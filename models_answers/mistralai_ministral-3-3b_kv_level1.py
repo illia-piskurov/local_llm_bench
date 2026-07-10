@@ -1,0 +1,95 @@
+import sys
+
+class InMemoryKVStore:
+    def __init__(self):
+        self.global_store = {}
+        self.transaction_stack = []
+
+    def _execute(self, command: str) -> list[str]:
+        output = []
+        if not self.transaction_stack:
+            return ["NO TRANSACTION"]
+
+        transaction = self.transaction_stack[-1]
+        if command == "SET":
+            key, value = command.split(maxsplit=1)
+            if key in transaction.local_store:
+                transaction.local_store[key] = value
+            else:
+                transaction.local_store[key] = value
+        elif command == "GET":
+            key = command.split()[0]
+            if key in transaction.local_store:
+                output.append(transaction.local_store[key])
+            elif key in transaction.parent_local_store or key in self.global_store:
+                output.append(self._resolve_key(key, transaction))
+        elif command == "DELETE":
+            key = command.split()[0]
+            if key in transaction.local_store:
+                del transaction.local_store[key]
+        return output
+
+    def _resolve_key(self, key: str, transaction) -> str:
+        if key in transaction.parent_local_store:
+            return transaction.parent_local_store[key]
+        elif key in self.global_store:
+            return self.global_store[key]
+        else:
+            return "NULL"
+
+    def run(self, program: str):
+        output = []
+        commands = [cmd.strip() for cmd in program.split('\n') if cmd.strip()]
+        self.transaction_stack = []
+
+        for cmd in commands:
+            if cmd == "BEGIN":
+                transaction = Transaction(self.global_store.copy(), None)
+                self.transaction_stack.append(transaction)
+            elif cmd == "COMMIT":
+                commit_output = []
+                if len(self.transaction_stack) > 1:
+                    parent = self.transaction_stack[-2]
+                    for key, value in self.transaction_stack[-1].local_store.items():
+                        parent.local_store[key] = value
+                    del self.transaction_stack[-1]
+                    self.transaction_stack.append(parent)
+                    commit_output.extend(commit_output)
+                else:
+                    commit_output.append("NO TRANSACTION")
+                output.extend(commit_output)
+            elif cmd == "ROLLBACK":
+                rollback_output = []
+                if self.transaction_stack:
+                    transaction = self.transaction_stack.pop()
+                    for key in list(transaction.local_store.keys()):
+                        del transaction.local_store[key]
+                    if len(self.transaction_stack) > 0:
+                        parent = self.transaction_stack[-1]
+                        parent.local_store.update(transaction.parent_local_store)
+                    rollback_output.append("NO TRANSACTION")
+                else:
+                    rollback_output.append("NO TRANSACTION")
+                output.extend(rollback_output)
+            elif cmd in ["SET", "GET", "DELETE"]:
+                result = self._execute(cmd)
+                if cmd == "GET" and result:
+                    output.append(result[0])
+
+        return output
+
+class Transaction:
+    def __init__(self, parent_local_store=None, parent_transaction=None):
+        self.local_store = {}
+        self.parent_local_store = parent_local_store
+        self.parent_transaction = parent_transaction
+
+def main():
+    store = InMemoryKVStore()
+    program = "\n".join(sys.stdin.readlines())
+    results = store.run(program)
+    for line in results:
+        print(line)
+
+if __name__ == "__main__":
+    main()
