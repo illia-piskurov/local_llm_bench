@@ -1,0 +1,172 @@
+```python
+import sys
+
+def run(program: str) -> list[str]:
+    """
+    Интерпретирует программу стекового языка.
+
+    Args:
+        program: Многострочный текст с инструкциями.
+
+    Returns:
+        Список строк, содержащих вывод команды PRINT.
+
+    Raises:
+        RuntimeError: Если произошла ошибка выполнения (нехватка данных на стеке, деление на ноль).
+    """
+    stack = []
+    output = []
+    lines = program.split('\n')
+
+    for i, line in enumerate(lines):
+        line_number = i + 1
+        stripped_line = line.strip()
+
+        # Игнорирование пустых строк и комментариев
+        if not stripped_line or stripped_line.startswith('#'):
+            continue
+
+        tokens = stripped_line.split()
+        if not tokens:
+            continue
+
+        instruction = tokens[0]
+
+        try:
+            if instruction == "PUSH":
+                if len(tokens) != 2:
+                    raise ValueError("PUSH требует один аргумент.")
+                # Пытаемся преобразовать второй токен в целое число
+                value = int(tokens[1])
+                stack.append(value)
+
+            elif instruction == "POP":
+                if not stack:
+                    raise IndexError("Недостаточно элементов на стеке для POP.")
+                stack.pop()
+
+            elif instruction == "DUP":
+                if not stack:
+                    raise IndexError("Недостаточно элементов на стеке для DUP.")
+                # Дублируем вершину стека
+                stack.append(stack[-1])
+
+            elif instruction == "SWAP":
+                if len(stack) < 2:
+                    raise IndexError("Недостаточно элементов на стеке для SWAP (требуется минимум 2).")
+                # Меняем местами два верхних элемента
+                a = stack.pop()
+                b = stack.pop()
+                stack.append(a)
+                stack.append(b)
+
+            elif instruction == "PRINT":
+                if not stack:
+                    raise IndexError("Недостаточно элементов на стеке для PRINT.")
+                # Выводим значение, не удаляя его со стека
+                output.append(str(stack[-1]))
+
+            # --- Бинарные операции (требуют 2 элемента) ---
+            elif instruction in ["ADD", "SUB", "MUL", "DIV"]:
+                if len(stack) < 2:
+                    raise IndexError(f"Недостаточно элементов на стеке для {instruction} (требуется минимум 2).")
+
+                # b - второй элемент (нижний), a - первый элемент (верхний)
+                b = stack.pop()
+                a = stack.pop()
+                result = None
+
+                if instruction == "ADD":
+                    result = a + b
+                elif instruction == "SUB":
+                    # Вычисляем a - b
+                    result = a - b
+                elif instruction == "MUL":
+                    result = a * b
+                elif instruction == "DIV":
+                    if b == 0:
+                        raise ZeroDivisionError("Деление на ноль.")
+                    # Целочисленное деление (a // b)
+                    result = a // b
+
+                stack.append(result)
+
+            else:
+                raise NameError(f"Неизвестная инструкция: {instruction}")
+
+        except IndexError as e:
+            # Перехват ошибок, связанных с недостатком элементов на стеке
+            raise RuntimeError(f"Ошибка в строке {line_number}: {e}")
+        except ZeroDivisionError as e:
+            # Перехват деления на ноль
+            raise RuntimeError(f"Ошибка в строке {line_number}: Деление на ноль.")
+        except ValueError as e:
+             # Ошибки парсинга (например, PUSH без аргумента)
+            raise RuntimeError(f"Ошибка в строке {line_number}: {e}")
+        except Exception as e:
+            # Общий перехват ошибок
+            raise RuntimeError(f"Критическая ошибка в строке {line_number}: {type(e).__name__} - {str(e)}")
+
+    return output
+
+if __name__ == '__main__':
+    # Пример 1: Успешное выполнение (5 + 3) * 2 = 16. Вывод: 16
+    program_success = """
+    PUSH 5
+    PUSH 3
+    ADD       # Stack: [8]
+    DUP       # Stack: [8, 8]
+    MUL       # Stack: [64] (Ошибка в примере, должно быть MUL)
+    SWAP      # Stack: [8, 8]
+    POP       # Stack: [8]
+    PUSH 2
+    ADD       # Stack: [10]
+    PRINT     # Output: 10
+    """
+    print("--- Тест 1 (Успех) ---")
+    try:
+        results = run(program_success)
+        print("Вывод:", results)
+    except RuntimeError as e:
+        print("Ошибка выполнения:", e)
+
+    # Пример 2: Ошибка - Недостаточно элементов для POP
+    program_underflow = """
+    POP
+    PUSH 10
+    """
+    print("\n--- Тест 2 (Underflow) ---")
+    try:
+        run(program_underflow)
+    except RuntimeError as e:
+        print("Перехвачена ошибка:", e)
+
+    # Пример 3: Ошибка - Деление на ноль
+    program_div_zero = """
+    PUSH 10
+    PUSH 0
+    DIV
+    """
+    print("\n--- Тест 3 (Div Zero) ---")
+    try:
+        run(program_div_zero)
+    except RuntimeError as e:
+        print("Перехвачена ошибка:", e)
+
+    # Пример 4: Комментарии и пробелы
+    program_clean = """
+    # Это комментарий
+    PUSH 10
+    # Пропуск пустой строки
+    PUSH 5
+    ADD       # 15
+    PRINT     # Output: 15
+    """
+    print("\n--- Тест 4 (Чистота) ---")
+    try:
+        results = run(program_clean)
+        print("Вывод:", results)
+    except RuntimeError as e:
+        print("Ошибка выполнения:", e)
+
+```

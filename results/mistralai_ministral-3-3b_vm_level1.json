@@ -1,0 +1,8 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "level": "level1",
+  "tested_at": "2026-07-10 11:10:10",
+  "passed": 18,
+  "total": 18,
+  "benchmark": "vm"
+}

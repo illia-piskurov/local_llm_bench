@@ -1,0 +1,62 @@
+import sys
+
+def run(program):
+    stack = []
+    output = []
+    lines = program.split('\n')
+    for line_num, line in enumerate(lines, 1):
+        stripped_line = line.strip()
+        if not stripped_line or stripped_line.startswith('#'):
+            continue
+
+        parts = stripped_line.split()
+        cmd = parts[0]
+
+        try:
+            if cmd == 'PUSH':
+                num = int(parts[1])
+                stack.append(num)
+            elif cmd == 'POP':
+                if len(stack) == 0:
+                    raise IndexError(f"Stack underflow at line {line_num}")
+                stack.pop()
+            elif cmd == 'ADD':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough values on the stack for ADD at line {line_num}")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a + b)
+            elif cmd == 'SUB':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough values on the stack for SUB at line {line_num}")
+                a, b = stack.pop(), stack.pop()
+                stack.append(b - a)
+            elif cmd == 'MUL':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough values on the stack for MUL at line {line_num}")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a * b)
+            elif cmd == 'DIV':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough values on the stack for DIV at line {line_num}")
+                a, b = stack.pop(), stack.pop()
+                if a == 0:
+                    raise ZeroDivisionError(f"Division by zero at line {line_num}")
+                stack.append(b // a)
+            elif cmd == 'DUP':
+                if len(stack) == 0:
+                    raise IndexError(f"No values to duplicate at line {line_num}")
+                stack.append(stack[-1])
+            elif cmd == 'SWAP':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough values on the stack for SWAP at line {line_num}")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a)
+                stack.append(b)
+            elif cmd == 'PRINT':
+                if len(stack) == 0:
+                    raise IndexError(f"No value to print at line {line_num}")
+                output.append(str(stack[-1]))
+        except (IndexError, ZeroDivisionError) as e:
+            raise type(e)(f"{e}") from None
+
+    return output

@@ -1,0 +1,8 @@
+{
+  "model": "google/gemma-4-e4b",
+  "level": "level2",
+  "tested_at": "2026-07-10 11:07:39",
+  "passed": 27,
+  "total": 27,
+  "benchmark": "vm"
+}

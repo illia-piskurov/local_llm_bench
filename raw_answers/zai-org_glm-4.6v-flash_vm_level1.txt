@@ -1,0 +1,86 @@
+```python
+def run(program: str) -> list[str]:
+    stack = []
+    output_lines = []
+
+    lines = program.strip().split('\n')
+    for i, line in enumerate(lines, start=1):
+        stripped_line = line.strip()
+        if not stripped_line or stripped_line.startswith('#'):
+            continue
+
+        parts = stripped_line.split()
+        cmd = parts[0].upper()
+
+        try:
+            if cmd == 'PUSH':
+                if len(parts) != 2:
+                    raise ValueError(f"Expected number after PUSH, got {parts}")
+                num = int(parts[1])
+                stack.append(num)
+            elif cmd == 'POP':
+                if not stack:
+                    raise IndexError(f"Stack underflow at line {i}")
+                stack.pop()
+            elif cmd == 'ADD':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough operands for ADD at line {i}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+            elif cmd == 'SUB':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough operands for SUB at line {i}")
+                b = stack.pop()   # first popped is b
+                a = stack.pop()   # then a
+                stack.append(a - b)
+            elif cmd == 'MUL':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough operands for MUL at line {i}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+            elif cmd == 'DIV':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough operands for DIV at line {i}")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise ZeroDivisionError(f"Divide by zero at line {i}")
+                stack.append(a // b)
+            elif cmd == 'DUP':
+                if not stack:
+                    raise IndexError(f"Stack underflow for DUP at line {i}")
+                stack.append(stack[-1])
+            elif cmd == 'SWAP':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough operands for SWAP at line {i}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(b)
+                stack.append(a)
+            elif cmd == 'PRINT':
+                if not stack:
+                    raise IndexError(f"Stack underflow for PRINT at line {i}")
+                output_lines.append(str(stack[-1]))
+            else:
+                raise ValueError(f"Unknown command '{cmd}' at line {i}")
+
+        except Exception as e:
+            raise RuntimeError(f"Error at line {i}: {str(e)}")
+
+    return output_lines
+
+
+if __name__ == "__main__":
+    sample_program = """PUSH 5
+PUSH 3
+ADD
+PRINT
+
+PUSH 10
+PUSH 0
+DIV
+"""
+    print(run(sample_program))
+```

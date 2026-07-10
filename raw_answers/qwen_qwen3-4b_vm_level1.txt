@@ -1,0 +1,69 @@
+```python
+def run(program: str) -> list[str]:
+    lines = [line.strip() for line in program.split('\n')]
+    instructions = []
+    for i, line in enumerate(lines):
+        if not line or line.startswith('#'):
+            continue
+        instructions.append((i + 1, line))
+    
+    stack = []
+    output = []
+    
+    for line_num, instr in instructions:
+        parts = instr.split()
+        if parts[0] == 'PUSH':
+            if len(parts) < 2:
+                raise ValueError(f"Line {line_num}: invalid PUSH")
+            try:
+                n = int(parts[1])
+                stack.append(n)
+            except ValueError:
+                raise ValueError(f"Line {line_num}: invalid number in PUSH")
+        elif parts[0] == 'POP':
+            if not stack:
+                raise ValueError(f"Line {line_num}: stack underflow")
+            stack.pop()
+        elif parts[0] == 'ADD':
+            if len(stack) < 2:
+                raise ValueError(f"Line {line_num}: stack underflow")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a + b)
+        elif parts[0] == 'SUB':
+            if len(stack) < 2:
+                raise ValueError(f"Line {line_num}: stack underflow")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+        elif parts[0] == 'MUL':
+            if len(stack) < 2:
+                raise ValueError(f"Line {line_num}: stack underflow")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a * b)
+        elif parts[0] == 'DIV':
+            if len(stack) < 2:
+                raise ValueError(f"Line {line_num}: stack underflow")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise ValueError(f"Line {line_num}: division by zero")
+            stack.append(a // b)
+        elif parts[0] == 'DUP':
+            if not stack:
+                raise ValueError(f"Line {line_num}: stack underflow")
+            stack.append(stack[-1])
+        elif parts[0] == 'SWAP':
+            if len(stack) < 2:
+                raise ValueError(f"Line {line_num}: stack underflow")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a)
+            stack.append(b)
+        elif parts[0] == 'PRINT':
+            if not stack:
+                raise ValueError(f"Line {line_num}: stack underflow")
+            output.append(str(stack[-1]))
+    return output
+```
