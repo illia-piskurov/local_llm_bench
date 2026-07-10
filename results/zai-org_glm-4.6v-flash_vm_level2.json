@@ -1,8 +1,17 @@
 {
   "model": "zai-org/glm-4.6v-flash",
+  "benchmark": "vm",
   "level": "level2",
   "tested_at": "2026-07-10 13:03:51",
   "passed": 20,
   "total": 27,
-  "benchmark": "vm"
+  "failures": [
+    "unconditional_jump_skips_code: неожиданное исключение: Error at line 2: Unknown label 'skip' at line 2",
+    "jz_taken_when_zero: неожиданное исключение: Error at line 2: Unknown label 'zero' at line 2",
+    "jz_not_taken_when_nonzero: неожиданное исключение: Error at line 2: Unknown label 'zero' at line 2",
+    "jnz_taken_when_nonzero: неожиданное исключение: Error at line 2: Unknown label 'nz' at line 2",
+    "jnz_not_taken_when_zero: неожиданное исключение: Error at line 2: Unknown label 'nz' at line 2",
+    "countdown_loop: неожиданное исключение: Error at line 2: Label 'loop' already defined at line 2",
+    "count_up_loop: неожиданное исключение: Error at line 2: Label 'loop' already defined at line 2"
+  ]
 }

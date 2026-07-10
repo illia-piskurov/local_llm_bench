@@ -1,8 +1,33 @@
 {
   "model": "mistralai/ministral-3-3b",
+  "benchmark": "vm",
   "level": "level2",
   "tested_at": "2026-07-10 12:16:47",
   "passed": 4,
   "total": 27,
-  "benchmark": "vm"
+  "failures": [
+    "push_print: неожиданное исключение: list index out of range",
+    "add: неожиданное исключение: pop from empty list",
+    "sub_order: неожиданное исключение: too many values to unpack (expected 2)",
+    "mul: неожиданное исключение: too many values to unpack (expected 2)",
+    "div_order: неожиданное исключение: list index out of range",
+    "div_truncate: неожиданное исключение: list index out of range",
+    "dup: неожиданное исключение: pop from empty list",
+    "swap: неожиданное исключение: too many values to unpack (expected 2)",
+    "pop: неожиданное исключение: list index out of range",
+    "comments_and_blank_lines: неожиданное исключение: pop from empty list",
+    "multiple_prints: неожиданное исключение: pop from empty list",
+    "print_does_not_pop: неожиданное исключение: list index out of range",
+    "negative_numbers: неожиданное исключение: pop from empty list",
+    "empty_program: неожиданное исключение: list index out of range",
+    "complex_chain: неожиданное исключение: pop from empty list",
+    "unconditional_jump_skips_code: неожиданное исключение: pop from empty list",
+    "jz_taken_when_zero: неожиданное исключение: list index out of range",
+    "jz_not_taken_when_nonzero: неожиданное исключение: list index out of range",
+    "jnz_taken_when_nonzero: неожиданное исключение: list index out of range",
+    "jnz_not_taken_when_zero: неожиданное исключение: list index out of range",
+    "countdown_loop: неожиданное исключение: too many values to unpack (expected 2)",
+    "count_up_loop: неожиданное исключение: pop from empty list",
+    "label_does_nothing_on_its_own: неожиданное исключение: list index out of range"
+  ]
 }

@@ -126,7 +126,7 @@ def _scheduler_level1_runner(answer_path):
         fn = scheduler_bench.load_function(str(answer_path), "topo_sort")
     except Exception as e:
         console.print(f"  [red]error:[/red] не удалось загрузить решение: {e}")
-        return 0, len(scheduler_bench.LEVEL1_TESTS)
+        return 0, len(scheduler_bench.LEVEL1_TESTS), [f"не удалось загрузить решение: {e}"]
     return scheduler_bench.run_level1_suite(fn)
 
 
@@ -135,7 +135,7 @@ def _scheduler_level2_runner(answer_path):
         fn = scheduler_bench.load_function(str(answer_path), "critical_path")
     except Exception as e:
         console.print(f"  [red]error:[/red] не удалось загрузить решение: {e}")
-        return 0, len(scheduler_bench.LEVEL2_TESTS)
+        return 0, len(scheduler_bench.LEVEL2_TESTS), [f"не удалось загрузить решение: {e}"]
     return scheduler_bench.run_level2_suite(fn)
 
 
@@ -196,7 +196,7 @@ def _kv_test_runner(answer_path, tests, name):
         run_fn = bench.load_run(str(answer_path))
     except Exception as e:
         console.print(f"  [red]error:[/red] не удалось загрузить решение: {e}")
-        return 0, len(tests)
+        return 0, len(tests), [f"не удалось загрузить решение: {e}"]
     return bench.run_suite(name, tests, run_fn)
 
 
@@ -427,7 +427,9 @@ def all_saved_results() -> list[dict]:
     return results
 
 
-def save_result(result_path: Path, model_key: str, benchmark_id: str, level_id: str, passed: int, total: int) -> None:
+def save_result(
+    result_path: Path, model_key: str, benchmark_id: str, level_id: str, passed: int, total: int, failures: list[str]
+) -> None:
     result_path.write_text(
         json.dumps(
             {
@@ -437,6 +439,7 @@ def save_result(result_path: Path, model_key: str, benchmark_id: str, level_id: 
                 "tested_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "passed": passed,
                 "total": total,
+                "failures": failures,
             },
             ensure_ascii=False,
             indent=2,
@@ -541,12 +544,12 @@ def run_level(model: Model, benchmark_id: str, level_id: str) -> None:
         run_manual_level(model, benchmark_id, level_id, answer_path)
         return
 
-    passed, total = level["runner"](answer_path)
+    passed, total, failures = level["runner"](answer_path)
     color = "green" if total and passed == total else ("yellow" if passed else "red")
     console.print(f"\n  Результат [bold]{model.key}[/bold] / {level['name']}: [{color}]{passed}/{total}[/{color}]")
 
     _, _, result_path = paths_for(model.key, benchmark_id, level_id)
-    save_result(result_path, model.key, benchmark_id, level_id, passed, total)
+    save_result(result_path, model.key, benchmark_id, level_id, passed, total, failures)
 
 
 def score_percent(result: dict) -> float:
@@ -667,6 +670,13 @@ def choose_level(model: Model, benchmark_id: str) -> None:
         _, _, result_path = paths_for(model.key, benchmark_id, level_id)
 
         if result_path.exists():
+            existing = load_result(result_path)
+            failures = (existing or {}).get("failures")
+            if failures:
+                console.print(f"\n  [yellow]Провалено тестов: {len(failures)}[/yellow]")
+                for f in failures:
+                    console.print(f"    [red]•[/red] {f}")
+
             redo = questionary.select(
                 "Этот уровень уже протестирован:",
                 choices=[
