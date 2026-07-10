@@ -1,0 +1,183 @@
+```python
+from collections import defaultdict, deque
+from typing import Dict, List, Optional, Tuple
+
+def topo_sort(tasks: Dict[str, List[str]]) -> Optional[List[str]]:
+    """
+    Выполняет топологическую сортировку задач с учетом их зависимостей.
+
+    Args:
+        tasks: Словарь, где ключ — имя задачи (строка), а значение — список 
+               имён задач, от которых она зависит (предшественники).
+
+    Returns:
+        Список имён всех задач в порядке выполнения, или None, если обнаружен цикл.
+    """
+    
+    # 1. Инициализация графа и подсчет in-degrees
+    adj: Dict[str, List[str]] = defaultdict(list)
+    in_degree: Dict[str, int] = {}
+    all_tasks: set[str] = set()
+
+    # Сбор всех уникальных задач и инициализация in_degree для каждой задачи
+    for task, prerequisites in tasks.items():
+        all_tasks.add(task)
+        for prereq in prerequisites:
+            all_tasks.add(prereq)
+            
+    # Инициализируем in_degree для всех задач нулем
+    for task in all_tasks:
+        in_degree[task] = 0
+
+    # Построение графа и подсчет входов (in-degrees)
+    for task, prerequisites in tasks.items():
+        for prereq in prerequisites:
+            # Ребро идет от prereq к task (prereq -> task)
+            adj[prereq].append(task)
+            # Увеличиваем степень входа для 'task'
+            in_degree[task] += 1
+
+    # 2. Инициализация очереди с задачами, у которых нет зависимостей (in_degree == 0)
+    queue = deque()
+    for task in all_tasks:
+        if in_degree[task] == 0:
+            queue.append(task)
+
+    # 3. Выполнение топологической сортировки (Kahn's Algorithm)
+    sorted_order: List[str] = []
+    
+    while queue:
+        u = queue.popleft()
+        sorted_order.append(u)
+        
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+
+    # 4. Проверка на циклы
+    if len(sorted_order) != len(all_tasks):
+        return None
+    else:
+        return sorted_order
+
+
+def critical_path(tasks: Dict[str, Tuple[int, List[str]]]) -> Optional[int]:
+    """
+    Рассчитывает длину критического пути в проекте.
+
+    Args:
+        tasks: Словарь, где значение — кортеж (длительность_задачи, список_зависимостей).
+
+    Returns:
+        Длина критического пути (максимальное время завершения), или None, если обнаружен цикл.
+    """
+    
+    # 1. Подготовка графа и проверка на циклы
+    
+    # Создаем структуру для топологической сортировки (Task -> [Prerequisites])
+    dependency_map: Dict[str, List[str]] = {}
+    for task, data in tasks.items():
+        duration, prereqs = data
+        dependency_map[task] = prereqs
+
+    # Получаем порядок задач с помощью топологической сортировки
+    sorted_tasks = topo_sort(dependency_map)
+    
+    if sorted_tasks is None:
+        return None # Обнаружен цикл
+    
+    # 2. Расчет времени (Earliest Finish Time - EF)
+    
+    # earliest_finish_time[task] хранит максимальное время завершения задачи
+    earliest_finish_time: Dict[str, int] = {}
+
+    for task in sorted_tasks:
+        duration, prerequisites = tasks[task]
+        
+        if not prerequisites:
+            # Задача без зависимостей начинается в момент 0
+            es = 0
+        else:
+            # ES(T) = max(EF(P)) для всех предшественников P
+            max_prereq_finish_time = 0
+            for prereq in prerequisites:
+                # Если задача-предшественник не была обработана (что теоретически невозможно, 
+                # если topo_sort корректен), это будет ошибкой. Но для безопасности проверим.
+                if prereq not in earliest_finish_time:
+                    # Это должно быть невозможно при правильной топологической сортировке
+                    return None # Внутренняя ошибка графа
+                
+                max_prereq_finish_time = max(max_prereq_finish_time, 
+                                             earliest_finish_time[prereq])
+            es = max_prereq_finish_time
+
+        # EF(T) = ES(T) + Duration(T)
+        ef = es + duration
+        earliest_finish_time[task] = ef
+
+    # 3. Определение длины критического пути
+    
+    # Критический путь — это максимальное время завершения среди всех задач.
+    if not earliest_finish_time:
+        return 0 # Пустой граф
+        
+    critical_path_length = max(earliest_finish_time.values())
+    
+    return critical_path_length
+
+if __name__ == '__main__':
+    # --- Тест 1: Простая цепочка (A -> B -> C) ---
+    print("--- Тест 1: Линейный путь ---")
+    tasks1 = {
+        "A": (3, []),
+        "B": (2, ["A"]),
+        "C": (5, ["B"])
+    }
+    # Ожидаемый расчет: A(3) -> B(3+2=5) -> C(5+5=10). Критический путь = 10.
+    result1 = critical_path(tasks1)
+    print(f"Задачи: {tasks1}")
+    print(f"Длина критического пути (Ожидается 10): {result1}")
+
+    # --- Тест 2: Расщепление и слияние (Параллельные ветви) ---
+    print("\n--- Тест 2: Параллельные ветви ---")
+    tasks2 = {
+        "Start": (0, []), # Начало
+        "A": (5, ["Start"]),
+        "B": (7, ["Start"]),
+        "End": (3, ["A", "B"])
+    }
+    # Ожидаемый расчет: 
+    # Start -> A(5)
+    # Start -> B(7)
+    # End начинается после max(EF_A=5, EF_B=7). ES_End = 7.
+    # EF_End = 7 + 3 = 10. Критический путь = 10.
+    result2 = critical_path(tasks2)
+    print(f"Задачи: {tasks2}")
+    print(f"Длина критического пути (Ожидается 10): {result2}")
+
+    # --- Тест 3: Цикл зависимостей ---
+    print("\n--- Тест 3: Обнаружение цикла ---")
+    tasks3 = {
+        "A": (5, ["C"]),
+        "B": (2, ["A"]),
+        "C": (1, ["B"])
+    }
+    # Ожидаемый результат: None
+    result3 = critical_path(tasks3)
+    print(f"Задачи: {tasks3}")
+    print(f"Длина критического пути (Ожидается None): {result3}")
+
+    # --- Тест 4: Сложный граф с разными длительностями ---
+    print("\n--- Тест 4: Смешанный граф ---")
+    tasks4 = {
+        "T1": (2, []),
+        "T2": (5, ["T1"]), # T1 -> T2. EF_T2 = 7
+        "T3": (8, ["T1"]), # T1 -> T3. EF_T3 = 10
+        "T4": (3, ["T2", "T3"]) # ES_T4 = max(7, 10) = 10. EF_T4 = 13.
+    }
+    # Критический путь проходит через T1 -> T3 -> T4. Длина = 2 + 8 + 3 = 13.
+    result4 = critical_path(tasks4)
+    print(f"Задачи: {tasks4}")
+    print(f"Длина критического пути (Ожидается 13): {result4}")
+```

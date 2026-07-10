@@ -171,7 +171,8 @@ def run_level1_suite(topo_sort_fn):
     print(f"\n=== LEVEL 1 (topo_sort): {passed}/{total} ===")
     for name, reason in failed:
         print(f"  [FAIL] {name}: {reason}")
-    return passed, total
+    failures = [f"{name}: {reason}" for name, reason in failed]
+    return passed, total, failures
 
 
 def run_level2_suite(critical_path_fn):
@@ -196,4 +197,5 @@ def run_level2_suite(critical_path_fn):
     print(f"\n=== LEVEL 2 (critical_path): {passed}/{total} ===")
     for name, reason in failed:
         print(f"  [FAIL] {name}: {reason}")
-    return passed, total
+    failures = [f"{name}: {reason}" for name, reason in failed]
+    return passed, total, failures

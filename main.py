@@ -79,7 +79,7 @@ def _vm_test_runner(answer_path, tests, name):
         run_fn = bench.load_run(str(answer_path))
     except Exception as e:
         console.print(f"  [red]error:[/red] не удалось загрузить решение: {e}")
-        return 0, len(tests)
+        return 0, len(tests), [f"не удалось загрузить решение: {e}"]
     return bench.run_suite(name, tests, run_fn)
 
 

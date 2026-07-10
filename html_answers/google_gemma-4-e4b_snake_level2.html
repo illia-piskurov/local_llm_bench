@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Змейка (Snake Game)</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a202c; /* Darker background */
+            color: #ffffff;
+            padding-top: 30px;
+        }
+        #gameCanvas {
+            border: 8px solid #4a5568;
+            background-color: #1e293b; /* Slightly lighter dark blue for contrast */
+            box-shadow: 0 0 30px rgba(74, 85, 104, 0.5); /* Outer glow */
+            border-radius: 10px;
+        }
+        #scoreBoard {
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #4fd1c5; /* Teal/Cyan for score */
+        }
+        h1 {
+            color: #63b3ed; /* Lighter blue title */
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+        }
+        p {
+            margin-top: 20px;
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body id="gameBody">
+
+    <h1>🐍 Змейка</h1>
+    <div id="scoreBoard">Счет: <span id="scoreValue">0</span></div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <p>Управление: Стрелки или WASD. Нажмите любую клавишу для перезапуска после Game Over.</p>
+
+    <script>
+        // --- Константы и настройки игры ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreValueElement = document.getElementById('scoreValue');
+        const gameBody = document.getElementById('gameBody');
+
+        const GRID_SIZE = 20; // Размер одной клетки в пикселях
+        const BOARD_SIZE = 20; // Количество клеток по ширине/высоте (400 / 20)
+        const GAME_SPEED = 150; // Скорость игры в мс
+
+        // --- Переменные состояния игры ---
+        let snake;
+        let food;
+        let dx = GRID_SIZE; // Начальное направление: Вправо
+        let dy = 0;
+        let score = 0;
+        let gameLoopInterval;
+        let isGameOver = false;
+        let particleEffectActive = false;
+
+        // --- Инициализация игры ---
+        function initGame() {
+            // Сброс состояния
+            clearInterval(gameLoopInterval);
+            isGameOver = false;
+            score = 0;
+            dx = GRID_SIZE;
+            dy = 0;
+            
+            snake = [{ x: BOARD_SIZE / 2 * GRID_SIZE, y: BOARD_SIZE / 2 * GRID_SIZE }];
+            scoreValueElement.textContent = score;
+
+            placeFood();
+            drawGame(); // Отрисовка начального состояния
+            gameLoopInterval = setInterval(gameTick, GAME_SPEED);
+        }
+
+        // --- Логика размещения еды ---
+        function placeFood() {
+            let newFoodPosition;
+            do {
+                newFoodPosition = { 
+                    x: Math.floor(Math.random() * BOARD_SIZE) * GRID_SIZE, 
+                    y: Math.floor(Math.random() * BOARD_SIZE) * GRID_SIZE 
+                };
+            } while (isCollision(newFoodPosition, snake)); // Убеждаемся, что еда не на змейке
+            food = newFoodPosition;
+        }
+
+        // --- Проверка коллизий (для еды и для тела) ---
+        function isCollision(pos1, pos2) {
+            return pos1.x === pos2.x && pos1.y === pos2.y;
+        }
+
+        // --- Эффект частиц при поедании еды ---
+        function createParticles(x, y) {
+            const particles = [];
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x: x + Math.random() * GRID_SIZE - GRID_SIZE / 2,
+                    y: y + Math.random() * GRID_SIZE - GRID_SIZE / 2,
+                    vx: (Math.random() - 0.5) * 4, // Скорость по X
+                    vy: (Math.random() - 0.5) * 4, // Скорость по Y
+                    life: Math.random() * 10 + 30, // Продолжительность жизни
+                    size: Math.random() * 3 + 1
+                });
+            }
+            return particles;
+        }
+
+        // --- Основной игровой цикл ---
+        function gameTick() {
+            if (isGameOver) return;
+
+            // 1. Вычисляем новую голову змейки
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+            // 2. Проверка коллизий
+            if (checkCollision(head)) {
+                gameOver();
+                return;
+            }
+
+            // 3. Обновление тела змейки
+            snake.unshift(head); // Добавляем новую голову
+            
+            let ateFood = false;
+            // 4. Проверка поедания еды
+            if (checkFoodConsumption()) {
+                ateFood = true;
+                score += 10;
+                scoreValueElement.textContent = score;
+                placeFood(); // Генерируем новую еду
+            } else {
+                snake.pop(); // Стандартное движение: удаляем хвост
+            }
+
+            // 5. Отрисовка и запуск следующего кадра
+            drawGame(ateFood);
+        }
+
+        // --- Проверка коллизий (Стена или Тело) ---
+        function checkCollision(head) {
+            // Столкновение со стеной
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                return true;
+            }
+
+            // Столкновение с собственным телом
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // --- Проверка поедания еды ---
+        function checkFoodConsumption() {
+            const head = snake[0];
+            if (head.x === food.x && head.y === food.y) {
+                return true; // Еда съедена
+            }
+            return false;
+        }
+
+        // --- Отрисовка всех элементов на Canvas ---
+        function drawGame(ateFood = false) {
+            // 1. Очистка канваса (фон)
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Эффект частиц (если еда съедена)
+            if (ateFood && !particleEffectActive) {
+                const particles = createParticles(food.x + GRID_SIZE/2, food.y + GRID_SIZE/2);
+                particles.forEach((p, index) => {
+                    ctx.fillStyle = `rgba(255, 160, 0, ${index / 15 * 0.8})`; // Оранжевый цвет вспышки
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                particleEffectActive = true;
+            }
+
+            // 3. Рисование еды (с свечением)
+            ctx.shadowColor = 'red';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#ff6b6b'; // Яркий красный цвет
+            ctx.fillRect(food.x + 2, food.y + 2, GRID_SIZE - 4, GRID_SIZE - 4);
+
+            // 4. Рисование змейки (с градиентом и свечением)
+            for (let i = 0; i < snake.length; i++) {
+                const segment = snake[i];
+                
+                // Сброс теней для сегментов, чтобы не влиять на еду
+                ctx.shadowBlur = 15; 
+
+                if (i === 0) {
+                    // Голова: Градиент и сильное свечение
+                    const gradient = ctx.createRadialGradient(segment.x + GRID_SIZE/2, segment.y + GRID_SIZE/2, 5, segment.x + GRID_SIZE/2, segment.y + GRID_SIZE/2, GRID_SIZE);
+                    gradient.addColorStop(0, '#a7e9ff'); // Яркий центр
+                    gradient.addColorStop(1, '#4CAF50'); // Темный край
+                    ctx.fillStyle = gradient;
+                } else {
+                    // Тело: Мягкое свечение и градиент
+                    const bodyGradient = ctx.createLinearGradient(segment.x, segment.y, segment.x + GRID_SIZE, segment.y);
+                    bodyGradient.addColorStop(0, '#66BB6A'); 
+                    bodyGradient.addColorStop(1, '#4CAF50');
+                    ctx.fillStyle = bodyGradient;
+                }
+
+                // Рисуем с небольшим отступом для эффекта сетки и мягкости
+                ctx.fillRect(segment.x + 2, segment.y + 2, GRID_SIZE - 4, GRID_SIZE - 4);
+            }
+            
+            // Сброс теней после отрисовки всех элементов
+            ctx.shadowBlur = 0;
+
+            // Установка таймера для сброса эффекта частиц (очень грубая имитация)
+            if (ateFood && particleEffectActive) {
+                setTimeout(() => {
+                    particleEffectActive = false;
+                }, 150); // Эффект длится полторы секунды
+            }
+        }
+
+        // --- Обработка ввода (Управление) ---
+        document.addEventListener('keydown', e => {
+            const key = e.key;
+            let newDx = dx;
+            let newDy = dy;
+
+            if (isGameOver && !e.repeat) {
+                initGame(); // Перезапуск при нажатии любой клавиши после Game Over
+                return;
+            }
+
+            // Определяем новое направление
+            if (key === 'ArrowUp' || key === 'w') {
+                newDx = 0; newDy = -GRID_SIZE;
+            } else if (key === 'ArrowDown' || key === 's') {
+                newDx = 0; newDy = GRID_SIZE;
+            } else if (key === 'ArrowLeft' || key === 'a') {
+                newDx = -GRID_SIZE; newDy = 0;
+            } else if (key === 'ArrowRight' || key === 'd') {
+                newDx = GRID_SIZE; newDy = 0;
+            }
+
+            // Проверка на разворот на 180 градусов
+            if ((newDx !== 0 && dx === -GRID_SIZE) || (newDy !== 0 && dy === -GRID_SIZE)) {
+                // Разрешено, если новое направление не противоположно текущему
+            } else if (Math.sign(newDx / GRID_SIZE) * Math.sign(dx / GRID_SIZE) < 0 || 
+                       Math.sign(newDy / GRID_SIZE) * Math.sign(dy / GRID_SIZE) < 0) {
+                // Игнорируем попытку развернуться на 180 градусов
+            } else {
+                 dx = newDx; dy = newDy;
+            }
+        });
+
+
+        // --- Game Over ---
+        function gameOver() {
+            clearInterval(gameLoopInterval);
+            isGameOver = true;
+
+            const message = `GAME OVER! Ваш счет: ${score}`;
+
+            // 1. Анимация затемнения фона (Fade out)
+            gameBody.style.transition = 'opacity 0.5s ease-in';
+            gameBody.style.opacity = '0.8';
+
+            setTimeout(() => {
+                // 2. Отрисовка Game Over на канвасе
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; // Затемнение фона
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Текст с анимацией пульсации (используем CSS для лучшего эффекта)
+                const titleElement = document.createElement('h2');
+                titleElement.textContent = message;
+                titleElement.style.cssText = `
+                    color: #ff4d4d; 
+                    font-size: 3em; 
+                    text-shadow: 0 0 15px rgba(255, 77, 77, 0.8);
+                    animation: pulse 1s infinite alternate;
+                `;
+                document.querySelector('h1').parentNode.appendChild(titleElement);
+
+                // Добавляем ключевые кадры для пульсации
+                const styleSheet = document.createElement("style");
+                styleSheet.type = "text/css";
+                styleSheet.innerText = `@keyframes pulse { from { transform: scale(1); opacity: 0.8; } to { transform: scale(1.05); opacity: 1; } }`;
+                document.head.appendChild(styleSheet);
+
+                // Инструкция по перезапуску
+                const restartP = document.createElement('p');
+                restartP.innerHTML = 'Нажмите любую клавишу для рестарта';
+                gameBody.querySelector('p').parentNode.insertBefore(restartP, gameBody.querySelector('p'));
+
+
+            }, 500); // Ждем завершения анимации затемнения
+        }
+
+        // --- Запуск игры при загрузке страницы ---
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>

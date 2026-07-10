@@ -1,0 +1,155 @@
+```powershell
+# Создаём временный файл для хранения данных о задачах (для расчёта критического пути)
+$tasksFile = "temp_tasks_data.json"
+$topoResultFile = "topo_sorted_tasks.txt"
+
+# Сохраняем входные данные в JSON-файл
+$inputTasks = @{
+    A = @{duration=3; dependencies=["B"]}
+    B = @{duration=2; dependencies=["C"]}
+    C = @{duration=1; dependencies=[]}
+    D = @{duration=4; dependencies=["A", "E"]}
+    E = @{duration=2; dependencies=["F"]}
+    F = @{duration=3; dependencies=[]}
+}
+
+$jsonTasks = ConvertTo-Json -Depth 5 $inputTasks
+Set-Content -Path $tasksFile -Value $jsonTasks
+
+# Выполняем топологическую сортировку и сохраняем результат
+& .\topo_sort.ps1 | Out-File -FilePath $topoResultFile -Encoding UTF8
+
+# Загружаем данные из JSON-файла в PowerShell-объект
+$tasks = Import-Module -Name System.Text.Json -ErrorAction SilentlyContinue | ConvertFrom-Json -ReadCount 0 -InputFile $tasksFile
+
+# Функция расчёта критического пути
+function critical_path {
+    param (
+        [Parameter(Mandatory=$true)]
+        [hashtable]$tasks,
+        [string]$topoResult = ""
+    )
+
+    # Проверяем на наличие циклов (если топо-сортировка не выполнена)
+    if (-not $topoResult) {
+        return $null
+    }
+
+    # Инициализация переменных для расчёта
+    $earliestStart = @{}
+    $latestFinish = @{}
+    $criticalPathLength = 0
+
+    # Начальные значения: earliest start = duration для всех задач без зависимостей
+    foreach ($task in $tasks.Keys) {
+        if (-not $tasks[$task].dependencies) {
+            $earliestStart[$task] = $tasks[$task].duration
+        }
+    }
+
+    # Рассчитываем earliest start для остальных задач
+    foreach ($task in $topoResult -split "`n") {
+        $taskName = $task.Trim()
+        if (-not $tasks[$taskName]) { continue }
+        $earliestStart[$taskName] += [int]$tasks[$taskName].duration
+    }
+
+    # Рассчитываем latest finish с конца (от обратного хода)
+    foreach ($task in $topoResult -split "`n" | Reverse) {
+        $taskName = $task.Trim()
+        if (-not $tasks[$taskName]) { continue }
+        $latestFinish[$taskName] = [int]$earliestStart[$taskName]
+
+        # Находим максимальное latest finish среди зависимых задач
+        foreach ($dep in $tasks[$taskName].dependencies) {
+            $latestFinish[$taskName] = [math]::Max($latestFinish[$taskName], $latestFinish[$dep])
+        }
+    }
+
+    # Определяем длину критического пути
+    $criticalPathLength = $latestFinish[$topoResult[-split "`n"][0]] - $tasks[$topoResult[0]].duration
+
+    return $criticalPathLength
+}
+
+# Выполняем расчёт и сохраняем результат в файл
+$criticalPathLength = critical_path -tasks $tasks -topoResult (Get-Content $topoResultFile -Raw)
+
+if ($criticalPathLength) {
+    "Длина критического пути: $($criticalPathLength)"
+} else {
+    "Граф содержит цикл!"
+}
+
+# Очистка временных файлов
+Remove-Item -Path $tasksFile, $topoResultFile -Force
+
+# Передаём результат обратно в Python (через стандартный вывод)
+$null
+```
+
+```python
+import sys
+from collections import deque
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    # Проверяем наличие циклов с помощью топологической сортировки
+    topo_result = topo_sort(tasks)
+
+    if topo_result is None:
+        return None
+
+    # Инициализация переменных для расчёта
+    earliest_start = {task: 0 for task in tasks}
+    latest_finish = {}
+
+    # Начальные значения earliest start (для задач без зависимостей)
+    for task, deps in tasks.items():
+        if not deps:
+            earliest_start[task] = deps[0]
+
+    # Рассчитываем earliest start для всех задач
+    current_time = 0
+    for task in topo_result:
+        current_time += tasks[task][0]
+        earliest_start[task] = current_time
+
+    # Начальные значения latest finish (с конца)
+    for task in reversed(topo_result):
+        latest_finish[task] = earliest_start[task]
+
+        # Обновляем latest finish для зависимых задач
+        for dependent_task, deps in tasks.items():
+            if task in deps:
+                latest_finish[dependent_task] = max(latest_finish[dependent_task], latest_finish[task])
+
+    # Определяем длину критического пути
+    critical_length = latest_finish[topo_result[-1]]
+
+    return critical_length
+
+# Пример использования (вместе с сохранением в файл)
+if __name__ == "__main__":
+    tasks = {
+        "A": (3, ["B"]),
+        "B": (2, ["C"]),
+        "C": (1, []),
+        "D": (4, ["A", "E"]),
+        "E": (2, ["F"]),
+        "F": (3, [])
+    }
+
+    result = topo_sort(tasks)
+    with open("topo_sorted_tasks.txt", "w") as f:
+        if result is None:
+            print("Граф содержит цикл!", file=f)
+        else:
+            print("Порядок выполнения:", "\n".join(result), file=f)
+
+    critical_length = critical_path(tasks)
+    with open("critical_path.txt", "w") as f:
+        if critical_length is None:
+            print("Граф содержит цикл!", file=f)
+        else:
+            print(f"Длина критического пути: {critical_length}", file=f)
+```

@@ -226,7 +226,8 @@ def run_suite(name, tests, run_fn):
     print(f"\n=== {name}: {passed}/{total} ===")
     for test_name, reason, _ in failed:
         print(f"  [FAIL] {test_name}: {reason}")
-    return passed, total
+    failures = [f"{test_name}: {reason}" for test_name, reason, _ in failed]
+    return passed, total, failures
 
 
 def main():
@@ -242,8 +243,8 @@ def main():
         traceback.print_exc()
         sys.exit(1)
 
-    p1, t1 = run_suite("LEVEL 1", LEVEL1_TESTS, run_fn)
-    p2, t2 = run_suite("LEVEL 2", LEVEL2_TESTS, run_fn)
+    p1, t1, _ = run_suite("LEVEL 1", LEVEL1_TESTS, run_fn)
+    p2, t2, _ = run_suite("LEVEL 2", LEVEL2_TESTS, run_fn)
 
     print("\n=== ИТОГО ===")
     print(f"Level 1: {p1}/{t1}")
