@@ -1,0 +1,13 @@
+{
+  "model": "google/gemma-4-e2b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-07-11 00:27:23",
+  "passed": 15,
+  "total": 18,
+  "failures": [
+    "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно"
+  ]
+}

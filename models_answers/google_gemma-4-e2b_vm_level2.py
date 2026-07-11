@@ -1,0 +1,198 @@
+import sys
+
+def run(program: str) -> list[str]:
+    """
+    Интерпретирует программу стекового языка с поддержкой меток и условных переходов.
+
+    Args:
+        program: Многострочный текст программы.
+
+    Returns:
+        Список строк, которые были выведены функцией PRINT.
+    """
+    lines = program.split('\n')
+    stack = []
+    output = []
+
+    # 1. Предварительная обработка: Собираем все метки и их номера строк
+    labels = {}
+    for i, line in enumerate(lines):
+        line_num = i + 1
+        parts = line.split()
+        if parts and parts[0] == "LABEL":
+            label_name = parts[1]
+            # Метки должны быть уникальными
+            labels[label_name] = line_num
+
+    # 2. Исполнение с учетом управления потоком (PC)
+    pc = 0  # Program Counter (индекс текущей строки)
+
+    while pc < len(lines):
+        line = lines[pc].strip()
+        line_num = pc + 1
+
+        # Игнорировать пустые строки и комментарии
+        if not line or line.startswith('#'):
+            pc += 1
+            continue
+
+        parts = line.split()
+        if not parts:
+            pc += 1
+            continue
+
+        command = parts[0]
+        args = parts[1:]
+
+        try:
+            # --- Стандартные стековые операции ---
+            if command == "PUSH":
+                if len(args) != 1:
+                    raise ValueError("Недостаточно аргументов для PUSH")
+                value = int(args[0])
+                stack.append(value)
+
+            elif command == "POP":
+                if not stack:
+                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (POP)")
+                stack.pop()
+
+            elif command == "PRINT":
+                if not stack:
+                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (PRINT)")
+                print(stack[-1])
+                output.append(str(stack[-1]))
+
+            # --- Бинарные операции ---
+            elif command in ("ADD", "MUL"):
+                if len(stack) < 2:
+                    raise IndexError(f"Ошибка на строке {line_num}: Недостаточно элементов для {command}")
+                
+                b = stack.pop()
+                a = stack.pop()
+                
+                if command == "ADD":
+                    stack.append(a + b)
+                elif command == "MUL":
+                    stack.append(a * b)
+
+            elif command in ("SUB", "DIV"):
+                if len(stack) < 2:
+                    raise IndexError(f"Ошибка на строке {line_num}: Недостаточно элементов для {command}")
+
+                b = stack.pop()  # Операнд, который идет первым в аргументах
+                a = stack.pop()  # Операнд, который идет вторым в аргументах
+
+                if command == "SUB":
+                    result = a - b
+                    stack.append(result)
+                elif command == "DIV":
+                    if b == 0:
+                        raise ZeroDivisionError(f"Ошибка на строке {line_num}: Деление на ноль")
+                    result = a // b
+                    stack.append(result)
+
+            # --- Управление стеком и потоком ---
+            elif command == "DUP":
+                if not stack:
+                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (DUP)")
+                top = stack[-1]
+                stack.append(top)
+
+            elif command == "SWAP":
+                if len(stack) < 2:
+                    raise IndexError(f"Ошибка на строке {line_num}: Недостаточно элементов для SWAP")
+                
+                a = stack.pop()
+                b = stack.pop()
+                stack.append(a)
+                stack.append(b)
+
+            # --- Условные переходы и метки ---
+            elif command == "LABEL":
+                # Метки не влияют на выполнение, просто обновляем PC
+                pass 
+
+            elif command == "JMP":
+                if len(args) != 1:
+                    raise ValueError("JMP требует одного аргумента (имя метки)")
+                target_label = args[0]
+                if target_label not in labels:
+                    raise NameError(f"Ошибка на строке {line_num}: Метка '{target_label}' не найдена")
+                pc = labels[target_label]
+
+            elif command == "JZ":
+                if len(args) != 1:
+                    raise ValueError("JZ требует одного аргумента (имя метки)")
+                target_label = args[0]
+                if not stack:
+                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (JZ)")
+                
+                condition = stack.pop()
+                if condition == 0:
+                    pc = labels[target_label]
+                else:
+                    pc += 1
+
+            elif command == "JNZ":
+                if len(args) != 1:
+                    raise ValueError("JNZ требует одного аргумента (имя метки)")
+                target_label = args[0]
+                if not stack:
+                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (JNZ)")
+
+                condition = stack.pop()
+                if condition != 0:
+                    pc = labels[target_label]
+                else:
+                    pc += 1
+
+            else:
+                raise ValueError(f"Неизвестная команда '{command}' на строке {line_num}")
+
+        except (IndexError, ZeroDivisionError, ValueError, NameError) as e:
+            print(f"RUNTIME ERROR: {e} на строке {line_num}", file=sys.stderr)
+            # При ошибке можно остановить выполнение или продолжить, в зависимости от требований.
+            # Здесь мы продолжаем, но ошибка будет выведена.
+            pass
+
+        # Если команда не была JMP/JZ/JNZ, PC увеличивается на 1
+        if command not in ("JMP", "JZ", "JNZ"):
+            pc += 1
+
+
+    return output
+
+if __name__ == '__main__':
+    # Пример использования с метками и ветвлениями
+    program_example = """
+LABEL start
+PUSH 10
+PUSH 5
+ADD
+PRINT
+LABEL end
+PUSH 2
+MUL
+PRINT
+JMP end
+POP
+DIV 10, 0  # Проверка деления на ноль (вызовет ошибку)
+"""
+
+    print("--- Запуск программы с ветвлением ---")
+    results = run(program_example)
+    print("\n--- Результаты (выводы PRINT) ---")
+    for res in results:
+        print(res)
+
+    print("\n--- Тест с ошибкой JMP ---")
+    program_error_jump = """
+LABEL start
+PUSH 10
+JMP non_existent
+"""
+    results_error_jump = run(program_error_jump)
+    print("\n--- Результаты (выводы PRINT) ---")
+    for res in results_error_jump:
+        print(res)

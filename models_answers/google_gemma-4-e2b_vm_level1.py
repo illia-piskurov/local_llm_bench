@@ -1,0 +1,145 @@
+import sys
+
+def run(program: str) -> list[str]:
+    """
+    Интерпретирует программу стекового языка.
+
+    Args:
+        program: Многострочный текст программы.
+
+    Returns:
+        Список строк, которые были выведены функцией PRINT.
+    """
+    stack = []
+    output = []
+    lines = program.split('\n')
+
+    for line_num, line in enumerate(lines):
+        # Игнорировать пустые строки и комментарии
+        if not line or line.startswith('#'):
+            continue
+
+        # Разделение команды и аргументов
+        parts = line.split()
+        if not parts:
+            continue
+
+        command = parts[0]
+        args = parts[1:]
+
+        try:
+            if command == "PUSH":
+                if len(args) != 1:
+                    raise ValueError("Недостаточно аргументов для PUSH")
+                value = int(args[0])
+                stack.append(value)
+
+            elif command == "POP":
+                if not stack:
+                    raise IndexError(f"Ошибка на строке {line_num + 1}: Стек пуст (POP)")
+                stack.pop()
+
+            elif command == "PRINT":
+                if not stack:
+                    raise IndexError(f"Ошибка на строке {line_num + 1}: Стек пуст (PRINT)")
+                print(stack[-1])
+                output.append(str(stack[-1]))
+
+            # --- Бинарные операции ---
+            elif command in ("ADD", "MUL"):
+                if len(stack) < 2:
+                    raise IndexError(f"Ошибка на строке {line_num + 1}: Недостаточно элементов для {command}")
+                
+                # Для ADD/MUL порядок не важен, берем в обратном порядке (a, b)
+                b = stack.pop()
+                a = stack.pop()
+                
+                if command == "ADD":
+                    stack.append(a + b)
+                elif command == "MUL":
+                    stack.append(a * b)
+
+            elif command in ("SUB", "DIV"):
+                # SUB (b, a) -> a - b
+                # DIV (b, a) -> a / b
+                if len(stack) < 2:
+                    raise IndexError(f"Ошибка на строке {line_num + 1}: Недостаточно элементов для {command}")
+
+                # Порядок извлечения: b (верхний), a (нижний)
+                b = stack.pop()  # b - операнд, который идет первым в аргументах
+                a = stack.pop()  # a - операнд, который идет вторым в аргументах
+
+                if command == "SUB":
+                    # a - b
+                    result = a - b
+                    stack.append(result)
+                elif command == "DIV":
+                    # a / b (целочисленное деление)
+                    if b == 0:
+                        raise ZeroDivisionError(f"Ошибка на строке {line_num + 1}: Деление на ноль")
+                    result = a // b
+                    stack.append(result)
+
+            elif command == "DUP":
+                if not stack:
+                    raise IndexError(f"Ошибка на строке {line_num + 1}: Стек пуст (DUP)")
+                top = stack[-1]
+                stack.append(top)
+
+            elif command == "SWAP":
+                if len(stack) < 2:
+                    raise IndexError(f"Ошибка на строке {line_num + 1}: Недостаточно элементов для SWAP")
+                
+                # Поменять местами два верхних значения
+                a = stack.pop()
+                b = stack.pop()
+                stack.append(a)
+                stack.append(b)
+
+            else:
+                raise ValueError(f"Неизвестная команда '{command}' на строке {line_num + 1}")
+
+        except (IndexError, ZeroDivisionError, ValueError) as e:
+            # Выбрасываем понятную ошибку с номером строки
+            print(f"RUNTIME ERROR: {e} на строке {line_num + 1}", file=sys.stderr)
+            # В зависимости от требований, можно прервать выполнение или продолжить.
+            # Здесь мы просто пропускаем ошибочную команду, но в реальном интерпретаторе это может быть критично.
+            pass
+
+    return output
+
+if __name__ == '__main__':
+    # Пример использования:
+    program_example = """
+# Это тестовая программа
+PUSH 10
+PUSH 5
+ADD
+PRINT
+DUP
+PUSH 2
+MUL
+PRINT
+POP
+DIV 10, 0  # Проверка деления на ноль
+"""
+
+    print("--- Запуск программы ---")
+    results = run(program_example)
+    print("\n--- Результаты (выводы PRINT) ---")
+    for res in results:
+        print(res)
+
+    print("\n--- Тест с ошибкой ---")
+    program_error = """
+PUSH 10
+PUSH 5
+SUB
+POP
+PRINT
+DIV 10, 0
+"""
+    results_error = run(program_error)
+    print("\n--- Результаты (выводы PRINT) ---")
+    for res in results_error:
+        print(res)

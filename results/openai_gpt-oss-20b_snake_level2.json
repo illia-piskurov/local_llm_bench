@@ -1,0 +1,8 @@
+{
+  "model": "openai/gpt-oss-20b",
+  "benchmark": "snake",
+  "level": "level2",
+  "tested_at": "2026-07-11 12:07:26",
+  "manual_score": 7,
+  "comment": "эффекты неона есть, проблемы те же."
+}

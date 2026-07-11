@@ -1,0 +1,9 @@
+{
+  "model": "google/gemma-4-12b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-07-11 11:26:32",
+  "passed": 6,
+  "total": 6,
+  "failures": []
+}

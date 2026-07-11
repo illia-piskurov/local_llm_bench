@@ -1,0 +1,11 @@
+{
+  "model": "google/gemma-4-e2b",
+  "benchmark": "brackets",
+  "level": "level1",
+  "tested_at": "2026-07-11 01:06:24",
+  "passed": 0,
+  "total": 12,
+  "failures": [
+    "не удалось загрузить решение: f-string: single '}' is not allowed (google_gemma-4-e2b_brackets_level1.py, line 33)"
+  ]
+}

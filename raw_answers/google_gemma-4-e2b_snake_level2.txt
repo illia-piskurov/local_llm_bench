@@ -1,0 +1,271 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Змейка</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #282c34 0%, #4a4e69 100%); /* Более красивый фон */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #f0f0f0;
+        }
+        canvas {
+            border: 8px solid #61dafb;
+            background-color: #1e1e1e;
+            box-shadow: 0 0 30px rgba(97, 218, 251, 0.7), 0 0 15px rgba(0, 0, 0, 0.5); /* Добавление свечения */
+            border-radius: 10px;
+        }
+        #score {
+            margin-top: 20px;
+            font-size: 2.5em;
+            color: #4CAF50;
+            text-shadow: 0 0 10px #4CAF50;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score">Счёт: 0</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+
+        // --- Константы игры ---
+        const gridSize = 20; // Размер одной ячейки (пикселей)
+        const tileCount = canvas.width / gridSize; // Количество ячеек по ширине/высоте
+        let score = 0;
+
+        // --- Состояние игры ---
+        let snake = [];
+        let food = {};
+        let dx = 0; // Направление X (движение)
+        let dy = 0; // Направление Y (движение)
+        let gameLoopInterval;
+        let isGameOver = false;
+
+        // --- Визуальные переменные для эффектов ---
+        let flashTimer = 0;
+        let isFlashing = false;
+
+
+        // --- Инициализация игры ---
+
+        function initializeGame() {
+            // Начальное состояние змейки (в центре)
+            snake = [
+                { x: 10 * gridSize, y: 10 * gridSize },
+                { x: 9 * gridSize, y: 10 * gridSize },
+                { x: 8 * gridSize, y: 10 * gridSize }
+            ];
+            dx = gridSize; // Начальное движение вправо
+            dy = 0;
+
+            score = 0;
+            scoreDisplay.textContent = `Счёт: ${score}`;
+            isGameOver = false;
+            flashTimer = 0;
+            isFlashing = false;
+            
+            placeFood();
+            
+            // Запуск основного цикла игры
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            gameLoopInterval = setInterval(gameLoop, 1000 / 15); // Скорость игры: 15 FPS
+        }
+
+        function placeFood() {
+            let newFoodPos;
+            do {
+                newFoodPos = {
+                    x: Math.floor(Math.random() * tileCount) * gridSize,
+                    y: Math.floor(Math.random() * tileCount) * gridSize
+                };
+            } while (isFoodOnSnake(newFoodPos)); 
+
+            food = newFoodPos;
+        }
+
+        function isFoodOnSnake(pos) {
+            return snake.some(segment => segment.x === pos.x && segment.y === pos.y);
+        }
+
+
+        // --- Основной игровой цикл ---
+
+        function gameLoop() {
+            if (isGameOver) return;
+
+            // 1. Очистка экрана с градиентом
+            ctx.fillStyle = '#1e1e1e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Обработка движения и столкновений
+            moveSnake();
+
+            // 3. Проверка условий игры
+            checkCollision();
+
+            // 4. Отрисовка (с эффектами)
+            drawGame();
+        }
+
+        function moveSnake() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head); 
+
+            // Проверка на поедание еды
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreDisplay.textContent = `Счёт: ${score}`;
+                placeFood(); // Ставим новую еду
+                triggerFlash(); // Активируем эффект вспышки
+            } else {
+                snake.pop();
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+
+            // Столкновение со стенами
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                endGame();
+                return;
+            }
+
+            // Столкновение с собой
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    endGame();
+                    return;
+                }
+            }
+        }
+
+        function triggerFlash() {
+            isFlashing = true;
+            flashTimer = 10; // Длительность вспышки в кадрах
+        }
+
+
+        function drawGame() {
+            // Отрисовка еды с эффектом свечения
+            ctx.fillStyle = '#FF4500'; 
+            ctx.shadowColor = '#FF8C00';
+            ctx.shadowBlur = isFlashing ? 30 : 15;
+            ctx.fillRect(food.x, food.y, gridSize, gridSize);
+            ctx.shadowBlur = 15; // Сбрасываем тень для змейки
+
+            // Отрисовка змейки
+            snake.forEach((segment, index) => {
+                if (index === 0) {
+                    // Голова: яркий цвет и свечение
+                    ctx.fillStyle = '#00FF7F';
+                    ctx.shadowColor = '#00FF7F';
+                    ctx.shadowBlur = isFlashing ? 25 : 10;
+                } else {
+                    // Тело: более приглушенный цвет
+                    ctx.fillStyle = '#00CC66';
+                    ctx.shadowColor = '#008040';
+                    ctx.shadowBlur = 5;
+                }
+                
+                // Рисуем сегмент с небольшим отступом для эффекта
+                ctx.fillRect(segment.x, segment.y, gridSize - 1, gridSize - 1);
+            });
+
+            // Сброс эффекта вспышки после отрисовки
+            if (isFlashing) {
+                flashTimer--;
+                if (flashTimer <= 0) {
+                    isFlashing = false;
+                }
+            }
+        }
+
+        function endGame() {
+            isGameOver = true;
+            clearInterval(gameLoopInterval);
+            
+            // Отрисовка экрана Game Over с анимацией
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Анимация пульсации текста
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const message = 'GAME OVER';
+            const scoreText = `Финальный счёт: ${score}`;
+            const restartText = 'Нажмите R для перезапуска';
+
+            ctx.fillStyle = '#FF4500'; // Оранжевый для заголовка
+            ctx.font = '60px Impact, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#FF8C00';
+            ctx.shadowBlur = 30;
+            ctx.fillText(message, centerX, centerY - 40);
+
+            ctx.fillStyle = 'white';
+            ctx.font = '24px Arial';
+            ctx.shadowBlur = 15;
+            ctx.fillText(scoreText, centerX, centerY + 10);
+            
+            ctx.fillStyle = '#61dafb'; // Синий для инструкции
+            ctx.font = '18px Arial';
+            ctx.fillText(restartText, centerX, centerY + 50);
+
+            // Добавляем легкую пульсацию к тексту Game Over
+            if (score > 0) {
+                const pulse = Math.sin(Date.now() / 200) * 5;
+                ctx.shadowBlur = 30 + pulse;
+            }
+        }
+
+        // --- Управление вводом ---
+
+        document.addEventListener('keydown', (e) => {
+            if (isGameOver && (e.key === 'r' || e.key === 'R')) {
+                initializeGame();
+                return;
+            }
+
+            const keyPressed = e.key;
+
+            // Управление стрелками или WASD
+            switch (keyPressed) {
+                case 'ArrowUp':
+                case 'w':
+                    if (dy === 0) { dx = 0; dy = -gridSize; }
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    if (dy === 0) { dx = 0; dy = gridSize; }
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    if (dx === 0) { dx = -gridSize; dy = 0; }
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    if (dx === 0) { dx = gridSize; dy = 0; }
+                    break;
+            }
+        });
+
+        // --- Запуск игры при загрузке страницы ---
+        initializeGame();
+
+    </script>
+</body>
+</html>
+```

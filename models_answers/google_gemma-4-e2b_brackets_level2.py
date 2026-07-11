@@ -1,0 +1,105 @@
+def is_balanced(s: str) -> bool:
+    """
+    Проверяет сбалансированность скобок в строке.
+    Учитываются только скобки: (), [], {}.
+    """
+    stack = []
+    mapping = {")": "(", "]": "[", "}": "{"}
+    open_brackets = set(["(", "[", "{"])
+
+    for char in s:
+        if char in open_brackets:
+            # Открывающая скобка, добавляем в стек
+            stack.append(char)
+        elif char in mapping:
+            # Закрывающая скобка
+            if not stack:
+                return False
+            
+            top_element = stack.pop()
+            if mapping[char] != top_element:
+                return False
+        
+    return not stack
+
+def max_depth(s: str) -> int:
+    """
+    Вернет максимальную глубину вложенности скобок при сканировании строки слева направо.
+    Глубина увеличивается на 1 при каждой открывающей скобке и уменьшается только при корректном закрытии.
+    """
+    stack = []
+    max_depth = 0
+
+    for char in s:
+        if char in ["(", "[", "{"]:
+            stack.append(char)
+            current_depth = len(stack)
+            if current_depth > max_depth:
+                max_depth = current_depth
+        elif char in [")", "]", "}"]:
+            # Проверяем, есть ли открытая скобка для закрытия
+            if stack:
+                top_element = stack[-1]
+                if (char == ")" and top_element == "(") or \
+                   (char == "]" and top_element == "[") or \
+                   (char == "}" and top_element == "{"):
+                    # Корректное закрытие, уменьшаем глубину
+                    stack.pop()
+            # Если стек пуст или тип не совпадает, мы игнорируем это закрывающее скобку 
+            # для целей изменения глубины (согласно условию задачи).
+
+    return max_depth
+
+def find_unmatched(s: str) -> list[int]:
+    """
+    Вернет отсортированный по возрастанию список индексов всех "несовпавших" скобок в строке.
+    """
+    stack = []  # Хранит открывающие скобки и их индексы
+    unmatched_indices = []
+
+    for i, char in enumerate(s):
+        if char in ["(", "[", "{"]:
+            # Открывающая скобка: сохраняем ее индекс в стек
+            stack.append((char, i))
+        elif char in [")", "]", "}"]:
+            # Закрывающая скобка
+            if not stack:
+                # Стек пуст: это несовпавшая закрывающая скобка
+                unmatched_indices.append(i)
+            else:
+                open_type, open_index = stack[-1]
+                expected_open = ""
+                if char == ")": expected_open = "("
+                elif char == "]": expected_open = "["
+                elif char == "}": expected_open = "{"
+
+                if open_type == expected_open:
+                    # Совпадение: снимаем открывающую скобку со стека
+                    stack.pop()
+                else:
+                    # Несовпадение типа: это несовпавшая закрывающая скобка
+                    unmatched_indices.append(i)
+
+    # Все, что осталось в стеке, — незакрытые открывающие скобки
+    for _, index in stack:
+        unmatched_indices.append(index)
+
+    return sorted(unmatched_indices)
+
+if __name__ == '__main__':
+    s1 = "([{}])"
+    print(f"'{s1}' - is_balanced: {is_balanced(s1)}") # True
+    print(f"'{s1}' - max_depth: {max_depth(s1)}")     # 3
+    print(f"'{s1}' - unmatched indices: {find_unmatched(s1)}") # []
+
+    s2 = "({[)]}"
+    print(f"'{s2}' - is_balanced: {is_balanced(s2)}") # False
+    # max_depth для s2 будет 3 (из-за (, {, [)
+    print(f"'{s2}' - max_depth: {max_depth(s2)}")     # 3
+    # Несовпавшие: ')' не закрыла '(', '[' осталась, '}' не закрыла '{'
+    print(f"'{s2}' - unmatched indices: {find_unmatched(s2)}") # [3, 4] (индексы ']' и '}')
+
+    s3 = "abc(d)e{f}g"
+    print(f"'{s3}' - is_balanced: {is_balanced(s3)}") # True
+    print(f"'{s3}' - max_depth: {max_depth(s3)}")     # 1
+    print(f"'{s3}' - unmatched indices: {find_unmatched(s3)}") # []

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Змейка</title>
+<style>
+    body { background: #000; color: #0f0; font-family: sans-serif; text-align: center; }
+    canvas { background: #111; display: block; margin: 20px auto; border: 2px solid #0f0; }
+    #score { font-size: 24px; margin-top: 10px; }
+    .game-over {
+        animation: fadeIn 1s ease-in;
+        position: relative;
+        padding: 20px;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .particles {
+        position: absolute;
+        width: 4px; height: 4px; border-radius: 50%;
+        animation: float 1s ease-in-out infinite;
+    }
+    @keyframes float { 0% { transform: translateY(0) translateX(0); opacity: 1; } 50% { transform: translateY(-10px) translateX(20px); opacity: 0.5; } 100% { transform: translateY(0) translateX(0); opacity: 1; } }
+    .screen-glow {
+        filter: drop-shadow(0 0 8px #0f0) drop-shadow(0 0 20px #0f0);
+    }
+</style>
+</head>
+<body>
+<canvas id="game" width="400" height="400"></canvas>
+<div id="score">Счёт: 0</div>
+<div id="gameOver" class="game-over"></div>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
+const gameOverDiv = document.getElementById('gameOver');
+
+let gridSize = 20;
+const cols = canvas.width / gridSize;
+const rows = canvas.height / gridSize;
+
+let snake = [{x: 10, y: 10}];
+let direction = 'RIGHT';
+let food = null;
+let score = 0;
+let gameOver = false;
+let particles = [];
+let glowTicks = 0;
+
+function randomFood() {
+    let f;
+    do {
+        f = {x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows)};
+    } while (snake.some(seg => seg.x === f.x && seg.y === f.y));
+    food = f;
+}
+
+function drawSnake() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    snake.forEach((seg, i) => {
+        ctx.fillStyle = i === 0 ? '#0f0' : '#00f';
+        ctx.fillRect(seg.x * gridSize, seg.y * gridSize, gridSize-1, gridSize-1);
+    });
+    drawFood();
+}
+
+function drawFood() {
+    ctx.fillStyle = '#ff0';
+    ctx.beginPath();
+    ctx.arc(food.x * gridSize + gridSize/2, food.y * gridSize + gridSize/2, gridSize/2 - 2, 0, Math.PI*2);
+    ctx.fill();
+}
+
+function createParticles(x, y) {
+    particles = [];
+    for (let i = 0; i < 12; i++) {
+        particles.push({
+            x: x * gridSize + gridSize/2,
+            y: y * gridSize + gridSize/2,
+            vx: (Math.random()-0.5)*4,
+            vy: (Math.random()-0.5)*4,
+            life: 30
+        });
+    }
+}
+
+function updateParticles() {
+    particles = particles.filter(p => p.life-- > 0);
+    particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x >= cols*gridSize) p.vx *= -1;
+        if (p.y < 0 || p.y >= rows*gridSize) p.vy *= -1;
+    });
+}
+
+function drawParticles() {
+    particles.forEach(p => {
+        ctx.fillStyle = '#ff0';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI*2);
+        ctx.fill();
+    });
+}
+
+function drawGlow() {
+    if (glowTicks % 4 === 0) {
+        ctx.shadowColor = '#0f0';
+        ctx.shadowBlur = 20;
+        ctx.shadowOffset = {x: 2, y: 2};
+        ctx.fillStyle = '#0f0';
+        ctx.beginPath();
+        ctx.arc(canvas.width/2, canvas.height/2, 60, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+    glowTicks++;
+}
+
+function drawSnakeWithShadow() {
+    snake.forEach((seg, i) => {
+        ctx.fillStyle = i === 0 ? '#0f0' : '#00f';
+        ctx.shadowColor = '#0f0';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffset = {x: 1, y: 1};
+        ctx.fillRect(seg.x * gridSize, seg.y * gridSize, gridSize-1, gridSize-1);
+        ctx.shadowBlur = 0;
+    });
+}
+
+function update() {
+    if (gameOver) return;
+
+    const head = {...snake[0]};
+    switch(direction) {
+        case 'UP': head.y--; break;
+        case 'DOWN': head.y++; break;
+        case 'LEFT': head.x--; break;
+        case 'RIGHT': head.x++; break;
+    }
+    snake.unshift(head);
+
+    if (head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows) {
+        gameOver = true;
+        return;
+    }
+
+    for (let i = 1; i < snake.length; i++) {
+        if (snake[i].x === head.x && snake[i].y === head.y) {
+            gameOver = true;
+            return;
+        }
+    }
+
+    if (head.x === food.x && head.y === food.y) {
+        score++;
+        scoreDisplay.textContent = `Счёт: ${score}`;
+        createParticles(head.x, head.y);
+        food = null;
+        while (!food) randomFood();
+        snake.push({x: head.x, y: head.y});
+    } else {
+        snake.pop();
+    }
+}
+
+function gameLoop() {
+    update();
+    updateParticles();
+    drawGlow();
+    drawSnakeWithShadow();
+    drawParticles();
+    drawFood();
+    if (gameOver) {
+        gameOverDiv.innerHTML = `
+            <div style="font-size: 24px; color: #ff0; animation: fadeIn 1s ease-in;">
+                Game Over! Перезапустить?<br>
+                <button onclick="restartGame()" style="background:#0f0;color:#000;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;">Перезапустить</button>
+            </div>`;
+        setTimeout(restartGame, 1200);
+    } else {
+        drawScore();
+    }
+    requestAnimationFrame(gameLoop);
+}
+
+function drawScore() {
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Счёт: ${score}`, 10, 30);
+}
+
+function restartGame() {
+    gameOver = false;
+    score = 0;
+    scoreDisplay.textContent = `Счёт: ${score}`;
+    snake = [{x: 10, y: 10}];
+    direction = 'RIGHT';
+    food = null;
+    particles = [];
+    gameOverDiv.innerHTML = '';
+    randomFood();
+    gameLoop();
+}
+
+canvas.addEventListener('keydown', e => {
+    if (gameOver) return;
+    switch(e.key) {
+        case 'ArrowUp': direction = 'UP'; break;
+        case 'ArrowDown': direction = 'DOWN'; break;
+        case 'ArrowLeft': direction = 'LEFT'; break;
+        case 'ArrowRight': direction = 'RIGHT'; break;
+    }
+});
+
+randomFood();
+gameLoop();
+</script>
+</body>
+</html>

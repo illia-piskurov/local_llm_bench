@@ -1,0 +1,57 @@
+```python
+def run(program: str) -> list[str]:
+    """
+    Execute a simple in-memory key‑value store with nested transactions.
+    Returns the outputs of GET commands and any "NO TRANSACTION" messages.
+    """
+    # Each transaction is a dict mapping keys to values or None (for deletion)
+    stack = [{}]  # base level
+    output = []
+
+    def get_value(key: str):
+        for txn in reversed(stack):
+            if key in txn:
+                return None if txn[key] is None else txn[key]
+        return None
+
+    for line in program.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split()
+        cmd = parts[0].upper()
+
+        if cmd == "SET":
+            key, val = parts[1], parts[2]
+            stack[-1][key] = val
+
+        elif cmd == "GET":
+            key = parts[1]
+            val = get_value(key)
+            output.append(val if val is not None else "NULL")
+
+        elif cmd == "DELETE":
+            key = parts[1]
+            # Mark as deleted in current transaction
+            stack[-1][key] = None
+
+        elif cmd == "BEGIN":
+            stack.append({})
+
+        elif cmd == "COMMIT":
+            if len(stack) == 1:
+                output.append("NO TRANSACTION")
+            else:
+                changes = stack.pop()
+                parent = stack[-1]
+                for k, v in changes.items():
+                    parent[k] = v
+
+        elif cmd == "ROLLBACK":
+            if len(stack) == 1:
+                output.append("NO TRANSACTION")
+            else:
+                stack.pop()
+
+    return output
+```

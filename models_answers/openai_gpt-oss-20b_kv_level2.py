@@ -1,0 +1,89 @@
+def run(program: str) -> list[str]:
+    """
+    Execute a simple in-memory key‑value store with nested transactions,
+    supporting COUNT and WATCH commands.
+    Returns the outputs of GET, COUNT, any "NO TRANSACTION" messages,
+    and immediate WATCH notifications.
+    """
+    stack = [{}]          # transaction layers
+    watched = set()       # keys being watched
+    output = []
+
+    def get_value(key: str):
+        for txn in reversed(stack):
+            if key in txn:
+                return None if txn[key] is None else txn[key]
+        return None
+
+    def current_state():
+        """Return a dict of the visible state."""
+        state = {}
+        for txn in stack:
+            for k, v in txn.items():
+                if v is None:
+                    state.pop(k, None)
+                else:
+                    state[k] = v
+        return state
+
+    for line in program.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split()
+        cmd = parts[0].upper()
+
+        if cmd == "SET":
+            key, val = parts[1], parts[2]
+            old_val = get_value(key)
+            stack[-1][key] = val
+            new_val = get_value(key)
+            if key in watched and old_val != new_val:
+                output.append(f"WATCH {key} "
+                              f"{old_val if old_val is not None else 'NULL'} -> "
+                              f"{new_val if new_val is not None else 'NULL'}")
+
+        elif cmd == "GET":
+            key = parts[1]
+            val = get_value(key)
+            output.append(val if val is not None else "NULL")
+
+        elif cmd == "DELETE":
+            key = parts[1]
+            old_val = get_value(key)
+            stack[-1][key] = None
+            new_val = get_value(key)
+            if key in watched and old_val != new_val:
+                output.append(f"WATCH {key} "
+                              f"{old_val if old_val is not None else 'NULL'} -> "
+                              f"{new_val if new_val is not None else 'NULL'}")
+
+        elif cmd == "BEGIN":
+            stack.append({})
+
+        elif cmd == "COMMIT":
+            if len(stack) == 1:
+                output.append("NO TRANSACTION")
+            else:
+                changes = stack.pop()
+                parent = stack[-1]
+                for k, v in changes.items():
+                    parent[k] = v
+
+        elif cmd == "ROLLBACK":
+            if len(stack) == 1:
+                output.append("NO TRANSACTION")
+            else:
+                stack.pop()
+
+        elif cmd == "COUNT":
+            value = parts[1]
+            state = current_state()
+            count = sum(1 for v in state.values() if v == value)
+            output.append(str(count))
+
+        elif cmd == "WATCH":
+            key = parts[1]
+            watched.add(key)
+
+    return output

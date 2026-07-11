@@ -1,0 +1,17 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-07-11 12:42:26",
+  "passed": 8,
+  "total": 15,
+  "failures": [
+    "delete_then_get: неожиданное исключение: 1",
+    "overwrite_set: неожиданное исключение: 1",
+    "simple_transaction_rollback: неожиданное исключение: 2",
+    "rollback_restores_delete: неожиданное исключение: 2",
+    "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', '10', '10']",
+    "rollback_after_commit_is_no_transaction: ожидалось ['NO TRANSACTION'], получено []",
+    "multiple_keys_independent: неожиданное исключение: 1"
+  ]
+}

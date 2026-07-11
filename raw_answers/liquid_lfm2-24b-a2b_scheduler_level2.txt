@@ -1,0 +1,47 @@
+```python
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    from collections import deque
+
+    # Собрать все задачи и их зависимости
+    all_nodes = set(tasks.keys())
+    for deps in tasks.values():
+        for d in deps[1]:
+            all_nodes.add(d)
+
+    # Создать граф и индексы длительности
+    graph = {node: [] for node in all_nodes}
+    indegree = {node: 0 for node in all_nodes}
+    duration = {}
+    for node, (dur, deps) in tasks.items():
+        duration[node] = dur
+        for dep in deps:
+            graph[dep].append(node)
+            indegree[node] += 1
+
+    # Топологическая сортировка и проверка циклов
+    queue = deque([node for node in all_nodes if indegree[node] == 0])
+    topo_order = []
+    processed = 0
+
+    while queue:
+        current = queue.popleft()
+        topo_order.append(current)
+        processed += 1
+        for neighbor in graph[current]:
+            indegree[neighbor] -= 1
+            if indegree[neighbor] == 0:
+                queue.append(neighbor)
+
+    if processed != len(all_nodes):
+        return None  # цикл найден
+
+    # Динамическое программирование для нахождения максимальной длительности пути
+    dp = {node: 0 for node in all_nodes}
+    for node in topo_order:
+        max_prev = 0
+        for dep in tasks[node][1]:
+            max_prev = max(max_prev, dp[dep])
+        dp[node] = max_prev + duration[node]
+
+    return max(dp.values())
+```

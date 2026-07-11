@@ -1,0 +1,8 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-07-11 12:45:33",
+  "manual_score": 2,
+  "comment": "игра очень быстрая "
+}

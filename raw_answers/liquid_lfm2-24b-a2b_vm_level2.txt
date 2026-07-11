@@ -1,0 +1,124 @@
+```python
+def run(program: str) -> list[str]:
+    stack = []
+    output = []
+    lines = [line for line in program.splitlines() if line.strip() and not line.startswith('#')]
+    
+    # Собираем словарь меток и их номеров строк
+    labels = {}
+    pc = 0  # текущий индекс строки (позиция)
+    
+    for idx, line in enumerate(lines, start=1):
+        tokens = line.split()
+        if not tokens:
+            continue
+        cmd = tokens[0].upper()
+        
+        # Определяем метку
+        if cmd == 'LABEL':
+            if len(tokens) != 2:
+                raise ValueError(f"LABEL requires one argument at line {idx}")
+            label_name = tokens[1]
+            labels[label_name] = pc
+            continue
+        
+        # Получаем текущую позицию
+        current_pc = pc
+        
+        if cmd == 'PUSH':
+            if len(tokens) != 2:
+                raise ValueError(f"PUSH requires one argument at line {idx}")
+            try:
+                n = int(tokens[1])
+            except ValueError:
+                raise ValueError(f"Invalid number at line {idx}")
+            stack.append(n)
+        
+        elif cmd == 'POP':
+            if not stack:
+                raise IndexError(f"Stack underflow at line {idx}")
+            output.append(str(stack.pop()))
+        
+        elif cmd == 'ADD':
+            if len(stack) < 2:
+                raise IndexError(f"Stack underflow during ADD at line {idx}")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a + b)
+        
+        elif cmd == 'SUB':
+            if len(stack) < 2:
+                raise IndexError(f"Stack underflow during SUB at line {idx}")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+        
+        elif cmd == 'MUL':
+            if len(stack) < 2:
+                raise IndexError(f"Stack underflow during MUL at line {idx}")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a * b)
+        
+        elif cmd == 'DIV':
+            if len(stack) < 2:
+                raise IndexError(f"Stack underflow during DIV at line {idx}")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise ZeroDivisionError(f"Division by zero at line {idx}")
+            stack.append(a // b)
+        
+        elif cmd == 'DUP':
+            if not stack:
+                raise IndexError(f"Stack underflow during DUP at line {idx}")
+            stack.append(stack[-1])
+        
+        elif cmd == 'SWAP':
+            if len(stack) < 2:
+                raise IndexError(f"Stack underflow during SWAP at line {idx}")
+            a = stack.pop()
+            b = stack.pop()
+            stack.extend([a, b])
+        
+        elif cmd == 'PRINT':
+            if not stack:
+                raise IndexError(f"Stack empty for PRINT at line {idx}")
+            output.append(str(stack[-1]))
+        
+        # Обработка переходов
+        if cmd in ('JMP', 'LABEL', 'JZ', 'JNZ'):
+            if cmd == 'JMP':
+                target = tokens[1]
+                pc = labels.get(target, None)
+                if pc is None:
+                    raise NameError(f"Label {target} not found at line {idx}")
+                # Переход без увеличения pc
+                continue
+            elif cmd == 'LABEL':
+                # Метка просто помечает текущую позицию, ничего не делаем
+                pass
+            elif cmd == 'JZ':
+                val = stack.pop() if stack else 0
+                target = tokens[1]
+                if val == 0:
+                    pc = labels.get(target, None)
+                    if pc is None:
+                        raise NameError(f"Label {target} not found at line {idx}")
+                # pc обновляется в конце цикла
+                continue
+            elif cmd == 'JNZ':
+                val = stack.pop() if stack else 0
+                target = tokens[1]
+                if val != 0:
+                    pc = labels.get(target, None)
+                    if pc is None:
+                        raise NameError(f"Label {target} not found at line {idx}")
+                # pc обновляется в конце цикла
+                continue
+        
+        # Увеличиваем pc после выполнения инструкции (кроме переходов)
+        pc += 1
+    
+    return output
+```

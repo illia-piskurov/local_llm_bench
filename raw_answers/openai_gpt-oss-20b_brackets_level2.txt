@@ -1,0 +1,60 @@
+```python
+def is_balanced(s: str) -> bool:
+    """Check if brackets in the string are balanced."""
+    pairs = {')': '(', ']': '[', '}': '{'}
+    open_brackets = set(pairs.values())
+    stack = []
+
+    for ch in s:
+        if ch in open_brackets:
+            stack.append(ch)
+        elif ch in pairs:
+            if not stack or stack[-1] != pairs[ch]:
+                return False
+            stack.pop()
+
+    return not stack
+
+
+def max_depth(s: str) -> int:
+    """Return the maximum nesting depth of brackets while scanning left to right."""
+    pairs = {')': '(', ']': '[', '}': '{'}
+    open_brackets = set(pairs.values())
+    stack = []
+    current_depth = 0
+    max_depth_val = 0
+
+    for ch in s:
+        if ch in open_brackets:
+            stack.append(ch)
+            current_depth += 1
+            if current_depth > max_depth_val:
+                max_depth_val = current_depth
+        elif ch in pairs:
+            if stack and stack[-1] == pairs[ch]:
+                stack.pop()
+                current_depth -= 1
+
+    return max_depth_val
+
+
+def find_unmatched(s: str) -> list[int]:
+    """Return sorted indices of unmatched brackets."""
+    pairs = {')': '(', ']': '[', '}': '{'}
+    open_brackets = set(pairs.values())
+    stack = []          # stores tuples (index, bracket)
+    unmatched_indices = []
+
+    for idx, ch in enumerate(s):
+        if ch in open_brackets:
+            stack.append((idx, ch))
+        elif ch in pairs:
+            if stack and stack[-1][1] == pairs[ch]:
+                stack.pop()
+            else:
+                unmatched_indices.append(idx)
+
+    # Remaining opening brackets on the stack are unmatched
+    unmatched_indices.extend(index for index, _ in stack)
+    return sorted(unmatched_indices)
+```

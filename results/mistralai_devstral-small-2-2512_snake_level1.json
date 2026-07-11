@@ -1,0 +1,8 @@
+{
+  "model": "mistralai/devstral-small-2-2512",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-07-11 01:19:13",
+  "manual_score": 1,
+  "comment": "Не рабочая, со старта сразу проигрыш. Для такой большой модели стыд"
+}

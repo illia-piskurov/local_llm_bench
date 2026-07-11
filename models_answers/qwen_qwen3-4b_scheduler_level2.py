@@ -1,0 +1,50 @@
+import collections
+
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    all_tasks = set(tasks.keys())
+    in_degree = {task: 0 for task in all_tasks}
+    reverse_graph = collections.defaultdict(list)
+    
+    for task, deps in tasks.items():
+        for dep in deps:
+            in_degree[task] += 1
+            reverse_graph[dep].append(task)
+    
+    queue = collections.deque([task for task in all_tasks if in_degree[task] == 0])
+    result = []
+    
+    while queue:
+        current = queue.popleft()
+        result.append(current)
+        for neighbor in reverse_graph[current]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+    
+    if len(result) == len(all_tasks):
+        return result
+    else:
+        return None
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    if not tasks:
+        return 0
+    
+    dependencies = {task: deps for task, (duration, deps) in tasks.items()}
+    topological_order = topo_sort(dependencies)
+    
+    if topological_order is None:
+        return None
+    
+    dist = {task: 0 for task in topological_order}
+    
+    for task in topological_order:
+        duration = tasks[task][0]
+        predecessors = tasks[task][1]
+        max_prev = max(dist[pre] for pre in predecessors) if predecessors else 0
+        dist[task] = max_prev + duration
+    
+    return max(dist.values())

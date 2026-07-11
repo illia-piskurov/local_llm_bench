@@ -1,0 +1,38 @@
+def is_balanced(s: str) -> bool:
+    """
+    Проверяет сбалансированность скобок в строке.
+    Учитываются только скобки: (), [], {}.
+    """
+    stack = []
+    mapping = {")": "(", "]": "[", "}": "{"}
+    open_brackets = set(["(", "[", "{"])
+
+    for char in s:
+        if char in open_brackets:
+            # Открывающая скобка, добавляем в стек
+            stack.append(char)
+        elif char in mapping:
+            # Закрывающая скобка
+            # Если стек пуст, значит закрывающая скобка без открывающей
+            if not stack:
+                return False
+            
+            # Берем последнюю открытую скобку и сравниваем с текущей закрывающей
+            top_element = stack.pop()
+            if mapping[char] != top_element:
+                return False
+        
+        # Игнорируем все остальные символы
+
+    # Если стек пуст, значит все скобки были правильно закрыты
+    return not stack
+
+if __name__ == '__main__':
+    print(f"()[]{{}}: {is_balanced('()[]{}')}")  # True
+    print(f"(]: {is_balanced('(]')}")          # False
+    print(f"([)]}: {is_balanced('([)]')}")      # False
+    print(f"{{[()]}}: {is_balanced('{[()]}')}")  # True
+    print(f"{{: {is_balanced('{')}")            # False
+    print(f"}}{: {is_balanced('}')}")            # False
+    print(f"abc(d)e: {is_balanced('abc(d)e')}")  # True
+    print(f"((: {is_balanced('((')}")          # False

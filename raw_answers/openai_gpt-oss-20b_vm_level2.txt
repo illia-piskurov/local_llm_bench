@@ -1,0 +1,154 @@
+```python
+#!/usr/bin/env python3
+"""
+Simple stack-based language interpreter with labels and conditional jumps.
+"""
+
+def _error(msg: str, line_no: int) -> None:
+    raise RuntimeError(f"Line {line_no}: {msg}")
+
+def run(program: str) -> list[str]:
+    """
+    Execute a program written in the simple stack language.
+
+    Parameters
+    ----------
+    program : str
+        Multi-line string containing the program.
+
+    Returns
+    -------
+    list[str]
+        List of strings printed by PRINT instructions.
+    """
+    # Preprocess lines and collect labels
+    raw_lines = program.splitlines()
+    lines = []
+    label_map = {}
+    for idx, raw_line in enumerate(raw_lines, start=1):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        instr = parts[0].upper()
+        # Record labels with their instruction index (after filtering)
+        if instr == "LABEL":
+            if len(parts) != 2:
+                _error("LABEL requires one argument", idx)
+            name = parts[1]
+            if name in label_map:
+                _error(f"Duplicate label '{name}'", idx)
+            label_map[name] = len(lines)
+            # LABEL itself is not added to executable lines
+        else:
+            lines.append((idx, line))
+
+    stack = []
+    output = []
+    ip = 0  # instruction pointer
+
+    while ip < len(lines):
+        line_no, raw_line = lines[ip]
+        parts = raw_line.split()
+        instr = parts[0].upper()
+
+        try:
+            if instr == "PUSH":
+                if len(parts) != 2:
+                    _error("PUSH requires one argument", line_no)
+                stack.append(int(parts[1]))
+                ip += 1
+            elif instr == "POP":
+                if not stack:
+                    _error("POP from empty stack", line_no)
+                stack.pop()
+                ip += 1
+            elif instr == "ADD":
+                if len(stack) < 2:
+                    _error("ADD needs two operands", line_no)
+                b, a = stack.pop(), stack.pop()
+                stack.append(a + b)
+                ip += 1
+            elif instr == "SUB":
+                if len(stack) < 2:
+                    _error("SUB needs two operands", line_no)
+                b, a = stack.pop(), stack.pop()
+                stack.append(a - b)
+                ip += 1
+            elif instr == "MUL":
+                if len(stack) < 2:
+                    _error("MUL needs two operands", line_no)
+                b, a = stack.pop(), stack.pop()
+                stack.append(a * b)
+                ip += 1
+            elif instr == "DIV":
+                if len(stack) < 2:
+                    _error("DIV needs two operands", line_no)
+                b, a = stack.pop(), stack.pop()
+                if b == 0:
+                    _error("Division by zero", line_no)
+                stack.append(int(a / b))
+                ip += 1
+            elif instr == "DUP":
+                if not stack:
+                    _error("DUP from empty stack", line_no)
+                stack.append(stack[-1])
+                ip += 1
+            elif instr == "SWAP":
+                if len(stack) < 2:
+                    _error("SWAP needs two operands", line_no)
+                stack[-1], stack[-2] = stack[-2], stack[-1]
+                ip += 1
+            elif instr == "PRINT":
+                if not stack:
+                    _error("PRINT from empty stack", line_no)
+                output.append(str(stack[-1]))
+                ip += 1
+            elif instr == "JMP":
+                if len(parts) != 2:
+                    _error("JMP requires one argument", line_no)
+                target = parts[1]
+                if target not in label_map:
+                    _error(f"Undefined label '{target}'", line_no)
+                ip = label_map[target]
+            elif instr == "JZ":
+                if len(parts) != 2:
+                    _error("JZ requires one argument", line_no)
+                if not stack:
+                    _error("JZ from empty stack", line_no)
+                val = stack.pop()
+                target = parts[1]
+                if target not in label_map:
+                    _error(f"Undefined label '{target}'", line_no)
+                ip = label_map[target] if val == 0 else ip + 1
+            elif instr == "JNZ":
+                if len(parts) != 2:
+                    _error("JNZ requires one argument", line_no)
+                if not stack:
+                    _error("JNZ from empty stack", line_no)
+                val = stack.pop()
+                target = parts[1]
+                if target not in label_map:
+                    _error(f"Undefined label '{target}'", line_no)
+                ip = label_map[target] if val != 0 else ip + 1
+            elif instr == "LABEL":
+                # Should never reach here because LABELs are removed earlier
+                ip += 1
+            else:
+                _error(f"Unknown instruction '{instr}'", line_no)
+
+        except ValueError as e:
+            _error(f"Invalid number: {e}", line_no)
+
+    return output
+
+if __name__ == "__main__":
+    import sys
+    prog = sys.stdin.read()
+    try:
+        for line in run(prog):
+            print(line)
+    except RuntimeError as err:
+        sys.stderr.write(str(err) + "\n")
+        sys.exit(1)
+```

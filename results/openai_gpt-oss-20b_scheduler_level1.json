@@ -1,0 +1,9 @@
+{
+  "model": "openai/gpt-oss-20b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-07-11 11:51:12",
+  "passed": 10,
+  "total": 10,
+  "failures": []
+}

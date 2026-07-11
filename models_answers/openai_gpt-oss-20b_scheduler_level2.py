@@ -1,0 +1,84 @@
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    """
+    Return a topological ordering of tasks or None if a cycle exists.
+    """
+    # Build adjacency list and indegree count
+    adj = {task: [] for task in tasks}
+    indeg = {task: 0 for task in tasks}
+
+    # Include dependencies that might not be explicit keys
+    for deps in tasks.values():
+        for dep in deps:
+            if dep not in adj:
+                adj[dep] = []
+                indeg[dep] = 0
+
+    for task, deps in tasks.items():
+        for dep in deps:
+            adj[dep].append(task)
+            indeg[task] += 1
+
+    # Kahn's algorithm
+    queue = [t for t, d in indeg.items() if d == 0]
+    order = []
+
+    while queue:
+        current = queue.pop()
+        order.append(current)
+        for neighbor in adj[current]:
+            indeg[neighbor] -= 1
+            if indeg[neighbor] == 0:
+                queue.append(neighbor)
+
+    # If all tasks processed, return order; else cycle detected
+    if len(order) != len(adj):
+        return None
+    return order
+
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    """
+    Return the length of the critical path (maximum total duration)
+    in a DAG defined by tasks. Each task is a tuple (duration, dependencies).
+    If the graph contains a cycle, return None.
+    """
+    # Build adjacency and indegree for topological sort
+    adj = {task: [] for task in tasks}
+    indeg = {task: 0 for task in tasks}
+
+    for deps in [deps for _, deps in tasks.values()]:
+        for dep in deps:
+            if dep not in adj:
+                adj[dep] = []
+                indeg[dep] = 0
+
+    for task, (_, deps) in tasks.items():
+        for dep in deps:
+            adj[dep].append(task)
+            indeg[task] += 1
+
+    # Kahn's algorithm to get topological order
+    queue = [t for t, d in indeg.items() if d == 0]
+    topo_order = []
+
+    while queue:
+        current = queue.pop()
+        topo_order.append(current)
+        for neighbor in adj[current]:
+            indeg[neighbor] -= 1
+            if indeg[neighbor] == 0:
+                queue.append(neighbor)
+
+    if len(topo_order) != len(adj):
+        return None  # cycle detected
+
+    # Longest path calculation
+    longest = {task: 0 for task in tasks}
+    for task in topo_order:
+        duration, deps = tasks.get(task, (0, []))
+        max_dep = 0
+        for dep in deps:
+            max_dep = max(max_dep, longest[dep])
+        longest[task] = max_dep + duration
+
+    return max(longest.values(), default=0)

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Змейка</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #282c34;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        canvas {
+            border: 5px solid #61dafb;
+            background-color: #1e1e1e;
+            box-shadow: 0 0 20px rgba(97, 218, 251, 0.5);
+        }
+        #score {
+            margin-top: 15px;
+            font-size: 2em;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score">Счёт: 0</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+
+        // --- Константы игры ---
+        const gridSize = 20; // Размер одной ячейки (пикселей)
+        const tileCount = canvas.width / gridSize; // Количество ячеек по ширине/высоте
+        let score = 0;
+
+        // --- Состояние игры ---
+        let snake = [];
+        let food = {};
+        let dx = 0; // Направление X (движение)
+        let dy = 0; // Направление Y (движение)
+        let gameLoopInterval;
+        let isGameOver = false;
+
+        // --- Инициализация игры ---
+
+        function initializeGame() {
+            // Начальное состояние змейки (в центре)
+            snake = [
+                { x: 10 * gridSize, y: 10 * gridSize },
+                { x: 9 * gridSize, y: 10 * gridSize },
+                { x: 8 * gridSize, y: 10 * gridSize }
+            ];
+            dx = gridSize; // Начальное движение вправо
+            dy = 0;
+
+            score = 0;
+            scoreDisplay.textContent = `Счёт: ${score}`;
+            isGameOver = false;
+            
+            placeFood();
+            
+            // Запуск основного цикла игры
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            gameLoopInterval = setInterval(gameLoop, 1000 / 15); // Скорость игры: 15 FPS
+        }
+
+        function placeFood() {
+            let newFoodPos;
+            do {
+                newFoodPos = {
+                    x: Math.floor(Math.random() * tileCount) * gridSize,
+                    y: Math.floor(Math.random() * tileCount) * gridSize
+                };
+            } while (isFoodOnSnake(newFoodPos)); // Убедиться, что еда не появляется на змейке
+
+            food = newFoodPos;
+        }
+
+        function isFoodOnSnake(pos) {
+            return snake.some(segment => segment.x === pos.x && segment.y === pos.y);
+        }
+
+
+        // --- Основной игровой цикл ---
+
+        function gameLoop() {
+            if (isGameOver) return;
+
+            // 1. Очистка экрана
+            ctx.fillStyle = '#1e1e1e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Обработка движения и столкновений
+            moveSnake();
+
+            // 3. Проверка условий игры
+            checkCollision();
+
+            // 4. Отрисовка
+            drawGame();
+        }
+
+        function moveSnake() {
+            // Создаем новую голову
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head); // Добавляем новую голову в начало
+
+            // Проверка на поедание еды
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreDisplay.textContent = `Счёт: ${score}`;
+                placeFood(); // Ставим новую еду
+            } else {
+                // Если еда не съедена, удаляем хвост
+                snake.pop();
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+
+            // Столкновение со стенами
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                endGame();
+                return;
+            }
+
+            // Столкновение с собой (проверяем голову со всеми остальными сегментами)
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    endGame();
+                    return;
+                }
+            }
+        }
+
+        function drawGame() {
+            // Отрисовка еды
+            ctx.fillStyle = '#FF4500'; // Оранжевый цвет еды
+            ctx.fillRect(food.x, food.y, gridSize, gridSize);
+
+            // Отрисовка змейки
+            ctx.fillStyle = '#00FF7F'; // Зеленый цвет змейки
+            snake.forEach((segment, index) => {
+                // Сделать голову немного ярче
+                if (index === 0) {
+                    ctx.fillStyle = '#00FF7F';
+                } else {
+                    ctx.fillStyle = '#00CC66'; // Тело змейки
+                }
+                ctx.fillRect(segment.x, segment.y, gridSize - 1, gridSize - 1);
+            });
+        }
+
+        function endGame() {
+            isGameOver = true;
+            clearInterval(gameLoopInterval);
+            
+            // Отображение Game Over
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#FF0000';
+            ctx.font = '40px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 30);
+            ctx.font = '20px Arial';
+            ctx.fillStyle = 'white';
+            ctx.fillText(`Финальный счёт: ${score}`, canvas.width / 2, canvas.height / 2 + 10);
+            ctx.fillText('Нажмите R для перезапуска', canvas.width / 2, canvas.height / 2 + 50);
+        }
+
+        // --- Управление вводом ---
+
+        document.addEventListener('keydown', (e) => {
+            if (isGameOver && (e.key === 'r' || e.key === 'R')) {
+                initializeGame();
+                return;
+            }
+
+            const keyPressed = e.key;
+
+            // Управление стрелками или WASD
+            switch (keyPressed) {
+                case 'ArrowUp':
+                case 'w':
+                    if (dy === 0) { dx = 0; dy = -gridSize; }
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    if (dy === 0) { dx = 0; dy = gridSize; }
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    if (dx === 0) { dx = -gridSize; dy = 0; }
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    if (dx === 0) { dx = gridSize; dy = 0; }
+                    break;
+            }
+        });
+
+        // --- Запуск игры при загрузке страницы ---
+        initializeGame();
+
+    </script>
+</body>
+</html>

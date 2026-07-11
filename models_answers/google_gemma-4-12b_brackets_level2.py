@@ -1,0 +1,59 @@
+def is_balanced(s: str) -> bool:
+    stack = []
+    mapping = {')': '(', ']': '[', '}': '{'}
+    opening = "([{"
+    closing = ")]}"
+
+    for char in s:
+        if char in opening:
+            stack.append(char)
+        elif char in closing:
+            if not stack or stack.pop() != mapping[char]:
+                return False
+    
+    return len(stack) == 0
+
+def max_depth(s: str) -> int:
+    stack = []
+    mapping = {')': '(', ']': '[', '}': '{'}
+    opening = "([{"
+    closing = ")]}"
+    current_depth = 0
+    max_d = 0
+
+    for char in s:
+        if char in opening:
+            stack.append(char)
+            current_depth += 1
+            if current_depth > max_d:
+                max_d = current_depth
+        elif char in closing:
+            # Only decrease depth if it correctly matches the top of the stack
+            if stack and stack[-1] == mapping[char]:
+                stack.pop()
+                current_depth -= 1
+    return max_d
+
+def find_unmatched(s: str) -> list[int]:
+    stack = []  # Stores tuples of (character, index)
+    mapping = {')': '(', ']': '[', '}': '{'}
+    opening = "([{"
+    closing = ")]}"
+    unmatched_indices = []
+
+    for i, char in enumerate(s):
+        if char in opening:
+            stack.append((char, i))
+        elif char in closing:
+            # If it matches the top of the stack, pop it
+            if stack and stack[-1][0] == mapping[char]:
+                stack.pop()
+            else:
+                # Otherwise, it's an unmatched closing bracket
+                unmatched_indices.append(i)
+    
+    # Any remaining items in the stack are unmatched opening brackets
+    for _, index in stack:
+        unmatched_indices.append(index)
+    
+    return sorted(unmatched_indices)

@@ -1,0 +1,15 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-07-11 13:00:00",
+  "passed": 10,
+  "total": 15,
+  "failures": [
+    "max_depth/flat: неожиданное исключение: name 'stack' is not defined",
+    "max_depth/nested3: неожиданное исключение: name 'stack' is not defined",
+    "max_depth/mixed_types_nested: неожиданное исключение: name 'stack' is not defined",
+    "max_depth/stray_closing_ignored: неожиданное исключение: name 'stack' is not defined",
+    "max_depth/mismatched_type_not_popped: неожиданное исключение: name 'stack' is not defined"
+  ]
+}

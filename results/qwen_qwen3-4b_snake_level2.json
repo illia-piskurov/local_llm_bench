@@ -1,0 +1,8 @@
+{
+  "model": "qwen/qwen3-4b",
+  "benchmark": "snake",
+  "level": "level2",
+  "tested_at": "2026-07-11 01:26:33",
+  "manual_score": 3,
+  "comment": "Фон под цвет снаряда, но анимация прикольная, в целом плохо"
+}

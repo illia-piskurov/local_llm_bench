@@ -1,0 +1,21 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-07-11 13:01:17",
+  "passed": 4,
+  "total": 15,
+  "failures": [
+    "max_depth/flat: неожиданное исключение: name 'mapping' is not defined",
+    "max_depth/nested3: неожиданное исключение: name 'mapping' is not defined",
+    "max_depth/mixed_types_nested: неожиданное исключение: name 'mapping' is not defined",
+    "max_depth/mismatched_type_not_popped: неожиданное исключение: name 'mapping' is not defined",
+    "find_unmatched/all_matched: ожидалось [], получено [1]",
+    "find_unmatched/single_unclosed_open: ожидалось [0], получено []",
+    "find_unmatched/mismatch_and_unclosed: ожидалось [0, 1], получено [1]",
+    "find_unmatched/stray_close_after_valid_pair: ожидалось [2], получено [1, 2]",
+    "find_unmatched/wrong_order_classic: ожидалось [0, 2], получено [2, 3]",
+    "find_unmatched/mixed_with_text: ожидалось [3, 7], получено [7]",
+    "find_unmatched/fully_balanced_nested: ожидалось [], получено [3, 4, 5]"
+  ]
+}

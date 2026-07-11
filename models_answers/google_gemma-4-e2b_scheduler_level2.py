@@ -1,0 +1,122 @@
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    """
+    Рассчитывает длину критического пути проекта с использованием метода CPM.
+
+    Args:
+        tasks: Словарь, где ключ — имя задачи, а значение — кортеж 
+               (длительность_задачи, список_зависимостей).
+
+    Returns:
+        Длина критического пути (максимальная общая длительность проекта), 
+        или None, если в графе зависимостей есть цикл.
+    """
+    if not tasks:
+        return 0
+
+    # --- Шаг 1: Построение графа и проверка на циклы (с помощью топологической сортировки) ---
+    adj = {}       # Граф смежности (предшественник -> зависимая задача)
+    in_degree = {} # Входящая степень
+    all_tasks = set(tasks.keys())
+
+    for task, (duration, prerequisites) in tasks.items():
+        if task not in adj:
+            adj[task] = []
+            in_degree[task] = 0
+        
+        # Инициализация всех задач в графе
+        for prereq in prerequisites:
+            all_tasks.add(prereq)
+
+    # Добавляем все задачи, которые могут быть только предшественниками (если они не указаны как ключи)
+    for task in all_tasks:
+        if task not in adj:
+            adj[task] = []
+            in_degree[task] = 0
+
+
+    # Построение графа и расчет входящих степеней
+    for dependent_task, (_, prerequisites) in tasks.items():
+        for prereq in prerequisites:
+            # Ребро: prereq -> dependent_task
+            if prereq not in adj:
+                adj[prereq] = []
+                in_degree[prereq] = 0
+            
+            adj[prereq].append(dependent_task)
+            in_degree[dependent_task] += 1
+
+    # Топологическая сортировка (Kahn's Algorithm) для обнаружения циклов
+    queue = []
+    for task in all_tasks:
+        if in_degree.get(task, 0) == 0:
+            queue.append(task)
+
+    sorted_count = 0
+    temp_in_degree = in_degree.copy() # Используем копию для сортировки
+
+    while queue:
+        u = queue.pop(0)
+        sorted_count += 1
+
+        for v in adj[u]:
+            temp_in_degree[v] -= 1
+            if temp_in_degree[v] == 0:
+                queue.append(v)
+
+    # Если количество отсортированных задач меньше общего количества уникальных задач, цикл существует.
+    if sorted_count != len(all_tasks):
+        return None  # Цикл обнаружен
+    
+    # --- Шаг 2: Прямой проход (Forward Pass) для расчета EF ---
+    
+    earliest_finish_time = {}
+
+    # Инициализация начальных задач (те, у которых нет зависимостей)
+    for task in all_tasks:
+        if task in tasks:
+            duration, _ = tasks[task]
+            earliest_finish_time[task] = duration
+        else:
+             # Задачи, которые существуют только как зависимости и не имеют длительности (если таковые есть)
+             # В данном случае, мы предполагаем, что все задачи из 'tasks' являются конечными узлами.
+             pass
+
+
+    # Сортировка по топологическому порядку для корректного расчета EF
+    # Мы используем результат сортировки, чтобы гарантировать порядок
+    topo_order = []
+    q = [task for task in all_tasks if in_degree.get(task, 0) == 0]
+    while q:
+        u = q.pop(0)
+        topo_order.append(u)
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                q.append(v)
+
+    # Пересчет EF, используя гарантированный порядок
+    final_ef = {}
+    for task in topo_order:
+        duration, _ = tasks[task]
+        
+        # Находим максимальное время завершения всех предшественников
+        max_prereq_finish = 0
+        prerequisites = tasks[task][1]
+        
+        if prerequisites:
+            for prereq in prerequisites:
+                # Предполагаем, что все предшественники уже рассчитаны (что гарантируется топологией)
+                max_prereq_finish = max(max_prereq_finish, final_ef.get(prereq, 0))
+        
+        earliest_start_time = max_prereq_finish
+        final_ef[task] = earliest_start_time + duration
+
+    # --- Шаг 3: Определение длины критического пути ---
+    
+    if not final_ef:
+        return 0
+
+    # Критический путь - это максимальное время завершения среди всех задач
+    critical_path_length = max(final_ef.values())
+
+    return critical_path_length
