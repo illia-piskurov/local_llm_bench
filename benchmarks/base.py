@@ -44,6 +44,73 @@ class ManualResult:
 
 
 @dataclass
+class GenerationStats:
+    input_tokens: int | None = None
+    total_output_tokens: int | None = None
+    reasoning_output_tokens: int | None = None
+    tokens_per_second: float | None = None
+    time_to_first_token_seconds: float | None = None
+    model_load_time_seconds: float | None = None
+
+    def to_dict(self) -> dict:
+        return {
+            "input_tokens": self.input_tokens,
+            "total_output_tokens": self.total_output_tokens,
+            "reasoning_output_tokens": self.reasoning_output_tokens,
+            "tokens_per_second": self.tokens_per_second,
+            "time_to_first_token_seconds": self.time_to_first_token_seconds,
+            "model_load_time_seconds": self.model_load_time_seconds,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict | None) -> "GenerationStats | None":
+        if not data:
+            return None
+        return cls(
+            input_tokens=data.get("input_tokens"),
+            total_output_tokens=data.get("total_output_tokens"),
+            reasoning_output_tokens=data.get("reasoning_output_tokens"),
+            tokens_per_second=data.get("tokens_per_second"),
+            time_to_first_token_seconds=data.get("time_to_first_token_seconds"),
+            model_load_time_seconds=data.get("model_load_time_seconds"),
+        )
+
+
+@dataclass
+class SpeedSample:
+    host_id: str
+    host_label: str
+    model: str
+    benchmark: str
+    level: str
+    tested_at: str
+    stats: GenerationStats
+
+    def to_dict(self) -> dict:
+        return {
+            "host_id": self.host_id,
+            "host_label": self.host_label,
+            "model": self.model,
+            "benchmark": self.benchmark,
+            "level": self.level,
+            "tested_at": self.tested_at,
+            "stats": self.stats.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "SpeedSample":
+        return cls(
+            host_id=data["host_id"],
+            host_label=data.get("host_label", ""),
+            model=data["model"],
+            benchmark=data["benchmark"],
+            level=data["level"],
+            tested_at=data["tested_at"],
+            stats=GenerationStats.from_dict(data.get("stats")) or GenerationStats(),
+        )
+
+
+@dataclass
 class StoredResult:
     model: str
     benchmark: str

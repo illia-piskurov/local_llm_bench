@@ -15,19 +15,62 @@ class Model:
         return cls(type=data.get("type"), key=data.get("key"))
 
 
+@dataclass
+class ModelResponse:
+    content: str
+    stats: dict | None
+    raw: dict
+
+
+def _render_transcript(messages: list[dict]) -> tuple[str | None, str]:
+    system_prompt = None
+    chunks: list[str] = []
+
+    for message in messages:
+        role = message.get("role")
+        content = message.get("content", "")
+
+        if role == "system":
+            system_prompt = content
+            continue
+
+        label = "User" if role == "user" else "Assistant" if role == "assistant" else str(role or "message")
+        chunks.append(f"{label}: {content}")
+
+    return system_prompt, "\n\n".join(chunks)
+
+
 def list_llm_models() -> list[Model]:
     models = requests.get(f"{BASE_URL}/api/v1/models").json()
     return [Model.from_dict(m) for m in models["models"] if m["type"] == "llm"]
 
 
-def ask_model(model_key: str, messages: list[dict]) -> str:
+def ask_model(model_key: str, messages: list[dict]) -> ModelResponse:
+    system_prompt, input_text = _render_transcript(messages)
+
+    payload = {
+        "model": model_key,
+        "input": input_text,
+        "temperature": 0.2,
+        "store": True,
+    }
+    if system_prompt:
+        payload["system_prompt"] = system_prompt
+
     response = requests.post(
-        f"{BASE_URL}/v1/chat/completions",
-        json={"model": model_key, "messages": messages, "temperature": 0.2},
+        f"{BASE_URL}/api/v1/chat",
+        json=payload,
         timeout=None,
     )
     response.raise_for_status()
-    return response.json()["choices"][0]["message"]["content"]
+    payload = response.json()
+    output = payload.get("output", [])
+    content = "\n".join(item.get("content", "") for item in output if item.get("type") == "message")
+    return ModelResponse(
+        content=content,
+        stats=payload.get("stats"),
+        raw=payload,
+    )
 
 
 def loaded_instance_ids(model_key: str) -> list[str]:

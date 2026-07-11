@@ -11,9 +11,10 @@ from rich.text import Text
 
 import lmstudio
 from benchmarks import BY_ID, REGISTRY
-from benchmarks.base import Benchmark, ManualResult, StoredResult, TestResult
+from benchmarks.base import Benchmark, GenerationStats, ManualResult, SpeedSample, StoredResult, TestResult
+from host_configs import HostConfig, HostConfigStore
 from lmstudio import Model
-from storage import ResultStore
+from storage import ResultStore, SpeedResultStore
 
 if sys.platform == "win32":
     try:
@@ -30,6 +31,8 @@ store = ResultStore(
     raw_answers_dir=ROOT / "raw_answers",
     results_dir=ROOT / "results",
 )
+speed_store = SpeedResultStore(ROOT / "speed_results")
+host_store = HostConfigStore(ROOT / "host_configs.json", ROOT / "active_host.json")
 
 BACK = "__back__"
 
@@ -67,18 +70,59 @@ def level_status_plain(benchmark: Benchmark, model_key: str, level_id: str) -> s
     return f"{result.format()} ({result.tested_at})"
 
 
-def ensure_level_answer(model: Model, benchmark: Benchmark, level_id: str) -> Path | None:
+def generate_stats(response_stats: dict | None) -> GenerationStats:
+    if not response_stats:
+        return GenerationStats()
+    return GenerationStats(
+        input_tokens=response_stats.get("input_tokens"),
+        total_output_tokens=response_stats.get("total_output_tokens"),
+        reasoning_output_tokens=response_stats.get("reasoning_output_tokens"),
+        tokens_per_second=response_stats.get("tokens_per_second"),
+        time_to_first_token_seconds=response_stats.get("time_to_first_token_seconds"),
+        model_load_time_seconds=response_stats.get("model_load_time_seconds"),
+    )
+
+
+def save_speed_sample(host: HostConfig, model: Model, benchmark: Benchmark, level_id: str, response_stats: dict | None) -> None:
+    stats = generate_stats(response_stats)
+    if stats.tokens_per_second is None:
+        return
+
+    sample = SpeedSample(
+        host_id=host.id,
+        host_label=host.label,
+        model=model.key,
+        benchmark=benchmark.id,
+        level=level_id,
+        tested_at=now_str(),
+        stats=stats,
+    )
+    speed_store.save(sample)
+    console.print(
+        f"  [cyan]speed:[/cyan] {model.key} / {host.label} -> {stats.tokens_per_second:.2f} tok/s"
+    )
+
+
+def ensure_active_host() -> HostConfig | None:
+    active = host_store.get_active()
+    if active is not None:
+        return active
+    return choose_host_config()
+
+
+def ensure_level_answer(model: Model, benchmark: Benchmark, level_id: str, host: HostConfig) -> Path | None:
     """Гарантирует наличие ответа модели для данного уровня, генерируя предыдущие уровни
     при необходимости. Возвращает путь к файлу с кодом или None при ошибке."""
     level = benchmark.level_by_id(level_id)
     answer_path, raw_path, _ = store.paths_for(benchmark, model.key, level_id)
+    speed_path = speed_store.path_for(host.id, model.key, benchmark.id, level_id)
 
-    if answer_path.exists():
+    if answer_path.exists() and speed_path.exists():
         return answer_path
 
     messages = []
     if level.requires:
-        prev_answer_path = ensure_level_answer(model, benchmark, level.requires)
+        prev_answer_path = ensure_level_answer(model, benchmark, level.requires, host)
         if prev_answer_path is None:
             return None
         _, prev_raw_path, _ = store.paths_for(benchmark, model.key, level.requires)
@@ -89,13 +133,14 @@ def ensure_level_answer(model: Model, benchmark: Benchmark, level_id: str) -> Pa
 
     console.print(f"  Отправляю задание [bold]«{level.name}»[/bold] модели (ждём ответ, таймаут не ограничен)...")
     try:
-        answer_text = lmstudio.ask_model(model.key, messages)
+        response = lmstudio.ask_model(model.key, messages)
     except Exception as e:
         console.print(f"  [red]error:[/red] модель не ответила: {e}")
         return None
 
-    raw_path.write_text(answer_text, encoding="utf-8")
-    code = benchmark.extract_code(answer_text)
+    raw_path.write_text(response.content, encoding="utf-8")
+    save_speed_sample(host, model, benchmark, level_id, response.stats)
+    code = benchmark.extract_code(response.content)
     answer_path.write_text(code, encoding="utf-8")
     console.print(f"  Ответ сохранён в [cyan]{answer_path}[/cyan] (сырой ответ — в [dim]{raw_path}[/dim])")
     return answer_path
@@ -129,7 +174,11 @@ def run_level(model: Model, benchmark: Benchmark, level_id: str) -> None:
     level = benchmark.level_by_id(level_id)
     console.rule(f"[bold]{model.key}[/bold] — {benchmark.name} / {level.name}")
 
-    answer_path = ensure_level_answer(model, benchmark, level_id)
+    host = ensure_active_host()
+    if host is None:
+        return
+
+    answer_path = ensure_level_answer(model, benchmark, level_id, host)
     if answer_path is None:
         return
 
@@ -152,6 +201,108 @@ def run_level(model: Model, benchmark: Benchmark, level_id: str) -> None:
         evaluation=test_result,
     )
     store.save(benchmark, model.key, level_id, result)
+
+
+def format_host_label(host: HostConfig, active_id: str | None) -> str:
+    prefix = "* " if host.id == active_id else "  "
+    return f"{prefix}{host.label} [{host.id}]"
+
+
+def create_host_config() -> HostConfig | None:
+    label = questionary.text("Введите конфигурацию ПК (например, Ryzen 7 7840U | 32 GB | RTX 4070):").ask()
+    if not label:
+        return None
+    host = HostConfig.create(label)
+    host_store.add(host)
+    host_store.set_active(host.id)
+    console.print(f"  Конфигурация сохранена: [bold]{host.label}[/bold] ([cyan]{host.id}[/cyan])")
+    return host
+
+
+def choose_host_config() -> HostConfig | None:
+    while True:
+        hosts = host_store.load_all()
+        active_id = host_store.load_active_id()
+
+        choices = [Choice(title="Создать новую конфигурацию", value="__new__")]
+        for host in hosts:
+            choices.append(Choice(title=format_host_label(host, active_id), value=host.id))
+        choices.append(Choice(title="« Назад", value=BACK))
+
+        selected = questionary.select("Выберите конфигурацию ПК:", choices=choices).ask()
+
+        if selected in (None, BACK):
+            return host_store.get_active()
+        if selected == "__new__":
+            host = create_host_config()
+            if host is not None:
+                return host
+            continue
+
+        host = host_store.get(selected)
+        if host is None:
+            continue
+        host_store.set_active(host.id)
+        return host
+
+
+def quality_averages_by_model() -> dict[str, float]:
+    by_model: dict[str, list[float]] = {}
+    for result in store.all_saved():
+        by_model.setdefault(result.model, []).append(result.percent())
+    return {model: sum(values) / len(values) for model, values in by_model.items() if values}
+
+
+def show_speed_leaderboard() -> None:
+    host = choose_host_config()
+    if host is None:
+        console.print("[yellow]Сначала создайте или выберите конфигурацию ПК.[/yellow]")
+        return
+
+    samples = [
+        sample
+        for sample in speed_store.all_saved()
+        if sample.host_id == host.id and sample.stats.tokens_per_second is not None
+    ]
+    if not samples:
+        console.print(f"[yellow]Для конфигурации {host.label} пока нет speed-результатов.[/yellow]")
+        return
+
+    by_model: dict[str, list[SpeedSample]] = {}
+    for sample in samples:
+        by_model.setdefault(sample.model, []).append(sample)
+
+    quality_by_model = quality_averages_by_model()
+    rows = []
+    for model_key, items in by_model.items():
+        speeds = [item.stats.tokens_per_second for item in items if item.stats.tokens_per_second is not None]
+        if not speeds:
+            continue
+        avg_speed = sum(speeds) / len(speeds)
+        avg_quality = quality_by_model.get(model_key)
+        rows.append((model_key, avg_speed, avg_quality, len(speeds)))
+
+    rows.sort(key=lambda row: row[1], reverse=True)
+
+    table = Table(title=f"Рейтинг скорости — {host.label}", padding=(0, 1))
+    table.add_column("#", justify="right", style="bold cyan")
+    table.add_column("Модель", style="bold")
+    table.add_column("Токенов/с", justify="right")
+    table.add_column("Оценка", justify="right")
+    table.add_column("Сэмплов", justify="right")
+
+    for i, (model_key, avg_speed, avg_quality, count) in enumerate(rows, start=1):
+        quality_text = "—" if avg_quality is None else f"{avg_quality:.0f}%"
+        quality_style = "dim" if avg_quality is None else score_color(avg_quality)
+        table.add_row(
+            str(i),
+            model_key,
+            f"{avg_speed:.2f}",
+            Text(quality_text, style=quality_style),
+            str(count),
+        )
+
+    console.print(table)
 
 
 def print_models_menu(benchmark: Benchmark, models: list[Model]) -> None:
@@ -331,15 +482,20 @@ def show_leaderboard() -> None:
 
 def main():
     store.ensure_dirs(REGISTRY)
+    speed_store.ensure_dir()
 
     console.print(Panel("[bold]Добро пожаловать в бенчмарк локальных моделей![/bold]", border_style="green"))
 
     LEADERBOARD = "__leaderboard__"
+    SPEEDBOARD = "__speedboard__"
+    HOSTS = "__hosts__"
     EXIT = "__exit__"
 
     while True:
         choices = [Choice(title=benchmark.name, value=benchmark.id) for benchmark in REGISTRY]
         choices.append(Choice(title="📊 Общий рейтинг моделей", value=LEADERBOARD))
+        choices.append(Choice(title="⚡ Рейтинг скорости по конфигурации ПК", value=SPEEDBOARD))
+        choices.append(Choice(title="🖥️ Конфигурации ПК", value=HOSTS))
         choices.append(Choice(title="Выход", value=EXIT))
 
         choice = questionary.select("Выберите тест:", choices=choices).ask()
@@ -350,6 +506,14 @@ def main():
 
         if choice == LEADERBOARD:
             show_leaderboard()
+            continue
+
+        if choice == SPEEDBOARD:
+            show_speed_leaderboard()
+            continue
+
+        if choice == HOSTS:
+            choose_host_config()
             continue
 
         choose_model(BY_ID[choice])

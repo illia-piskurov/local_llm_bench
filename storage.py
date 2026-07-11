@@ -2,7 +2,7 @@ import json
 import re
 from pathlib import Path
 
-from benchmarks.base import Benchmark, StoredResult
+from benchmarks.base import Benchmark, SpeedSample, StoredResult
 
 
 def safe_filename(key: str) -> str:
@@ -56,6 +56,35 @@ class ResultStore:
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 results.append(StoredResult.from_dict(data))
+            except (json.JSONDecodeError, OSError, KeyError):
+                continue
+        return results
+
+
+class SpeedResultStore:
+    def __init__(self, speed_results_dir: Path):
+        self.speed_results_dir = speed_results_dir
+
+    def ensure_dir(self) -> None:
+        self.speed_results_dir.mkdir(parents=True, exist_ok=True)
+
+    def path_for(self, host_id: str, model_key: str, benchmark_id: str, level_id: str) -> Path:
+        key = safe_filename(model_key)
+        return self.speed_results_dir / f"{host_id}_{key}_{benchmark_id}_{level_id}.json"
+
+    def save(self, sample: SpeedSample) -> None:
+        self.ensure_dir()
+        path = self.path_for(sample.host_id, sample.model, sample.benchmark, sample.level)
+        path.write_text(json.dumps(sample.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def all_saved(self) -> list[SpeedSample]:
+        results = []
+        if not self.speed_results_dir.exists():
+            return results
+        for path in sorted(self.speed_results_dir.glob("*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                results.append(SpeedSample.from_dict(data))
             except (json.JSONDecodeError, OSError, KeyError):
                 continue
         return results

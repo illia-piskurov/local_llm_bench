@@ -1,0 +1,80 @@
+def run(program: str) -> list[str]:
+    class Transaction:
+        def __init__(self):
+            self.data = {}
+        
+        def commit(self, parent):
+            if not parent:
+                return
+            for key, value in self.data.items():
+                parent.data[key] = value
+        
+        def rollback(self, parent):
+            if not parent:
+                return
+            self.data.clear()
+    
+    # Инициализация глобального хранилища и стека транзакций
+    global_store = {}
+    transactions = []
+    current_transaction = None
+    
+    output = []
+    
+    for line in program.strip().split('\n'):
+        if not line:
+            continue
+        
+        parts = line.split()
+        if not parts:
+            continue
+        
+        if parts[0] == 'SET':
+            key, value = parts[1], parts[2]
+            if current_transaction:
+                current_transaction.data[key] = value
+            else:
+                global_store[key] = value
+        elif parts[0] == 'GET':
+            key = parts[1]
+            if current_transaction:
+                if key in current_transaction.data:
+                    output.append(current_transaction.data[key])
+                else:
+                    output.append("NULL")
+            else:
+                output.append(global_store.get(key, "NULL"))
+        elif parts[0] == 'DELETE':
+            key = parts[1]
+            if current_transaction:
+                if key in current_transaction.data:
+                    del current_transaction.data[key]
+            else:
+                if key in global_store:
+                    del global_store[key]
+        elif parts[0] == 'BEGIN':
+            new_tx = Transaction()
+            transactions.append(new_tx)
+            current_transaction = new_tx
+        elif parts[0] == 'COMMIT':
+            if not transactions:
+                output.append("NO TRANSACTION")
+            else:
+                tx = transactions[-1]
+                parent = transactions[-2] if len(transactions) > 1 else None
+                tx.commit(parent)
+                transactions.pop()
+                current_transaction = transactions[-1] if transactions else None
+                output.append("COMMIT")
+        elif parts[0] == 'ROLLBACK':
+            if not transactions:
+                output.append("NO TRANSACTION")
+            else:
+                tx = transactions[-1]
+                parent = transactions[-2] if len(transactions) > 1 else None
+                tx.rollback(parent)
+                transactions.pop()
+                current_transaction = transactions[-1] if transactions else None
+                output.append("ROLLBACK")
+    
+    return output
