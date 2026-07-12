@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "omnicoder-9b",
+  "benchmark": "kv",
+  "level": "level3",
+  "tested_at": "2026-07-12 22:00:32",
+  "stats": {
+    "input_tokens": 1066,
+    "total_output_tokens": 2024,
+    "reasoning_output_tokens": 1390,
+    "tokens_per_second": 13.123172979895163,
+    "time_to_first_token_seconds": 8.939561,
+    "model_load_time_seconds": null
+  }
+}

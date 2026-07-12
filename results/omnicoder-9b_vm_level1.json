@@ -1,0 +1,11 @@
+{
+  "model": "omnicoder-9b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-07-12 22:11:17",
+  "passed": 0,
+  "total": 18,
+  "failures": [
+    "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+  ]
+}
