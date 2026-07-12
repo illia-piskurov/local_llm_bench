@@ -1,0 +1,14 @@
+{
+  "model": "zai-org/glm-4.7-flash",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-07-12 21:06:08",
+  "passed": 6,
+  "total": 10,
+  "failures": [
+    "simple_chain: невалидный топологический порядок: None",
+    "diamond: невалидный топологический порядок: None",
+    "multiple_roots: невалидный топологический порядок: None",
+    "wide_graph: невалидный топологический порядок: None"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "openai/gpt-oss-20b",
+  "benchmark": "kv",
+  "level": "level3",
+  "tested_at": "2026-07-12 00:19:48",
+  "stats": {
+    "input_tokens": 1198,
+    "total_output_tokens": 779,
+    "reasoning_output_tokens": 33,
+    "tokens_per_second": 10.767485345715066,
+    "time_to_first_token_seconds": 6.6429279999999995,
+    "model_load_time_seconds": 19.488
+  }
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Змейка</title>
+<style>
+body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;background:#222}
+canvas{border:2px solid #fff}
+#msg{color:#fff;padding:10px;background:#333;border-radius:5px}
+</style>
+</head>
+<body>
+<canvas id="c" width="200" height="200"></canvas>
+<div id="msg">Игра окончена. Нажмите любую клавишу для перезапуска.</div>
+
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let snake=[{x:10,y:10}];
+let dir=1; // 0 up,1 right,2 down,3 left
+let score=0;
+let gameOver=false;
+let food={x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)};
+const speed=5;
+
+function draw(){
+if(gameOver){ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(0,0,c.width,c.height);return}
+ctx.clearRect(0,0,c.width,c.height);
+drawFood();
+drawSnake();
+}
+function drawFood(){
+ctx.fillStyle='#f94';
+ctx.fillRect(food.x,food.y,20,20);
+}
+function drawSnake(){
+ctx.fillStyle='lime';
+for(let i=0;i<snake.length;i++){
+ctx.fillRect(snake[i].x,snake[i].y,20,20);
+}
+}
+function update(){
+if(gameOver)return;
+const head={x:snake[0].x+dir, y:snake[0].y};
+if(dir===0){head.y--;}
+else if(dir===1){head.x++;}
+else if(dir===2){head.y++;}
+else{head.x--;}
+
+if(head.x<0||head.x>c.width-20||head.y<0||head.y>c.height-20){
+gameOver=true;
+return;
+}
+if(snake.some(seg=>seg.x===head.x&&seg.y===head.y)){
+gameOver=true;
+return;
+}
+snake.unshift(head);
+score++;
+if(head.x===food.x&&head.y===food.y){
+snake.push({x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)});
+food={x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)};
+while(snake.some(seg=>seg.x===food.x&&seg.y===food.y)){
+food={x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)};
+}
+}
+requestAnimationFrame(update);
+}
+function reset(){
+snake=[{x:10,y:10}];
+dir=1;
+score=0;
+gameOver=false;
+food={x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)};
+while(snake.some(seg=>seg.x===food.x&&seg.y===food.y)){
+food={x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)};
+}
+}
+document.addEventListener('keydown',e=>{
+if(gameOver){reset();gameOver=false;}
+});
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "model": "meta-llama-3.1-8b-instruct",
+  "benchmark": "brackets",
+  "level": "level1",
+  "tested_at": "2026-07-12 20:08:00",
+  "passed": 12,
+  "total": 12,
+  "failures": []
+}

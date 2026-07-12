@@ -1,0 +1,8 @@
+{
+  "model": "google/gemma-4-26b-a4b-qat",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-07-12 14:05:10",
+  "manual_score": 10,
+  "comment": "Работает"
+}

@@ -1,0 +1,11 @@
+{
+  "model": "deepseek/deepseek-r1-0528-qwen3-8b",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-07-12 20:02:19",
+  "passed": 0,
+  "total": 15,
+  "failures": [
+    "не удалось загрузить решение: В решении не найдена функция max_depth(...)"
+  ]
+}

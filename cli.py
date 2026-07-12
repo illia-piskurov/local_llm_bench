@@ -115,9 +115,8 @@ def ensure_level_answer(model: Model, benchmark: Benchmark, level_id: str, host:
     при необходимости. Возвращает путь к файлу с кодом или None при ошибке."""
     level = benchmark.level_by_id(level_id)
     answer_path, raw_path, _ = store.paths_for(benchmark, model.key, level_id)
-    speed_path = speed_store.path_for(host.id, model.key, benchmark.id, level_id)
 
-    if answer_path.exists() and speed_path.exists():
+    if answer_path.exists():
         return answer_path
 
     messages = []
@@ -253,6 +252,15 @@ def quality_averages_by_model() -> dict[str, float]:
     return {model: sum(values) / len(values) for model, values in by_model.items() if values}
 
 
+def efficiency_score(avg_speed: float, avg_quality: float | None, best_quality: float | None) -> float:
+    if avg_quality is None or best_quality is None or best_quality <= 0:
+        return avg_speed * 0.05
+
+    quality_norm = max(0.0, min(1.0, avg_quality / best_quality))
+    quality_weight = 0.05 + 0.95 * (quality_norm ** 3)
+    return avg_speed * quality_weight
+
+
 def show_speed_leaderboard() -> None:
     host = choose_host_config()
     if host is None:
@@ -282,16 +290,22 @@ def show_speed_leaderboard() -> None:
         avg_quality = quality_by_model.get(model_key)
         rows.append((model_key, avg_speed, avg_quality, len(speeds)))
 
-    rows.sort(key=lambda row: row[1], reverse=True)
+    best_quality = max((row[2] for row in rows if row[2] is not None), default=None)
+    scored_rows = [
+        (model_key, avg_speed, avg_quality, count, efficiency_score(avg_speed, avg_quality, best_quality))
+        for model_key, avg_speed, avg_quality, count in rows
+    ]
+    scored_rows.sort(key=lambda row: row[4], reverse=True)
 
-    table = Table(title=f"Рейтинг скорости — {host.label}", padding=(0, 1))
+    table = Table(title=f"Рейтинг эффективности скорости — {host.label}", padding=(0, 1))
     table.add_column("#", justify="right", style="bold cyan")
     table.add_column("Модель", style="bold")
     table.add_column("Токенов/с", justify="right")
     table.add_column("Оценка", justify="right")
+    table.add_column("Эффективность", justify="right")
     table.add_column("Сэмплов", justify="right")
 
-    for i, (model_key, avg_speed, avg_quality, count) in enumerate(rows, start=1):
+    for i, (model_key, avg_speed, avg_quality, count, score) in enumerate(scored_rows, start=1):
         quality_text = "—" if avg_quality is None else f"{avg_quality:.0f}%"
         quality_style = "dim" if avg_quality is None else score_color(avg_quality)
         table.add_row(
@@ -299,6 +313,7 @@ def show_speed_leaderboard() -> None:
             model_key,
             f"{avg_speed:.2f}",
             Text(quality_text, style=quality_style),
+            f"{score:.2f}",
             str(count),
         )
 
@@ -398,6 +413,51 @@ def choose_level(model: Model, benchmark: Benchmark) -> None:
         run_level(model, benchmark, level_id)
 
 
+def run_all_tests() -> None:
+    host = ensure_active_host()
+    if host is None:
+        console.print("[yellow]Сначала создайте или выберите конфигурацию ПК.[/yellow]")
+        return
+
+    try:
+        models = lmstudio.list_llm_models()
+    except Exception as e:
+        console.print(f"[red]Не удалось получить список моделей: {e}[/red]")
+        return
+
+    if not models:
+        console.print("[yellow]LM Studio не вернул ни одной LLM модели.[/yellow]")
+        return
+
+    console.rule(f"[bold]Автопрогон всех тестов[/bold] — {host.label}")
+
+    total_runs = 0
+    skipped_manual = 0
+
+    for benchmark in REGISTRY:
+        auto_levels = [level_id for level_id in benchmark.level_order if level_id not in benchmark.manual_levels]
+        manual_levels = [level_id for level_id in benchmark.level_order if level_id in benchmark.manual_levels]
+
+        if not auto_levels:
+            console.print(f"[dim]Пропускаю {benchmark.name}: только ручные уровни.[/dim]")
+            skipped_manual += len(manual_levels)
+            continue
+
+        console.rule(f"[bold]{benchmark.name}[/bold]")
+        for model in models:
+            console.print(f"[bold]{model.key}[/bold]")
+            for level_id in auto_levels:
+                run_level(model, benchmark, level_id)
+                total_runs += 1
+
+        skipped_manual += len(manual_levels) * len(models)
+
+    console.print(
+        f"[green]Готово:[/green] прогнано {total_runs} автоматических запусков; "
+        f"ручные уровни пропущены: {skipped_manual}."
+    )
+
+
 def choose_model(benchmark: Benchmark) -> None:
     while True:
         try:
@@ -486,6 +546,7 @@ def main():
 
     console.print(Panel("[bold]Добро пожаловать в бенчмарк локальных моделей![/bold]", border_style="green"))
 
+    ALL_TESTS = "__all_tests__"
     LEADERBOARD = "__leaderboard__"
     SPEEDBOARD = "__speedboard__"
     HOSTS = "__hosts__"
@@ -493,6 +554,7 @@ def main():
 
     while True:
         choices = [Choice(title=benchmark.name, value=benchmark.id) for benchmark in REGISTRY]
+        choices.append(Choice(title="▶ Прогнать все тесты", value=ALL_TESTS))
         choices.append(Choice(title="📊 Общий рейтинг моделей", value=LEADERBOARD))
         choices.append(Choice(title="⚡ Рейтинг скорости по конфигурации ПК", value=SPEEDBOARD))
         choices.append(Choice(title="🖥️ Конфигурации ПК", value=HOSTS))
@@ -506,6 +568,10 @@ def main():
 
         if choice == LEADERBOARD:
             show_leaderboard()
+            continue
+
+        if choice == ALL_TESTS:
+            run_all_tests()
             continue
 
         if choice == SPEEDBOARD:

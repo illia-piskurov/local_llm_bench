@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "qwen/qwen3-4b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-07-12 15:48:29",
+  "stats": {
+    "input_tokens": 278,
+    "total_output_tokens": 7914,
+    "reasoning_output_tokens": 7912,
+    "tokens_per_second": 18.236225455824062,
+    "time_to_first_token_seconds": 0.8031309999999999,
+    "model_load_time_seconds": 3.789
+  }
+}

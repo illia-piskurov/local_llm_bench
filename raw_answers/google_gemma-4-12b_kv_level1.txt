@@ -1,93 +1,107 @@
 ```python
-def run(program: str) -> list[str]:
-    # Internal state of the key-value store
-    data = {}
-    # Stack to handle nested transaction levels
-    stack = []
-    # Sentinel object to represent a deleted key within a transaction scope
-    _DELETED = object()
-    results = []
+class Store:
+    def __init__(self):
+        # The global store holds the base values of the keys.
+        self.global_store = {}
+        # A stack where each element is a dictionary representing 
+        # changes made in that specific transaction level.
+        self.transaction_stack = []
+        # Internal marker to distinguish between a value and a deletion.
+        self._TOMBSTONE = object()
 
-    for line in program.splitlines():
+    def set(self, key: str, value: str):
+        if not self.transaction_stack:
+            self.global_store[key] = value
+        else:
+            # Update the current top transaction's view of this key.
+            self.transaction_stack[-1][key] = value
+
+    def get(self, key: str) -> str:
+        # Search from the innermost transaction outwards to the global store.
+        for i in range(len(self.transaction_stack) - 1, -1, -1):
+            if key in self.transaction_stack[i]:
+                val = self.transaction_stack[i][key]
+                # If it's a tombstone or not found, return "NULL".
+                return val if val is not self._TOMBSTONE else "NULL"
+        
+        if key in self.global_store:
+            val = self.global_store[key]
+            return val if val is not self._TOMBSTONE else "NULL"
+        return "NULL"
+
+    def delete(self, key: str):
+        if not self.transaction_stack:
+            # If no transaction, remove from global or mark as tombstone.
+            if key in self.global_store:
+                self.global_store[key] = self._TOMBSTONE
+        else:
+            # Mark the key as deleted at the current transaction level.
+            self.transaction_stack[-1][key] = self._TOMBSTONE
+
+    def begin(self):
+        self.transaction_stack.append({})
+
+    def commit(self) -> str | None:
+        if not self.transaction_stack:
+            return "NO TRANSACTION"
+        
+        # Pop the current transaction and merge its changes into the level below.
+        top = self.transaction_stack.pop()
+        if not self.transaction_stack:
+            # If it was the only transaction, merge directly into global store.
+            for k, v in top.items():
+                self.global_store[k] = v
+        else:
+            # Merge into the parent's transaction dictionary.
+            target = self.transaction_stack[-1]
+            for k, v in top.items():
+                target[k] = v
+        return None
+
+    def rollback(self) -> str | None:
+        if not self.transaction_stack:
+            return "NO TRANSACTION"
+        # Discard the current transaction's changes.
+        self.transaction_stack.pop()
+        return None
+
+def run(program: str) -> list[str]:
+    store = Store()
+    results = []
+    lines = program.splitlines()
+    
+    for line in lines:
         line = line.strip()
         if not line:
             continue
-        
         parts = line.split()
         if not parts:
             continue
-        
-        cmd = parts[0]
-        
+            
+        cmd = parts[0].upper()
         if cmd == "SET":
-            # SET <key> <value>
-            # If a transaction is active, update the top-most level's view.
-            # Otherwise, update the global store.
-            key, val = parts[1], parts[2]
-            if stack:
-                stack[-1][key] = val
-            else:
-                data[key] = val
-        
+            # Expects SET <key> <value>
+            if len(parts) >= 3:
+                store.set(parts[1], " ".join(parts[2:]))
         elif cmd == "GET":
-            # GET <key>
-            # Search from the top of the transaction stack down to the global store.
-            key = parts[1]
-            res = "NULL"
-            for i in range(len(stack) - 1, -1, -1):
-                if key in stack[i]:
-                    val = stack[i][key]
-                    # If value is the sentinel, it means it was deleted in this scope.
-                    res = "NULL" if val is _DELETED else val
-                    break
-            else:
-                # Not found in any transaction level; check global store.
-                if key in data:
-                    res = data[key]
-                else:
-                    res = "NULL"
-            results.append(str(res))
-            
+            # Expects GET <key>
+            if len(parts) >= 2:
+                results.append(store.get(parts[1]))
         elif cmd == "DELETE":
-            # DELETE <key>
-            # If a transaction is active, mark the key as deleted in that scope.
-            # Otherwise, remove it from the global store.
-            key = parts[1]
-            if stack:
-                stack[-1][key] = _DELETED
-            else:
-                if key in data:
-                    del data[key]
-                    
+            # Expects DELETE <key>
+            if len(parts) >= 2:
+                store.delete(parts[1])
         elif cmd == "BEGIN":
-            # BEGIN - start a new transaction level.
-            stack.append({})
-            
+            store.begin()
         elif cmd == "COMMIT":
-            # COMMIT - merge the current transaction into the parent scope.
-            if not stack:
-                results.append("NO TRANSACTION")
-            else:
-                top = stack.pop()
-                if stack:
-                    # Merge changes into the next level down in the stack.
-                    for k, v in top.items():
-                        stack[-1][k] = v
-                else:
-                    # Merge changes directly into the global store.
-                    for k, v in top.items():
-                        if v is _DELETED:
-                            if k in data:
-                                del data[k]
-                        else:
-                            data[k] = v
-            
+            res = store.commit()
+            if res is not None:
+                results.append(res)
         elif cmd == "ROLLBACK":
-            # ROLLBACK - discard the current transaction's changes.
-            if not stack:
-                results.append("NO TRANSACTION")
-            else:
-                stack.pop()
+            res = store.rollback()
+            if res is not None:
+                results.append(res)
                 
     return results
+
 ```

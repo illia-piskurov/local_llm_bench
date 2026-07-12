@@ -1,0 +1,20 @@
+{
+  "model": "meta-llama-3.1-8b-instruct",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-07-12 20:08:48",
+  "passed": 5,
+  "total": 15,
+  "failures": [
+    "max_depth/flat: ожидалось 1, получено 0",
+    "max_depth/nested3: ожидалось 3, получено 0",
+    "max_depth/mixed_types_nested: ожидалось 3, получено 0",
+    "max_depth/unclosed_counts: ожидалось 3, получено (",
+    "max_depth/stray_closing_ignored: ожидалось 3, получено (",
+    "max_depth/mismatched_type_not_popped: ожидалось 1, получено (",
+    "find_unmatched/all_matched: ожидалось [], получено [0]",
+    "find_unmatched/stray_close_after_valid_pair: ожидалось [2], получено [0]",
+    "find_unmatched/wrong_order_classic: ожидалось [0, 2], получено [0, 1, 2]",
+    "find_unmatched/fully_balanced_nested: ожидалось [], получено [0, 1, 2, 4, 5]"
+  ]
+}

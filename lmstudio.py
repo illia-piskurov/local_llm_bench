@@ -95,7 +95,6 @@ def unload_model(model_key: str, console=None) -> None:
         return
 
     if not instance_ids:
-        warn(f"нет загруженных инстансов для {model_key}, выгружать нечего.")
         return
 
     for instance_id in instance_ids:

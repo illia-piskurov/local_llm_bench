@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "meta-llama-3.1-8b-instruct",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-07-12 20:08:47",
+  "stats": {
+    "input_tokens": 661,
+    "total_output_tokens": 286,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 15.048769589446412,
+    "time_to_first_token_seconds": 4.036314,
+    "model_load_time_seconds": 4.119
+  }
+}

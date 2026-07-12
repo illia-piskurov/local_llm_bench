@@ -1,0 +1,26 @@
+{
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-07-12 20:26:46",
+  "passed": 9,
+  "total": 25,
+  "failures": [
+    "basic_set_get: неожиданное исключение: list index out of range",
+    "get_missing: неожиданное исключение: cannot access local variable 'key' where it is not associated with a value",
+    "delete_then_get: неожиданное исключение: list index out of range",
+    "overwrite_set: неожиданное исключение: list index out of range",
+    "simple_transaction_rollback: неожиданное исключение: list index out of range",
+    "rollback_restores_delete: неожиданное исключение: list index out of range",
+    "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', 'NULL', 'NULL']",
+    "multiple_keys_independent: неожиданное исключение: list index out of range",
+    "count_basic: неожиданное исключение: list index out of range",
+    "count_respects_transaction: неожиданное исключение: list index out of range",
+    "count_after_delete: неожиданное исключение: list index out of range",
+    "watch_set_new_key: неожиданное исключение: list index out of range",
+    "watch_set_change: неожиданное исключение: list index out of range",
+    "watch_no_change_no_notification: неожиданное исключение: list index out of range",
+    "watch_delete: неожиданное исключение: list index out of range",
+    "watch_unrelated_key_silent: неожиданное исключение: list index out of range"
+  ]
+}

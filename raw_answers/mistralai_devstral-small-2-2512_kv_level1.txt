@@ -1,0 +1,100 @@
+```python
+class Transaction:
+    def __init__(self):
+        self.data = {}
+        self.parent = None
+
+    def get(self, key):
+        if key in self.data:
+            return self.data[key]
+        elif self.parent is not None:
+            return self.parent.get(key)
+        else:
+            return "NULL"
+
+    def set(self, key, value):
+        self.data[key] = value
+
+    def delete(self, key):
+        if key in self.data:
+            del self.data[key]
+
+class InMemoryStore:
+    def __init__(self):
+        self.global_store = Transaction()
+        self.current_transaction = None
+        self.transaction_stack = []
+
+    def run(self, program: str) -> list[str]:
+        output = []
+        for line in program.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+
+            parts = line.split()
+            command = parts[0]
+
+            if command == "SET" and len(parts) == 3:
+                key, value = parts[1], parts[2]
+                self._set(key, value)
+            elif command == "GET" and len(parts) == 2:
+                key = parts[1]
+                result = self._get(key)
+                output.append(result)
+            elif command == "DELETE" and len(parts) == 2:
+                key = parts[1]
+                self._delete(key)
+            elif command == "BEGIN":
+                self._begin()
+            elif command == "COMMIT":
+                result = self._commit()
+                if result is not None:
+                    output.append(result)
+            elif command == "ROLLBACK":
+                result = self._rollback()
+                if result is not None:
+                    output.append(result)
+
+        return output
+
+    def _get(self, key):
+        current = self.current_transaction if self.current_transaction else self.global_store
+        return current.get(key)
+
+    def _set(self, key, value):
+        current = self.current_transaction if self.current_transaction else self.global_store
+        current.set(key, value)
+
+    def _delete(self, key):
+        current = self.current_transaction if self.current_transaction else self.global_store
+        current.delete(key)
+
+    def _begin(self):
+        new_transaction = Transaction()
+        if self.current_transaction:
+            new_transaction.parent = self.current_transaction
+        else:
+            new_transaction.parent = self.global_store
+        self.transaction_stack.append(new_transaction)
+        self.current_transaction = new_transaction
+
+    def _commit(self):
+        if not self.current_transaction and not self.transaction_stack:
+            return "NO TRANSACTION"
+
+        if self.current_transaction:
+            parent = self.current_transaction.parent
+            for key, value in self.current_transaction.data.items():
+                parent.set(key, value)
+            self.transaction_stack.pop()
+            self.current_transaction = self.transaction_stack[-1] if self.transaction_stack else None
+
+    def _rollback(self):
+        if not self.current_transaction and not self.transaction_stack:
+            return "NO TRANSACTION"
+
+        if self.current_transaction:
+            self.transaction_stack.pop()
+            self.current_transaction = self.transaction_stack[-1] if self.transaction_stack else None
+```

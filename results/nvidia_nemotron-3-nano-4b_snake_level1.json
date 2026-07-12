@@ -1,0 +1,8 @@
+{
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-07-12 20:36:08",
+  "manual_score": 1,
+  "comment": "не работает"
+}

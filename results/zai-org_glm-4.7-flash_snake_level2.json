@@ -1,0 +1,8 @@
+{
+  "model": "zai-org/glm-4.7-flash",
+  "benchmark": "snake",
+  "level": "level2",
+  "tested_at": "2026-07-12 19:30:34",
+  "manual_score": 10,
+  "comment": "мини баг подпись про паузу есть, но стиль и игра ШИКАРНАЯ"
+}

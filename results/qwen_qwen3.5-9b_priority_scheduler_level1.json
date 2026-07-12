@@ -1,0 +1,16 @@
+{
+  "model": "qwen/qwen3.5-9b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-07-12 18:38:27",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: неожиданное исключение: В решении не найдена функция plan_order(...)",
+    "dependency_unlocks_later: неожиданное исключение: В решении не найдена функция plan_order(...)",
+    "single_worker_duration_tiebreak: неожиданное исключение: В решении не найдена функция plan_order(...)",
+    "resource_limit_and_priority: неожиданное исключение: В решении не найдена функция plan_order(...)",
+    "simultaneous_unlocks: неожиданное исключение: В решении не найдена функция plan_order(...)",
+    "cycle_returns_none: неожиданное исключение: В решении не найдена функция plan_order(...)"
+  ]
+}

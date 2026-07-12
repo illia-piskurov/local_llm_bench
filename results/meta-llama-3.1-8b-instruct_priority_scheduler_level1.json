@@ -1,0 +1,16 @@
+{
+  "model": "meta-llama-3.1-8b-instruct",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-07-12 20:03:18",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: неожиданное исключение: unmatched ']' (meta-llama-3.1-8b-instruct_priority_scheduler_level1.py, line 28)",
+    "dependency_unlocks_later: неожиданное исключение: unmatched ']' (meta-llama-3.1-8b-instruct_priority_scheduler_level1.py, line 28)",
+    "single_worker_duration_tiebreak: неожиданное исключение: unmatched ']' (meta-llama-3.1-8b-instruct_priority_scheduler_level1.py, line 28)",
+    "resource_limit_and_priority: неожиданное исключение: unmatched ']' (meta-llama-3.1-8b-instruct_priority_scheduler_level1.py, line 28)",
+    "simultaneous_unlocks: неожиданное исключение: unmatched ']' (meta-llama-3.1-8b-instruct_priority_scheduler_level1.py, line 28)",
+    "cycle_returns_none: неожиданное исключение: unmatched ']' (meta-llama-3.1-8b-instruct_priority_scheduler_level1.py, line 28)"
+  ]
+}

@@ -1,0 +1,61 @@
+```python
+def run(program: str) -> list[str]:
+    lines = [line.strip() for line in program.split('\n')]
+    instruction_list = []
+    for i, line in enumerate(lines):
+        if not line or line.startswith('#'):
+            continue
+        instruction_list.append((i + 1, line.strip()))  # (line_num, instr)
+    
+    label_map = {}
+    for i, (line_num, instr) in enumerate(instruction_list):
+        parts = instr.split()
+        if parts[0] == 'LABEL':
+            name = parts[1]
+            label_map[name] = i
+    
+    stack = []
+    output = []
+    current_line = 0
+    
+    while current_line < len(instruction_list):
+        line_num, instr = instruction_list[current_line]
+        parts = instr.split()
+        
+        if parts[0] == 'LABEL':
+            name = parts[1]
+            label_map[name] = current_line
+        elif parts[0] == 'JMP':
+            if len(parts) < 2:
+                raise ValueError(f"Line {line_num}: invalid JMP")
+            target = parts[1]
+            if target not in label_map:
+                raise ValueError(f"Line {line_num}: unknown label {target}")
+            current_line = label_map[target]
+        elif parts[0] == 'JZ':
+            if len(parts) < 2:
+                raise ValueError(f"Line {line_num}: invalid JZ")
+            target = parts[1]
+            if target not in label_map:
+                raise ValueError(f"Line {line_num}: unknown label {target}")
+            if stack:
+                val = stack.pop()
+                if val == 0:
+                    current_line = label_map[target]
+                else:
+                    current_line += 1
+            else:
+                raise ValueError(f"Line {line_num}: stack underflow")
+        elif parts[0] == 'JNZ':
+            if len(parts) < 2:
+                raise ValueError(f"Line {line_num}: invalid JNZ")
+            target = parts[1]
+            if target not in label_map:
+                raise ValueError(f"Line {line_num}: unknown label {target}")
+            if stack:
+                val = stack.pop()
+                if val != 0:
+                    current_line = label_map[target]
+                else:
+                    current_line += 1
+            else

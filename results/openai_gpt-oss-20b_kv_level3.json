@@ -1,0 +1,9 @@
+{
+  "model": "openai/gpt-oss-20b",
+  "benchmark": "kv",
+  "level": "level3",
+  "tested_at": "2026-07-12 00:19:50",
+  "passed": 30,
+  "total": 30,
+  "failures": []
+}

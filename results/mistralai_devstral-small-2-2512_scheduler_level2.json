@@ -1,0 +1,9 @@
+{
+  "model": "mistralai/devstral-small-2-2512",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-07-11 14:03:31",
+  "passed": 6,
+  "total": 6,
+  "failures": []
+}

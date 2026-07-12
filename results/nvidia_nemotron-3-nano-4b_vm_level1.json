@@ -2,7 +2,24 @@
   "model": "nvidia/nemotron-3-nano-4b",
   "benchmark": "vm",
   "level": "level1",
-  "tested_at": "2026-07-10 16:19:02",
+  "tested_at": "2026-07-12 19:04:04",
   "passed": 3,
-  "total": 18
+  "total": 18,
+  "failures": [
+    "push_print: неожиданное исключение: name 'output' is not defined",
+    "add: неожиданное исключение: name 'output' is not defined",
+    "sub_order: неожиданное исключение: name 'output' is not defined",
+    "mul: неожиданное исключение: name 'output' is not defined",
+    "div_order: неожиданное исключение: name 'output' is not defined",
+    "div_truncate: неожиданное исключение: name 'output' is not defined",
+    "dup: неожиданное исключение: name 'output' is not defined",
+    "swap: неожиданное исключение: name 'output' is not defined",
+    "pop: неожиданное исключение: name 'output' is not defined",
+    "comments_and_blank_lines: неожиданное исключение: name 'output' is not defined",
+    "multiple_prints: неожиданное исключение: name 'output' is not defined",
+    "print_does_not_pop: неожиданное исключение: name 'output' is not defined",
+    "negative_numbers: неожиданное исключение: name 'output' is not defined",
+    "empty_program: неожиданное исключение: name 'output' is not defined",
+    "complex_chain: неожиданное исключение: name 'output' is not defined"
+  ]
 }

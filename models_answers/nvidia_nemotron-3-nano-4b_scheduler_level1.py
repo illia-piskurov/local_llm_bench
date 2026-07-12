@@ -1,0 +1,22 @@
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    # вычисляем индексы входящих ребер (входящие зависимости)
+    indeg = {t: 0 for t in tasks}
+    for deps in tasks.values():
+        for d in deps:
+            if d in tasks:
+                indeg[d] += 1
+
+    # очередь задач без зависимостей
+    queue = [t for t, deg in indeg.items() if deg == 0]
+    order: list[str] = []
+
+    while queue:
+        v = queue.pop(0)
+        order.append(v)
+        for nxt in tasks.get(v, []):
+            indeg[nxt] -= 1
+            if indeg[nxt] == 0:
+                queue.append(nxt)
+
+    # если не все задачи обработаны – есть цикл
+    return order if len(order) == len(tasks) else None

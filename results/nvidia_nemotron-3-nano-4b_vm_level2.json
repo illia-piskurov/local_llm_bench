@@ -1,0 +1,17 @@
+{
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-07-12 20:20:45",
+  "passed": 20,
+  "total": 27,
+  "failures": [
+    "unconditional_jump_skips_code: неожиданное исключение: Line 2: unknown label \"skip\"",
+    "jz_taken_when_zero: неожиданное исключение: list index out of range",
+    "jz_not_taken_when_nonzero: неожиданное исключение: Line 2: condition false, label \"zero\" not reached",
+    "jnz_taken_when_nonzero: неожиданное исключение: list index out of range",
+    "jnz_not_taken_when_zero: неожиданное исключение: list index out of range",
+    "countdown_loop: неожиданное исключение: list index out of range",
+    "count_up_loop: неожиданное исключение: list index out of range"
+  ]
+}

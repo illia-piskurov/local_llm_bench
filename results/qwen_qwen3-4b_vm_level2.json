@@ -1,0 +1,11 @@
+{
+  "model": "qwen/qwen3-4b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-07-12 12:51:45",
+  "passed": 0,
+  "total": 27,
+  "failures": [
+    "не удалось загрузить решение: invalid syntax (qwen_qwen3-4b_vm_level2.py, line 1)"
+  ]
+}

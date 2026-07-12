@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Змейка</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .game-over-text {
+            font-size: 48px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="game" width="400" height="400"></canvas>
+    <div id="score">Счёт: 0</div>
+    <div class="game-over">
+        <h1 class="game-over-text">Игра окончена!</h1>
+        <button onclick="restartGame()">Начать заново</button>
+    </div>
+    <script>
+        let canvas = document.getElementById('game');
+        let ctx = canvas.getContext('2d');
+        let score = 0;
+        let snake = [{x: 200, y: 200}, {x: 190, y: 200}, {x: 180, y: 200}];
+        let direction = 'right';
+        let food = {x: Math.floor(Math.random() * 40) * 10, y: Math.floor(Math.random() * 40) * 10};
+        let gameOver = false;
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = 'green';
+                ctx.fillRect(snake[i].x, snake[i].y, 10, 10);
+            }
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, 10, 10);
+        }
+
+        function update() {
+            if (gameOver) return;
+            let head = {x: snake[0].x, y: snake[0].y};
+            switch (direction) {
+                case 'right':
+                    head.x += 10;
+                    break;
+                case 'left':
+                    head.x -= 10;
+                    break;
+                case 'up':
+                    head.y -= 10;
+                    break;
+                case 'down':
+                    head.y += 10;
+                    break;
+            }
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                document.getElementById('score').innerHTML = `Счёт: ${score}`;
+                food = {x: Math.floor(Math.random() * 40) * 10, y: Math.floor(Math.random() * 40) * 10};
+                ctx.fillStyle = 'yellow';
+                ctx.fillRect(food.x, food.y, 10, 10);
+                setTimeout(() => {
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(food.x, food.y, 10, 10);
+                }, 1000);
+            } else {
+                snake.pop();
+            }
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || snake.slice(1).some(part => part.x === head.x && part.y === head.y)) {
+                gameOver = true;
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                setTimeout(() => {
+                    document.querySelector('.game-over').style.display = 'block';
+                }, 1000);
+            }
+        }
+
+        function handleKeydown(event) {
+            if (gameOver) return;
+            switch (event.key) {
+                case 'ArrowRight':
+                    if (direction !== 'left') direction = 'right';
+                    break;
+                case 'ArrowLeft':
+                    if (direction !== 'right') direction = 'left';
+                    break;
+                case 'ArrowUp':
+                    if (direction !== 'down') direction = 'up';
+                    break;
+                case 'ArrowDown':
+                    if (direction !== 'up') direction = 'down';
+                    break;
+                case 'w':
+                    if (direction !== 'down') direction = 'up';
+                    break;
+                case 's':
+                    if (direction !== 'up') direction = 'down';
+                    break;
+                case 'a':
+                    if (direction !== 'right') direction = 'left';
+                    break;
+                case 'd':
+                    if (direction !== 'left') direction = 'right';
+                    break;
+            }
+        }
+
+        document.addEventListener('keydown', handleKeydown);
+        setInterval(() => {
+            update();
+            draw();
+        }, 100);
+
+        function restartGame() {
+            gameOver = false;
+            score = 0;
+            document.getElementById('score').innerHTML = `Счёт: ${score}`;
+            snake = [{x: 200, y: 200}, {x: 190, y: 200}, {x: 180, y: 200}];
+            direction = 'right';
+            food = {x: Math.floor(Math.random() * 40) * 10, y: Math.floor(Math.random() * 40) * 10};
+            document.querySelector('.game-over').style.display = 'none';
+        }
+
+        draw();
+    </script>
+</body>
+</html>

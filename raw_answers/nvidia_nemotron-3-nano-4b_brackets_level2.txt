@@ -1,0 +1,47 @@
+```python
+def is_balanced(s: str) -> bool:
+    pairs = {')': '(', ']': '[', '}': '{'}
+    opening = set(pairs.values())
+    stack = []
+    for ch in s:
+        if ch in opening:
+            stack.append(ch)
+        elif ch in pairs:
+            if not stack or stack.pop() != pairs[ch]:
+                return False
+    return not stack
+
+
+def max_depth(s: str) -> int:
+    pairs = {')': '(', ']': '[', '}': '{'}
+    opening = set(pairs.values())
+    stack = []
+    maxd = 0
+    for ch in s:
+        if ch in opening:
+            stack.append(ch)
+            maxd = max(maxd, len(stack))
+        elif ch in pairs:
+            if stack and stack[-1] == pairs[ch]:
+                stack.pop()
+    return maxd
+
+
+def find_unmatched(s: str) -> list[int]:
+    pairs = {')': '(', ']': '[', '}': '{'}
+    opening = set(pairs.values())
+    stack = []
+    unmatched = []
+
+    for i, ch in enumerate(s):
+        if ch in opening:
+            stack.append((ch, i))
+        elif ch in pairs:
+            if stack and stack[-1][0] == pairs[ch]:
+                stack.pop()
+            else:
+                unmatched.append(i)
+
+    unmatched.extend(idx for _, idx in stack)
+    return sorted(unmatched)
+```

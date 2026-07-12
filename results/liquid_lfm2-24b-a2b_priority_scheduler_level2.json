@@ -1,0 +1,15 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-07-12 00:16:50",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: ожидалось order=['a'], ms=5, cp=5; получено order=['a'], ms=1, cp=0",
+    "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=3, cp=0",
+    "dependencies_and_workers: ожидалось order=['a', 'c', 'b', 'd'], ms=11, cp=11; получено order=['a', 'c', 'b', 'd'], ms=None, cp=7",
+    "critical_path_longer_than_worker_parallelism: ожидалось order=['a', 'b', 'c', 'd'], ms=16, cp=4; получено order=['a', 'b', 'c', 'd'], ms=3, cp=0",
+    "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=None, cp=7"
+  ]
+}

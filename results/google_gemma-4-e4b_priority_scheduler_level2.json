@@ -1,0 +1,11 @@
+{
+  "model": "google/gemma-4-e4b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-07-11 15:19:13",
+  "passed": 5,
+  "total": 6,
+  "failures": [
+    "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=8, cp=8"
+  ]
+}

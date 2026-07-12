@@ -1,0 +1,15 @@
+{
+  "model": "google/gemma-4-e2b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-07-12 00:00:40",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: ожидалось ['b', 'c', 'a'], получено None",
+    "dependency_unlocks_later: неожиданное исключение: not enough values to unpack (expected 3, got 2)",
+    "single_worker_duration_tiebreak: ожидалось ['b', 'c', 'a'], получено None",
+    "resource_limit_and_priority: ожидалось ['compile', 'lint', 'test', 'package', 'deploy'], получено None",
+    "simultaneous_unlocks: неожиданное исключение: not enough values to unpack (expected 3, got 2)"
+  ]
+}

@@ -1,0 +1,109 @@
+```python
+def run(program: str) -> list[str]:
+    stack = []
+    lines = program.splitlines()
+    label_map = {}
+    output = []
+
+    for idx, raw in enumerate(lines):
+        line_no = idx + 1
+        stripped = raw.lstrip()
+        if not stripped or stripped.startswith('#'):
+            continue
+
+        tokens = stripped.split()
+        cmd = tokens[0]
+        args = tokens[1:]
+
+        try:
+            if cmd == 'PUSH':
+                n = int(args[0])
+                stack.append(n)
+            elif cmd == 'POP':
+                if not stack:
+                    raise ValueError(f'Line {line_no}: stack underflow')
+                stack.pop()
+            elif cmd == 'ADD':
+                if len(stack) < 2:
+                    raise ValueError(f'Line {line_no}: insufficient values for ADD')
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+            elif cmd == 'SUB':
+                if len(stack) < 2:
+                    raise ValueError(f'Line {line_no}: insufficient values for SUB')
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a - b)
+            elif cmd == 'MUL':
+                if len(stack) < 2:
+                    raise ValueError(f'Line {line_no}: insufficient values for MUL')
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+            elif cmd == 'DIV':
+                if len(stack) < 2:
+                    raise ValueError(f'Line {line_no}: insufficient values for DIV')
+                b = stack.pop()
+                if b == 0:
+                    raise ValueError(f'Line {line_no}: division by zero')
+                a = stack.pop()
+                stack.append(a // b)
+            elif cmd == 'DUP':
+                if not stack:
+                    raise ValueError(f'Line {line_no}: stack underflow for DUP')
+                stack.append(stack[-1])
+            elif cmd == 'SWAP':
+                if len(stack) < 2:
+                    raise ValueError(f'Line {line_no}: insufficient values for SWAP')
+                top = stack.pop()
+                second = stack.pop()
+                stack.append(top)
+                stack.append(second)
+            elif cmd == 'PRINT':
+                if not stack:
+                    raise ValueError(f'Line {line_no}: stack underflow for PRINT')
+                output.append(str(stack[-1]))
+            elif cmd == 'LABEL':
+                label_name = args[0]
+                label_map[label_name] = line_no
+            elif cmd == 'JMP':
+                target_label = args[0]
+                if target_label not in label_map:
+                    raise ValueError(f'Line {line_no}: unknown label "{target_label}"')
+                next_line = label_map[target_label]
+                # skip to the target line
+                idx = next_line - 1
+                continue
+            elif cmd == 'JZ':
+                if not stack:
+                    raise ValueError(f'Line {line_no}: stack underflow for JZ')
+                value = stack.pop()
+                if value != 0:
+                    raise ValueError(f'Line {line_no}: condition false, label "{args[0]}" not reached')
+                target_label = args[1]
+                if target_label not in label_map:
+                    raise ValueError(f'Line {line_no}: unknown label "{target_label}"')
+                next_line = label_map[target_label]
+                idx = next_line - 1
+                continue
+            elif cmd == 'JNZ':
+                if not stack:
+                    raise ValueError(f'Line {line_no}: stack underflow for JNZ')
+                value = stack.pop()
+                if value == 0:
+                    raise ValueError(f'Line {line_no}: condition false, label "{args[1]}" not reached')
+                target_label = args[2]
+                if target_label not in label_map:
+                    raise ValueError(f'Line {line_no}: unknown label "{target_label}"')
+                next_line = label_map[target_label]
+                idx = next_line - 1
+                continue
+            else:
+                raise ValueError(f'Line {line_no}: unknown instruction "{cmd}"')
+        except Exception as e:
+            # Re-raise with line number info
+            raise ValueError(str(e)) from None
+
+    return output
+```

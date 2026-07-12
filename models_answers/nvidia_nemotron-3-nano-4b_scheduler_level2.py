@@ -1,0 +1,22 @@
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    # 1. Perform topological sort on the dependency graph to detect cycles
+    topo = topo_sort(tasks)
+    if topo is None:
+        return None
+
+    # 2. Compute earliest finish time for each task in topological order
+    finish: dict[str, int] = {}
+    max_path = 0
+    for t in topo:
+        dur, deps = tasks[t]
+        # If no dependencies, finish equals duration
+        if not deps:
+            f = dur
+        else:
+            # Take the maximum finish time among its predecessors
+            f = dur + max(finish[d] for d in deps)
+        finish[t] = f
+        if f > max_path:
+            max_path = f
+
+    return max_path

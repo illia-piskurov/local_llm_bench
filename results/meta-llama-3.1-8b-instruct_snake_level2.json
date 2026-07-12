@@ -1,0 +1,8 @@
+{
+  "model": "meta-llama-3.1-8b-instruct",
+  "benchmark": "snake",
+  "level": "level2",
+  "tested_at": "2026-07-12 20:16:18",
+  "manual_score": 2,
+  "comment": "работает, измений почти нет."
+}

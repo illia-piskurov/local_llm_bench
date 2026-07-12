@@ -1,0 +1,15 @@
+{
+  "model": "meta-llama-3.1-8b-instruct",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-07-12 20:05:01",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: invalid syntax (meta-llama-3.1-8b-instruct_priority_scheduler_level2.py, line 28)",
+    "parallel_tasks_reduce_makespan: неожиданное исключение: invalid syntax (meta-llama-3.1-8b-instruct_priority_scheduler_level2.py, line 28)",
+    "dependencies_and_workers: неожиданное исключение: invalid syntax (meta-llama-3.1-8b-instruct_priority_scheduler_level2.py, line 28)",
+    "critical_path_longer_than_worker_parallelism: неожиданное исключение: invalid syntax (meta-llama-3.1-8b-instruct_priority_scheduler_level2.py, line 28)",
+    "wide_graph_with_unlocks: неожиданное исключение: invalid syntax (meta-llama-3.1-8b-instruct_priority_scheduler_level2.py, line 28)"
+  ]
+}
