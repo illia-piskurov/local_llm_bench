@@ -3,9 +3,14 @@
   "benchmark": "scheduler",
   "level": "level1",
   "tested_at": "2026-07-12 19:01:21",
-  "passed": 0,
+  "passed": 4,
   "total": 10,
   "failures": [
-    "не удалось загрузить решение: invalid syntax (qwen_qwen3.5-9b_scheduler_level1.py, line 1)"
+    "no_dependencies: невалидный топологический порядок: None",
+    "simple_chain: невалидный топологический порядок: None",
+    "diamond: невалидный топологический порядок: None",
+    "multiple_roots: невалидный топологический порядок: None",
+    "single_task: невалидный топологический порядок: None",
+    "wide_graph: невалидный топологический порядок: None"
   ]
 }

@@ -177,12 +177,20 @@ def run_level(model: Model, benchmark: Benchmark, level_id: str) -> None:
     if host is None:
         return
 
+    try:
+        was_loaded_before = bool(lmstudio.loaded_instance_ids(model.key))
+    except Exception:
+        was_loaded_before = False
+
     answer_path = ensure_level_answer(model, benchmark, level_id, host)
     if answer_path is None:
         return
 
-    console.print("  Выгружаю модель из памяти...")
-    lmstudio.unload_model(model.key, console=console)
+    if was_loaded_before:
+        console.print("  Модель уже была запущена вручную — не трогаю её.")
+    else:
+        console.print("  Выгружаю модель из памяти...")
+        lmstudio.unload_model(model.key, console=console)
 
     if level_id in benchmark.manual_levels:
         run_manual_level(model, benchmark, level_id, answer_path)

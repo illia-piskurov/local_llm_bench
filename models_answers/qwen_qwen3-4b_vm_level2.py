@@ -1,4 +1,3 @@
-```python
 def run(program: str) -> list[str]:
     lines = [line.strip() for line in program.split('\n')]
     instruction_list = []

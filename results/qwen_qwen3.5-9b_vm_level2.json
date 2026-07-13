@@ -6,6 +6,32 @@
   "passed": 0,
   "total": 27,
   "failures": [
-    "не удалось загрузить решение: invalid syntax (qwen_qwen3.5-9b_vm_level2.py, line 1)"
+    "push_print: неожиданное исключение: 'NoneType' object is not iterable",
+    "add: неожиданное исключение: 'NoneType' object is not iterable",
+    "sub_order: неожиданное исключение: 'NoneType' object is not iterable",
+    "mul: неожиданное исключение: 'NoneType' object is not iterable",
+    "div_order: неожиданное исключение: 'NoneType' object is not iterable",
+    "div_truncate: неожиданное исключение: 'NoneType' object is not iterable",
+    "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+    "dup: неожиданное исключение: 'NoneType' object is not iterable",
+    "swap: неожиданное исключение: 'NoneType' object is not iterable",
+    "pop: неожиданное исключение: 'NoneType' object is not iterable",
+    "comments_and_blank_lines: неожиданное исключение: 'NoneType' object is not iterable",
+    "multiple_prints: неожиданное исключение: 'NoneType' object is not iterable",
+    "print_does_not_pop: неожиданное исключение: 'NoneType' object is not iterable",
+    "negative_numbers: неожиданное исключение: 'NoneType' object is not iterable",
+    "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно",
+    "empty_program: неожиданное исключение: 'NoneType' object is not iterable",
+    "complex_chain: неожиданное исключение: 'NoneType' object is not iterable",
+    "unconditional_jump_skips_code: неожиданное исключение: 'NoneType' object is not iterable",
+    "jz_taken_when_zero: неожиданное исключение: 'NoneType' object is not iterable",
+    "jz_not_taken_when_nonzero: неожиданное исключение: 'NoneType' object is not iterable",
+    "jnz_taken_when_nonzero: неожиданное исключение: 'NoneType' object is not iterable",
+    "jnz_not_taken_when_zero: неожиданное исключение: 'NoneType' object is not iterable",
+    "countdown_loop: неожиданное исключение: 'NoneType' object is not iterable",
+    "count_up_loop: неожиданное исключение: 'NoneType' object is not iterable",
+    "jump_to_undefined_label: ожидалась ошибка, но выполнение прошло успешно",
+    "label_does_nothing_on_its_own: неожиданное исключение: 'NoneType' object is not iterable"
   ]
 }

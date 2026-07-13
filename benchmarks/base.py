@@ -178,6 +178,8 @@ class Benchmark(ABC):
         """Достаёт код из ```<code_lang> ... ``` блока (последнего, если их несколько —
         модель могла сначала показать черновик/другой язык, а затем финальный вариант).
         Если явного блока с этой меткой языка нет — берёт последний блок без метки языка.
+        Если открывающий блок есть, а закрывающего нет (генерация оборвалась) — берёт всё
+        после открывающего маркера, отбрасывая сам маркер.
         Если блоков нет вообще — возвращает текст как есть."""
         lang_blocks = re.findall(rf"```{re.escape(self.code_lang)}\s*\n(.*?)```", raw_text, re.DOTALL)
         if lang_blocks:
@@ -186,6 +188,14 @@ class Benchmark(ABC):
         any_blocks = re.findall(r"```(?:\w*)\s*\n(.*?)```", raw_text, re.DOTALL)
         if any_blocks:
             return any_blocks[-1].strip() + "\n"
+
+        unclosed = re.search(rf"```{re.escape(self.code_lang)}\s*\n(.*)", raw_text, re.DOTALL)
+        if unclosed:
+            return unclosed.group(1).strip() + "\n"
+
+        unclosed_any = re.search(r"```(?:\w*)\s*\n(.*)", raw_text, re.DOTALL)
+        if unclosed_any:
+            return unclosed_any.group(1).strip() + "\n"
 
         return raw_text.strip() + "\n"
 

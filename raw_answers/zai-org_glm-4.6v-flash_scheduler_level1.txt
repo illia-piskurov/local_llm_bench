@@ -1,0 +1,45 @@
+```python
+from collections import deque
+
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    # 收集所有节点
+    nodes = set()
+    for task in tasks:
+        nodes.add(task)
+        for dep in tasks[task]:
+            nodes.add(dep)
+    
+    # 构建邻接表和入度
+    adj = {node: [] for node in nodes}
+    in_degree = {node: 0 for node in nodes}
+    
+    # 建立边和计算入度
+    for task, deps in tasks.items():
+        for dep in deps:
+            if dep not in nodes:
+                raise ValueError(f"Dependency '{dep}' not found in tasks.")
+            adj[dep].append(task)
+            in_degree[task] += 1
+    
+    # 初始化队列，包含所有入度为0的节点
+    zero_in_queue = deque([node for node in nodes if in_degree[node] == 0])
+    
+    order = []
+    while zero_in_queue:
+        current = zero_in_queue.popleft()
+        order.append(current)
+        
+        for neighbor in adj[current]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                zero_in_queue.append(neighbor)
+    
+    # 检查是否有环
+    if len(order) != len(nodes):
+        return None
+    
+    return order
+```

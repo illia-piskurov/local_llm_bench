@@ -1,0 +1,67 @@
+from collections import deque
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    if not tasks:
+        return None
+    
+    nodes = set()
+    for task in tasks:
+        nodes.add(task)
+        for dep in tasks[task][1]:
+            nodes.add(dep)
+    
+    adj = {node: [] for node in nodes}
+    duration = {}
+    in_degree = {node: 0 for node in nodes}
+    
+    for task, (dur, deps) in tasks.items():
+        duration[task] = dur
+        for dep in deps:
+            if dep not in nodes:
+                raise ValueError(f"Dependency '{dep}' not found.")
+            adj[dep].append(task)
+            in_degree[task] += 1
+    
+    zero_in_queue = deque([node for node in nodes if in_degree[node] == 0])
+    order = []
+    
+    while zero_in_queue:
+        current = zero_in_queue.popleft()
+        order.append(current)
+        
+        for neighbor in adj[current]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                zero_in_queue.append(neighbor)
+    
+    if len(order) != len(nodes):
+        return None
+    
+    est = {node: 0 for node in nodes}
+    queue = deque([node for node in nodes if in_degree[node] == 0])
+    
+    while queue:
+        current = queue.popleft()
+        cur_est = est[current]
+        
+        for neighbor in adj[current]:
+            new_est = cur_est + duration[current]
+            if new_est > est[neighbor]:
+                est[neighbor] = new_est
+                queue.append(neighbor)
+    
+    earliest_finish = {node: est[node] + duration[node] for node in nodes}
+    lst = {node: float('inf') for node in nodes}
+    reverse_order = order[::-1]
+    
+    for node in reverse_order:
+        cur_lf = earliest_finish[node]
+        for predecessor in adj.get(node, []):
+            new_lf = lst[predecessor]
+            if new_lf > cur_lf - duration[node]:
+                lst[predecessor] = new_lf
+    
+    critical_tasks = [node for node in nodes if est[node] == lst[node]]
+    total_duration = sum(duration[node] for node in critical_tasks)
+    
+    return total_duration

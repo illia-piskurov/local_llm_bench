@@ -1,4 +1,3 @@
-```python
 def run(program):
     store = {}  # Main key-value store
     output = []

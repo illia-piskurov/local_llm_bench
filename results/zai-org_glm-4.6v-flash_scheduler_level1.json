@@ -1,0 +1,9 @@
+{
+  "model": "zai-org/glm-4.6v-flash",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-07-13 09:16:50",
+  "passed": 10,
+  "total": 10,
+  "failures": []
+}

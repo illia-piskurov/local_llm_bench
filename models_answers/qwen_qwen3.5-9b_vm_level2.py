@@ -1,4 +1,3 @@
-```python
 def run(program: str) -> list[str]:
     stack = []
     output = []

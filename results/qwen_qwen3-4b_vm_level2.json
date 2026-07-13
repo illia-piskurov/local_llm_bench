@@ -6,6 +6,6 @@
   "passed": 0,
   "total": 27,
   "failures": [
-    "не удалось загрузить решение: invalid syntax (qwen_qwen3-4b_vm_level2.py, line 1)"
+    "не удалось загрузить решение: expected ':' (qwen_qwen3-4b_vm_level2.py, line 60)"
   ]
 }

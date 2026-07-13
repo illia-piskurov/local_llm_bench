@@ -6,6 +6,30 @@
   "passed": 0,
   "total": 25,
   "failures": [
-    "не удалось загрузить решение: invalid syntax (omnicoder-9b_kv_level2.py, line 1)"
+    "basic_set_get: неожиданное исключение: 'NoneType' object is not iterable",
+    "get_missing: неожиданное исключение: 'NoneType' object is not iterable",
+    "delete_then_get: неожиданное исключение: 'NoneType' object is not iterable",
+    "delete_missing_key_noop: неожиданное исключение: 'NoneType' object is not iterable",
+    "overwrite_set: неожиданное исключение: 'NoneType' object is not iterable",
+    "commit_no_transaction: неожиданное исключение: 'NoneType' object is not iterable",
+    "rollback_no_transaction: неожиданное исключение: 'NoneType' object is not iterable",
+    "simple_transaction_commit: неожиданное исключение: 'NoneType' object is not iterable",
+    "simple_transaction_rollback: неожиданное исключение: 'NoneType' object is not iterable",
+    "rollback_restores_delete: неожиданное исключение: 'NoneType' object is not iterable",
+    "nested_transactions: неожиданное исключение: 'NoneType' object is not iterable",
+    "nested_commit_propagates_to_outer_only: неожиданное исключение: 'NoneType' object is not iterable",
+    "rollback_after_commit_is_no_transaction: неожиданное исключение: 'NoneType' object is not iterable",
+    "multiple_keys_independent: неожиданное исключение: 'NoneType' object is not iterable",
+    "set_new_key_inside_transaction: неожиданное исключение: 'NoneType' object is not iterable",
+    "count_basic: неожиданное исключение: 'NoneType' object is not iterable",
+    "count_zero: неожиданное исключение: 'NoneType' object is not iterable",
+    "count_respects_transaction: неожиданное исключение: 'NoneType' object is not iterable",
+    "count_after_delete: неожиданное исключение: 'NoneType' object is not iterable",
+    "watch_set_new_key: неожиданное исключение: 'NoneType' object is not iterable",
+    "watch_set_change: неожиданное исключение: 'NoneType' object is not iterable",
+    "watch_no_change_no_notification: неожиданное исключение: 'NoneType' object is not iterable",
+    "watch_delete: неожиданное исключение: 'NoneType' object is not iterable",
+    "watch_unrelated_key_silent: неожиданное исключение: 'NoneType' object is not iterable",
+    "watch_inside_transaction_fires: неожиданное исключение: 'NoneType' object is not iterable"
   ]
 }

@@ -1,0 +1,15 @@
+{
+  "model": "zai-org/glm-4.6v-flash",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-07-13 09:51:06",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: ожидалось 5, получено 0",
+    "simple_chain: ожидалось 9, получено 0",
+    "diamond_pick_longer_branch: ожидалось 12, получено 0",
+    "independent_tasks: ожидалось 7, получено 0",
+    "wide_graph: ожидалось 19, получено 0"
+  ]
+}
