@@ -52,12 +52,12 @@ class SchedulerBenchmark(Benchmark):
         func_name = "topo_sort" if level_id == "level1" else "critical_path"
         tests = scheduler_bench.LEVEL1_TESTS if level_id == "level1" else scheduler_bench.LEVEL2_TESTS
         try:
-            fn = scheduler_bench.load_function(str(answer_path), func_name)
+            scheduler_bench.load_function(str(answer_path), func_name)
         except Exception as e:
             return TestResult(0, len(tests), [f"не удалось загрузить решение: {e}"])
 
         if level_id == "level1":
-            passed, total, failures = scheduler_bench.run_level1_suite(fn)
+            passed, total, failures = scheduler_bench.run_level1_suite(str(answer_path))
         else:
-            passed, total, failures = scheduler_bench.run_level2_suite(fn)
+            passed, total, failures = scheduler_bench.run_level2_suite(str(answer_path))
         return TestResult(passed, total, failures)

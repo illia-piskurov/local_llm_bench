@@ -5,16 +5,7 @@ Level 1: topo_sort(tasks: dict[str, list[str]]) -> list[str] | None
 Level 2: critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None
 """
 
-import importlib.util
-
-
-def load_function(path, func_name):
-    spec = importlib.util.spec_from_file_location("solution", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    if not hasattr(module, func_name):
-        raise AttributeError(f"В решении не найдена функция {func_name}(...)")
-    return getattr(module, func_name)
+from timeout_utils import call_with_timeout, load_function
 
 
 def is_valid_topo_order(tasks, order):
@@ -146,14 +137,13 @@ LEVEL2_TESTS = [
 ]
 
 
-def run_level1_suite(topo_sort_fn):
+def run_level1_suite(path):
     passed = 0
     failed = []
     for name, tasks, expected in LEVEL1_TESTS:
-        try:
-            result = topo_sort_fn(tasks)
-        except Exception as e:
-            failed.append((name, f"неожиданное исключение: {e}"))
+        success, result = call_with_timeout(path, "topo_sort", (tasks,))
+        if not success:
+            failed.append((name, f"неожиданное исключение: {result}"))
             continue
 
         if expected is None:
@@ -175,17 +165,16 @@ def run_level1_suite(topo_sort_fn):
     return passed, total, failures
 
 
-def run_level2_suite(critical_path_fn):
+def run_level2_suite(path):
     passed = 0
     failed = []
     for name, tasks, expected in LEVEL2_TESTS:
-        try:
-            result = critical_path_fn(tasks)
-        except Exception as e:
+        success, result = call_with_timeout(path, "critical_path", (tasks,))
+        if not success:
             if expected is None:
                 passed += 1
             else:
-                failed.append((name, f"неожиданное исключение: {e}"))
+                failed.append((name, f"неожиданное исключение: {result}"))
             continue
 
         if result == expected:

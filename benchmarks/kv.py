@@ -96,8 +96,8 @@ class KVBenchmark(Benchmark):
             tests = kv_bench.LEVEL1_TESTS + kv_bench.LEVEL2_TESTS + kv_bench.LEVEL3_TESTS
         name = self.level_by_id(level_id).name
         try:
-            run_fn = bench.load_run(str(answer_path))
+            bench.load_run(str(answer_path))
         except Exception as e:
             return TestResult(0, len(tests), [f"не удалось загрузить решение: {e}"])
-        passed, total, failures = bench.run_suite(name, tests, run_fn)
+        passed, total, failures = bench.run_suite(name, tests, str(answer_path))
         return TestResult(passed, total, failures)

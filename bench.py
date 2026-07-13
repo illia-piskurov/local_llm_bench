@@ -19,6 +19,8 @@ import importlib.util
 import sys
 import traceback
 
+from timeout_utils import call_with_timeout
+
 
 def load_run(path):
     spec = importlib.util.spec_from_file_location("solution", path)
@@ -202,25 +204,26 @@ LEVEL2_TESTS = [
 ]
 
 
-def run_suite(name, tests, run_fn):
+def run_suite(name, tests, path):
     passed = 0
     failed = []
     for test_name, program, expected in tests:
-        try:
-            result = run_fn(program)
-            if expected == "ERROR":
-                failed.append((test_name, "ожидалась ошибка, но выполнение прошло успешно", result))
-                continue
-            result_norm = norm(result)
-            if result_norm == expected:
-                passed += 1
-            else:
-                failed.append((test_name, f"ожидалось {expected}, получено {result_norm}", None))
-        except Exception as e:
+        success, result = call_with_timeout(path, "run", (program,))
+        if not success:
             if expected == "ERROR":
                 passed += 1
             else:
-                failed.append((test_name, f"неожиданное исключение: {e}", None))
+                failed.append((test_name, f"неожиданное исключение: {result}", None))
+            continue
+
+        if expected == "ERROR":
+            failed.append((test_name, "ожидалась ошибка, но выполнение прошло успешно", result))
+            continue
+        result_norm = norm(result)
+        if result_norm == expected:
+            passed += 1
+        else:
+            failed.append((test_name, f"ожидалось {expected}, получено {result_norm}", None))
 
     total = len(tests)
     print(f"\n=== {name}: {passed}/{total} ===")
@@ -237,14 +240,14 @@ def main():
 
     path = sys.argv[1]
     try:
-        run_fn = load_run(path)
+        load_run(path)
     except Exception as e:
         print(f"Не удалось загрузить решение: {e}")
         traceback.print_exc()
         sys.exit(1)
 
-    p1, t1, _ = run_suite("LEVEL 1", LEVEL1_TESTS, run_fn)
-    p2, t2, _ = run_suite("LEVEL 2", LEVEL2_TESTS, run_fn)
+    p1, t1, _ = run_suite("LEVEL 1", LEVEL1_TESTS, path)
+    p2, t2, _ = run_suite("LEVEL 2", LEVEL2_TESTS, path)
 
     print("\n=== ИТОГО ===")
     print(f"Level 1: {p1}/{t1}")

@@ -6,47 +6,11 @@ Level 2: critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | No
          makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None
 """
 
-import importlib.util
 import heapq
-import multiprocessing as mp
 
+from timeout_utils import call_with_timeout, load_function
 
-TEST_TIMEOUT_SECONDS = 5
-
-
-def load_function(path, func_name):
-    spec = importlib.util.spec_from_file_location("solution", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    if not hasattr(module, func_name):
-        raise AttributeError(f"В решении не найдена функция {func_name}(...)")
-    return getattr(module, func_name)
-
-
-def _worker_call(path: str, func_name: str, args: tuple, queue: mp.Queue) -> None:
-    try:
-        fn = load_function(path, func_name)
-        queue.put((True, fn(*args)))
-    except Exception as e:
-        queue.put((False, e))
-
-
-def _call_function_in_subprocess(path: str, func_name: str, args: tuple, timeout_seconds: int = TEST_TIMEOUT_SECONDS):
-    queue: mp.Queue = mp.Queue()
-    process = mp.Process(target=_worker_call, args=(path, func_name, args, queue))
-    process.start()
-    process.join(timeout_seconds)
-
-    if process.is_alive():
-        process.terminate()
-        process.join()
-        return False, TimeoutError(f"превышен таймаут {timeout_seconds}с")
-
-    if queue.empty():
-        return False, RuntimeError("подпроцесс не вернул результат")
-
-    success, payload = queue.get()
-    return success, payload
+_call_function_in_subprocess = call_with_timeout
 
 
 def _ready_key(name: str, task: tuple[int, list[str], int]) -> tuple[int, int, str]:
