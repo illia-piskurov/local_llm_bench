@@ -1,6 +1,9 @@
+import threading
 from dataclasses import dataclass
 
 import requests
+
+UNLOAD_TIMEOUT_SECONDS = 30
 
 BASE_URL = "http://127.0.0.1:1234"
 
@@ -81,28 +84,35 @@ def loaded_instance_ids(model_key: str) -> list[str]:
     return []
 
 
-def unload_model(model_key: str, console=None) -> None:
+def unload_model(model_key: str, console=None, timeout: int = UNLOAD_TIMEOUT_SECONDS) -> None:
     def warn(message: str) -> None:
         if console is not None:
             console.print(f"  [yellow]warn:[/yellow] {message}")
         else:
             print(f"  warn: {message}")
 
-    try:
-        instance_ids = loaded_instance_ids(model_key)
-    except Exception as e:
-        warn(f"не удалось получить loaded_instances: {e}")
-        return
-
-    if not instance_ids:
-        return
-
-    for instance_id in instance_ids:
+    def _do_unload() -> None:
         try:
-            requests.post(
-                f"{BASE_URL}/api/v1/models/unload",
-                json={"instance_id": instance_id},
-                timeout=60,
-            )
+            instance_ids = loaded_instance_ids(model_key)
         except Exception as e:
-            warn(f"не удалось выгрузить инстанс {instance_id}: {e}")
+            warn(f"не удалось получить loaded_instances: {e}")
+            return
+
+        if not instance_ids:
+            return
+
+        for instance_id in instance_ids:
+            try:
+                requests.post(
+                    f"{BASE_URL}/api/v1/models/unload",
+                    json={"instance_id": instance_id},
+                    timeout=timeout,
+                )
+            except Exception as e:
+                warn(f"не удалось выгрузить инстанс {instance_id}: {e}")
+
+    thread = threading.Thread(target=_do_unload, daemon=True)
+    thread.start()
+    thread.join(timeout=timeout)
+    if thread.is_alive():
+        warn(f"выгрузка модели зависла (>{timeout}с) — продолжаем без ожидания")

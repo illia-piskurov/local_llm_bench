@@ -1,0 +1,88 @@
+```python
+def run(program: str) -> list[str]:
+    stack = []
+    output_lines = []
+    
+    # Разбиваем программу на строки для отслеживания номеров строк (1-based index)
+    lines = program.splitlines()
+    
+    for line_num, line in enumerate(lines, start=1):
+        # Убираем ведущие и trailing пробелы
+        stripped_line = line.strip()
+        
+        # Игнорируем пустые строки и комментарии (начинающиеся с #)
+        if not stripped_line or stripped_line.startswith('#'):
+            continue
+            
+        parts = stripped_line.split()
+        if not parts:
+            continue
+            
+        command = parts[0]
+        
+        try:
+            if command == 'PUSH':
+                if len(parts) < 2:
+                    raise ValueError(f"Line {line_num}: PUSH requires an argument")
+                stack.append(int(parts[1]))
+                
+            elif command == 'POP':
+                if len(stack) < 1:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow (empty stack)")
+                stack.pop()
+                
+            elif command == 'ADD':
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow (need 2 values for ADD)")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+                
+            elif command == 'SUB':
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow (need 2 values for SUB)")
+                b = stack.pop() # Top is b
+                a = stack.pop() # Next is a
+                stack.append(a - b)
+                
+            elif command == 'MUL':
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow (need 2 values for MUL)")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+                
+            elif command == 'DIV':
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow (need 2 values for DIV)")
+                b = stack.pop() # Divisor
+                a = stack.pop() # Dividend
+                if b == 0:
+                    raise ZeroDivisionError(f"Line {line_num}: Division by zero")
+                stack.append(a // b)
+                
+            elif command == 'DUP':
+                if len(stack) < 1:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow (need 1 value for DUP)")
+                top = stack[-1]
+                stack.append(top)
+                
+            elif command == 'SWAP':
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow (need 2 values for SWAP)")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(b)
+                stack.append(a)
+                
+            elif command == 'PRINT':
+                if len(stack) < 1:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow (need 1 value for PRINT)")
+                output_lines.append(str(stack[-1]))
+                
+        except Exception as e:
+            # Перехватываем и выбрасываем ошибку с номером строки
+            raise e
+
+    return output_lines
+```

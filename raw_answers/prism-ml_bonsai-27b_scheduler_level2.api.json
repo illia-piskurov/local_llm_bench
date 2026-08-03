@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "prism-ml/bonsai-27b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    in_degree = {task: 0 for task in tasks}\n    adj = {task: [] for task in tasks}\n    \n    for task, deps in tasks.items():\n        for dep in deps:\n            if dep not in tasks:\n                return None\n            adj[dep].append(task)\n            in_degree[task] += 1\n    \n    queue = [t for t in tasks if in_degree[t] == 0]\n    \n    sorted_tasks = []\n    \n    while queue:\n        current = queue.pop(0)\n        sorted_tasks.append(current)\n        \n        for neighbor in adj[current]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n    \n    return sorted_tasks if len(sorted_tasks) == len(tasks) else None\n\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    # Проверяем наличие циклов с помощью topo_sort\n    deps_only = {task: deps for task, (duration, deps) in tasks.items()}\n    order = topo_sort(deps_only)\n    \n    if order is None:\n        return None\n    \n    # Вычисляем longest path до каждой задачи в топологическом порядке\n    earliest_start = {}\n    \n    for task in order:\n        duration, deps = tasks[task]\n        \n        if not deps:\n            earliest_start[task] = 0\n        else:\n            max_dep_end = max(earliest_start[dep] + tasks[dep][0] for dep in deps)\n            earliest_start[task] = max_dep_end\n    \n    # Критический путь — максимальное время завершения всех задач\n    if not earliest_start:\n        return 0\n    \n    return max(earliest_start[task] + tasks[task][0] for task in earliest_start)\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 665,
+    "total_output_tokens": 432,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 5.1764949312947905,
+    "time_to_first_token_seconds": 13.034088
+  },
+  "response_id": "resp_9250fbd8941ee657c25c5c36855e33b3d58df8ff584073e9"
+}

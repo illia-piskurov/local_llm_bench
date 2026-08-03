@@ -138,6 +138,11 @@ def ensure_level_answer(model: Model, benchmark: Benchmark, level_id: str, host:
         return None
 
     raw_path.write_text(response.content, encoding="utf-8")
+    # Сохраняем полный JSON-ответ API для диагностики (например, reasoning-моделей с пустым content)
+    import json as _json
+    raw_path.with_suffix(".api.json").write_text(
+        _json.dumps(response.raw, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     save_speed_sample(host, model, benchmark, level_id, response.stats)
     code = benchmark.extract_code(response.content)
     answer_path.write_text(code, encoding="utf-8")
@@ -394,7 +399,7 @@ def choose_level(model: Model, benchmark: Benchmark) -> None:
         if level_id in (None, BACK):
             return
 
-        _, _, result_path = store.paths_for(benchmark, model.key, level_id)
+        answer_path, _, result_path = store.paths_for(benchmark, model.key, level_id)
 
         if result_path.exists():
             existing = store.load(benchmark, model.key, level_id)
@@ -416,6 +421,23 @@ def choose_level(model: Model, benchmark: Benchmark) -> None:
                 continue
             if redo == "r":
                 console.print("  Удаляю сохранённые ответ/сырой ответ/результат для этого уровня...")
+                store.clear(benchmark, model.key, level_id)
+
+        elif answer_path.exists():
+            # Ответ есть, но результат не сохранён — предыдущий запуск прервался до конца
+            console.print("\n  [yellow]Найден сохранённый ответ модели без результата тестов (прошлый запуск прервался?).[/yellow]")
+            redo = questionary.select(
+                "Что делать?",
+                choices=[
+                    Choice(title="Запустить тесты на сохранённом коде", value="t"),
+                    Choice(title="Запросить у модели заново", value="r"),
+                    Choice(title="Отмена", value="c"),
+                ],
+            ).ask()
+            if redo in (None, "c"):
+                continue
+            if redo == "r":
+                console.print("  Удаляю сохранённый ответ для этого уровня...")
                 store.clear(benchmark, model.key, level_id)
 
         run_level(model, benchmark, level_id)

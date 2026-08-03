@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "prism-ml/bonsai-27b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    stack = []\n    mapping = {')': '(', ']': '[', '}': '{'}\n    \n    for char in s:\n        if char in mapping.values():\n            stack.append(char)\n        elif char in mapping.keys():\n            if not stack or stack.pop() != mapping[char]:\n                return False\n                \n    return len(stack) == 0\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 196,
+    "total_output_tokens": 95,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 5.408858457575762,
+    "time_to_first_token_seconds": 3.553749
+  },
+  "response_id": "resp_8d772b9dbef48411ff20ce47c9511635dc832c8d8ef8b2bf"
+}

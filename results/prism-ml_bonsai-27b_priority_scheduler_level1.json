@@ -1,0 +1,15 @@
+{
+  "model": "prism-ml/bonsai-27b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-03 21:42:06",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: неожиданное исключение: 'int' object is not subscriptable",
+    "dependency_unlocks_later: неожиданное исключение: 'int' object is not subscriptable",
+    "single_worker_duration_tiebreak: неожиданное исключение: 'int' object is not subscriptable",
+    "resource_limit_and_priority: неожиданное исключение: 'int' object is not subscriptable",
+    "simultaneous_unlocks: неожиданное исключение: 'int' object is not subscriptable"
+  ]
+}

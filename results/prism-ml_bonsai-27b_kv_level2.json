@@ -1,0 +1,12 @@
+{
+  "model": "prism-ml/bonsai-27b",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-08-03 21:34:13",
+  "passed": 23,
+  "total": 25,
+  "failures": [
+    "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+    "watch_delete: ожидалось ['WATCH a 5 -> NULL'], получено []"
+  ]
+}

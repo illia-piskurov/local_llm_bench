@@ -1,0 +1,9 @@
+{
+  "model": "prism-ml/bonsai-27b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-08-03 20:27:43",
+  "passed": 18,
+  "total": 18,
+  "failures": []
+}

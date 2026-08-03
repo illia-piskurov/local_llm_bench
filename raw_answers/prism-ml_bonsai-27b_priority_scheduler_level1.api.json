@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "prism-ml/bonsai-27b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    if not tasks:\n        return []\n    \n    # Проверка на циклы и вычисление порядка выполнения (topological sort)\n    in_degree = {task: 0 for task in tasks}\n    graph = {task: set() for task in tasks}\n    \n    for task, (_, deps, _) in tasks.items():\n        for dep in deps:\n            if dep not in tasks:\n                return None\n            graph[dep].add(task)\n            in_degree[task] += 1\n    \n    # Kahn's algorithm for topological sort with cycle detection\n    queue = [t for t, deg in in_degree.items() if deg == 0]\n    \n    order = []\n    while queue:\n        # Sort by priority (desc), then duration (asc), then name (asc)\n        queue.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))\n        task = queue.pop(0)\n        order.append(task)\n        \n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n    \n    if len(order) != len(tasks):\n        return None\n    \n    # Simulate execution with limited workers\n    import heapq\n    \n    # Events: (time, priority, duration, task_name)\n    # We use negative priority for max-heap behavior\n    ready_queue = []\n    completed = set()\n    \n    # Initialize ready tasks at time 0\n    for task in order:\n        if not any(dep in completed for dep in tasks[task][1]):\n            heapq.heappush(ready_queue, (-tasks[task][2], tasks[task][0], task))\n    \n    timeline = []\n    current_time = 0\n    \n    while ready_queue or len(completed) < len(tasks):\n        # Advance time to next event if needed\n        if not ready_queue:\n            if completed == set(tasks.keys()):\n                break\n            # Find the earliest completion time among running tasks\n            # We need to track running tasks separately\n            pass\n        \n        # Process all events at current_time\n        while ready_queue and (not timeline or timeline[-1][0] == current_time):\n            _, duration, task = heapq.heappop(ready_queue)\n            timeline.append(current_time)\n            completed.add(task)\n        \n        if not ready_queue:\n            # No more tasks to start, but we might have running ones (handled by completion logic below)\n            break\n        \n        current_time += 1\n    \n    return list(set(timeline))\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 262,
+    "total_output_tokens": 595,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 4.310593895225357,
+    "time_to_first_token_seconds": 5.407951
+  },
+  "response_id": "resp_b168fcc847197c553350b68bff87e94a3dba0ec35e2f25bc"
+}
