@@ -1,0 +1,20 @@
+{
+  "model": "liquid/lfm2.5-1.2b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-07-17 10:21:20",
+  "passed": 8,
+  "total": 18,
+  "failures": [
+    "sub_order: ожидалось ['7'], получено ['-7']",
+    "div_truncate: ожидалось ['3'], получено ['3.5']",
+    "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+    "swap: ожидалось ['1'], получено ['-1']",
+    "pop: ожидалось ['1'], получено ['2', '1']",
+    "comments_and_blank_lines: неожиданное исключение: list index out of range",
+    "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно",
+    "empty_program: неожиданное исключение: list index out of range",
+    "complex_chain: ожидалось ['10'], получено ['5', '-4', '2']"
+  ]
+}

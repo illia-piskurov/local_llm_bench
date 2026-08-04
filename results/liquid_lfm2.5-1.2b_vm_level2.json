@@ -1,0 +1,28 @@
+{
+  "model": "liquid/lfm2.5-1.2b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-07-17 10:23:28",
+  "passed": 9,
+  "total": 27,
+  "failures": [
+    "sub_order: ожидалось ['7'], получено ['-7']",
+    "div_truncate: ожидалось ['3'], получено ['3.5']",
+    "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+    "swap: ожидалось ['1'], получено ['-1']",
+    "pop: ожидалось ['1'], получено ['2', '1']",
+    "comments_and_blank_lines: неожиданное исключение: list index out of range",
+    "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно",
+    "empty_program: неожиданное исключение: list index out of range",
+    "complex_chain: ожидалось ['10'], получено ['5', '-4', '2']",
+    "unconditional_jump_skips_code: ожидалось ['3'], получено ['1001', '1']",
+    "jz_taken_when_zero: неожиданное исключение: invalid literal for int() with base 10: 'zero'",
+    "jz_not_taken_when_nonzero: неожиданное исключение: invalid literal for int() with base 10: 'zero'",
+    "jnz_taken_when_nonzero: неожиданное исключение: invalid literal for int() with base 10: 'nz'",
+    "jnz_not_taken_when_zero: неожиданное исключение: invalid literal for int() with base 10: 'nz'",
+    "countdown_loop: неожиданное исключение: invalid literal for int() with base 10: 'loop'",
+    "count_up_loop: неожиданное исключение: invalid literal for int() with base 10: 'loop'",
+    "jump_to_undefined_label: ожидалась ошибка, но выполнение прошло успешно"
+  ]
+}

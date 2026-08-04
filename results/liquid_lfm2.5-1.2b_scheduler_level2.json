@@ -1,0 +1,15 @@
+{
+  "model": "liquid/lfm2.5-1.2b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-07-17 10:26:35",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: 'int' object is not subscriptable",
+    "simple_chain: неожиданное исключение: 'int' object is not subscriptable",
+    "diamond_pick_longer_branch: неожиданное исключение: 'int' object is not subscriptable",
+    "independent_tasks: неожиданное исключение: 'int' object is not subscriptable",
+    "wide_graph: неожиданное исключение: 'int' object is not subscriptable"
+  ]
+}

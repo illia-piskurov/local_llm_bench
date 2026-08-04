@@ -1,0 +1,17 @@
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    in_degree = {task: 0 for task in tasks}
+    for duration, dependencies in tasks.values():
+        for dep in dependencies:
+            in_degree[dep] += 1
+    
+    zero_in_degree = [task for task in tasks if in_degree[task] == 0]
+    critical_path_length = 0
+    while zero_in_degree:
+        current = zero_in_degree.pop(0)
+        critical_path_length += duration[0]
+        for dependent in tasks.get(current, []):
+            in_degree[dependent] -= 1
+            if in_degree[dependent] == 0:
+                zero_in_degree.append(dependent)
+    
+    return critical_path_length if len(tasks) - critical_path_length == 0 else None

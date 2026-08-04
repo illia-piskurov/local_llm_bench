@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Змейка</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #111;
+            overflow: hidden;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: #222;
+            position: relative;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score">Счёт: 0</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let score = 0;
+        let x, y;
+        let gameOver = false;
+        const gameSpeed = 5;
+
+        const directions = {
+            'w': [0, -1],
+            's': [0, 1],
+            'a': [-1, 0],
+            'd': [1, 0]
+        };
+
+        function updateScore() {
+            score++;
+            document.getElementById('score').textContent = score;
+        }
+
+        function drawZm**eck() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(x, y, 50, 50);
+
+            // Плавное движение
+            const move = directions[document.currentTarget.keyboardEvent.button];
+            if (move) {
+                x += move[0] * gameSpeed;
+                y += move[1] * gameSpeed;
+            }
+
+            // Проверка столкновения
+            if (x + 50 >= canvas.width || x - 50 <= 0 || y + 25 >= canvas.height || y - 25 <= 0) {
+                gameOver = true;
+            }
+
+            // Вспышка при поедании еды (пример)
+            if (score % 10 === 0) {
+                ctx.fillStyle = 'rgba(255,0,0,0.3)';
+                ctx.beginPath();
+                ctx.arc(x + 25, y - 25, 20, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'w': x += directions['w'].y; break;
+                case 's': x += directions['s'].y; break;
+                case 'a': x -= directions['a'].x; break;
+                case 'd': x += directions['d'].x; break;
+            }
+        });
+
+        function gameLoop() {
+            if (gameOver) return;
+
+            drawZm**eck();
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('keydown', () => {
+            if (gameOver) {
+                document.getElementById('restartBtn').style.display = 'none';
+                return;
+            }
+            updateScore();
+        });
+
+        // Перезапуск после game over
+        window.addEventListener('click', () => {
+            document.getElementById('restartBtn').style.display = 'block';
+        });
+
+        // Всплывающее окно для перезапуска
+        const restartBtn = document.createElement('button');
+        restartBtn.textContent = 'Перезапустить игру';
+        restartBtn.style.position = 'absolute';
+        restartBtn.style.top = '10px';
+        restartBtn.style.right = '10px';
+        restartBtn.addEventListener('click', () => {
+            document.body.innerHTML = '';
+            canvas.width = 400;
+            canvas.height = 400;
+            score = 0;
+            x = 0;
+            y = 0;
+            gameOver = false;
+            updateScore();
+            drawZm**eck();
+        });
+    </script>
+</body>
+</html>

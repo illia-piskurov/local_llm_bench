@@ -1,0 +1,8 @@
+{
+  "model": "liquid/lfm2.5-1.2b",
+  "benchmark": "snake",
+  "level": "level2",
+  "tested_at": "2026-07-17 10:37:18",
+  "manual_score": 1,
+  "comment": "полная поломка"
+}

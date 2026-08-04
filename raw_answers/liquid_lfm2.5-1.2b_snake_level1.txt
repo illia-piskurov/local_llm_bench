@@ -1,0 +1,95 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Змейка</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #111;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: #222;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score">Счёт: 0</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let score = 0;
+        let x, y;
+        let gameOver = false;
+
+        const directions = {
+            'w': [0, -1],
+            's': [0, 1],
+            'a': [-1, 0],
+            'd': [1, 0]
+        };
+
+        function updateScore() {
+            score++;
+            document.getElementById('score').textContent = score;
+        }
+
+        function drawZm**eck() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(x, y, 50, 50);
+
+            // Простая форму змейки
+            ctx.beginPath();
+            ctx.arc(x + 25, y - 25, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Проверка столкновения
+            if (x + 50 >= canvas.width || x - 50 <= 0 || y + 25 >= canvas.height || y - 25 <= 0) {
+                gameOver = true;
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'w': x += directions['w'].y; break;
+                case 's': x += directions['s'].y; break;
+                case 'a': x -= directions['a'].x; break;
+                case 'd': x += directions['d'].x; break;
+            }
+        });
+
+        function gameLoop() {
+            if (gameOver) return;
+
+            drawZm**eck();
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('keydown', () => {
+            if (gameOver) {
+                document.getElementById('restartBtn').style.display = 'none';
+                return;
+            }
+            updateScore();
+        });
+
+        // Перезапуск после game over
+        window.addEventListener('click', () => {
+            document.getElementById('restartBtn').style.display = 'block';
+        });
+
+        // Инициализация
+        gameLoop();
+    </script>
+</body>
+</html>
+```

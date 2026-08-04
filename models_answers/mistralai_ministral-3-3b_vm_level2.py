@@ -1,80 +1,103 @@
-def run(program):
+def run(program: str) -> list[str]:
     stack = []
     output = []
-    labels = {}
     lines = program.split('\n')
-    current_line = 0
+    labels = {}
+    pc = 0  # Программный счётчик
+    line_num = 1
 
-    # Парсим метки
-    for line_num, line in enumerate(lines):
-        stripped = line.strip()
-        if not stripped or stripped.startswith('#'):
-            continue
-        parts = stripped.split()
-        if parts and parts[0] == 'LABEL':
-            labels[parts[1]] = line_num
-
-    # Выполнение программы с отслеживанием индексации
-    pc = 0  # Программный указатель
-    while True:
-        line = lines[pc].strip()
-        if not line or line.startswith('#'):
+    def get_line():
+        nonlocal pc, line_num
+        while True:
+            if pc >= len(lines):
+                return None
+            line = lines[pc].strip()
             pc += 1
-            continue
+            if not line or line.startswith('#'):
+                continue
+            return line.split()
 
-        parts = line.split()
-        cmd = parts[0]
-
+    while True:
         try:
-            if cmd == 'PUSH':
-                stack.append(int(parts[1]))
-            elif cmd == 'POP':
-                if not stack: raise IndexError(f"Stack underflow at line {pc + 1}")
-                stack.pop()
-            elif cmd in ('ADD', 'SUB', 'MUL'):
-                if len(stack) < 2:
-                    raise IndexError(f"Not enough values for {cmd} at line {pc + 1}")
+            cmd = get_line()
+            if cmd is None:
+                break
 
-                a, b = stack.pop(), stack.pop() if cmd == 'ADD' else stack[-1], stack.pop()
-                if cmd == 'SUB': a, b = b, a
-                stack.append(a + (b * (cmd != 'ADD')))
+            stripped_line = ' '.join(cmd)
+            parts = stripped_line.split(maxsplit=1)
 
-            elif cmd == 'DIV':
-                if len(stack) < 2:
-                    raise IndexError(f"Not enough values for DIV at line {pc + 1}")
-                a, b = stack.pop(), stack.pop()
-                if a == 0: raise ZeroDivisionError(f"Division by zero at line {pc + 1}")
-                stack.append(b // a)
+            if parts[0] == 'LABEL':
+                labels[parts[1]] = pc - 1
+                continue
 
-            elif cmd == 'DUP':
-                if not stack:
-                    raise IndexError(f"No values to duplicate at line {pc + 1}")
-                stack.append(stack[-1])
+            try:
+                if cmd[0] == 'PUSH':
+                    n = int(cmd[1])
+                    stack.append(n)
+                elif cmd[0] == 'POP':
+                    if not stack:
+                        raise IndexError(f"Stack underflow at line {line_num}")
+                    stack.pop()
+                elif cmd[0] == 'ADD':
+                    if len(stack) < 2:
+                        raise IndexError(f"Not enough values on stack for ADD at line {line_num}")
+                    a, b = stack.pop(), stack.pop()
+                    stack.append(a + b)
+                elif cmd[0] == 'SUB':
+                    if len(stack) < 2:
+                        raise IndexError(f"Not enough values on stack for SUB at line {line_num}")
+                    a, b = stack.pop(), stack.pop()
+                    stack.append(b - a)
+                elif cmd[0] == 'MUL':
+                    if len(stack) < 2:
+                        raise IndexError(f"Not enough values on stack for MUL at line {line_num}")
+                    a, b = stack.pop(), stack.pop()
+                    stack.append(a * b)
+                elif cmd[0] == 'DIV':
+                    if len(stack) < 2:
+                        raise IndexError(f"Not enough values on stack for DIV at line {line_num}")
+                    a, b = stack.pop(), stack.pop()
+                    if a == 0:
+                        raise ZeroDivisionError(f"Division by zero at line {line_num}")
+                    stack.append(b // a)
+                elif cmd[0] == 'DUP':
+                    if not stack:
+                        raise IndexError(f"Not enough values on stack for DUP at line {line_num}")
+                    stack.append(stack[-1])
+                elif cmd[0] == 'SWAP':
+                    if len(stack) < 2:
+                        raise IndexError(f"Not enough values on stack for SWAP at line {line_num}")
+                    a, b = stack.pop(), stack.pop()
+                    stack.append(a)
+                    stack.append(b)
+                elif cmd[0] == 'PRINT':
+                    if not stack:
+                        raise IndexError(f"No value to print at line {line_num}")
+                    output.append(str(stack[-1]))
+            except (IndexError, ZeroDivisionError) as e:
+                raise type(e)(f"{e.args[0]}") from None
 
-            elif cmd == 'SWAP':
-                if len(stack) < 2:
-                    raise IndexError(f"Not enough values for SWAP at line {pc + 1}")
-                a, b = stack.pop(), stack.pop()
-                stack.extend([a, b])
+            # Обработка условных переходов
+            if cmd and len(cmd) > 1 and cmd[0] in ('JMP', 'JZ', 'JNZ'):
+                label = cmd[1]
+                if cmd[0] == 'JMP':
+                    pc = labels.get(label, -1)
+                    line_num = pc + 1
+                    continue
+                else:
+                    val = stack.pop()
+                    if (cmd[0] == 'JZ' and val == 0) or (cmd[0] == 'JNZ' and val != 0):
+                        pc = labels.get(label, -1)
+                        line_num = pc + 1
+                        continue
 
-            elif cmd == 'PRINT':
-                if not stack:
-                    raise IndexError(f"No value to print at line {pc + 1}")
-                output.append(str(stack[-1]))
-
-            elif cmd in ('JMP', 'JZ', 'JNZ'):
-                target = parts[1]
-                if cmd == 'JMP' or (cmd == 'JZ' and stack.pop() == 0) or (cmd == 'JNZ' and stack.pop() != 0):
-                    if target not in labels:
-                        raise IndexError(f"Undefined label '{target}' at line {pc + 1}")
-                    pc = labels[target]
-
-            else:  # LABEL
-                pass
+            # Обработка ошибок некорректной метки
+            if cmd and len(cmd) > 1:
+                label = cmd[1]
+                if label not in labels:
+                    raise ValueError(f"Undefined label '{label}' at line {line_num}")
 
         except Exception as e:
-            raise type(e)(f"{e}") from None
-
-        pc += 1
+            raise type(e)(f"{e.args[0]}") from None
 
     return output
