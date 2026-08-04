@@ -1,0 +1,76 @@
+```python
+def run(program: str) -> list[str]:
+    """
+    Запускает интерпретатор стекового языка и возвращает список выведенных строк.
+
+    Args:
+        program: Многострочный текст, представляющий программу на стековом языке.
+
+    Returns:
+        Список строк, содержащих вывод оператора PRINT.
+    """
+
+    stack = []
+    output = []
+    lines = program.splitlines()
+    for i, line in enumerate(lines):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        try:
+            parts = line.split()
+            instruction = parts[0]
+
+            if instruction == "PUSH":
+                stack.append(int(parts[1]))
+            elif instruction == "POP":
+                if not stack:
+                    raise ValueError(f"Stack underflow on line {i + 1}")
+                stack.pop()
+            elif instruction == "ADD":
+                if len(stack) < 2:
+                    raise ValueError(f"Not enough operands for ADD on line {i + 1}")
+                operand2 = stack.pop()
+                operand1 = stack.pop()
+                stack.append(operand1 + operand2)
+            elif instruction == "SUB":
+                if len(stack) < 2:
+                    raise ValueError(f"Not enough operands for SUB on line {i + 1}")
+                operand2 = stack.pop()
+                operand1 = stack.pop()
+                stack.append(operand1 - operand2)
+            elif instruction == "MUL":
+                if len(stack) < 2:
+                    raise ValueError(f"Not enough operands for MUL on line {i + 1}")
+                operand2 = stack.pop()
+                operand1 = stack.pop()
+                stack.append(operand1 * operand2)
+            elif instruction == "DIV":
+                if len(stack) < 2:
+                    raise ValueError(f"Not enough operands for DIV on line {i + 1}")
+                operand2 = stack.pop()
+                operand1 = stack.pop()
+                if operand2 == 0:
+                    raise ZeroDivisionError(f"Division by zero on line {i + 1}")
+                stack.append(operand1 // operand2)  # Integer division
+            elif instruction == "DUP":
+                if not stack:
+                    raise ValueError(f"Stack is empty, cannot DUP on line {i + 1}")
+                stack.append(stack[-1])
+            elif instruction == "SWAP":
+                if len(stack) < 2:
+                    raise ValueError(f"Not enough elements to SWAP on line {i + 1}")
+                stack[-1], stack[-2] = stack[-2], stack[-1]
+            elif instruction == "PRINT":
+                if not stack:
+                    raise ValueError(f"Stack is empty, cannot PRINT on line {i + 1}")
+                output.append(str(stack[-1]))
+            else:
+                raise ValueError(f"Unknown instruction: {instruction} on line {i + 1}")
+
+        except (ValueError, ZeroDivisionError) as e:
+            output.append(str(e))
+            
+    return output
+```

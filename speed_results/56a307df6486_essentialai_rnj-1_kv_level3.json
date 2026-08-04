@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "essentialai/rnj-1",
+  "benchmark": "kv",
+  "level": "level3",
+  "tested_at": "2026-08-04 21:45:17",
+  "stats": {
+    "input_tokens": 1130,
+    "total_output_tokens": 627,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 12.740204931174548,
+    "time_to_first_token_seconds": 12.127745,
+    "model_load_time_seconds": null
+  }
+}

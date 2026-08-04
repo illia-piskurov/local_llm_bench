@@ -1,0 +1,8 @@
+{
+  "model": "essentialai/rnj-1",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-08-04 21:23:21",
+  "manual_score": 1,
+  "comment": "не работает"
+}

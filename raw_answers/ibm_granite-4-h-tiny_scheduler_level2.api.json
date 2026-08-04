@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    def dfs(task):\n        if memo[task] is not None:\n            return memo[task]\n        max_duration = 0\n        for dep in tasks.get(task, []):\n            duration = dfs(dep)\n            if duration is None:\n                return None  # cycle detected\n            max_duration = max(max_duration, duration)\n        memo[task] = max_duration + tasks[task][0]\n        return memo[task]\n\n    memo = {task: None for task in tasks}\n    result = None\n\n    for task in tasks:\n        duration = dfs(task)\n        if duration is None:\n            return None  # cycle detected\n        if result is None or duration > result:\n            result = duration\n\n    return result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 685,
+    "total_output_tokens": 176,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 19.79272295799546,
+    "time_to_first_token_seconds": 7.376808,
+    "model_load_time_seconds": 4.015
+  },
+  "response_id": "resp_988d4078a7d8c2163af075b6b194936bfa30026698076ada"
+}

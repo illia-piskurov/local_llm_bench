@@ -1,0 +1,9 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-08-04 20:26:12",
+  "passed": 15,
+  "total": 15,
+  "failures": []
+}

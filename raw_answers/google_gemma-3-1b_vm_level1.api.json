@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "google/gemma-3-1b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef run(program: str):\n    lines = program.strip().split('\\n')\n    stack = []\n    for line in lines:\n        line = line.strip()\n        if not line:\n            continue\n        if line.startswith(\"#\"):\n            continue\n        try:\n            num = int(line)\n            if num == 0:\n                print(\"Error: Division by zero\")\n                return []\n            stack.append(num)\n        except ValueError:\n            print(\"Error: Invalid number\")\n            return []\n\n    result = []\n    while stack:\n        val = stack.pop()\n        if val == 0:\n            print(\"Error: Division by zero\")\n            return []\n        result.append(str(val))\n\n    print(\" \".join(result))\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 322,
+    "total_output_tokens": 184,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 70.84348018596413,
+    "time_to_first_token_seconds": 0.413078
+  },
+  "response_id": "resp_6a6d77a6176006699665766a4dd3e7125a5532ee8dd69830"
+}

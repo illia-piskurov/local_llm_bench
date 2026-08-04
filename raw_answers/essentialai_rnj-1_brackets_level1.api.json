@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    stack = []\n    matching_bracket = {')': '(', ']': '[', '}': '{'}\n    \n    for char in s:\n        if char in \"([{\":\n            stack.append(char)\n        elif char in \")]}\":\n            if not stack or stack[-1] != matching_bracket[char]:\n                return False\n            stack.pop()\n    \n    return not stack\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 229,
+    "total_output_tokens": 94,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.50094614343319,
+    "time_to_first_token_seconds": 2.4251729999999996
+  },
+  "response_id": "resp_74678773bc9fd09b43d955813d7d1e40011a8da1222b9e8f"
+}

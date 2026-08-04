@@ -4,13 +4,13 @@
   "model": "qwen/qwen3.5-9b",
   "benchmark": "vm",
   "level": "level2",
-  "tested_at": "2026-07-12 18:49:18",
+  "tested_at": "2026-08-04 22:42:42",
   "stats": {
     "input_tokens": 1126,
-    "total_output_tokens": 7066,
-    "reasoning_output_tokens": 6942,
-    "tokens_per_second": 12.272208036719945,
-    "time_to_first_token_seconds": 7.095441,
-    "model_load_time_seconds": 7.671
+    "total_output_tokens": 8531,
+    "reasoning_output_tokens": 7446,
+    "tokens_per_second": 10.460973457479097,
+    "time_to_first_token_seconds": 13.682725,
+    "model_load_time_seconds": null
   }
 }

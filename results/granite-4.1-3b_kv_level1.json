@@ -1,0 +1,11 @@
+{
+  "model": "granite-4.1-3b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-08-04 23:07:36",
+  "passed": 0,
+  "total": 15,
+  "failures": [
+    "не удалось загрузить решение: 'continue' not properly in loop (granite-4.1-3b_kv_level1.py, line 35)"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "model": "granite-4.1-3b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-04 23:08:48",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: name 'topo_sort' is not defined",
+    "simple_chain: неожиданное исключение: name 'topo_sort' is not defined",
+    "diamond_pick_longer_branch: неожиданное исключение: name 'topo_sort' is not defined",
+    "independent_tasks: неожиданное исключение: name 'topo_sort' is not defined",
+    "wide_graph: неожиданное исключение: name 'topo_sort' is not defined"
+  ]
+}

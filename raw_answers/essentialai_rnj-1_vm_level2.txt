@@ -1,0 +1,97 @@
+```python
+def run(program: str) -> list[str]:
+    lines = program.strip().split('\n')
+    stack = []
+    output = []
+    labels = {}
+    pc = 0
+
+    # Preprocess to find all labels
+    for i, line in enumerate(lines):
+        if not line or line.startswith('#'):
+            continue
+        parts = line.split()
+        cmd = parts[0]
+        if cmd == 'LABEL':
+            label_name = parts[1]
+            labels[label_name] = i
+
+    while pc < len(lines):
+        line = lines[pc].strip()
+        if not line or line.startswith('#'):
+            pc += 1
+            continue
+
+        parts = line.split()
+        cmd = parts[0]
+
+        try:
+            if cmd == 'PUSH':
+                n = int(parts[1])
+                stack.append(n)
+                pc += 1
+            elif cmd == 'POP':
+                if len(stack) < 1:
+                    raise ValueError(f"Stack underflow at line {pc + 1}")
+                stack.pop()
+                pc += 1
+            elif cmd in ('ADD', 'SUB', 'MUL', 'DIV'):
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {pc + 1}")
+                b = stack.pop()
+                a = stack.pop()
+                if cmd == 'ADD':
+                    res = a + b
+                elif cmd == 'SUB':
+                    res = a - b
+                elif cmd == 'MUL':
+                    res = a * b
+                elif cmd == 'DIV':
+                    if b == 0:
+                        raise ZeroDivisionError(f"Division by zero at line {pc + 1}")
+                    res = a // b
+                stack.append(res)
+                pc += 1
+            elif cmd == 'DUP':
+                if len(stack) < 1:
+                    raise ValueError(f"Stack underflow at line {pc + 1}")
+                stack.append(stack[-1])
+                pc += 1
+            elif cmd == 'SWAP':
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {pc + 1}")
+                a = stack.pop()
+                b = stack.pop()
+                stack.append(a)
+                stack.append(b)
+                pc += 1
+            elif cmd == 'PRINT':
+                if len(stack) < 1:
+                    raise ValueError(f"Stack underflow at line {pc + 1}")
+                output.append(str(stack[-1]))
+                pc += 1
+            elif cmd in ('JMP', 'JZ', 'JNZ'):
+                label_name = parts[1]
+                if label_name not in labels:
+                    raise ValueError(f"Label '{label_name}' not found at line {pc + 1}")
+                target_pc = labels[label_name] + 1  # Jump to the next instruction after the label
+                if cmd == 'JMP':
+                    pc = target_pc - 1  # Adjust for loop increment below
+                elif len(stack) < 1:
+                    raise ValueError(f"Stack underflow at line {pc + 1}")
+                else:
+                    value = stack.pop()
+                    condition_met = (cmd == 'JZ' and value == 0) or (cmd == 'JNZ' and value != 0)
+                    if condition_met:
+                        pc = target_pc - 1
+                    else:
+                        pc += 1
+            elif cmd == 'LABEL':
+                # Ignore LABEL command during execution
+                pc += 1
+        except Exception as e:
+            print(f"Error: {e}")
+            break
+
+    return output
+```

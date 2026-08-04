@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nclass KeyValueStore:\n    def __init__(self):\n        self.data = {}\n        self.transactions = []\n\n    def _commit(self):\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n            return\n\n        top_tx = self.transactions.pop()\n        for key, value in top_tx.items():\n            self.data[key] = value\n        print(\"COMMIT\")\n\n    def _rollback(self):\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n            return\n\n        self.transactions.pop()\n        for key, value in list(self.data.items()):\n            del self.data[key]\n        print(\"ROLLBACK\")\n\n    def execute_command(self, command):\n        parts = command.split()\n        if not parts:\n            return\n\n        op = parts[0]\n\n        if op == \"SET\":\n            if len(parts) != 3:\n                continue\n            key, value = parts[1], parts[2]\n            self.data[key] = value\n\n        elif op == \"GET\":\n            if len(parts) != 2:\n                continue\n            key = parts[1]\n            print(self.data.get(key, \"NULL\"))\n\n        elif op == \"DELETE\":\n            if len(parts) != 2:\n                continue\n            key = parts[1]\n            if key in self.data:\n                del self.data[key]\n\n        elif op == \"BEGIN\":\n            self.transactions.append({})\n            print(\"BEGIN\")\n\n        elif op == \"COMMIT\":\n            self._commit()\n\n        elif op == \"ROLLBACK\":\n            self._rollback()\n\n\ndef run(program: str) -> list[str]:\n    kv_store = KeyValueStore()\n    output = []\n\n    for line in program.splitlines():\n        line = line.strip()\n        if not line:\n            continue\n\n        kv_store.execute_command(line)\n        if line.startswith((\"GET\", \"COMMIT\", \"ROLLBACK\")):\n            output.append(line)\n\n    return output\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 585,
+    "total_output_tokens": 390,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 27.727045578783944,
+    "time_to_first_token_seconds": 0.6352329999999999
+  },
+  "response_id": "resp_aadd5300ba91bbbfe53f058e55cd9666fdf29509587925f0"
+}

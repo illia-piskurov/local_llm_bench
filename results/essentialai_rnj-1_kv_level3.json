@@ -1,0 +1,16 @@
+{
+  "model": "essentialai/rnj-1",
+  "benchmark": "kv",
+  "level": "level3",
+  "tested_at": "2026-08-04 21:45:30",
+  "passed": 24,
+  "total": 30,
+  "failures": [
+    "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+    "snapshot_restores_full_state: ожидалось ['2', '2'], получено ['3', '3']",
+    "snapshot_is_deep_copied: ожидалось ['1', '2'], получено ['3', '3']",
+    "restore_preserves_open_transactions: ожидалось ['1'], получено ['2']",
+    "restore_keeps_watch_registrations: ожидалось ['WATCH a NULL -> 1', 'WATCH a 1 -> 2', 'WATCH a 1 -> 3'], получено ['WATCH a NULL -> 1', 'WATCH a 1 -> 2', 'WATCH a 2 -> 3']",
+    "snapshot_inside_nested_transactions: ожидалось ['1', '2', '1', '2'], получено ['3', '2', '3', '2']"
+  ]
+}

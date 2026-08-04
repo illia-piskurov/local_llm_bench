@@ -1,0 +1,9 @@
+{
+  "model": "ibm/granite-3.2-8b",
+  "benchmark": "brackets",
+  "level": "level1",
+  "tested_at": "2026-08-04 23:12:39",
+  "passed": 12,
+  "total": 12,
+  "failures": []
+}

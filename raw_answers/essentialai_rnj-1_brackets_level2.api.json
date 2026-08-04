@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef max_depth(s: str) -> int:\n    stack = []\n    max_d = 0\n    \n    for char in s:\n        if char in \"([{\":\n            stack.append(char)\n            max_d = max(max_d, len(stack))\n        elif char in \")]}\":\n            if not stack or (char == ')' and stack[-1] != '(') or \\\n               (char == ']' and stack[-1] != '[') or \\\n               (char == '}' and stack[-1] != '{'):\n                continue\n            else:\n                stack.pop()\n    \n    return max_d\n\n\ndef find_unmatched(s: str) -> list[int]:\n    stack = []\n    unmatched_indices = []\n    \n    for i, char in enumerate(s):\n        if char in \"([{\":\n            stack.append((char, i))\n        elif char in \")]}\":\n            if not stack or (char == ')' and stack[-1][0] != '(') or \\\n               (char == ']' and stack[-1][0] != '[') or \\\n               (char == '}' and stack[-1][0] != '{'):\n                unmatched_indices.append(i)\n            else:\n                stack.pop()\n    \n    # Add indices of any remaining open brackets\n    for _, idx in stack:\n        unmatched_indices.append(idx)\n    \n    return sorted(unmatched_indices)\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 668,
+    "total_output_tokens": 282,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 12.905412433870632,
+    "time_to_first_token_seconds": 4.751439
+  },
+  "response_id": "resp_b782c75ed762035534387f76a139f680be277b0782d19421"
+}

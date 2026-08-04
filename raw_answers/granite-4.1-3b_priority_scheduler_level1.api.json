@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nfrom collections import defaultdict, deque\nimport heapq\n\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    def find_cycle():\n        visited = set()\n        recursion_stack = set()\n\n        def dfs(node):\n            if node in recursion_stack:\n                return True\n            if node in visited:\n                return False\n\n            visited.add(node)\n            recursion_stack.add(node)\n\n            for dep in tasks[node][1]:\n                if dfs(dep):\n                    return True\n\n            recursion_stack.remove(node)\n            return False\n\n        for task in tasks.values():\n            if dfs(task[0]):\n                return True\n        return False\n\n    if find_cycle():\n        return None\n\n    # Sort tasks by priority, then duration, then name\n    sorted_tasks = sorted(tasks.items(), key=lambda x: (-x[1][2], x[1][0], x[0]))\n\n    # Initialize graph and in-degree for topological sort\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n\n    for task, (duration, deps, _) in sorted_tasks:\n        for dep in deps:\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    # Queue for processing ready tasks\n    ready_queue = []\n    heapq.heapify(ready_queue)\n\n    current_time = 0\n    completed_tasks = set()\n\n    while len(completed_tasks) < len(tasks):\n        # Add all tasks that are ready (all dependencies completed) to the queue\n        for task, duration in sorted_tasks:\n            if in_degree[task] == 0 and task not in completed_tasks:\n                heapq.heappush(ready_queue, (tasks[task][2], -duration, task))\n\n        while ready_queue and len(completed_tasks) < len(tasks):\n            _, duration, task = heapq.heappop(ready_queue)\n            if current_time + duration <= workers:\n                # Start the task\n                completed_tasks.add(task)\n\n                # Decrease in-degree for dependent tasks\n                for dep in graph[task]:\n                    in_degree[dep] -= 1\n\n                # Update current time\n                current_time += duration\n            else:\n                break\n\n        if not ready_queue and len(completed_tasks) < len(tasks):\n            return None  # Not enough workers to keep up with the tasks\n\n    # Collect all completed tasks in order of their start time, priority, duration, name\n    result = []\n    for task in sorted(completed_tasks):\n        result.append(task)\n\n    return result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 405,
+    "total_output_tokens": 541,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 27.99529616927581,
+    "time_to_first_token_seconds": 1.1795470000000001
+  },
+  "response_id": "resp_f30a1794932f36fbab7800c78c305bc830d950e9e12d8bb1"
+}

@@ -1,0 +1,15 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-04 20:27:52",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: 5",
+    "simple_chain: неожиданное исключение: 2",
+    "diamond_pick_longer_branch: неожиданное исключение: 1",
+    "independent_tasks: неожиданное исключение: 3",
+    "wide_graph: неожиданное исключение: 10"
+  ]
+}

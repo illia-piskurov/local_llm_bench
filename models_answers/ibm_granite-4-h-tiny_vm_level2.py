@@ -64,7 +64,7 @@ def run(program: str) -> list[str]:
             elif cmd == "JMP":
                 target = labels[parts[1]]
                 if not (0 <= target < len(lines)):
-                    raise IndexError(f"Label '{parts[1]}' not found at line {i+1}")
+                    raise IndexError(f"Invalid jump to label '{parts[1]}' at line {i+1}")
                 lines[i] = f"# JUMP TO LABEL {parts[1]} (replaced)"
             elif cmd == "JZ":
                 if len(stack) < 1:
@@ -72,8 +72,8 @@ def run(program: str) -> list[str]:
                 val = stack.pop()
                 target = labels[parts[1]]
                 if not (0 <= target < len(lines)):
-                    raise IndexError(f"Label '{parts[1]}' not found at line {i+1}")
-                lines[i] = f"# JMP TO LABEL {parts[1]} (replaced)"
+                    raise IndexError(f"Invalid jump to label '{parts[1]}' after JZ at line {i+1}")
+                lines[i] = f"# JUMP TO LABEL {parts[1]} (replaced)"
                 if val == 0:
                     i = target - 1
             elif cmd == "JNZ":
@@ -82,8 +82,8 @@ def run(program: str) -> list[str]:
                 val = stack.pop()
                 target = labels[parts[1]]
                 if not (0 <= target < len(lines)):
-                    raise IndexError(f"Label '{parts[1]}' not found at line {i+1}")
-                lines[i] = f"# JMP TO LABEL {parts[1]} (replaced)"
+                    raise IndexError(f"Invalid jump to label '{parts[1]}' after JNZ at line {i+1}")
+                lines[i] = f"# JUMP TO LABEL {parts[1]} (replaced)"
                 if val != 0:
                     i = target - 1
             else:

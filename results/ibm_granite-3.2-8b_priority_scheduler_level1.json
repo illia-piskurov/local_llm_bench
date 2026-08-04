@@ -1,0 +1,15 @@
+{
+  "model": "ibm/granite-3.2-8b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-04 23:12:11",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: ожидалось ['b', 'c', 'a'], получено ['a', 'c', 'b']",
+    "dependency_unlocks_later: ожидалось ['a', 'b', 'c'], получено ['a', 'c', 'b']",
+    "single_worker_duration_tiebreak: ожидалось ['b', 'c', 'a'], получено ['a', 'c', 'b']",
+    "resource_limit_and_priority: ожидалось ['compile', 'lint', 'test', 'package', 'deploy'], получено ['lint', 'compile', 'test', 'package', 'deploy']",
+    "simultaneous_unlocks: ожидалось ['root', 'c', 'd', 'b'], получено ['root', 'b', 'd', 'c']"
+  ]
+}

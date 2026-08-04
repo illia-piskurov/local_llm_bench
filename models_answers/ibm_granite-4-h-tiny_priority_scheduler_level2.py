@@ -1,0 +1,110 @@
+from collections import defaultdict, deque
+
+def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task in tasks}
+    
+    for task, (_, deps, _) in tasks.items():
+        for dep in deps:
+            graph[dep].append(task)
+            in_degree[task] += 1
+    
+    def topological_sort():
+        queue = deque([task for task in tasks if in_degree[task] == 0])
+        order = []
+        
+        while queue:
+            next_tasks = sorted(queue, key=lambda t: (-tasks[t][2], tasks[t][0], t))
+            chosen_task = None
+            
+            for _ in range(min(workers, len(next_tasks))):
+                chosen_task = next_tasks.pop(0)
+                order.append(chosen_task)
+                
+                for dependent in graph[chosen_task]:
+                    in_degree[dependent] -= 1
+                    if in_degree[dependent] == 0:
+                        queue.append(dependent)
+            
+            if not next_tasks and not queue:
+                break
+        
+        return order if len(order) == len(tasks) else None
+    
+    sorted_tasks = topological_sort()
+    
+    if sorted_tasks is None:
+        return None
+    
+    def longest_path():
+        distances = {task: 0 for task in tasks}
+        
+        for task in sorted_tasks:
+            max_duration = 0
+            for dep in graph[task]:
+                max_duration = max(max_duration, distances[dep])
+            
+            distances[task] = max_duration + tasks[task][0]
+        
+        return max(distances.values())
+    
+    return longest_path()
+
+def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task in tasks}
+    
+    for task, (_, deps, _) in tasks.items():
+        for dep in deps:
+            graph[dep].append(task)
+            in_degree[task] += 1
+    
+    def topological_sort():
+        queue = deque([task for task in tasks if in_degree[task] == 0])
+        order = []
+        
+        while queue:
+            next_tasks = sorted(queue, key=lambda t: (-tasks[t][2], tasks[t][0], t))
+            chosen_task = None
+            
+            for _ in range(min(workers, len(next_tasks))):
+                chosen_task = next_tasks.pop(0)
+                order.append(chosen_task)
+                
+                for dependent in graph[chosen_task]:
+                    in_degree[dependent] -= 1
+                    if in_degree[dependent] == 0:
+                        queue.append(dependent)
+            
+            if not next_tasks and not queue:
+                break
+        
+        return order if len(order) == len(tasks) else None
+    
+    sorted_tasks = topological_sort()
+    
+    if sorted_tasks is None:
+        return None
+    
+    schedule = []
+    current_time = 0
+    available_tasks = deque(sorted_tasks)
+    
+    while available_tasks or schedule:
+        ready_tasks = [task for task in available_tasks if all(dep_task in schedule for dep_task in tasks[task][1])]
+        
+        if not ready_tasks and schedule:
+            current_time += min(tasks[task][0] for task in schedule if task not in available_tasks)
+        
+        while ready_tasks and len(schedule) < workers:
+            task = ready_tasks.popleft()
+            schedule.append(task)
+        
+        if schedule:
+            next_start_times = {task: current_time + tasks[task][0] for task in schedule}
+            start_times, order = zip(*sorted((time, task) for task, time in next_start_times.items()))
+            
+            for i, task in enumerate(order):
+                schedule[i] = task
+    
+    return max(tasks[task][0] + current_time for task in schedule)

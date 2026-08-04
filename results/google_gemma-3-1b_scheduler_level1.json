@@ -1,0 +1,20 @@
+{
+  "model": "google/gemma-3-1b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-04 20:59:37",
+  "passed": 0,
+  "total": 10,
+  "failures": [
+    "no_dependencies: невалидный топологический порядок: []",
+    "simple_chain: невалидный топологический порядок: []",
+    "diamond: невалидный топологический порядок: []",
+    "multiple_roots: невалидный топологический порядок: []",
+    "single_task: невалидный топологический порядок: []",
+    "self_cycle: ожидался None (цикл), получено []",
+    "two_node_cycle: ожидался None (цикл), получено []",
+    "long_cycle: ожидался None (цикл), получено []",
+    "cycle_with_extra_nodes: ожидался None (цикл), получено []",
+    "wide_graph: невалидный топологический порядок: []"
+  ]
+}

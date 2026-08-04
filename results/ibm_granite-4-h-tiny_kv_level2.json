@@ -1,0 +1,17 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-08-04 20:35:51",
+  "passed": 18,
+  "total": 25,
+  "failures": [
+    "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', '10', '10']",
+    "nested_commit_propagates_to_outer_only: ожидалось ['2', '2'], получено ['1', '1']",
+    "count_respects_transaction: ожидалось ['2', '1'], получено ['2', '2']",
+    "watch_set_new_key: ожидалось ['WATCH a NULL -> 10'], получено []",
+    "watch_set_change: ожидалось ['WATCH a 5 -> 10'], получено []",
+    "watch_delete: ожидалось ['WATCH a 5 -> NULL'], получено []",
+    "watch_inside_transaction_fires: ожидалось ['WATCH a NULL -> 1'], получено []"
+  ]
+}

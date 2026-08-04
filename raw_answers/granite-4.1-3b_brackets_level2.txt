@@ -1,0 +1,52 @@
+```python
+def max_depth(s: str) -> int:
+    stack = []
+    current_depth = 0
+    max_depth = 0
+
+    for char in s:
+        if char in "([{":
+            stack.append(char)
+            current_depth += 1
+            max_depth = max(max_depth, current_depth)
+        elif char in ")]}":
+            if stack and stack[-1] == matching_ending_bracket[char]:
+                stack.pop()
+                current_depth -= 1
+
+    return max_depth
+
+def find_unmatched(s: str) -> list[int]:
+    stack = []
+    unmatched_indices = []
+
+    for index, char in enumerate(s):
+        if char in "([{":
+            stack.append(index)
+        elif char in ")]}":
+            if stack and matching_start_bracket[char] == s[stack[-1]]:
+                stack.pop()
+            else:
+                unmatched_indices.append(index)
+
+    # Indices of unclosed opening brackets
+    unmatched_indices.extend(stack)
+
+    return sorted(unmatched_indices)
+
+def is_balanced(s: str) -> bool:
+    stack = []
+    matching_ending_bracket = {')': '(', ']': '[', '}': '{'}
+
+    for char in s:
+        if char in matching_ending_bracket.values():
+            stack.append(char)
+        elif char in matching_ending_bracket.keys():
+            if not stack or stack[-1] != matching_ending_bracket[char]:
+                return False
+            stack.pop()
+
+    return not stack
+
+def matching_start_bracket = {')': '(', ']': '[', '}': '{'}
+```

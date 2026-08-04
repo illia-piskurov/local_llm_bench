@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    def dfs(task):\n        visited[task] = 'visiting'\n        for dep in tasks.get(task, []):\n            if visited[dep] == 'visiting':\n                return False  # cycle detected\n            elif visited[dep] != 'visited' and not dfs(dep):\n                return False\n        visited[task] = 'visited'\n        result.append(task)\n        return True\n\n    visited = {task: 'unvisited' for task in tasks}\n    result = []\n\n    for task in tasks:\n        if visited[task] != 'visited':\n            if not dfs(task):\n                return None  # cycle detected\n\n    return result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 309,
+    "total_output_tokens": 157,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 19.6248307358349,
+    "time_to_first_token_seconds": 3.940178,
+    "model_load_time_seconds": 14.728
+  },
+  "response_id": "resp_24355a13ae692535f8bde6c281c1d21e496f739e91268222"
+}

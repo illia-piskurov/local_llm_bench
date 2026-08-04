@@ -1,0 +1,35 @@
+```python
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    """
+    Реализует планировщик задач с зависимостями в одном Python файле.
+
+    Args:
+        tasks: Словарь, где ключ — имя задачи (строка), а значение — список имён задач,
+               от которых она зависит (эти задачи должны быть выполнены раньше).
+
+    Returns:
+        Список имён всех задач в порядке, при котором каждая задача идёт строго после всех своих зависимостей.
+        Если в графе зависимостей есть цикл — верни None.
+    """
+    visited = set()
+    recursion_stack = []
+    result = []
+
+    def dfs(task):
+        if task in recursion_stack:
+            return
+
+        visited.add(task)
+        recursion_stack.append(task)
+
+        for dependent_task in tasks[task]:
+            dfs(dependent_task)
+
+        recursion_stack.pop()
+
+    for task in tasks:
+        if task not in visited:
+            dfs(task)
+
+    return result
+```

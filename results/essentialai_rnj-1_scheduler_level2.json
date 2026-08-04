@@ -1,0 +1,13 @@
+{
+  "model": "essentialai/rnj-1",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-04 21:17:21",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "simple_chain: ожидалось 9, получено 4",
+    "diamond_pick_longer_branch: ожидалось 12, получено 1",
+    "wide_graph: ожидалось 19, получено 1"
+  ]
+}

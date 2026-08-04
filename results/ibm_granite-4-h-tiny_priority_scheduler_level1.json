@@ -1,0 +1,16 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-04 20:41:54",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+    "dependency_unlocks_later: неожиданное исключение: name 'indeg_map' is not defined",
+    "single_worker_duration_tiebreak: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+    "resource_limit_and_priority: неожиданное исключение: name 'indeg_map' is not defined",
+    "simultaneous_unlocks: неожиданное исключение: name 'indeg_map' is not defined",
+    "cycle_returns_none: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)"
+  ]
+}

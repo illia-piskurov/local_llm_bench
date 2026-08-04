@@ -1,0 +1,21 @@
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    def dfs(task):
+        visited[task] = 'visiting'
+        for dep in tasks.get(task, []):
+            if visited[dep] == 'visiting':
+                return False  # cycle detected
+            elif visited[dep] != 'visited' and not dfs(dep):
+                return False
+        visited[task] = 'visited'
+        result.append(task)
+        return True
+
+    visited = {task: 'unvisited' for task in tasks}
+    result = []
+
+    for task in tasks:
+        if visited[task] != 'visited':
+            if not dfs(task):
+                return None  # cycle detected
+
+    return result

@@ -2,7 +2,7 @@
   "model": "ibm/granite-4-h-tiny",
   "benchmark": "vm",
   "level": "level2",
-  "tested_at": "2026-08-04 16:26:32",
+  "tested_at": "2026-08-04 20:41:04",
   "passed": 20,
   "total": 27,
   "failures": [

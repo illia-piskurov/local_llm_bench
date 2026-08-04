@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nclass InMemoryKVStore:\n    def __init__(self):\n        self.store = {}\n        self.transactions = []\n\n    def run(self, program: str) -> list[str]:\n        output = []\n        for line in program.splitlines():\n            if not line.strip():\n                continue\n\n            parts = line.split()\n            command = parts[0]\n\n            try:\n                if command == \"SET\":\n                    key, value = parts[1], parts[2]\n                    self.store[key] = value\n                elif command == \"GET\":\n                    key = parts[1]\n                    output.append(self.store.get(key, \"NULL\"))\n                elif command == \"DELETE\":\n                    key = parts[1]\n                    if key in self.store:\n                        del self.store[key]\n                elif command == \"BEGIN\":\n                    self.transactions.append(dict(self.store))\n                elif command == \"COMMIT\":\n                    if not self.transactions:\n                        output.append(\"NO TRANSACTION\")\n                    else:\n                        self.store.update(self.transactions.pop())\n                elif command == \"ROLLBACK\":\n                    if not self.transactions:\n                        output.append(\"NO TRANSACTION\")\n                    else:\n                        for key, value in self.transactions[-1].items():\n                            self.store[key] = value\n                        self.transactions.pop()\n                else:\n                    raise ValueError(f\"Unknown command: {command}\")\n            except IndexError:\n                pass\n\n        return output\n\n\ndef run(program: str) -> list[str]:\n    store = InMemoryKVStore()\n    return store.run(program)\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 563,
+    "total_output_tokens": 304,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 47.15724785958061,
+    "time_to_first_token_seconds": 1.7239659999999999
+  },
+  "response_id": "resp_b8358ba37c24f2e2651b80ca93ba0a3fb057a6990218bf1f"
+}

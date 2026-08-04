@@ -5,37 +5,23 @@ class InMemoryKVStore:
         self.transactions = []  # List of transaction dictionaries
 
     def set(self, key, value):
-        self.data[key] = value
         if self.transactions:
-            self.transactions[-1]['changes'].append((key, value))
-        else:
-            print("NO TRANSACTION")
+            raise ValueError("Transaction is active")
+        self.data[key] = value
 
     def get(self, key):
-        if key in self.data:
-            if self.transactions:
-                # Apply changes from the latest transaction to the data
-                latest_transaction = self.transactions[-1]
-                for k, v in latest_transaction['changes']:
-                    if k == key:
-                        return v
-            else:
-                return self.data[key]
-        else:
-            return "NULL"
+        if self.transactions:
+            return "NULL"  # Return NULL while transaction is active
+        return self.data.get(key, "NULL")
 
     def delete(self, key):
+        if self.transactions:
+            raise ValueError("Transaction is active")
         if key in self.data:
             del self.data[key]
-            if self.transactions:
-                self.transactions[-1]['changes'].append((key, None))  # Mark for deletion
-            else:
-                pass # nothing to do
 
     def begin(self):
-        new_transaction = {'changes': []}
-        self.transactions.append(new_transaction)
-        print("BEGIN")
+        self.transactions.append({"parent": None, "changes": {}})
 
     def commit(self):
         if not self.transactions:
@@ -43,11 +29,18 @@ class InMemoryKVStore:
             return
 
         transaction = self.transactions[-1]
-        for key, value in transaction['changes']:
-            if value is not None:
+        parent = transaction["parent"]
+        changes = transaction["changes"]
+
+        if parent is None:  # Root transaction
+            for key, value in changes.items():
                 self.data[key] = value
-        print("COMMIT")
-        self.transactions.pop()  # Remove the committed transaction
+            self.transactions.pop()
+        else:
+            parent.setdefault("changes", {})
+            for key, value in changes.items():
+                parent["changes"][key] = value
+            self.transactions.pop()
 
     def rollback(self):
         if not self.transactions:
@@ -55,14 +48,18 @@ class InMemoryKVStore:
             return
 
         transaction = self.transactions[-1]
-        for key, value in transaction['changes']:
-            if value is not None:
+        parent = transaction["parent"]
+        changes = transaction["changes"]
+
+        if parent is None:  # Root transaction
+            pass  # No changes to revert for root transaction
+        else:
+            for key, value in changes.items():
                 del self.data[key]
-        print("ROLLBACK")
-        self.transactions.pop()  # Remove the rolled back transaction
+            self.transactions.pop()
 
 
-    def run(self, program: str) -> list[str]:
+    def run(self, program):
         output = []
         lines = program.splitlines()
         for line in lines:
@@ -92,12 +89,10 @@ class InMemoryKVStore:
                 key = parts[1]
                 self.delete(key)
             elif command == "BEGIN":
-                print("BEGIN")
+                self.begin()
             elif command == "COMMIT":
-                print("COMMIT")
                 self.commit()
             elif command == "ROLLBACK":
-                print("ROLLBACK")
                 self.rollback()
 
         return output
@@ -106,16 +101,18 @@ class InMemoryKVStore:
 if __name__ == '__main__':
     store = InMemoryKVStore()
     program = """
-SET key1 value1
-SET key2 value2
-BEGIN
-SET key3 value3
-GET key1
-ROLLBACK
-GET key1
-COMMIT
-GET key1
-"""
+    SET key1 value1
+    GET key1
+    BEGIN
+    SET key2 value2
+    GET key2
+    SET key3 value3
+    GET key3
+    ROLLBACK
+    GET key3
+    COMMIT
+    GET key3
+    """
 
     output = store.run(program)
     for item in output:
