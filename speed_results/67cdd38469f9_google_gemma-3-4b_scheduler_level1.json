@@ -1,0 +1,16 @@
+{
+  "host_id": "67cdd38469f9",
+  "host_label": "Intel Core i5-1235U | 16GB | Intel Xe Graphics",
+  "model": "google/gemma-3-4b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-04 15:57:14",
+  "stats": {
+    "input_tokens": 225,
+    "total_output_tokens": 310,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 7.311875008638626,
+    "time_to_first_token_seconds": 5.018658,
+    "model_load_time_seconds": 17.084
+  }
+}

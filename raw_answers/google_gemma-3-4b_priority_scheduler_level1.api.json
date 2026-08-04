@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "google/gemma-3-4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    \"\"\"\n    Реализует планировщик задач с зависимостями, приоритетами и ограниченным числом исполнителей.\n\n    Args:\n        tasks: Словарь задач, где ключ - имя задачи, а значение - кортеж (duration, deps, priority).\n        workers: Количество доступных исполнителей.\n\n    Returns:\n        Список имён задач в порядке их выполнения, или None, если есть цикл зависимостей.\n    \"\"\"\n\n    ready_tasks = []\n    completed_tasks = set()\n    current_time = 0\n    order = []\n\n    # Инициализация списка готовых к выполнению задач\n    for task_name, (duration, deps, priority) in tasks.items():\n        if not deps:\n            ready_tasks.append((task_name, duration, deps, priority))\n\n    while ready_tasks or any(not t[1] for t in tasks.values()):\n        # Фильтруем готовые задачи\n        filtered_ready_tasks = []\n        for task_name, duration, deps, priority in ready_tasks:\n            if task_name not in completed_tasks:\n                filtered_ready_tasks.append((task_name, duration, deps, priority))\n\n        # Сортируем готовые задачи по приоритету, длительности и имени\n        filtered_ready_tasks.sort(key=lambda x: (x[3], -x[1], x[0]))\n\n        # Выбираем исполнителей\n        num_workers = min(workers, len(filtered_ready_tasks))\n        selected_tasks = filtered_ready_tasks[:num_workers]\n\n        # Добавляем задачи в порядок выполнения\n        for task_name, duration, deps, priority in selected_tasks:\n            order.append(task_name)\n            completed_tasks.add(task_name)\n\n            # Обновляем список готовых задач\n            for other_task_name, (other_duration, other_deps, other_priority) in tasks.items():\n                if task_name in other_deps:\n                    if other_task_name not in completed_tasks:\n                        if all(t in completed_tasks for t in other_deps):\n                            ready_tasks.append((other_task_name, other_duration, other_deps, other_priority))\n\n        # Обновляем текущее время\n        current_time += 1\n\n        # Очищаем список готовых задач\n        ready_tasks = []\n\n    if len(completed_tasks) != len(tasks):\n        return None  # Цикл зависимостей\n\n    return order\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 264,
+    "total_output_tokens": 616,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 6.616224755303063,
+    "time_to_first_token_seconds": 6.0216959999999995,
+    "model_load_time_seconds": 12.897
+  },
+  "response_id": "resp_d248dfd5c64054d9523a152ef618191ca7f223a68d69dcd3"
+}

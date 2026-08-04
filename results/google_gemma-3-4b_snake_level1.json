@@ -1,0 +1,8 @@
+{
+  "model": "google/gemma-3-4b",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-08-04 16:06:12",
+  "manual_score": 1,
+  "comment": "полная поломка дно"
+}

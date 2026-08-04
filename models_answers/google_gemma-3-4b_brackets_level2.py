@@ -1,0 +1,63 @@
+def is_balanced(s: str) -> bool:
+    """
+    Проверяет сбалансированность скобок в строке.
+    """
+    stack = []
+    mapping = {")": "(", "]": "[", "}": "{"}
+
+    for char in s:
+        if char in mapping:
+            top_element = stack.pop() if stack else '#'  # Используем '#' для обозначения пустого стека
+            if mapping[char] != top_element:
+                return False
+        elif char in "([{":
+            stack.append(char)
+
+    return not stack
+
+
+def max_depth(s: str) -> int:
+    """
+    Верни максимальную глубину вложенности скобок при сканировании строки слева направо.
+    """
+    max_so_far = 0
+    current_depth = 0
+    for char in s:
+        if char in "([{":
+            current_depth += 1
+            max_so_far = max(max_so_far, current_depth)
+        elif char in ")]}":
+            if current_depth > 0:
+                current_depth -= 1
+    return max_so_far
+
+
+def find_unmatched(s: str) -> list[int]:
+    """
+    Верни отсортированный по возрастанию список индексов (0-based) всех "несовпавших"
+    скобок в строке.
+    """
+    stack = []
+    unmatched = []
+    for i, char in enumerate(s):
+        if char in "([{":
+            stack.append((char, i))
+        elif char in ")]}":
+            if stack and stack[-1][0] == matching_open(char):
+                stack.pop()
+            else:
+                unmatched.append(i)
+
+    unmatched.extend(stack)
+    return sorted(unmatched, key=lambda i: s[i])
+
+
+def matching_open(closing_bracket):
+    if closing_bracket == ')':
+        return '('
+    elif closing_bracket == ']':
+        return '['
+    elif closing_bracket == '}':
+        return '{'
+    else:
+        return None

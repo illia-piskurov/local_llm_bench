@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef run(program: str) -> list[str]:\n    lines = [line.strip() for line in program.splitlines() if line.strip() and not line.strip().startswith(\"#\")]\n    stack = []\n    output = []\n\n    for i, line in enumerate(lines):\n        parts = line.split()\n        cmd = parts[0]\n\n        try:\n            if cmd == \"PUSH\":\n                n = int(parts[1])\n                stack.append(n)\n            elif cmd == \"POP\":\n                if not stack:\n                    raise IndexError(f\"Stack underflow at line {i+1}\")\n                stack.pop()\n            elif cmd == \"ADD\":\n                if len(stack) < 2:\n                    raise IndexError(f\"Not enough values on the stack for ADD at line {i+1}\")\n                b = stack.pop()\n                a = stack.pop()\n                stack.append(a + b)\n            elif cmd == \"SUB\":\n                if len(stack) < 2:\n                    raise IndexError(f\"Not enough values on the stack for SUB at line {i+1}\")\n                b = stack.pop()\n                a = stack.pop()\n                stack.append(a - b)\n            elif cmd == \"MUL\":\n                if len(stack) < 2:\n                    raise IndexError(f\"Not enough values on the stack for MUL at line {i+1}\")\n                b = stack.pop()\n                a = stack.pop()\n                stack.append(a * b)\n            elif cmd == \"DIV\":\n                if len(stack) < 2:\n                    raise IndexError(f\"Not enough values on the stack for DIV at line {i+1}\")\n                b = stack.pop()\n                a = stack.pop()\n                if b == 0:\n                    raise ZeroDivisionError(f\"Division by zero at line {i+1}\")\n                stack.append(a // b)\n            elif cmd == \"DUP\":\n                if not stack:\n                    raise IndexError(\"Stack underflow for DUP at line {i+1}\")\n                stack.append(stack[-1])\n            elif cmd == \"SWAP\":\n                if len(stack) < 2:\n                    raise IndexError(f\"Not enough values on the stack for SWAP at line {i+1}\")\n                a = stack.pop()\n                b = stack.pop()\n                stack.append(a)\n                stack.append(b)\n            elif cmd == \"PRINT\":\n                if not stack:\n                    raise IndexError(\"Stack underflow for PRINT at line {i+1}\")\n                output.append(str(stack[-1]))\n            else:\n                raise ValueError(f\"Unknown command '{cmd}' at line {i+1}\")\n        except (IndexError, ZeroDivisionError) as e:\n            raise RuntimeError(f\"Error at line {i+1}: {str(e)}\")\n\n    return output\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 438,
+    "total_output_tokens": 554,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 12.942283861756971,
+    "time_to_first_token_seconds": 13.571594,
+    "model_load_time_seconds": 22.26
+  },
+  "response_id": "resp_7d52991c936477b8a0ea792700d1231362e25164a5bf7c8e"
+}

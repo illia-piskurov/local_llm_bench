@@ -1,0 +1,121 @@
+class InMemoryKVStore:
+    def __init__(self):
+        self.data = {}
+        self.transactions = []  # List of transaction dictionaries
+
+    def set(self, key, value):
+        self.data[key] = value
+        if self.transactions:
+            self.transactions[-1]['changes'].append((key, value))
+        else:
+            print("NO TRANSACTION")
+
+    def get(self, key):
+        if key in self.data:
+            if self.transactions:
+                # Apply changes from the latest transaction to the data
+                latest_transaction = self.transactions[-1]
+                for k, v in latest_transaction['changes']:
+                    if k == key:
+                        return v
+            else:
+                return self.data[key]
+        else:
+            return "NULL"
+
+    def delete(self, key):
+        if key in self.data:
+            del self.data[key]
+            if self.transactions:
+                self.transactions[-1]['changes'].append((key, None))  # Mark for deletion
+            else:
+                pass # nothing to do
+
+    def begin(self):
+        new_transaction = {'changes': []}
+        self.transactions.append(new_transaction)
+        print("BEGIN")
+
+    def commit(self):
+        if not self.transactions:
+            print("NO TRANSACTION")
+            return
+
+        transaction = self.transactions[-1]
+        for key, value in transaction['changes']:
+            if value is not None:
+                self.data[key] = value
+        print("COMMIT")
+        self.transactions.pop()  # Remove the committed transaction
+
+    def rollback(self):
+        if not self.transactions:
+            print("NO TRANSACTION")
+            return
+
+        transaction = self.transactions[-1]
+        for key, value in transaction['changes']:
+            if value is not None:
+                del self.data[key]
+        print("ROLLBACK")
+        self.transactions.pop()  # Remove the rolled back transaction
+
+
+    def run(self, program: str) -> list[str]:
+        output = []
+        lines = program.splitlines()
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            parts = line.split()
+            command = parts[0]
+
+            if command == "SET":
+                if len(parts) != 3:
+                    output.append("")
+                    continue
+                key, value = parts[1], parts[2]
+                self.set(key, value)
+            elif command == "GET":
+                if len(parts) != 2:
+                    output.append("")
+                    continue
+                key = parts[1]
+                output.append(self.get(key))
+            elif command == "DELETE":
+                if len(parts) != 2:
+                    output.append("")
+                    continue
+                key = parts[1]
+                self.delete(key)
+            elif command == "BEGIN":
+                print("BEGIN")
+            elif command == "COMMIT":
+                print("COMMIT")
+                self.commit()
+            elif command == "ROLLBACK":
+                print("ROLLBACK")
+                self.rollback()
+
+        return output
+
+
+if __name__ == '__main__':
+    store = InMemoryKVStore()
+    program = """
+SET key1 value1
+SET key2 value2
+BEGIN
+SET key3 value3
+GET key1
+ROLLBACK
+GET key1
+COMMIT
+GET key1
+"""
+
+    output = store.run(program)
+    for item in output:
+        print(item)

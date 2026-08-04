@@ -1,0 +1,16 @@
+{
+  "host_id": "67cdd38469f9",
+  "host_label": "Intel Core i5-1235U | 16GB | Intel Xe Graphics",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-08-04 16:23:46",
+  "stats": {
+    "input_tokens": 438,
+    "total_output_tokens": 554,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 12.942283861756971,
+    "time_to_first_token_seconds": 13.571594,
+    "model_load_time_seconds": 22.26
+  }
+}

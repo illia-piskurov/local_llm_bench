@@ -1,0 +1,16 @@
+{
+  "model": "google/gemma-3n-e4b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-04 15:55:34",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "single_task: ожидалось order=['a'], ms=5, cp=5; получено order=['a'], ms=10, cp=5",
+    "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=7, cp=3",
+    "dependencies_and_workers: неожиданное исключение: 'b'",
+    "critical_path_longer_than_worker_parallelism: ожидалось order=['a', 'b', 'c', 'd'], ms=16, cp=4; получено order=['a', 'b', 'c', 'd'], ms=20, cp=4",
+    "wide_graph_with_unlocks: неожиданное исключение: 'test'",
+    "cycle_returns_none: ожидались None, получено order=None, ms=0, cp=0"
+  ]
+}

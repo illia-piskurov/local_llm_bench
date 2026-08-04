@@ -1,0 +1,58 @@
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    """
+    Реализует планировщик задач с зависимостями, приоритетами и ограниченным числом исполнителей.
+
+    Args:
+        tasks: Словарь задач, где ключ - имя задачи, а значение - кортеж (duration, deps, priority).
+        workers: Количество доступных исполнителей.
+
+    Returns:
+        Список имён задач в порядке их выполнения, или None, если есть цикл зависимостей.
+    """
+
+    ready_tasks = []
+    completed_tasks = set()
+    current_time = 0
+    order = []
+
+    # Инициализация списка готовых к выполнению задач
+    for task_name, (duration, deps, priority) in tasks.items():
+        if not deps:
+            ready_tasks.append((task_name, duration, deps, priority))
+
+    while ready_tasks or any(not t[1] for t in tasks.values()):
+        # Фильтруем готовые задачи
+        filtered_ready_tasks = []
+        for task_name, duration, deps, priority in ready_tasks:
+            if task_name not in completed_tasks:
+                filtered_ready_tasks.append((task_name, duration, deps, priority))
+
+        # Сортируем готовые задачи по приоритету, длительности и имени
+        filtered_ready_tasks.sort(key=lambda x: (x[3], -x[1], x[0]))
+
+        # Выбираем исполнителей
+        num_workers = min(workers, len(filtered_ready_tasks))
+        selected_tasks = filtered_ready_tasks[:num_workers]
+
+        # Добавляем задачи в порядок выполнения
+        for task_name, duration, deps, priority in selected_tasks:
+            order.append(task_name)
+            completed_tasks.add(task_name)
+
+            # Обновляем список готовых задач
+            for other_task_name, (other_duration, other_deps, other_priority) in tasks.items():
+                if task_name in other_deps:
+                    if other_task_name not in completed_tasks:
+                        if all(t in completed_tasks for t in other_deps):
+                            ready_tasks.append((other_task_name, other_duration, other_deps, other_priority))
+
+        # Обновляем текущее время
+        current_time += 1
+
+        # Очищаем список готовых задач
+        ready_tasks = []
+
+    if len(completed_tasks) != len(tasks):
+        return None  # Цикл зависимостей
+
+    return order

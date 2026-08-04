@@ -1,0 +1,22 @@
+def is_balanced(s: str) -> bool:
+    """
+    Проверяет сбалансированность скобок в строке.
+
+    Args:
+        s: Строка для проверки.
+
+    Returns:
+        True, если строка сбалансирована, False - в противном случае.
+    """
+    stack = []
+    mapping = {")": "(", "]": "[", "}": "{"}
+
+    for char in s:
+        if char in mapping:
+            top_element = stack.pop() if stack else '#'  # Use '#' as a placeholder for empty stack
+            if mapping[char] != top_element:
+                return False
+        elif char in "([{":
+            stack.append(char)
+
+    return not stack

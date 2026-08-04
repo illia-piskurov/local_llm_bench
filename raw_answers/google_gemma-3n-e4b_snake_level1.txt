@@ -1,0 +1,164 @@
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Змейка</title>
+<style>
+body {
+  background-color: #eee;
+  font-family: sans-serif;
+  text-align: center;
+}
+canvas {
+  border: 1px solid black;
+  background-color: white;
+}
+#score {
+  font-size: 20px;
+}
+</style>
+</head>
+<body>
+<h1>Змейка</h1>
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+<div id="score">Счет: 0</div>
+<p>Нажмите клавишу 'R' для перезапуска.</p>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
+
+let score = 0;
+let snake = {
+  x: 50,
+  y: 50,
+  body: [{ x: 50, y: 50 }],
+  direction: 'right'
+};
+let food = {
+  x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
+  y: Math.floor(Math.random() * (canvas.height / 20)) * 20
+};
+let gameInterval;
+let gameOver = false;
+
+const gridSize = 20;
+
+function draw() {
+  if (gameOver) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Отображение еды
+  ctx.fillStyle = 'red';
+  ctx.beginPath();
+  ctx.arc(food.x + gridSize / 2, food.y + gridSize / 2, gridSize / 2, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Отображение змейки
+  for (let i = 0; i < snake.body.length; i++) {
+    ctx.fillStyle = 'green';
+    ctx.fillRect(snake.body[i].x, snake.body[i].y, gridSize, gridSize);
+  }
+
+  // Отображение счета
+  scoreDisplay.textContent = `Счет: ${score}`;
+}
+
+
+function update() {
+  if (gameOver) return;
+
+  let headX = snake.x;
+  let headY = snake.y;
+
+  switch (snake.direction) {
+    case 'up':
+      headY--;
+      break;
+    case 'down':
+      headY++;
+      break;
+    case 'left':
+      headX--;
+      break;
+    case 'right':
+      headX++;
+      break;
+  }
+
+  // Проверка на столкновение со стеной
+  if (headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height) {
+    gameOver = true;
+    return;
+  }
+
+  // Проверка на столкновение с собой
+  for (let i = 0; i < snake.body.length - 1; i++) {
+    if (headX === snake.body[i].x && headY === snake.body[i].y) {
+      gameOver = true;
+      return;
+    }
+  }
+
+  // Проверка на поедание еды
+  if (headX === food.x && headY === food.y) {
+    score++;
+    food = {
+      x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
+      y: Math.floor(Math.random() * (canvas.height / 20)) * 20
+    };
+    snake.body.unshift({ x: headX, y: headY }); // Добавляем голову в начало тела
+  } else {
+    snake.body.unshift({ x: headX, y: headY }); // Добавляем голову в начало тела
+    snake.body.pop(); // Удаляем хвост
+  }
+
+}
+
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowUp' || event.key === 'w') {
+    if (snake.direction !== 'down') {
+      snake.direction = 'up';
+    }
+  } else if (event.key === 'ArrowDown' || event.key === 's') {
+    if (snake.direction !== 'up') {
+      snake.direction = 'down';
+    }
+  } else if (event.key === 'ArrowLeft' || event.key === 'a') {
+    if (snake.direction !== 'right') {
+      snake.direction = 'left';
+    }
+  } else if (event.key === 'ArrowRight' || event.key === 'd') {
+    if (snake.direction !== 'left') {
+      snake.direction = 'right';
+    }
+  }
+});
+
+document.addEventListener('r', () => {
+  gameOver = false;
+  score = 0;
+  snake = {
+    x: 50,
+    y: 50,
+    body: [{ x: 50, y: 50 }],
+    direction: 'right'
+  };
+  food = {
+    x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
+    y: Math.floor(Math.random() * (canvas.height / 20)) * 20
+  };
+  gameInterval = setInterval(update, 16); // ~60 FPS
+});
+
+
+gameInterval = setInterval(update, 16);
+
+draw();
+</script>
+</body>
+</html>
+```
