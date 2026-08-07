@@ -1,0 +1,9 @@
+{
+  "model": "granite-4.1-8b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-07 22:07:59",
+  "passed": 10,
+  "total": 10,
+  "failures": []
+}

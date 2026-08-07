@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "ibm/granite-3.2-8b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    from collections import defaultdict\n\n    def dfs(node, visited, stack, graph):\n        if node in visited:\n            return False  # Cycle detected\n\n        visited.add(node)\n        for neighbor in graph[node]:\n            if not dfs(neighbor, visited, stack, graph):\n                return False\n\n        stack.append(node)\n        return True\n\n    graph = defaultdict(list)\n    for task, dependencies in tasks.items():\n        for dep in dependencies:\n            graph[dep].append(task)\n\n    visited = set()\n    stack = []\n\n    for node in tasks:\n        if not dfs(node, visited, stack, graph):\n            return None  # Cycle detected\n\n    return stack[::-1]\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 389,
+    "total_output_tokens": 174,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 8.66858850270161,
+    "time_to_first_token_seconds": 8.627229999999999
+  },
+  "response_id": "resp_d745d87fa3b1fc3a6afcf0cd82c7942b33f450cae3e31657"
+}

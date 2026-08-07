@@ -1,0 +1,60 @@
+def run(program: str) -> list[str]:
+    lines = program.strip().split('\n')
+    stack = []
+    output = []
+    for idx, line in enumerate(lines, start=1):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        parts = line.split()
+        cmd = parts[0]
+        try:
+            if cmd == 'PUSH':
+                if len(parts) != 2:
+                    raise ValueError(f"Invalid PUSH command at line {idx}")
+                n = int(parts[1])
+                stack.append(n)
+            elif cmd == 'POP':
+                if not stack:
+                    raise IndexError(f"Not enough elements for POP at line {idx}")
+                stack.pop()
+            elif cmd == 'ADD':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough elements for ADD at line {idx}")
+                b, a = stack.pop(), stack.pop()
+                stack.append(a + b)
+            elif cmd == 'SUB':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough elements for SUB at line {idx}")
+                b, a = stack.pop(), stack.pop()
+                stack.append(a - b)
+            elif cmd == 'MUL':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough elements for MUL at line {idx}")
+                b, a = stack.pop(), stack.pop()
+                stack.append(a * b)
+            elif cmd == 'DIV':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough elements for DIV at line {idx}")
+                b, a = stack.pop(), stack.pop()
+                if b == 0:
+                    raise ZeroDivisionError(f"Division by zero at line {idx}")
+                stack.append(a // b)
+            elif cmd == 'DUP':
+                if not stack:
+                    raise IndexError(f"Not enough elements for DUP at line {idx}")
+                stack.append(stack[-1])
+            elif cmd == 'SWAP':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough elements for SWAP at line {idx}")
+                stack[-1], stack[-2] = stack[-2], stack[-1]
+            elif cmd == 'PRINT':
+                if not stack:
+                    raise IndexError(f"Not enough elements for PRINT at line {idx}")
+                output.append(str(stack[-1]))
+            else:
+                raise ValueError(f"Unknown command '{cmd}' at line {idx}")
+        except Exception as e:
+            print(f"Error at line {idx}: {e}")
+            return []
+    return output

@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-8b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nfrom collections import defaultdict, deque\n\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n    priorities = {}\n    \n    for name, (duration, deps, priority) in tasks.items():\n        priorities[name] = priority\n        for dep in deps:\n            graph[dep].append(name)\n            in_degree[name] += 1\n    \n    queue = deque([name for name, degree in in_degree.items() if degree == 0])\n    \n    while queue:\n        ready_tasks = []\n        while len(ready_tasks) < workers and queue:\n            task = queue.popleft()\n            # Check if all dependencies are resolved\n            if any(task not in [t[0] for t in tasks.values()] for d in graph[task]):\n                continue\n            ready_tasks.append((priorities[task], -tasks[task][0], task))\n        \n        if not ready_tasks:\n            return None\n        \n        # Sort by priority (desc), duration (asc), name (asc)\n        ready_tasks.sort(key=lambda x: (-x[0], -x[1], x[2]))\n        \n        for _, _, task in ready_tasks:\n            queue.extend([t for t in graph[task] if all(dep in completed for dep in tasks[t][1])])\n            in_degree[task] -= 1\n            if in_degree[task] == 0:\n                queue.append(task)\n    \n    # Detect cycles by checking if any task is not processed\n    if len(tasks) != sum(1 for _ in queue):\n        return None\n    \n    # Return the order of tasks based on priority, duration, and name\n    sorted_tasks = sorted((priorities[t], -tasks[t][0], t) for t in tasks)\n    return [t[2] for t in sorted_tasks]\n\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 405,
+    "total_output_tokens": 409,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.409966208196643,
+    "time_to_first_token_seconds": 2.9607829999999997
+  },
+  "response_id": "resp_7d6607825ce1b0564cc6f97ffb2d1843592fa2ff18719c43"
+}

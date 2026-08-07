@@ -1,0 +1,65 @@
+```python
+class KeyValueStore:
+    def __init__(self):
+        self.storage = {}
+        self.transactions = []
+
+    def set(self, key, value):
+        self.storage[key] = value
+
+    def get(self, key):
+        return self.storage.get(key, "NULL")
+
+    def delete(self, key):
+        if key in self.storage:
+            del self.storage[key]
+
+    def begin(self):
+        self.transactions.append({})
+
+    def commit(self):
+        if not self.transactions:
+            print("NO TRANSACTION")
+        else:
+            last_tx = self.transactions.pop()
+            for key, value in last_tx.items():
+                self.storage[key] = value
+
+    def rollback(self):
+        if not self.transactions:
+            print("NO TRANSACTION")
+        else:
+            self.transactions.pop()
+
+    def execute_command(self, command):
+        parts = command.split()
+        cmd = parts[0]
+        if cmd == "SET":
+            key, value = parts[1], parts[2]
+            self.set(key, value)
+        elif cmd == "GET":
+            key = parts[1]
+            print(self.get(key))
+        elif cmd == "DELETE":
+            key = parts[1]
+            self.delete(key)
+        elif cmd == "BEGIN":
+            self.begin()
+        elif cmd == "COMMIT":
+            self.commit()
+        elif cmd == "ROLLBACK":
+            self.rollback()
+
+def run(program: str) -> list[str]:
+    store = KeyValueStore()
+    output_lines = []
+    for line in program.splitlines():
+        stripped_line = line.strip()
+        if not stripped_line:
+            continue
+        store.execute_command(stripped_line)
+        if stripped_line.startswith(("COMMIT", "ROLLBACK")):
+            output_lines.append(stripped_line)
+    return output_lines
+
+```

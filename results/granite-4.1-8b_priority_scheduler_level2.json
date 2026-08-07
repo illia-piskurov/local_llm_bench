@@ -1,0 +1,16 @@
+{
+  "model": "granite-4.1-8b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-07 21:51:24",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: '>' not supported between instances of 'str' and 'int'",
+    "parallel_tasks_reduce_makespan: неожиданное исключение: '>' not supported between instances of 'str' and 'int'",
+    "dependencies_and_workers: ожидалось order=['a', 'c', 'b', 'd'], ms=11, cp=11; получено order=['a', 'c', 'b', 'd'], ms=None, cp=5",
+    "critical_path_longer_than_worker_parallelism: неожиданное исключение: '>' not supported between instances of 'str' and 'int'",
+    "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=None, cp=4",
+    "cycle_returns_none: ожидались None, получено order=None, ms=None, cp=1"
+  ]
+}

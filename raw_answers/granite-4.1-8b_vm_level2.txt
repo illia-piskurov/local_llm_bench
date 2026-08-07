@@ -1,0 +1,100 @@
+```python
+def run(program: str) -> list[str]:
+    lines = program.strip().split('\n')
+    stack = []
+    output = []
+    labels = {}
+    current_line = 0
+
+    def get_label(name):
+        return labels.get(name, None)
+
+    for idx, line in enumerate(lines, start=1):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        parts = line.split()
+        cmd = parts[0]
+        try:
+            current_line = idx
+            if cmd == 'PUSH':
+                if len(parts) != 2:
+                    raise ValueError(f"Invalid PUSH command at line {idx}")
+                n = int(parts[1])
+                stack.append(n)
+            elif cmd == 'POP':
+                if not stack:
+                    raise IndexError(f"Not enough elements for POP at line {idx}")
+                stack.pop()
+            elif cmd == 'ADD':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough elements for ADD at line {idx}")
+                b, a = stack.pop(), stack.pop()
+                stack.append(a + b)
+            elif cmd == 'SUB':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough elements for SUB at line {idx}")
+                b, a = stack.pop(), stack.pop()
+                stack.append(a - b)
+            elif cmd == 'MUL':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough elements for MUL at line {idx}")
+                b, a = stack.pop(), stack.pop()
+                stack.append(a * b)
+            elif cmd == 'DIV':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough elements for DIV at line {idx}")
+                b, a = stack.pop(), stack.pop()
+                if b == 0:
+                    raise ZeroDivisionError(f"Division by zero at line {idx}")
+                stack.append(a // b)
+            elif cmd == 'DUP':
+                if not stack:
+                    raise IndexError(f"Not enough elements for DUP at line {idx}")
+                stack.append(stack[-1])
+            elif cmd == 'SWAP':
+                if len(stack) < 2:
+                    raise IndexError(f"Not enough elements for SWAP at line {idx}")
+                stack[-1], stack[-2] = stack[-2], stack[-1]
+            elif cmd == 'PRINT':
+                if not stack:
+                    raise IndexError(f"Not enough elements for PRINT at line {idx}")
+                output.append(str(stack[-1]))
+            elif cmd == 'LABEL':
+                if len(parts) != 2:
+                    raise ValueError(f"Invalid LABEL command at line {idx}")
+                labels[parts[1]] = idx
+            elif cmd == 'JMP':
+                target = get_label(parts[1])
+                if target is None:
+                    raise ValueError(f"Unknown label '{parts[1]}' at line {idx}")
+                current_line = target
+                continue
+            elif cmd == 'JZ':
+                target = get_label(parts[1])
+                if target is None:
+                    raise ValueError(f"Unknown label '{parts[1]}' at line {idx}")
+                val = stack.pop()
+                if val != 0:
+                    current_line = idx + 1
+                else:
+                    current_line = target
+                continue
+            elif cmd == 'JNZ':
+                target = get_label(parts[1])
+                if target is None:
+                    raise ValueError(f"Unknown label '{parts[1]}' at line {idx}")
+                val = stack.pop()
+                if val == 0:
+                    current_line = idx + 1
+                else:
+                    current_line = target
+                continue
+            else:
+                raise ValueError(f"Unknown command '{cmd}' at line {idx}")
+        except Exception as e:
+            print(f"Error at line {idx}: {e}")
+            return []
+
+    return output
+```

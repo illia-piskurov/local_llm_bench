@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-8b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef max_depth(s: str) -> int:\n    stack = []\n    depth = 0\n    max_d = 0\n    \n    for i, char in enumerate(s):\n        if char in \"([{\":\n            stack.append(char)\n            depth += 1\n            max_d = max(max_d, depth)\n        elif char in \")]}\":\n            if stack and ((char == \")\" and stack[-1] == \"(\") or \n                          (char == \"]\" and stack[-1] == \"[\") or \n                          (char == \"}\" and stack[-1] == \"{\")):\n                stack.pop()\n                depth -= 1\n    \n    return max_d\n\ndef find_unmatched(s: str) -> list[int]:\n    stack = []\n    unmatched_closing = []\n    unmatched_opening = []\n\n    matching_bracket = {')': '(', ']': '[', '}': '{'}\n    \n    for i, char in enumerate(s):\n        if char in \"([{\":\n            stack.append((char, i))\n        elif char in \")]}\":\n            if not stack or stack[-1][0] != matching_bracket[char]:\n                unmatched_closing.append(i)\n            else:\n                stack.pop()\n    \n    for opening_char, index in stack:\n        unmatched_opening.append(index)\n\n    return sorted(unmatched_closing + unmatched_opening)\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 870,
+    "total_output_tokens": 279,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.03443398460965,
+    "time_to_first_token_seconds": 4.533703
+  },
+  "response_id": "resp_7431cf3c5d68fa960bc61b71d2952ccd40c9fa42878a6283"
+}

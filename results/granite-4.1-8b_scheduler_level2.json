@@ -1,0 +1,15 @@
+{
+  "model": "granite-4.1-8b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-07 22:08:44",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: ожидалось 5, получено None",
+    "simple_chain: ожидалось 9, получено None",
+    "diamond_pick_longer_branch: ожидалось 12, получено None",
+    "independent_tasks: ожидалось 7, получено None",
+    "wide_graph: ожидалось 19, получено None"
+  ]
+}

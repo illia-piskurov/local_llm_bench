@@ -1,0 +1,16 @@
+{
+  "model": "google/gemma-3-1b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-06 20:19:51",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "single_task: ожидалось order=['a'], ms=5, cp=5; получено order=['a'], ms=None, cp=None",
+    "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=None, cp=None",
+    "dependencies_and_workers: ожидалось order=['a', 'c', 'b', 'd'], ms=11, cp=11; получено order=['a', 'c', 'b', 'd'], ms=None, cp=None",
+    "critical_path_longer_than_worker_parallelism: ожидалось order=['a', 'b', 'c', 'd'], ms=16, cp=4; получено order=['a', 'b', 'c', 'd'], ms=None, cp=None",
+    "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=None, cp=None",
+    "cycle_returns_none: ожидались None, получено order=None, ms=0, cp=None"
+  ]
+}

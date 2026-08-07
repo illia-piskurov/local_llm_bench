@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-8b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef run(program: str) -> list[str]:\n    lines = program.strip().split('\\n')\n    stack = []\n    output = []\n    for idx, line in enumerate(lines, start=1):\n        line = line.strip()\n        if not line or line.startswith('#'):\n            continue\n        parts = line.split()\n        cmd = parts[0]\n        try:\n            if cmd == 'PUSH':\n                if len(parts) != 2:\n                    raise ValueError(f\"Invalid PUSH command at line {idx}\")\n                n = int(parts[1])\n                stack.append(n)\n            elif cmd == 'POP':\n                if not stack:\n                    raise IndexError(f\"Not enough elements for POP at line {idx}\")\n                stack.pop()\n            elif cmd == 'ADD':\n                if len(stack) < 2:\n                    raise IndexError(f\"Not enough elements for ADD at line {idx}\")\n                b, a = stack.pop(), stack.pop()\n                stack.append(a + b)\n            elif cmd == 'SUB':\n                if len(stack) < 2:\n                    raise IndexError(f\"Not enough elements for SUB at line {idx}\")\n                b, a = stack.pop(), stack.pop()\n                stack.append(a - b)\n            elif cmd == 'MUL':\n                if len(stack) < 2:\n                    raise IndexError(f\"Not enough elements for MUL at line {idx}\")\n                b, a = stack.pop(), stack.pop()\n                stack.append(a * b)\n            elif cmd == 'DIV':\n                if len(stack) < 2:\n                    raise IndexError(f\"Not enough elements for DIV at line {idx}\")\n                b, a = stack.pop(), stack.pop()\n                if b == 0:\n                    raise ZeroDivisionError(f\"Division by zero at line {idx}\")\n                stack.append(a // b)\n            elif cmd == 'DUP':\n                if not stack:\n                    raise IndexError(f\"Not enough elements for DUP at line {idx}\")\n                stack.append(stack[-1])\n            elif cmd == 'SWAP':\n                if len(stack) < 2:\n                    raise IndexError(f\"Not enough elements for SWAP at line {idx}\")\n                stack[-1], stack[-2] = stack[-2], stack[-1]\n            elif cmd == 'PRINT':\n                if not stack:\n                    raise IndexError(f\"Not enough elements for PRINT at line {idx}\")\n                output.append(str(stack[-1]))\n            else:\n                raise ValueError(f\"Unknown command '{cmd}' at line {idx}\")\n        except Exception as e:\n            print(f\"Error at line {idx}: {e}\")\n            return []\n    return output\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 455,
+    "total_output_tokens": 531,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.304214058440227,
+    "time_to_first_token_seconds": 3.421438
+  },
+  "response_id": "resp_c0ac7007e934b295cb70ea4f4d3441eb134cf36d069c71be"
+}

@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-8b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nclass KeyValueStore:\n    def __init__(self):\n        self.storage = {}\n        self.transactions = []\n\n    def set(self, key, value):\n        self.storage[key] = value\n\n    def get(self, key):\n        return self.storage.get(key, \"NULL\")\n\n    def delete(self, key):\n        if key in self.storage:\n            del self.storage[key]\n\n    def begin(self):\n        self.transactions.append({})\n\n    def commit(self):\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n        else:\n            last_tx = self.transactions.pop()\n            for key, value in last_tx.items():\n                self.storage[key] = value\n\n    def rollback(self):\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n        else:\n            self.transactions.pop()\n\n    def execute_command(self, command):\n        parts = command.split()\n        cmd = parts[0]\n        if cmd == \"SET\":\n            key, value = parts[1], parts[2]\n            self.set(key, value)\n        elif cmd == \"GET\":\n            key = parts[1]\n            print(self.get(key))\n        elif cmd == \"DELETE\":\n            key = parts[1]\n            self.delete(key)\n        elif cmd == \"BEGIN\":\n            self.begin()\n        elif cmd == \"COMMIT\":\n            self.commit()\n        elif cmd == \"ROLLBACK\":\n            self.rollback()\n\ndef run(program: str) -> list[str]:\n    store = KeyValueStore()\n    output_lines = []\n    for line in program.splitlines():\n        stripped_line = line.strip()\n        if not stripped_line:\n            continue\n        store.execute_command(stripped_line)\n        if stripped_line.startswith((\"COMMIT\", \"ROLLBACK\")):\n            output_lines.append(stripped_line)\n    return output_lines\n\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 585,
+    "total_output_tokens": 366,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.316898485610308,
+    "time_to_first_token_seconds": 4.2557730000000005
+  },
+  "response_id": "resp_a32944ec54fe3a98ce2ca95e8f75479ec71961f258eb39aa"
+}

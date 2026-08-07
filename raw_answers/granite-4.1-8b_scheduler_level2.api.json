@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-8b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    from collections import defaultdict, deque\n\n    # Создаем граф зависимостей и словари для хранения времени на предшественников и самых ранних начал\n    graph = defaultdict(list)\n    earliest_start = {task: 0 for task in tasks}\n    durations = {task: duration for task, (duration, _) in tasks.items()}\n\n    # Построение графа зависимостей\n    for task, (_, dependencies) in tasks.items():\n        for dep in dependencies:\n            graph[dep].append(task)\n\n    # Инициализация очереди для задач без предшественников\n    queue = deque([task for task in earliest_start if not graph[task]])\n\n    while queue:\n        current_task = queue.popleft()\n\n        # Обновление времени начала для всех зависимых задач\n        for dependent_task in graph[current_task]:\n            earliest_start[dependent_task] = max(\n                earliest_start[dependent_task],\n                earliest_start[current_task]\n            )\n            # Удаление ребра, если текущая задача стала последней в своем предшественнике\n            if all(earliest_start[child] == earliest_start[current_task] + durations[current_task] for child in graph[dependent_task]):\n                queue.append(dependent_task)\n\n    # Вычисление позднего времени завершения для каждой задачи и определение критического пути\n    latest_finish = {task: earliest_start[task] + durations[task] for task in tasks}\n    critical_path_length = max(latest_finish.values())\n\n    # Проверка наличия циклов (если какая-то задача не была обработана в очереди, есть цикл)\n    if len(queue) != len(tasks):\n        return None\n\n    return critical_path_length\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 902,
+    "total_output_tokens": 450,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.15855151015871,
+    "time_to_first_token_seconds": 4.319856
+  },
+  "response_id": "resp_4ea8e8e3a421d345b8b9e4eb884f50b67dc72043b13acf66"
+}
