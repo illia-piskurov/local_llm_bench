@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "deepseek/deepseek-r1-0528-qwen3-8b",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-08-08 23:19:30",
+  "stats": {
+    "input_tokens": 219,
+    "total_output_tokens": 2694,
+    "reasoning_output_tokens": 465,
+    "tokens_per_second": 13.62826573135147,
+    "time_to_first_token_seconds": 1.822996,
+    "model_load_time_seconds": null
+  }
+}
