@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "qwen2.5-coder-3b-instruct",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    # Используем функцию topo_sort для получения топологической сортировки задач\n    topological_order = topo_sort(tasks)\n    \n    if topological_order is None:\n        return None\n\n    # Создаем граф зависимостей\n    graph = defaultdict(list)\n    for task, (duration, dependencies) in tasks.items():\n        for dependency in dependencies:\n            graph[dependency].append(task)\n\n    # Функция для расчёта максимальной длины пути от заданной задачи\n    def longest_path(node):\n        if node not in tasks:\n            return 0\n        duration, _ = tasks[node]\n        max_duration = duration\n        for neighbor in graph[node]:\n            max_duration = max(max_duration, longest_path(neighbor) + duration)\n        return max_duration\n\n    # Вычисляем длину критического пути\n    critical_path_length = 0\n    for task in topological_order:\n        critical_path_length = max(critical_path_length, longest_path(task))\n\n    return critical_path_length\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 798,
+    "total_output_tokens": 244,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 14.671657034383088,
+    "time_to_first_token_seconds": 5.642359000000001
+  },
+  "response_id": "resp_140296c913bfc9098376d251a71bd5aa19e7757af8059aae"
+}

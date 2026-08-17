@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "qwen2.5-coder-3b-instruct",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef max_depth(s: str) -> int:\n    stack = []\n    max_depth = 0\n    \n    for i, char in enumerate(s):\n        if char == '(' or char == '[' or char == '{':\n            stack.append(char)\n            max_depth = max(max_depth, len(stack))\n        elif char == ')' or char == ']' or char == '}':\n            if not stack or stack.pop() != mapping[char]:\n                return -1\n    \n    return max_depth\n\ndef find_unmatched(s: str) -> list[int]:\n    stack = []\n    unmatched_indices = []\n    \n    for i, char in enumerate(s):\n        if char == '(' or char == '[' or char == '{':\n            stack.append((char, i))\n        elif char == ')' or char == ']' or char == '}':\n            if not stack or stack.pop()[0] != mapping[char]:\n                unmatched_indices.append(i)\n    \n    # Add remaining open brackets to unmatched indices\n    for bracket, index in stack:\n        unmatched_indices.append(index)\n    \n    return sorted(unmatched_indices)\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 675,
+    "total_output_tokens": 223,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 14.941602789081319,
+    "time_to_first_token_seconds": 4.551356
+  },
+  "response_id": "resp_f8657adf76d8dcc74f4721d5963144b9edce5c9c4afbcb05"
+}

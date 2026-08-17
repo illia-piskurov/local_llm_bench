@@ -1,0 +1,8 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "benchmark": "snake",
+  "level": "level2",
+  "tested_at": "2026-08-17 17:06:55",
+  "manual_score": 2,
+  "comment": "no"
+}

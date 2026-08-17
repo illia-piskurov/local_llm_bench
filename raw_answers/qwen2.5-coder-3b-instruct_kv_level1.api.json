@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "qwen2.5-coder-3b-instruct",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nclass KeyValueStore:\n    def __init__(self):\n        self.store = {}\n        self.transactions = []\n\n    def set(self, key, value):\n        if not self.transactions or not self.transactions[-1]:\n            self.store[key] = value\n\n    def get(self, key):\n        return self.store.get(key, \"NULL\")\n\n    def delete(self, key):\n        if key in self.store:\n            del self.store[key]\n\n    def begin(self):\n        self.transactions.append([])\n\n    def commit(self):\n        if not self.transactions or not self.transactions[-1]:\n            print(\"NO TRANSACTION\")\n        else:\n            changes = self.transactions.pop()\n            for change in changes:\n                if change[0] == \"SET\":\n                    self.set(*change)\n                elif change[0] == \"DELETE\":\n                    self.delete(change[1])\n\n    def rollback(self):\n        if not self.transactions or not self.transactions[-1]:\n            print(\"NO TRANSACTION\")\n        else:\n            self.transactions.pop()\n\ndef run(program: str) -> list[str]:\n    lines = program.strip().split('\\n')\n    store = KeyValueStore()\n    output = []\n\n    for line in lines:\n        if line.startswith('SET'):\n            _, key, value = line.split()\n            store.set(key, value)\n        elif line.startswith('GET'):\n            key = line.split()[1]\n            output.append(store.get(key))\n        elif line.startswith('DELETE'):\n            key = line.split()[1]\n            store.delete(key)\n        elif line.startswith('BEGIN'):\n            store.begin()\n        elif line.startswith('COMMIT'):\n            store.commit()\n        elif line.startswith('ROLLBACK'):\n            store.rollback()\n\n    return output\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 470,
+    "total_output_tokens": 346,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 28.351383440989377,
+    "time_to_first_token_seconds": 1.676002
+  },
+  "response_id": "resp_841e18134fd9b0775358b882d345ade3664f526f3c8e1da3"
+}

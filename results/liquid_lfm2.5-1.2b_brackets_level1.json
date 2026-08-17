@@ -1,9 +1,0 @@
-{
-  "model": "liquid/lfm2.5-1.2b",
-  "benchmark": "brackets",
-  "level": "level1",
-  "tested_at": "2026-07-17 10:24:02",
-  "passed": 12,
-  "total": 12,
-  "failures": []
-}

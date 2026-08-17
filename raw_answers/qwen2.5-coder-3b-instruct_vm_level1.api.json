@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "qwen2.5-coder-3b-instruct",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nclass StackError(Exception):\n    def __init__(self, message, line_number):\n        super().__init__(f\"{message} at line {line_number}\")\n\ndef run(program: str) -> list[str]:\n    lines = program.strip().split('\\n')\n    stack = []\n    output = []\n\n    for line_number, line in enumerate(lines, start=1):\n        if line.startswith('#'):\n            continue\n\n        parts = line.split()\n        command = parts[0]\n\n        try:\n            if command == 'PUSH':\n                if len(parts) != 2:\n                    raise StackError(\"Invalid PUSH instruction\", line_number)\n                stack.append(int(parts[1]))\n            elif command == 'POP':\n                if not stack:\n                    raise StackError(\"Stack is empty\", line_number)\n                stack.pop()\n            elif command == 'ADD':\n                if len(stack) < 2:\n                    raise StackError(\"Not enough values on the stack for ADD\", line_number)\n                b, a = stack.pop(), stack.pop()\n                stack.append(a + b)\n            elif command == 'SUB':\n                if len(stack) < 2:\n                    raise StackError(\"Not enough values on the stack for SUB\", line_number)\n                b, a = stack.pop(), stack.pop()\n                stack.append(a - b)\n            elif command == 'MUL':\n                if len(stack) < 2:\n                    raise StackError(\"Not enough values on the stack for MUL\", line_number)\n                b, a = stack.pop(), stack.pop()\n                stack.append(a * b)\n            elif command == 'DIV':\n                if len(stack) < 2:\n                    raise StackError(\"Not enough values on the stack for DIV\", line_number)\n                b, a = stack.pop(), stack.pop()\n                if b == 0:\n                    raise StackError(\"Division by zero\", line_number)\n                stack.append(a // b)\n            elif command == 'DUP':\n                if not stack:\n                    raise StackError(\"Stack is empty\", line_number)\n                stack.append(stack[-1])\n            elif command == 'SWAP':\n                if len(stack) < 2:\n                    raise StackError(\"Not enough values on the stack for SWAP\", line_number)\n                a, b = stack.pop(), stack.pop()\n                stack.append(a)\n                stack.append(b)\n            elif command == 'PRINT':\n                if not stack:\n                    raise StackError(\"Stack is empty\", line_number)\n                output.append(str(stack[-1]))\n            else:\n                raise StackError(f\"Unknown instruction: {command}\", line_number)\n\n        except Exception as e:\n            print(e)\n\n    return output\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 390,
+    "total_output_tokens": 546,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 21.907892559040462,
+    "time_to_first_token_seconds": 2.249383
+  },
+  "response_id": "resp_1190e3b20aad496dd7cc87b574511bf47abf79350f59d9ca"
+}

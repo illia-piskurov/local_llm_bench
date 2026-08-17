@@ -1,0 +1,23 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-08-17 16:21:37",
+  "passed": 14,
+  "total": 27,
+  "failures": [
+    "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+    "comments_and_blank_lines: неожиданное исключение: list index out of range",
+    "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно",
+    "empty_program: неожиданное исключение: list index out of range",
+    "unconditional_jump_skips_code: ожидалось ['3'], получено ['1001']",
+    "jz_taken_when_zero: ожидалось ['0'], получено ['1', '0']",
+    "jz_not_taken_when_nonzero: ожидалось ['1'], получено ['1', '0']",
+    "jnz_taken_when_nonzero: ожидалось ['1'], получено ['0', '1']",
+    "jnz_not_taken_when_zero: ожидалось ['0'], получено ['0', '1']",
+    "countdown_loop: ожидалось ['5', '4', '3', '2', '1'], получено ['5']",
+    "count_up_loop: ожидалось ['1', '2', '3', '4', '5'], получено ['1']",
+    "jump_to_undefined_label: ожидалась ошибка, но выполнение прошло успешно"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "mistralai/ministral-3-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nfrom collections import deque\n\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    in_degree = {task: 0 for task in tasks}\n    graph = {task: [] for task in tasks}\n\n    # Подсчёт степени входа и построение графа\n    for task, dependencies in tasks.items():\n        for dep in dependencies:\n            if dep not in tasks:\n                return None  # цикл или несуществующая задача\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    # Начальный набор задач без зависимостей\n    queue = deque([task for task in in_degree if in_degree[task] == 0])\n    result = []\n\n    while queue:\n        current = queue.popleft()\n        result.append(current)\n\n        for neighbor in graph[current]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    return None if len(result) != len(tasks) else result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 768,
+    "total_output_tokens": 241,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 20.816639353105227,
+    "time_to_first_token_seconds": 3.467438
+  },
+  "response_id": "resp_eab56a7603abc0d1fdf259d7f323e2b996d00b64cd5b7052"
+}

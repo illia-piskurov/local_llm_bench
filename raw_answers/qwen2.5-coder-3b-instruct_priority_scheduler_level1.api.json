@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "qwen2.5-coder-3b-instruct",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nfrom typing import Dict, List, Tuple\n\ndef plan_order(tasks: Dict[str, Tuple[int, List[str], int]], workers: int) -> List[str] | None:\n    def find_cycle(graph):\n        visited = set()\n        rec_stack = set()\n\n        def dfs(node):\n            if node in rec_stack:\n                return True\n            if node in visited:\n                return False\n\n            visited.add(node)\n            rec_stack.add(node)\n\n            for neighbor in graph[node]:\n                if dfs(neighbor):\n                    return True\n\n            rec_stack.remove(node)\n            return False\n\n        for node in tasks:\n            if find_cycle({node: tasks[node][1]}):\n                return None\n        return None\n\n    def topological_sort(graph, indegree, order):\n        queue = [node for node in graph if indegree[node] == 0]\n        while queue:\n            node = queue.pop(0)\n            order.append(node)\n\n            for neighbor in graph[node]:\n                indegree[neighbor] -= 1\n                if indegree[neighbor] == 0:\n                    queue.append(neighbor)\n\n    # Check for cycles\n    cycle = find_cycle(tasks)\n    if cycle is not None:\n        return None\n\n    # Build the graph and calculate indegrees\n    graph = {}\n    indegree = {}\n\n    for task, (duration, deps, priority) in tasks.items():\n        graph[task] = deps\n        indegree[task] = len(deps)\n\n    # Sort tasks by priority, duration, and name\n    sorted_tasks = sorted(tasks.keys(), key=lambda x: (-tasks[x][2], tasks[x][0], x))\n\n    # Topological sort to get the order of execution\n    topological_sort(graph, indegree, [])\n\n    return topological_sort(graph, indegree, [])\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 299,
+    "total_output_tokens": 378,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 15.209616275866708,
+    "time_to_first_token_seconds": 2.896712
+  },
+  "response_id": "resp_b3e6e9cedc404e127bc25247d35d2badb4f6da0b32a3c5b5"
+}

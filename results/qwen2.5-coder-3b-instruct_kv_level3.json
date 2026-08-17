@@ -1,0 +1,26 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "benchmark": "kv",
+  "level": "level3",
+  "tested_at": "2026-08-17 17:05:15",
+  "passed": 14,
+  "total": 30,
+  "failures": [
+    "commit_no_transaction: ожидалось ['NO TRANSACTION'], получено []",
+    "rollback_no_transaction: ожидалось ['NO TRANSACTION'], получено []",
+    "simple_transaction_rollback: ожидалось ['5'], получено ['10']",
+    "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+    "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', '20', '20']",
+    "rollback_after_commit_is_no_transaction: ожидалось ['NO TRANSACTION'], получено []",
+    "multiple_keys_independent: ожидалось ['2', '1', '2'], получено ['2', '99', '2']",
+    "count_basic: ожидалось ['2'], получено []",
+    "count_zero: ожидалось ['0'], получено []",
+    "count_respects_transaction: ожидалось ['2', '1'], получено []",
+    "count_after_delete: ожидалось ['1'], получено []",
+    "watch_set_new_key: ожидалось ['WATCH a NULL -> 10'], получено []",
+    "watch_set_change: ожидалось ['WATCH a 5 -> 10'], получено []",
+    "watch_delete: ожидалось ['WATCH a 5 -> NULL'], получено []",
+    "watch_inside_transaction_fires: ожидалось ['WATCH a NULL -> 1'], получено []",
+    "restore_keeps_watch_registrations: неожиданное исключение: name 'value' is not defined"
+  ]
+}
