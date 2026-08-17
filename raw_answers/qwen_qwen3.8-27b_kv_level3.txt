@@ -1,0 +1,104 @@
+```python
+_DELETED = object()
+
+
+def run(program: str) -> list[str]:
+    global_store: dict[str, str] = {}
+    tx_stack: list[dict[str, object]] = []
+    watched: set[str] = set()
+    output: list[str] = []
+    snapshots: dict[str, dict] = {}
+
+    def get_visible(key: str) -> str:
+        for layer in reversed(tx_stack):
+            if key in layer:
+                return "NULL" if layer[key] is _DELETED else layer[key]
+        return global_store.get(key, "NULL")
+
+    for line in program.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+
+        parts = line.split()
+        cmd = parts[0].upper()
+
+        if cmd == 'SET':
+            key, value = parts[1], parts[2]
+            old_val = get_visible(key)
+            if tx_stack:
+                tx_stack[-1][key] = value
+            else:
+                global_store[key] = value
+            if key in watched and old_val != value:
+                output.append(f"WATCH {key} {old_val} -> {value}")
+
+        elif cmd == 'GET':
+            key = parts[1]
+            output.append(get_visible(key))
+
+        elif cmd == 'DELETE':
+            key = parts[1]
+            old_val = get_visible(key)
+            if tx_stack:
+                tx_stack[-1][key] = _DELETED
+            else:
+                global_store.pop(key, None)
+            if key in watched and old_val != "NULL":
+                output.append(f"WATCH {key} {old_val} -> NULL")
+
+        elif cmd == 'BEGIN':
+            tx_stack.append({})
+
+        elif cmd == 'COMMIT':
+            if not tx_stack:
+                output.append("NO TRANSACTION")
+            else:
+                layer = tx_stack.pop()
+                target = tx_stack[-1] if tx_stack else global_store
+                for key, val in layer.items():
+                    if val is _DELETED:
+                        target.pop(key, None)
+                    else:
+                        target[key] = val
+
+        elif cmd == 'ROLLBACK':
+            if not tx_stack:
+                output.append("NO TRANSACTION")
+            else:
+                tx_stack.pop()
+
+        elif cmd == 'COUNT':
+            value = parts[1]
+            all_keys = set(global_store.keys())
+            for layer in tx_stack:
+                all_keys.update(layer.keys())
+            count = sum(1 for k in all_keys if get_visible(k) == value)
+            output.append(str(count))
+
+        elif cmd == 'WATCH':
+            watched.add(parts[1])
+
+        elif cmd == 'SNAPSHOT':
+            name = parts[1]
+            snapshots[name] = {
+                'global_store': dict(global_store),
+                'tx_stack': [dict(layer) for layer in tx_stack],
+                'watched': set(watched),
+                'output': list(output),
+            }
+
+        elif cmd == 'RESTORE':
+            name = parts[1]
+            snap = snapshots[name]
+            global_store.clear()
+            global_store.update(snap['global_store'])
+            tx_stack.clear()
+            tx_stack.extend([dict(layer) for layer in snap['tx_stack']])
+            watched.clear()
+            watched.update(snap['watched'])
+            output.clear()
+            output.extend(snap['output'])
+
+    return output
+```

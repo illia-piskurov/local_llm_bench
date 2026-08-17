@@ -4,13 +4,13 @@
   "model": "ibm/granite-4-h-tiny",
   "benchmark": "priority_scheduler",
   "level": "level2",
-  "tested_at": "2026-08-04 20:31:51",
+  "tested_at": "2026-08-17 22:14:41",
   "stats": {
-    "input_tokens": 1115,
-    "total_output_tokens": 808,
+    "input_tokens": 1070,
+    "total_output_tokens": 517,
     "reasoning_output_tokens": 0,
-    "tokens_per_second": 19.589277343558226,
-    "time_to_first_token_seconds": 11.006985,
+    "tokens_per_second": 39.84005412699037,
+    "time_to_first_token_seconds": 2.6600140000000003,
     "model_load_time_seconds": null
   }
 }

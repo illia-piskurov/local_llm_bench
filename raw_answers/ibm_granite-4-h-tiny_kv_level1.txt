@@ -6,8 +6,8 @@ class InMemoryKVStore:
 
     def run(self, program: str) -> list[str]:
         output = []
-        for line in program.splitlines():
-            if not line.strip():
+        for line in program.strip().splitlines():
+            if not line:
                 continue
 
             parts = line.split()
@@ -35,9 +35,9 @@ class InMemoryKVStore:
                     if not self.transactions:
                         output.append("NO TRANSACTION")
                     else:
-                        for key, value in self.transactions[-1].items():
-                            self.store[key] = value
-                        self.transactions.pop()
+                        for key in list(self.store.keys()):
+                            if key in self.transactions[-1]:
+                                del self.store[key]
                 else:
                     raise ValueError(f"Unknown command: {command}")
             except IndexError:

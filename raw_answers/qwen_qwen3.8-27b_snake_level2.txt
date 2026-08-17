@@ -1,0 +1,386 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Змейка</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0c29, #1a1a3e, #24243e);
+  font-family: 'Courier New', monospace;
+  color: #eee;
+  overflow: hidden;
+}
+h1 {
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+  letter-spacing: 4px;
+  background: linear-gradient(90deg, #4ecca3, #7b68ee, #4ecca3);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+@keyframes shimmer {
+  to { background-position: 200% center; }
+}
+#score {
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  transition: transform 0.15s ease;
+}
+#score.pop {
+  transform: scale(1.3);
+  color: #4ecca3;
+}
+canvas {
+  border: 2px solid rgba(78, 204, 163, 0.4);
+  border-radius: 8px;
+  background: #0d1117;
+  box-shadow: 0 0 40px rgba(78, 204, 163, 0.15), inset 0 0 60px rgba(0,0,0,0.5);
+}
+#msg {
+  margin-top: 14px;
+  font-size: 0.95rem;
+  color: #888;
+  min-height: 1.4em;
+  letter-spacing: 1px;
+}
+#overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 20, 0.85);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+  z-index: 10;
+}
+#overlay.show {
+  opacity: 1;
+  pointer-events: all;
+}
+#overlay h2 {
+  font-size: 3rem;
+  color: #e94560;
+  text-shadow: 0 0 30px rgba(233, 69, 96, 0.6);
+  animation: goPulse 1.2s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+@keyframes goPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+#overlay .final-score {
+  font-size: 1.4rem;
+  color: #ccc;
+  margin-bottom: 24px;
+}
+#overlay .restart-hint {
+  font-size: 1rem;
+  color: #4ecca3;
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+</style>
+</head>
+<body>
+<h1>ЗМЕЙКА</h1>
+<div id="score">Счёт: 0</div>
+<canvas id="game" width="400" height="400"></canvas>
+<div id="msg">Стрелки / WASD — движение</div>
+
+<div id="overlay">
+  <h2>GAME OVER</h2>
+  <div class="final-score" id="finalScore">Счёт: 0</div>
+  <div class="restart-hint">Нажмите Enter для перезапуска</div>
+</div>
+
+<script>
+(function () {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const scoreEl = document.getElementById('score');
+  const msgEl = document.getElementById('msg');
+  const overlay = document.getElementById('overlay');
+  const finalScoreEl = document.getElementById('finalScore');
+
+  const GRID = 20;
+  const CELL = canvas.width / GRID;
+  const TICK_MS = 110;
+
+  let snake, prevSnake, dir, nextDir, food, foodSpawnTime, score, alive, lastTick, particles, shakeTime, shakeMag;
+
+  function init() {
+    snake = [{ x: 10, y: 10 }];
+    prevSnake = [{ x: 10, y: 10 }];
+    dir = { x: 1, y: 0 };
+    nextDir = { x: 1, y: 0 };
+    score = 0;
+    alive = true;
+    particles = [];
+    shakeTime = 0;
+    shakeMag = 0;
+    foodSpawnTime = performance.now();
+    placeFood();
+    updateScore();
+    msgEl.textContent = 'Стрелки / WASD — движение';
+    overlay.classList.remove('show');
+    lastTick = performance.now();
+  }
+
+  function placeFood() {
+    do {
+      food = { x: Math.floor(Math.random() * GRID), y: Math.floor(Math.random() * GRID) };
+    } while (snake.some(s => s.x === food.x && s.y === food.y));
+    foodSpawnTime = performance.now();
+  }
+
+  function updateScore() {
+    scoreEl.textContent = 'Счёт: ' + score;
+    scoreEl.classList.add('pop');
+    setTimeout(() => scoreEl.classList.remove('pop'), 150);
+  }
+
+  function spawnParticles(gx, gy) {
+    const cx = (gx + 0.5) * CELL;
+    const cy = (gy + 0.5) * CELL;
+    const colors = ['#4ecca3', '#7b68ee', '#e94560', '#ffd700', '#fff'];
+    for (let i = 0; i < 22; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1.5 + Math.random() * 4;
+      particles.push({
+        x: cx, y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        decay: 0.02 + Math.random() * 0.03,
+        size: 2 + Math.random() * 4,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+  }
+
+  function tick() {
+    if (!alive) return;
+    dir = nextDir;
+    const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+    if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID) {
+      return gameOver();
+    }
+    if (snake.some(s => s.x === head.x && s.y === head.y)) {
+      return gameOver();
+    }
+
+    prevSnake = snake.map(s => ({ x: s.x, y: s.y }));
+    snake.unshift(head);
+
+    if (head.x === food.x && head.y === food.y) {
+      score++;
+      updateScore();
+      spawnParticles(food.x, food.y);
+      placeFood();
+    } else {
+      snake.pop();
+      prevSnake.pop();
+    }
+  }
+
+  function gameOver() {
+    alive = false;
+    shakeTime = 1;
+    shakeMag = 6;
+    finalScoreEl.textContent = 'Счёт: ' + score;
+    setTimeout(() => overlay.classList.add('show'), 400);
+    msgEl.textContent = '';
+  }
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function draw(now) {
+    const t = Math.min(1, (now - lastTick) / TICK_MS);
+
+    ctx.save();
+
+    // screen shake
+    if (shakeTime > 0) {
+      const sx = (Math.random() - 0.5) * shakeMag * shakeTime;
+      const sy = (Math.random() - 0.5) * shakeMag * shakeTime;
+      ctx.translate(sx, sy);
+      shakeTime = Math.max(0, shakeTime - 0.04);
+    }
+
+    // background
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(-10, -10, canvas.width + 20, canvas.height + 20);
+
+    // subtle grid
+    ctx.strokeStyle = 'rgba(78, 204, 163, 0.04)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= GRID; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * CELL, 0);
+      ctx.lineTo(i * CELL, canvas.height);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, i * CELL);
+      ctx.lineTo(canvas.width, i * CELL);
+      ctx.stroke();
+    }
+
+    // food with pulse
+    const foodAge = (now - foodSpawnTime) / 1000;
+    const foodScale = Math.min(1, foodAge * 4);
+    const pulse = 1 + Math.sin(now * 0.005) * 0.12;
+    const fSize = (CELL - 6) * foodScale * pulse;
+    const fx = (food.x + 0.5) * CELL;
+    const fy = (food.y + 0.5) * CELL;
+
+    ctx.save();
+    ctx.shadowColor = '#e94560';
+    ctx.shadowBlur = 15 + Math.sin(now * 0.004) * 5;
+    ctx.fillStyle = '#e94560';
+    ctx.beginPath();
+    ctx.arc(fx, fy, fSize / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // food inner glow
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(fx - fSize * 0.15, fy - fSize * 0.15, fSize * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // snake (interpolated)
+    for (let i = snake.length - 1; i >= 0; i--) {
+      let px, py;
+      if (i < prevSnake.length) {
+        px = lerp(prevSnake[i].x, snake[i].x, t);
+        py = lerp(prevSnake[i].y, snake[i].y, t);
+      } else {
+        px = snake[i].x;
+        py = snake[i].y;
+      }
+
+      const cx = (px + 0.5) * CELL;
+      const cy = (py + 0.5) * CELL;
+      const isHead = (i === 0);
+      const size = isHead ? CELL - 2 : CELL - 4;
+
+      if (isHead) {
+        ctx.save();
+        ctx.shadowColor = '#4ecca3';
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = '#4ecca3';
+        roundRect(ctx, cx - size / 2, cy - size / 2, size, size, 5);
+        ctx.fill();
+        ctx.restore();
+
+        // eyes
+        const ex = dir.x * 3, ey = dir.y * 3;
+        const perpX = -dir.y * 4, perpY = dir.x * 4;
+        ctx.fillStyle = '#0d1117';
+        ctx.beginPath();
+        ctx.arc(cx + ex + perpX, cy + ey + perpY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + ex - perpX, cy + ey - perpY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const hue = 160;
+        const light = Math.max(20, 50 - i * 1.2);
+        ctx.fillStyle = 'hsl(' + hue + ', 55%, ' + light + '%)';
+        roundRect(ctx, cx - size / 2, cy - size / 2, size, size, 4);
+        ctx.fill();
+      }
+    }
+
+    // particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.08;
+      p.life -= p.decay;
+      if (p.life <= 0) { particles.splice(i, 1); continue; }
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function loop(now) {
+    if (alive) {
+      if (now - lastTick >= TICK_MS) {
+        lastTick = now;
+        tick();
+      }
+    }
+    draw(now);
+    requestAnimationFrame(loop);
+  }
+
+  document.addEventListener('keydown', function (e) {
+    const key = e.key;
+
+    if (!alive) {
+      if (key === 'Enter' || key === ' ') {
+        init();
+      }
+      return;
+    }
+
+    let nd = null;
+    if (key === 'ArrowUp' || key === 'w' || key === 'W') nd = { x: 0, y: -1 };
+    else if (key === 'ArrowDown' || key === 's' || key === 'S') nd = { x: 0, y: 1 };
+    else if (key === 'ArrowLeft' || key === 'a' || key === 'A') nd = { x: -1, y: 0 };
+    else if (key === 'ArrowRight' || key === 'd' || key === 'D') nd = { x: 1, y: 0 };
+
+    if (nd) {
+      if (nd.x !== -dir.x || nd.y !== -dir.y) {
+        nextDir = nd;
+      }
+      e.preventDefault();
+    }
+  });
+
+  init();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
+```

@@ -1,0 +1,64 @@
+```python
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    # --- Cycle detection (DFS) ---
+    WHITE, GRAY, BLACK = 0, 1, 2
+    color = {name: WHITE for name in tasks}
+
+    def has_cycle(node: str) -> bool:
+        color[node] = GRAY
+        for dep in tasks[node][1]:
+            if color[dep] == GRAY:
+                return True
+            if color[dep] == WHITE and has_cycle(dep):
+                return True
+        color[node] = BLACK
+        return False
+
+    for name in tasks:
+        if color[name] == WHITE:
+            if has_cycle(name):
+                return None
+
+    # --- Build reverse-dependency map ---
+    dependents: dict[str, list[str]] = {name: [] for name in tasks}
+    for name, (_, deps, _) in tasks.items():
+        for dep in deps:
+            dependents[dep].append(name)
+
+    # --- Simulation ---
+    completed: set[str] = set()
+    running: list[tuple[int, str]] = []  # (end_time, task_name)
+    ready: set[str] = {name for name, (_, deps, _) in tasks.items() if not deps}
+    result: list[str] = []
+    time = 0
+
+    while len(completed) < len(tasks):
+        # Finish tasks whose end_time <= current time
+        still_running: list[tuple[int, str]] = []
+        for end_time, tname in running:
+            if end_time <= time:
+                completed.add(tname)
+                for dep_name in dependents[tname]:
+                    if all(d in completed for d in tasks[dep_name][1]):
+                        ready.add(dep_name)
+            else:
+                still_running.append((end_time, tname))
+        running = still_running
+
+        # Start as many ready tasks as capacity allows
+        while len(running) < workers and ready:
+            best = min(ready, key=lambda n: (-tasks[n][2], tasks[n][0], n))
+            ready.remove(best)
+            running.append((time + tasks[best][0], best))
+            result.append(best)
+
+        if len(completed) >= len(tasks):
+            break
+        if not running:
+            break  # should not happen without a cycle
+
+        # Advance to the next finish event
+        time = min(end_time for end_time, _ in running)
+
+    return result
+```

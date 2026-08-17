@@ -1,9 +1,0 @@
-{
-  "model": "granite-4.1-3b",
-  "benchmark": "vm",
-  "level": "level1",
-  "tested_at": "2026-08-04 23:03:55",
-  "passed": 18,
-  "total": 18,
-  "failures": []
-}

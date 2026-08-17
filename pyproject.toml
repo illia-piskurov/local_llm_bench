@@ -8,3 +8,8 @@ dependencies = [
     "requests>=2.34.2",
     "rich>=15.0.0",
 ]
+
+[tool.uv.workspace]
+members = [
+    "llm-probe",
+]

@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "mistralai/ministral-3-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nfrom collections import deque\n\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    in_degree = {task: 0 for task in tasks}\n    graph = {task: [] for task in tasks}\n\n    # Подсчёт степени входа и построение графа\n    for task, dependencies in tasks.items():\n        for dep in dependencies:\n            if dep not in tasks:\n                return None  # цикл или несуществующая задача\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    # Начальный набор задач без зависимостей\n    queue = deque([task for task in in_degree if in_degree[task] == 0])\n    result = []\n\n    while queue:\n        current = queue.popleft()\n        result.append(current)\n\n        for neighbor in graph[current]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    return None if len(result) != len(tasks) else result\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    # Проверка на циклы с помощью топологической сортировки\n    topo_order = topo_sort({task: dep for task, (_, dep) in tasks.items()})\n    if topo_order is None:\n        return None\n\n    # Вычисление длительностей и смещений задач\n    durations = {task: dur for task, (dur, _) in tasks.items()}\n    early_start = {task: 0 for task in tasks}\n    late_start = {task: 0 for task in tasks}\n\n    # Расчёт ранних стартов (от начальных задач)\n    queue = deque([task for task in early_start if early_start[task] == 0])\n    while queue:\n        current = queue.popleft()\n        for neighbor in graph.get(current, []):\n            if early_start[neighbor] < early_start[current] + durations[current]:\n                early_start[neighbor] = early_start[current] + durations[current]\n                queue.append(neighbor)\n\n    # Расчёт поздних стартов (от конечных задач)\n    late_end = {task: 0 for task in tasks}\n    for task in reversed(topo_order):\n        latest_end = max(late_end.get(dep, 0) - durations[dep] for dep in graph.get(task, []) if dep in tasks)\n        late_start[task] = latest_end\n        late_end[task] = late_start[task] + durations[task]\n\n    # Нахождение критического пути (максимальная разница между ранним и поздним стартом)\n    critical_path_length = max(late_start[task] - early_start[task] for task in tasks)\n\n    return critical_path_length if critical_path_length > 0 else None\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 1171,
+    "total_output_tokens": 636,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 25.75646870066634,
+    "time_to_first_token_seconds": 1.536211
+  },
+  "response_id": "resp_7e45f75257af36164821b583feeceffea07a962df7eccebc"
+}

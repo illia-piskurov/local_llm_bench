@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "mistralai/ministral-3-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nfrom collections import deque\n\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    # Проверка на циклы зависимостей\n    visited = set()\n    recursion_stack = set()\n\n    def has_cycle(task):\n        if task in recursion_stack:\n            return True\n        if task in visited:\n            return False\n        visited.add(task)\n        recursion_stack.add(task)\n        for dep in tasks.get(task, (0, [], 0))[1]:\n            if has_cycle(dep):\n                return True\n        recursion_stack.remove(task)\n        return False\n\n    for task in tasks:\n        if has_cycle(task):\n            return None\n\n    # Сортировка задач по приоритету и длительности\n    sorted_tasks = sorted(tasks.keys(), key=lambda x: (-tasks[x][2], tasks[x][0], x))\n\n    ready_queue = deque()\n    task_duration = {task: duration for task, (duration, _, _) in tasks.items()}\n    available_workers = workers\n\n    result = []\n    current_time = 0\n    active_tasks = set()\n\n    while ready_queue or active_tasks:\n        # Определяем задачи, готовые к выполнению в текущий момент времени\n        for task in sorted_tasks:\n            if all(dep not in active_tasks and dep != task for dep in tasks[task][1]):\n                ready_queue.append(task)\n\n        # Выполняем задачи по правилам\n        while available_workers > 0 and ready_queue:\n            current_task = ready_queue.popleft()\n            if current_task in active_tasks:\n                continue\n\n            active_tasks.add(current_task)\n            result.append((current_time, current_task))\n            current_time += task_duration[current_task]\n            available_workers -= 1\n\n        # Если нет свободных рабочих мест и все задачи выполнены\n        if not ready_queue and not active_tasks:\n            break\n\n    # Проверка на завершение всех задач\n    if len(result) != sum(1 for _ in tasks.values()):\n        return None\n\n    # Сортируем результаты по времени старта и возвращаем задачи в порядке выполнения\n    result.sort()\n    return [task for time, task in result]\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 801,
+    "total_output_tokens": 490,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 26.60112583564858,
+    "time_to_first_token_seconds": 0.6376470000000001
+  },
+  "response_id": "resp_083b950894eddb6ae74d9482e6b0f8aea657bd6f7e494ba0"
+}

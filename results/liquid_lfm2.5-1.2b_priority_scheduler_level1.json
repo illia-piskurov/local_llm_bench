@@ -1,0 +1,16 @@
+{
+  "model": "liquid/lfm2.5-1.2b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-17 22:34:34",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'",
+    "dependency_unlocks_later: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'",
+    "single_worker_duration_tiebreak: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'",
+    "resource_limit_and_priority: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'",
+    "simultaneous_unlocks: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'",
+    "cycle_returns_none: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'"
+  ]
+}

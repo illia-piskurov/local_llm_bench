@@ -1,0 +1,116 @@
+def run(program: str) -> list[str]:
+    data = {}
+    stack = []
+    watches = set()
+    output = []
+
+    def get_visible_value(key):
+        for tx in reversed(stack):
+            if key in tx:
+                return tx[key]
+        return data.get(key)
+
+    lines = [line.strip() for line in program.split('\n') if line.strip()]
+
+    for line in lines:
+        parts = line.split()
+        if not parts:
+            continue
+        
+        cmd = parts[0]
+        args = parts[1:]
+
+        if cmd == "SET":
+            if len(args) >= 2:
+                key, value = args[0], args[1]
+                old_val = get_visible_value(key)
+                old_str = "NULL" if old_val is None or old_val == "__DELETED__" else str(old_val)
+                
+                if not stack:
+                    data[key] = value
+                else:
+                    stack[-1][key] = value
+                
+                new_val = get_visible_value(key)
+                new_str = "NULL" if new_val is None or new_val == "__DELETED__" else str(new_val)
+                
+                if key in watches and old_str != new_str:
+                    output.append(f"WATCH {key} {old_str} -> {new_str}")
+        
+        elif cmd == "GET":
+            if len(args) >= 1:
+                key = args[0]
+                val = get_visible_value(key)
+                if val == "__DELETED__" or val is None:
+                    output.append("NULL")
+                else:
+                    output.append(str(val))
+        
+        elif cmd == "DELETE":
+            if len(args) >= 1:
+                key = args[0]
+                exists = False
+                for tx in stack:
+                    if key in tx:
+                        exists = True
+                        break
+                if not exists and key in data:
+                    exists = True
+                
+                if exists:
+                    old_val = get_visible_value(key)
+                    old_str = "NULL" if old_val is None or old_val == "__DELETED__" else str(old_val)
+                    
+                    if not stack:
+                        data[key] = "__DELETED__"
+                    else:
+                        stack[-1][key] = "__DELETED__"
+                    
+                    new_val = get_visible_value(key)
+                    new_str = "NULL" if new_val is None or new_val == "__DELETED__" else str(new_val)
+                    
+                    if key in watches and old_str != new_str:
+                        output.append(f"WATCH {key} {old_str} -> {new_str}")
+        
+        elif cmd == "BEGIN":
+            stack.append({})
+        
+        elif cmd == "COMMIT":
+            if not stack:
+                output.append("NO TRANSACTION")
+            else:
+                top = stack.pop()
+                if not stack:
+                    for k, v in top.items():
+                        data[k] = v
+                else:
+                    for k, v in top.items():
+                        stack[-1][k] = v
+        
+        elif cmd == "ROLLBACK":
+            if not stack:
+                output.append("NO TRANSACTION")
+            else:
+                stack.pop()
+        
+        elif cmd == "COUNT":
+            if len(args) >= 1:
+                target = args[0]
+                count = 0
+                # A key is "known" if it exists in data or any transaction level
+                known_keys = set(data.keys())
+                for tx in stack:
+                    known_keys.update(tx.keys())
+                
+                for k in known_keys:
+                    val = get_visible_value(k)
+                    current_str = "NULL" if val is None or val == "__DELETED__" else str(val)
+                    if current_str == target:
+                        count += 1
+                output.append(str(count))
+        
+        elif cmd == "WATCH":
+            if len(args) >= 1:
+                watches.add(args[0])
+
+    return output

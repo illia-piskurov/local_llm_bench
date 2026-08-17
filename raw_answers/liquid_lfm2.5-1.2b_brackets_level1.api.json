@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "liquid/lfm2.5-1.2b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    stack = []\n    opening = {'(': ')', '{': '}', '[': ']'}\n    closing = {')': '(', '}': '{', ']': '['}\n    \n    for char in s:\n        if char in opening:\n            stack.append(char)\n        elif char in closing:\n            if not stack or opening[stack.pop()] != char:\n                return False\n    return not stack\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 227,
+    "total_output_tokens": 111,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 58.382458753581844,
+    "time_to_first_token_seconds": 0.219236
+  },
+  "response_id": "resp_819e8be297a6cfc0ee5f287f0462055308de63abc70f2b14"
+}

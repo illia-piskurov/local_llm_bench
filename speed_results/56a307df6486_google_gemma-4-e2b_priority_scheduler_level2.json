@@ -4,13 +4,13 @@
   "model": "google/gemma-4-e2b",
   "benchmark": "priority_scheduler",
   "level": "level2",
-  "tested_at": "2026-07-12 00:02:49",
+  "tested_at": "2026-08-17 21:35:15",
   "stats": {
-    "input_tokens": 1875,
-    "total_output_tokens": 2805,
-    "reasoning_output_tokens": 880,
-    "tokens_per_second": 33.10861651685834,
-    "time_to_first_token_seconds": 2.912505,
-    "model_load_time_seconds": 6.294
+    "input_tokens": 2384,
+    "total_output_tokens": 3577,
+    "reasoning_output_tokens": 853,
+    "tokens_per_second": 30.852041174752923,
+    "time_to_first_token_seconds": 0.607677,
+    "model_load_time_seconds": null
   }
 }

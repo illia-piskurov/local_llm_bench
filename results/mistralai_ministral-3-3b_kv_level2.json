@@ -1,0 +1,11 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-08-17 19:26:07",
+  "passed": 0,
+  "total": 25,
+  "failures": [
+    "не удалось загрузить решение: invalid syntax (mistralai_ministral-3-3b_kv_level2.py, line 78)"
+  ]
+}

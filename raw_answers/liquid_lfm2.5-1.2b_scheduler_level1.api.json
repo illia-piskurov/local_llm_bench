@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "liquid/lfm2.5-1.2b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    in_degree = {task: 0 for task in tasks}\n    for dependencies in tasks.values():\n        for dep in dependencies:\n            in_degree[dep] += 1\n\n    queue = [task for task in tasks if in_degree[task] == 0]\n    order = []\n    while queue:\n        current = queue.pop(0)\n        order.append(current)\n        for dependent in tasks.get(current, []):\n            in_degree[dependent] -= 1\n            if in_degree[dependent] == 0:\n                queue.append(dependent)\n\n    if len(order) != len(tasks):\n        return None\n    return order\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 280,
+    "total_output_tokens": 169,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 56.84296844071665,
+    "time_to_first_token_seconds": 0.063506
+  },
+  "response_id": "resp_685115f1d814fb0cdd28e63c31eafd673c577a97f8a3d617"
+}

@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "liquid/lfm2.5-1.2b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    in_degree = {task: 0 for task in tasks}\n    for _, dependencies in tasks.values():\n        for dep in dependencies:\n            in_degree[dep] += 1\n\n    zero_in_degree = [task for task in tasks if in_degree[task] == 0]\n    path_length = 0\n    while zero_in_degree:\n        current = zero_in_degree.pop(0)\n        path_length += 1\n        for dependent, (length, deps) in tasks.get(current, (0, [])).items():\n            if len(deps) == 0 or all(d in zero_in_degree for d in deps):\n                zero_in_degree.append(dependent)\n    return path_length if len(tasks) - path_length == 1 else None\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 646,
+    "total_output_tokens": 197,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 57.62313068516534,
+    "time_to_first_token_seconds": 0.062887
+  },
+  "response_id": "resp_ffd8d990134fe4b385d2d6e32416dc9ffea2c0644a744f9b"
+}
