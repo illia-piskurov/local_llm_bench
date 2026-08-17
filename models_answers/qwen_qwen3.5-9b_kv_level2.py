@@ -1,0 +1,106 @@
+def run(program: str) -> list[str]:
+    lines = program.split('\n')
+    store = {}
+    tx_stack = []
+    watch_keys = set()
+    output = []
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        parts = line.split()
+        cmd = parts[0]
+        
+        def get_current_value(key):
+            """Get current value considering transactions"""
+            # Check all snapshots in tx_stack to find the latest value for this key
+            for snapshot in reversed(tx_stack):
+                if key in snapshot:
+                    return snapshot[key]
+            return store.get(key, "NULL")
+
+        def set_current_value(key, value):
+            """Set current value considering transactions"""
+            # First restore from snapshots to get base state
+            base_store = {}
+            for k, v in store.items():
+                base_store[k] = v
+            
+            # Apply snapshots in reverse order (most recent first)
+            for snapshot in reversed(tx_stack):
+                for k, v in snapshot.items():
+                    base_store[k] = v
+            
+            # Now set the value
+            base_store[key] = value
+            
+            # Update store and tx_stack appropriately
+            # This is complex - we need to handle it carefully
+            pass
+
+        if cmd == 'SET':
+            key = parts[1]
+            value = parts[2]
+            
+            old_value = get_current_value(key)
+            
+            # Check if watched and value changed
+            if key in watch_keys:
+                if old_value != value:
+                    output.append(f"WATCH {key} {old_value} -> {value}")
+            
+            store[key] = value
+            
+        elif cmd == 'GET':
+            key = parts[1]
+            val = get_current_value(key)
+            output.append(val)
+            
+        elif cmd == 'DELETE':
+            key = parts[1]
+            old_value = get_current_value(key)
+            
+            if key in watch_keys:
+                if old_value != "NULL":
+                    output.append(f"WATCH {key} {old_value} -> NULL")
+            
+            if key in store:
+                del store[key]
+                
+        elif cmd == 'COUNT':
+            value = parts[1]
+            count = 0
+            for k, v in store.items():
+                if v == value:
+                    count += 1
+            output.append(str(count))
+            
+        elif cmd == 'BEGIN':
+            tx_stack.append(dict(store))
+            
+        elif cmd == 'COMMIT':
+            if not tx_stack:
+                output.append("NO TRANSACTION")
+            else:
+                tx_stack.pop()
+                
+        elif cmd == 'ROLLBACK':
+            if not tx_stack:
+                output.append("NO TRANSACTION")
+            else:
+                snapshot = tx_stack.pop()
+                # Restore keys from snapshot
+                for k, v in snapshot.items():
+                    store[k] = v
+                # Remove keys not in snapshot
+                for k in list(store.keys()):
+                    if k not in snapshot:
+                        del store[k]
+                        
+        elif cmd == 'WATCH':
+            key = parts[1]
+            watch_keys.add(key)
+
+    return output

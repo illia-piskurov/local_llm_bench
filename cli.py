@@ -570,6 +570,109 @@ def show_leaderboard() -> None:
     console.print(table)
 
 
+def manage_deletion_menu() -> None:
+    DELETE_MODEL = "__delete_model__"
+    DELETE_LEVEL = "__delete_level__"
+    DELETE_ALL = "__delete_all__"
+    BACK = "__back__"
+
+    while True:
+        saved_results = store.all_saved()
+        saved_speeds = speed_store.all_saved()
+
+        all_models = sorted(list({r.model for r in saved_results} | {s.model for s in saved_speeds}))
+
+        if not all_models:
+            console.print("[yellow]Нет сохранённых результатов для удаления.[/yellow]")
+            return
+
+        choices = [
+            Choice(title="🗑️ Удалить ВСЕ результаты конкретной модели", value=DELETE_MODEL),
+            Choice(title="🎯 Удалить результаты конкретного теста / уровня модели", value=DELETE_LEVEL),
+            Choice(title="⚠️ Сбросить ВСЕ результаты бенчмарка (очистка всей базы)", value=DELETE_ALL),
+            Choice(title="« Назад в главное меню", value=BACK),
+        ]
+
+        action = questionary.select("Управление результатами:", choices=choices).ask()
+
+        if action in (None, BACK):
+            return
+
+        if action == DELETE_MODEL:
+            model_choices = [Choice(title=m, value=m) for m in all_models]
+            model_choices.append(Choice(title="« Назад", value=BACK))
+            selected_model = questionary.select("Выберите модель для удаления всех её результатов:", choices=model_choices).ask()
+
+            if selected_model in (None, BACK):
+                continue
+
+            confirm = questionary.confirm(
+                f"Вы уверены, что хотите полностью удалить все результаты и замеры скорости для '{selected_model}'?",
+                default=False,
+            ).ask()
+
+            if confirm:
+                count_res = store.clear_model(selected_model, REGISTRY)
+                count_speed = speed_store.clear_model(selected_model)
+                console.print(
+                    f"[green]Удалено {count_res} файлов ответов/результатов и {count_speed} замеров скорости для '{selected_model}'.[/green]"
+                )
+
+        elif action == DELETE_LEVEL:
+            model_choices = [Choice(title=m, value=m) for m in all_models]
+            model_choices.append(Choice(title="« Назад", value=BACK))
+            selected_model = questionary.select("Выберите модель:", choices=model_choices).ask()
+
+            if selected_model in (None, BACK):
+                continue
+
+            level_choices = []
+            for b in REGISTRY:
+                for l_id in b.level_order:
+                    res = store.load(b, selected_model, l_id)
+                    status = f"{res.format()} ({res.tested_at})" if res else "не тестировался"
+                    level_choices.append(
+                        Choice(
+                            title=f"[{b.short}] {b.name} — {b.level_by_id(l_id).name}: {status}",
+                            value=(b, l_id),
+                        )
+                    )
+            level_choices.append(Choice(title="« Назад", value=BACK))
+
+            selected_level = questionary.select("Выберите уровень для удаления:", choices=level_choices).ask()
+
+            if selected_level in (None, BACK):
+                continue
+
+            b, l_id = selected_level
+            confirm = questionary.confirm(
+                f"Удалить результат [{b.short} - {l_id}] для модели '{selected_model}'?",
+                default=False,
+            ).ask()
+
+            if confirm:
+                count_res = store.clear(b, selected_model, l_id)
+                count_speed = speed_store.clear_level(selected_model, b.id, l_id)
+                console.print(
+                    f"[green]Удален результат теста [{b.short} - {l_id}] (файлов: {count_res}, замер скорости: {count_speed}).[/green]"
+                )
+
+        elif action == DELETE_ALL:
+            confirm = questionary.confirm(
+                "ВНИМАНИЕ: Это полностью удалит ВСЕ сохранённые результаты и замеры скорости ВСЕХ моделей! Продолжить?",
+                default=False,
+            ).ask()
+
+            if confirm:
+                double_confirm = questionary.confirm("Вы ТОЧНО уверены?", default=False).ask()
+                if double_confirm:
+                    count_res = store.clear_all(REGISTRY)
+                    count_speed = speed_store.clear_all()
+                    console.print(
+                        f"[bold red]База очищена: удалено {count_res} файлов результатов и {count_speed} замеров скорости.[/bold red]"
+                    )
+
+
 def main():
     store.ensure_dirs(REGISTRY)
     speed_store.ensure_dir()
@@ -580,6 +683,7 @@ def main():
     LEADERBOARD = "__leaderboard__"
     SPEEDBOARD = "__speedboard__"
     HOSTS = "__hosts__"
+    DELETE_MENU = "__delete_menu__"
     EXIT = "__exit__"
 
     while True:
@@ -588,6 +692,7 @@ def main():
         choices.append(Choice(title="📊 Общий рейтинг моделей", value=LEADERBOARD))
         choices.append(Choice(title="⚡ Рейтинг скорости по конфигурации ПК", value=SPEEDBOARD))
         choices.append(Choice(title="🖥️ Конфигурации ПК", value=HOSTS))
+        choices.append(Choice(title="🗑️ Удалить результаты моделей", value=DELETE_MENU))
         choices.append(Choice(title="Выход", value=EXIT))
 
         choice = questionary.select("Выберите тест:", choices=choices).ask()
@@ -610,6 +715,10 @@ def main():
 
         if choice == HOSTS:
             choose_host_config()
+            continue
+
+        if choice == DELETE_MENU:
+            manage_deletion_menu()
             continue
 
         choose_model(BY_ID[choice])

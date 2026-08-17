@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "qwen/qwen3-4b-2507",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    stack = []\n    pairs = {')': '(', ']': '[', '}': '{'}\n    \n    for char in s:\n        if char in '([{':\n            stack.append(char)\n        elif char in ')]}':\n            if not stack or stack.pop() != pairs[char]:\n                return False\n    \n    return len(stack) == 0\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 207,
+    "total_output_tokens": 88,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 15.970869134698308,
+    "time_to_first_token_seconds": 2.090121
+  },
+  "response_id": "resp_6ea1a165c58b6302356a64cad64a48479c1abeca18139bd2"
+}

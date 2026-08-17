@@ -4,81 +4,103 @@
 <meta charset="UTF-8">
 <title>Змейка</title>
 <style>
-body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;background:#222}
-canvas{border:2px solid #fff}
-#msg{color:#fff;padding:10px;background:#333;border-radius:5px}
+body{margin:0;overflow:hidden;background:#111;display:flex;justify-content:center;align-items:center;height:100vh;}
+canvas{border:2px solid #fff;}
+#score{position:absolute;top:10px;left:10px;font-size:24px;color:#fff;}
 </style>
 </head>
 <body>
-<canvas id="c" width="200" height="200"></canvas>
-<div id="msg">Игра окончена. Нажмите любую клавишу для перезапуска.</div>
-
+<canvas id="game" width="400" height="400"></canvas>
+<div id="score">Счёт: 0</div>
 <script>
-const c=document.getElementById('c'),ctx=c.getContext('2d');
-let snake=[{x:10,y:10}];
-let dir=1; // 0 up,1 right,2 down,3 left
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+let snake=[];
+let direction='RIGHT';
+let speed=10;
 let score=0;
-let gameOver=false;
-let food={x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)};
-const speed=5;
+let food={x:Math.floor(Math.random()*39)+1,y:Math.floor(Math.random()*39)};
+let gameRunning=true;
 
 function draw(){
-if(gameOver){ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(0,0,c.width,c.height);return}
-ctx.clearRect(0,0,c.width,c.height);
+if(!gameRunning) return;
+ctx.clearRect(0,0,canvas.width,canvas.height);
 drawFood();
 drawSnake();
+requestAnimationFrame(draw);
 }
 function drawFood(){
-ctx.fillStyle='#f94';
-ctx.fillRect(food.x,food.y,20,20);
+ctx.fillStyle='lime';
+ctx.fillRect(food.x*10,food.y*10,9,9);
 }
 function drawSnake(){
-ctx.fillStyle='lime';
 for(let i=0;i<snake.length;i++){
-ctx.fillRect(snake[i].x,snake[i].y,20,20);
+let x=snake[i].x*10;
+let y=snake[i].y*10;
+ctx.fillStyle='lime';
+ctx.fillRect(x,y,9,9);
+if(i===snake.length-1) ctx.strokeStyle='black'; else ctx.strokeStyle='none';
+ctx.strokeRect(x,y,9,9);
 }
 }
 function update(){
-if(gameOver)return;
-const head={x:snake[0].x+dir, y:snake[0].y};
-if(dir===0){head.y--;}
-else if(dir===1){head.x++;}
-else if(dir===2){head.y++;}
-else{head.x--;}
-
-if(head.x<0||head.x>c.width-20||head.y<0||head.y>c.height-20){
-gameOver=true;
+let head={x:snake[0].x+getDirectionX(direction),y:snake[0].y+getDirectionY(direction)};
+if(head.x<0||head.x>39||head.y<0||head.y>39){
+gameRunning=false;
+alert('Game Over! Счёт: '+score);
 return;
 }
-if(snake.some(seg=>seg.x===head.x&&seg.y===head.y)){
-gameOver=true;
+for(let i=1;i<snake.length;i++){
+if(snake[i].x===head.x&&snake[i].y===head.y){
+gameRunning=false;
 return;
+}
 }
 snake.unshift(head);
+if(head.x===food.x && head.y===food.y){
+snake.pop();
 score++;
-if(head.x===food.x&&head.y===food.y){
-snake.push({x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)});
-food={x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)};
+food={x:Math.floor(Math.random()*39)+1,y:Math.floor(Math.random()*39)};
 while(snake.some(seg=>seg.x===food.x&&seg.y===food.y)){
-food={x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)};
+food={x:Math.floor(Math.random()*39)+1,y:Math.floor(Math.random()*39)};
+}
+}else{
+snake.pop();
 }
 }
-requestAnimationFrame(update);
+function getDirectionX(dir){
+if(dir==='RIGHT') return 1;
+if(dir==='LEFT') return -1;
+return 0;
 }
-function reset(){
-snake=[{x:10,y:10}];
-dir=1;
-score=0;
-gameOver=false;
-food={x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)};
-while(snake.some(seg=>seg.x===food.x&&seg.y===food.y)){
-food={x:Math.floor(Math.random()*9)+1,y:Math.floor(Math.random()*9)};
-}
+function getDirectionY(dir){
+if(dir==='DOWN') return 1;
+if(dir==='UP') return -1;
+return 0;
 }
 document.addEventListener('keydown',e=>{
-if(gameOver){reset();gameOver=false;}
+let key=e.key.toLowerCase();
+if(key==='w'||key==='ArrowUp'){
+direction='UP';
+}else if(key==='s'||key==='ArrowDown'){
+direction='DOWN';
+}else if(key==='a'||key==='ArrowLeft'){
+direction='LEFT';
+}else if(key==='d'||key==='ArrowRight'){
+direction='RIGHT';
+}
 });
-update();
+function restart(){
+snake=[{x:18,y:18}];
+score=0;
+food={x:Math.floor(Math.random()*39)+1,y:Math.floor(Math.random()*39)};
+while(snake.some(seg=>seg.x===food.x&&seg.y===food.y)){
+food={x:Math.floor(Math.random()*39)+1,y:Math.floor(Math.random()*39)};
+}
+gameRunning=true;
+}
+document.addEventListener('keypress',restart);
+draw();
 </script>
 </body>
 </html>

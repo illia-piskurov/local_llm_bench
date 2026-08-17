@@ -1,0 +1,16 @@
+{
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-17 14:01:18",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+    "dependency_unlocks_later: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+    "single_worker_duration_tiebreak: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+    "resource_limit_and_priority: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+    "simultaneous_unlocks: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+    "cycle_returns_none: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence"
+  ]
+}

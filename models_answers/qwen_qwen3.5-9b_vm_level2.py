@@ -1,110 +1,139 @@
 def run(program: str) -> list[str]:
+    stack = []
+    output = []
     lines = program.splitlines()
-    n_lines = len(lines)
     
-    # Pass 1: Parse labels to build a map of label names to line indices (0-based)
+    # First pass: collect label positions
     labels = {}
     for i, line in enumerate(lines):
         stripped = line.strip()
         if not stripped or stripped.startswith('#'):
             continue
+        
         parts = stripped.split()
-        if parts[0].upper() == 'LABEL':
+        instruction = parts[0].upper()
+        
+        if instruction == 'LABEL':
             if len(parts) < 2:
                 raise RuntimeError(f"Line {i + 1}: LABEL requires a name")
-            labels[parts[1]] = i
+            label_name = parts[1]
+            labels[label_name] = i
     
-    # Pass 2: Execute the program using a program counter (pc)
-    stack = []
-    output = []
-    pc = 0
-    
-    while pc < n_lines:
-        line = lines[pc]
-        stripped = line.strip()
+    # Second pass: execute with jumps
+    pc = 0  # program counter
+    while pc < len(lines):
+        line_num = pc + 1
+        stripped = lines[pc].strip()
         
-        # Skip empty/comment lines during execution flow
+        # Skip empty lines and comments
         if not stripped or stripped.startswith('#'):
             pc += 1
             continue
         
         parts = stripped.split()
         instruction = parts[0].upper()
-        line_num = pc + 1
         
         try:
             if instruction == 'PUSH':
-                if len(parts) < 2: raise RuntimeError(f"Line {line_num}: PUSH requires an argument")
+                if len(parts) < 2:
+                    raise RuntimeError(f"Line {line_num}: PUSH requires an argument")
                 stack.append(int(parts[1]))
-                
+            
             elif instruction == 'POP':
-                if not stack: raise RuntimeError(f"Line {line_num}: Stack underflow on POP")
+                if not stack:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow on POP")
                 stack.pop()
                 
             elif instruction == 'ADD':
-                if len(stack) < 2: raise RuntimeError(f"Line {line_num}: Stack underflow on ADD")
-                b = stack.pop(); a = stack.pop()
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow on ADD")
+                b = stack.pop()
+                a = stack.pop()
                 stack.append(a + b)
                 
             elif instruction == 'SUB':
-                if len(stack) < 2: raise RuntimeError(f"Line {line_num}: Stack underflow on SUB")
-                b = stack.pop(); a = stack.pop()
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow on SUB")
+                b = stack.pop()
+                a = stack.pop()
                 stack.append(a - b)
                 
             elif instruction == 'MUL':
-                if len(stack) < 2: raise RuntimeError(f"Line {line_num}: Stack underflow on MUL")
-                b = stack.pop(); a = stack.pop()
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow on MUL")
+                b = stack.pop()
+                a = stack.pop()
                 stack.append(a * b)
                 
             elif instruction == 'DIV':
-                if len(stack) < 2: raise RuntimeError(f"Line {line_num}: Stack underflow on DIV")
-                b = stack.pop(); a = stack.pop()
-                if b == 0: raise RuntimeError(f"Line {line_num}: Division by zero")
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow on DIV")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise RuntimeError(f"Line {line_num}: Division by zero")
                 stack.append(a // b)
                 
             elif instruction == 'DUP':
-                if not stack: raise RuntimeError(f"Line {line_num}: Stack underflow on DUP")
+                if not stack:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow on DUP")
                 stack.append(stack[-1])
                 
             elif instruction == 'SWAP':
-                if len(stack) < 2: raise RuntimeError(f"Line {line_num}: Stack underflow on SWAP")
-                a = stack.pop(); b = stack.pop()
-                stack.append(a); stack.append(b)
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow on SWAP")
+                a = stack.pop()
+                b = stack.pop()
+                stack.append(a)
+                stack.append(b)
                 
             elif instruction == 'PRINT':
-                if not stack: raise RuntimeError(f"Line {line_num}: Stack underflow on PRINT")
+                if not stack:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow on PRINT")
                 output.append(str(stack[-1]))
-                
+            
             elif instruction == 'LABEL':
-                # Labels are no-ops during execution, just skip to next line
-                pc += 1
-                
+                # Labels are no-ops during execution
+                pass
+            
             elif instruction == 'JMP':
-                if len(parts) < 2: raise RuntimeError(f"Line {line_num}: JMP requires a label")
-                target = parts[1]
-                if target not in labels: raise RuntimeError(f"Line {line_num}: Undefined label '{target}'")
-                pc = labels[target]
+                if len(parts) < 2:
+                    raise RuntimeError(f"Line {line_num}: JMP requires a label name")
+                target_label = parts[1]
+                if target_label not in labels:
+                    raise RuntimeError(f"Line {line_num}: Unknown label '{target_label}'")
+                pc = labels[target_label]
                 
             elif instruction == 'JZ':
-                if len(parts) < 2: raise RuntimeError(f"Line {line_num}: JZ requires a label")
-                target = parts[1]
-                if target not in labels: raise RuntimeError(f"Line {line_num}: Undefined label '{target}'")
-                if not stack: raise RuntimeError(f"Line {line_num}: Stack underflow on JZ")
+                if len(parts) < 2:
+                    raise RuntimeError(f"Line {line_num}: JZ requires a label name")
+                target_label = parts[1]
+                if target_label not in labels:
+                    raise RuntimeError(f"Line {line_num}: Unknown label '{target_label}'")
+                if not stack:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow on JZ")
                 val = stack.pop()
-                if val == 0: pc = labels[target]
+                if val != 0:
+                    pc = labels[target_label]
                 
             elif instruction == 'JNZ':
-                if len(parts) < 2: raise RuntimeError(f"Line {line_num}: JNZ requires a label")
-                target = parts[1]
-                if target not in labels: raise RuntimeError(f"Line {line_num}: Undefined label '{target}'")
-                if not stack: raise RuntimeError(f"Line {line_num}: Stack underflow on JNZ")
+                if len(parts) < 2:
+                    raise RuntimeError(f"Line {line_num}: JNZ requires a label name")
+                target_label = parts[1]
+                if target_label not in labels:
+                    raise RuntimeError(f"Line {line_num}: Unknown label '{target_label}'")
+                if not stack:
+                    raise RuntimeError(f"Line {line_num}: Stack underflow on JNZ")
                 val = stack.pop()
-                if val != 0: pc = labels[target]
-                
+                if val == 0:
+                    pc = labels[target_label]
+            
             else:
                 raise RuntimeError(f"Line {line_num}: Unknown instruction '{instruction}'")
-            
+                
         except ValueError:
             raise RuntimeError(f"Line {line_num}: Invalid integer argument") from None
         
+        pc += 1
+    
     return output

@@ -1,0 +1,94 @@
+def run(program: str) -> list[str]:
+    class KVStore:
+        def __init__(self):
+            self.main_store = {}
+            self.transaction_stack = []
+            self.DELETED = object()
+
+        def set(self, key, value):
+            if self.transaction_stack:
+                self.transaction_stack[-1][key] = value
+            else:
+                self.main_store[key] = value
+
+        def get(self, key):
+            # Check transaction stack from top to bottom
+            for layer in reversed(self.transaction_stack):
+                if key in layer:
+                    val = layer[key]
+                    return str(val) if val is not self.DELETED else "NULL"
+            
+            # Check main store
+            if key in self.main_store:
+                return str(self.main_store[key])
+            return "NULL"
+
+        def delete(self, key):
+            if self.transaction_stack:
+                self.transaction_stack[-1][key] = self.DELETED
+            else:
+                self.main_store.pop(key, None)
+
+        def begin(self):
+            self.transaction_stack.append({})
+
+        def commit(self):
+            if not self.transaction_stack:
+                return "NO TRANSACTION"
+            
+            changes = self.transaction_stack.pop()
+            
+            if self.transaction_stack:
+                # Merge into the parent transaction
+                self.transaction_stack[-1].update(changes)
+            else:
+                # Merge into main store
+                for k, v in changes.items():
+                    if v is self.DELETED:
+                        self.main_store.pop(k, None)
+                    else:
+                        self.main_store[k] = v
+            return None
+
+        def rollback(self):
+            if not self.transaction_stack:
+                return "NO TRANSACTION"
+            self.transaction_stack.pop()
+            return None
+
+    store = KVStore()
+    results = []
+    
+    for line in program.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        
+        parts = line.split()
+        command = parts[0]
+        
+        if command == "SET":
+            if len(parts) >= 3:
+                key = parts[1]
+                # Re-join in case value contains spaces, though problem implies single word
+                # But standard KV usually takes the rest of the line as value
+                value = " ".join(parts[2:])
+                store.set(key, value)
+        elif command == "GET":
+            if len(parts) >= 2:
+                results.append(store.get(parts[1]))
+        elif command == "DELETE":
+            if len(parts) >= 2:
+                store.delete(parts[1])
+        elif command == "BEGIN":
+            store.begin()
+        elif command == "COMMIT":
+            res = store.commit()
+            if res:
+                results.append(res)
+        elif command == "ROLLBACK":
+            res = store.rollback()
+            if res:
+                results.append(res)
+                
+    return results

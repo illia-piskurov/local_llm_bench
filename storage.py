@@ -46,9 +46,28 @@ class ResultStore:
             encoding="utf-8",
         )
 
-    def clear(self, benchmark: Benchmark, model_key: str, level_id: str) -> None:
+    def clear(self, benchmark: Benchmark, model_key: str, level_id: str) -> int:
+        count = 0
         for path in self.paths_for(benchmark, model_key, level_id):
-            path.unlink(missing_ok=True)
+            if path.exists():
+                path.unlink(missing_ok=True)
+                count += 1
+        return count
+
+    def clear_model(self, model_key: str, benchmarks: list[Benchmark]) -> int:
+        count = 0
+        for benchmark in benchmarks:
+            for level_id in benchmark.level_order:
+                count += self.clear(benchmark, model_key, level_id)
+        return count
+
+    def clear_all(self, benchmarks: list[Benchmark]) -> int:
+        count = 0
+        for result in self.all_saved():
+            for benchmark in benchmarks:
+                if benchmark.id == result.benchmark:
+                    count += self.clear(benchmark, result.model, result.level)
+        return count
 
     def all_saved(self) -> list[StoredResult]:
         results = []
@@ -76,6 +95,35 @@ class SpeedResultStore:
         self.ensure_dir()
         path = self.path_for(sample.host_id, sample.model, sample.benchmark, sample.level)
         path.write_text(json.dumps(sample.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def clear_level(self, model_key: str, benchmark_id: str, level_id: str) -> int:
+        if not self.speed_results_dir.exists():
+            return 0
+        count = 0
+        key = safe_filename(model_key)
+        for path in self.speed_results_dir.glob(f"*_{key}_{benchmark_id}_{level_id}.json"):
+            path.unlink(missing_ok=True)
+            count += 1
+        return count
+
+    def clear_model(self, model_key: str) -> int:
+        if not self.speed_results_dir.exists():
+            return 0
+        count = 0
+        key = safe_filename(model_key)
+        for path in self.speed_results_dir.glob(f"*_{key}_*.json"):
+            path.unlink(missing_ok=True)
+            count += 1
+        return count
+
+    def clear_all(self) -> int:
+        if not self.speed_results_dir.exists():
+            return 0
+        count = 0
+        for path in self.speed_results_dir.glob("*.json"):
+            path.unlink(missing_ok=True)
+            count += 1
+        return count
 
     def all_saved(self) -> list[SpeedSample]:
         results = []

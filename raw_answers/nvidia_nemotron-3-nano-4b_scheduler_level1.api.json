@@ -1,0 +1,21 @@
+{
+  "model_instance_id": "nvidia/nemotron-3-nano-4b",
+  "output": [
+    {
+      "type": "reasoning",
+      "content": "We need to output only code block with function topo_sort. Implement Kahn's algorithm. Return None if cycle. Provide code only.\n\nLet's write:\n\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    # compute indegree\n    indeg = {t:0 for t in tasks}\n    for deps in tasks.values():\n        for d in deps:\n            if d not in tasks: maybe ignore? but assume valid.\n            indeg[d]+=1\n\n    queue = [t for t,deg in indeg.items() if deg==0]\n    order=[]\n    while queue:\n        v=queue.pop(0)\n        order.append(v)\n        for nxt in tasks.get(v, []):\n            indeg[nxt]-=1\n            if indeg[nxt]==0:\n                queue.append(nxt)\n\n    # check if all processed\n    if len(order)==len(tasks):\n        return order\n    else:\n        return None\n\nBut need type hints: list[str] | None. Use typing.\n\nAdd import typing? In Python 3.10+ can use list[str]. Provide code only.\n\nLet's output.\n"
+    },
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    # compute indegree for each task\n    indeg = {t: 0 for t in tasks}\n    for deps in tasks.values():\n        for d in deps:\n            if d in indeg:\n                indeg[d] += 1\n\n    # queue of tasks with no remaining dependencies\n    zero_dep = [t for t, deg in indeg.items() if deg == 0]\n    order: list[str] = []\n\n    while zero_dep:\n        v = zero_dep.pop(0)\n        order.append(v)\n        for nxt in tasks.get(v, []):\n            indeg[nxt] -= 1\n            if indeg[nxt] == 0:\n                zero_dep.append(nxt)\n\n    # if not all tasks were processed, there is a cycle\n    return order if len(order) == len(tasks) else None\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 250,
+    "total_output_tokens": 457,
+    "reasoning_output_tokens": 246,
+    "tokens_per_second": 7.126096448175767,
+    "time_to_first_token_seconds": 4.992770999999999
+  },
+  "response_id": "resp_2e676b84042ab5467a663744cb05aad82c7a391d2557dd6b"
+}

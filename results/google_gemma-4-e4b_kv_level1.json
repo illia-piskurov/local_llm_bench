@@ -2,7 +2,7 @@
   "model": "google/gemma-4-e4b",
   "benchmark": "kv",
   "level": "level1",
-  "tested_at": "2026-08-08 00:14:17",
+  "tested_at": "2026-08-14 12:24:08",
   "passed": 0,
   "total": 15,
   "failures": [

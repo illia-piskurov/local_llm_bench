@@ -1,8 +1,0 @@
-{
-  "model": "deepseek/deepseek-r1-0528-qwen3-8b",
-  "benchmark": "snake",
-  "level": "level1",
-  "tested_at": "2026-08-08 23:24:15",
-  "manual_score": 1,
-  "comment": "not work"
-}

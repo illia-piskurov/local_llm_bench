@@ -2,7 +2,7 @@
   "model": "nvidia/nemotron-3-nano-4b",
   "benchmark": "scheduler",
   "level": "level1",
-  "tested_at": "2026-07-12 20:17:11",
+  "tested_at": "2026-08-17 11:51:48",
   "passed": 6,
   "total": 10,
   "failures": [

@@ -1,138 +1,87 @@
-import collections
-from typing import List, Dict, Any, Tuple
+import copy
+from typing import List, Dict, Any
 
-class KVStore:
+class TransactionalKVStore:
     """
     In-memory key-value store supporting nested transactions.
-    The state is managed using a transaction stack to ensure isolation and rollback capability.
+    The state is managed using a stack of deep copies to ensure isolation.
     """
     def __init__(self):
-        # The global committed state (the base layer)
-        self.committed_data: Dict[str, Any] = {}
+        # The global persistent storage (the base level)
+        self._store: Dict[str, Any] = {}
+        # Stack of transaction scopes. Each element is a full copy of the state 
+        # at the moment BEGIN was called.
+        self._transaction_stack: List[Dict[str, Any]] = []
+
+    def _get_current_view(self) -> Dict[str, Any]:
+        """Returns the dictionary representing the current active view."""
+        if self._transaction_stack:
+            return self._transaction_stack[-1]
+        return self._store
+
+    def set(self, key: str, value: Any):
+        """Sets a key-value pair in the current active scope."""
+        current_view = self._get_current_view()
+        # Note: Since we are modifying the dictionary reference at the top of the stack 
+        # or the global store, changes are immediately visible.
+        current_view[key] = value
+
+    def get(self, key: str) -> Any:
+        """Gets the value associated with a key in the current active scope."""
+        current_view = self._get_current_view()
+        return current_view.get(key, None)
+
+    def delete(self, key: str):
+        """Deletes a key from the current active scope."""
+        current_view = self._get_current_view()
+        if key in current_view:
+            del current_view[key]
+
+    def begin(self):
+        """Starts a new transaction scope by creating a deep copy of the current state."""
+        # We must capture the entire current view to ensure isolation.
+        new_scope = copy.deepcopy(self._get_current_view())
+        self._transaction_stack.append(new_scope)
+
+    def commit(self) -> str:
+        """Commits the innermost transaction, merging changes into the parent scope."""
+        if not self._transaction_stack:
+            return "NO TRANSACTION"
+
+        # 1. Get the committed changes (the top scope)
+        committed_scope = self._transaction_stack.pop()
         
-        # Stack of pending changes for active transactions.
-        # Each element is a dictionary representing the changes made at that level.
-        # Structure: {key: value} for SET, or None/special marker for DELETE.
-        self.transaction_stack: List[Dict[str, Any]] = []
+        # 2. Determine the target scope for merging
+        if not self._transaction_stack:
+            # If this was the outermost transaction, merge into the global store
+            target_store = self._store
+        else:
+            # Otherwise, merge into the parent transaction's view
+            target_store = self._get_current_view()
 
-    def _get_effective_value(self, key: str) -> Tuple[Any, bool]:
-        """
-        Determines the current visible value of a key by checking the stack 
-        from innermost to outermost (most recent change wins).
-        Returns (value, is_set).
-        """
-        # Check transactions from inner to outer
-        for transaction_scope in reversed(self.transaction_stack):
-            if key not in transaction_scope:
-                continue
-
-            change = transaction_scope[key]
-            
-            # We use a special marker (None) for deletion within the scope
-            if change is None: 
-                return "NULL", False # Key was explicitly deleted in this scope
-            else:
-                return change, True # Found the most recent value
-
-        # Check committed data if not found in any transaction scope
-        if key in self.committed_data:
-            return self.committed_data[key], True
-        
-        return "NULL", False
-
-    def _apply_changes(self, changes: Dict[str, Any], target_store: Dict[str, Any]):
-        """
-        Applies a set of changes (from a committed transaction) to a target store.
-        This handles merging and overwriting existing keys.
-        """
-        for key, change in changes.items():
-            if change is None:
-                # Deletion marker
+        # 3. Merge changes from committed_scope to target_store
+        for key, value in committed_scope.items():
+            if key == "__DELETED__": # Sentinel for deleted keys
                 if key in target_store:
                     del target_store[key]
             else:
-                # Setting value
-                target_store[key] = change
+                target_store[key] = value
 
-    def set(self, key: str, value: Any):
-        """SET <key> <value>"""
-        current_scope = self.transaction_stack[-1] if self.transaction_stack else {}
-        
-        # Record the pending change in the current scope
-        if current_scope is None: # Should not happen if BEGIN was called, but safe guard
-             self.transaction_stack.append({})
-             current_scope = self.transaction_stack[-1]
-
-        current_scope[key] = value
-
-    def get(self, key: str) -> str:
-        """GET <key>"""
-        value, is_set = self._get_effective_value(key)
-        return str(value) if is_set else "NULL"
-
-    def delete(self, key: str):
-        """DELETE <key>"""
-        if not self.transaction_stack:
-            # If no transaction is active, we cannot record a pending deletion 
-            # that will be rolled back later. We assume the command fails silently 
-            # or has no effect on committed data outside of a transaction context.
-            return
-
-        current_scope = self.transaction_stack[-1]
-        
-        # Record the deletion using None as the marker value
-        if key not in current_scope:
-             current_scope[key] = None
-
-
-    def begin(self):
-        """BEGIN - Starts a new transaction scope."""
-        self.transaction_stack.append({})
-
-    def commit(self) -> str:
-        """COMMIT - Commits the innermost transaction changes to its parent/global store."""
-        if not self.transaction_stack:
-            return "NO TRANSACTION"
-
-        # 1. Pop the changes from the current scope (the one being committed)
-        committed_changes = self.transaction_stack.pop()
-        
-        # Filter out keys that were deleted in this scope, as they are handled by None marker
-        # We only need to pass through the actual key/value pairs for merging.
-        mergeable_changes: Dict[str, Any] = {}
-        for k, v in committed_changes.items():
-            if v is not None:
-                mergeable_changes[k] = v
-            else:
-                # If it was deleted (v is None), we need to explicitly mark this for deletion 
-                # when applying changes to the parent/global store.
-                mergeable_changes[k] = None
-
-        # 2. Determine the target store and apply changes
-        if self.transaction_stack:
-            # Nested transaction: Commit to the parent scope (the new top of stack)
-            parent_scope = self.transaction_stack[-1]
-            self._apply_changes(mergeable_changes, parent_scope)
-        else:
-            # Top-level commit: Merge into the global committed data
-            self._apply_changes(mergeable_changes, self.committed_data)
-
-        return "" # Successful commit does not produce output string
+        return "" # Successful commit does not produce output per requirements
 
     def rollback(self) -> str:
-        """ROLLBACK - Discards changes made in the innermost transaction."""
-        if not self.transaction_stack:
+        """Rolls back the innermost transaction by discarding its changes."""
+        if not self._transaction_stack:
             return "NO TRANSACTION"
-
-        # Simply pop the scope; all pending changes are discarded.
-        self.transaction_stack.pop()
-        return "" # Successful rollback does not produce output string
-
+        
+        # Simply discard the top scope, effectively rolling back all changes made within it.
+        self._transaction_stack.pop()
+        return "" # Successful rollback does not produce output per requirements
 
     def run(self, program: str) -> List[str]:
         """
         Processes a sequence of commands and returns a list of output strings 
-        (GET results or NO TRANSACTION messages).
+        for GET results or NO TRANSACTION messages.
         """
         lines = [line.strip() for line in program.split('\n') if line.strip()]
         output: List[str] = []
@@ -143,13 +92,12 @@ class KVStore:
                 continue
 
             command = parts[0].upper()
-            args = parts[1:]
 
             try:
                 if command == "SET":
-                    if len(args) < 2: continue
-                    key, value_str = args[0], args[1]
-                    # Attempt to convert simple types (like numbers), otherwise treat as string
+                    if len(parts) < 3: continue
+                    key, value_str = parts[1], parts[2]
+                    # Attempt to convert simple types (like numbers) if possible, otherwise treat as string.
                     try:
                         value = int(value_str)
                     except ValueError:
@@ -160,14 +108,14 @@ class KVStore:
                     self.set(key, value)
 
                 elif command == "GET":
-                    if not args: continue
-                    key = args[0]
+                    if len(parts) < 2: continue
+                    key = parts[1]
                     result = self.get(key)
-                    output.append(result)
+                    output.append(str(result) if result is not None else "NULL")
 
                 elif command == "DELETE":
-                    if not args: continue
-                    key = args[0]
+                    if len(parts) < 2: continue
+                    key = parts[1]
                     self.delete(key)
 
                 elif command == "BEGIN":
@@ -175,28 +123,30 @@ class KVStore:
 
                 elif command == "COMMIT":
                     result = self.commit()
-                    if result == "NO TRANSACTION":
-                        output.append("NO TRANSACTION")
+                    if result:
+                        output.append(result)
 
                 elif command == "ROLLBACK":
                     result = self.rollback()
-                    if result == "NO TRANSACTION":
-                        output.append("NO TRANSACTION")
-            except Exception as e:
-                # In a real system, we would log this error. Here, we just skip the line.
-                pass
+                    if result:
+                        output.append(result)
 
+            except Exception as e:
+                # In a real system, we would handle specific errors. 
+                # Here, we just skip or log unexpected failures.
+                pass
+        
         return output
 
 
-def run_kv_store(program: str) -> list[str]:
-    """Wrapper function to initialize and run the KVStore."""
-    store = KVStore()
-    return store.run(program)
+def run_kv_store() -> TransactionalKVStore:
+    """Returns an instance of the KV store."""
+    return TransactionalKVStore()
 
-# Example usage (for testing, not part of the final submission structure):
 if __name__ == '__main__':
-    test_program = """
+    # Example Usage (for testing purposes, not part of the required output)
+    store = run_kv_store()
+    program = """
 SET user_id 100
 SET name Alice
 GET name
@@ -207,13 +157,12 @@ COMMIT
 GET email
 BEGIN
 DELETE name
-SET phone 123-4567
+SET age 30
 GET name
 ROLLBACK
 GET name
-COMMIT
 """
-    results = run_kv_store(test_program)
-    print("--- Results ---")
+    results = store.run(program)
+    print("--- Test Results ---")
     for r in results:
         print(r)

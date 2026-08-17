@@ -1,0 +1,119 @@
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    # Собираем все задачи
+    all_tasks = set(tasks.keys())
+    for deps in tasks.values():
+        all_tasks.update(deps)
+    
+    # Если задач нет, возвращаем пустой список
+    if not all_tasks:
+        return []
+    
+    # Словарь для хранения входящих степеней (количество зависимостей)
+    in_degree = {}
+    for task in all_tasks:
+        in_degree[task] = 0
+    
+    # Устанавливаем входящие степени
+    for task, deps in tasks.items():
+        for dep in deps:
+            in_degree[dep] += 1
+    
+    # Начинаем с задач, у которых входящий степень 0
+    queue = []
+    for task in all_tasks:
+        if in_degree[task] ==  0:
+            queue.append(task)
+    
+    result = []
+    
+    # Проводим топологическую сортировку
+    while queue:
+        # Берём задачу с нулевым входящим степенем
+        current = queue.pop(0)
+        result.append(current)
+        
+        # Обновляем входящие степени для всех задач, которые зависят от текущей
+        for next_task in tasks.get(current, []):
+            in_degree[next_task] -= 1
+            # Если входящий степень стала 0, добавляем в очередь
+            if in_degree[next_task] == 0:
+                queue.append(next_task)
+    
+    # Если результат не содержит все задачи — есть цикл
+    if len(result) != len(all_tasks):
+        return None
+    
+    return result
+
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    if not tasks:
+        return 0
+    
+    # Проверим наличие циклов с помощью топологической сортировки
+    # Сначала создадим граф зависимостей
+    dependencies = {}
+    for task, (duration, deps) in tasks.items():
+        dependencies[task] = deps
+    
+    # Проверим, есть ли цикл
+    all_tasks = set(tasks.keys())
+    for deps in dependencies.values():
+        all_tasks.update(deps)
+    
+    if not all_tasks:
+        return 0
+    
+    # Словарь для входящих степеней
+    in_degree = {}
+    for task in all_tasks:
+        in_degree[task] = 0
+    
+    for task, deps in dependencies.items():
+        for dep in deps:
+            in_degree[dep] += 1
+    
+    # Начинаем с задач, у которых входящий степень 0
+    queue = []
+    for task in all_tasks:
+        if in_degree[task] == 0:
+            queue.append(task)
+    
+    # Проверим наличие цикла
+    while queue:
+        current = queue.pop(0)
+        for next_task in dependencies.get(current, []):
+            in_degree[next_task] -= 1
+            if in_degree[next_task] == 0:
+                queue.append(next_task)
+    
+    # Если не все задачи включены — есть цикл
+    if len([task for task in all_tasks if in_degree[task] > 0]):
+        return None
+    
+    # Теперь ищем критический путь
+    # Для каждой задачи храним максимальную длину пути до неё
+    # Используем динамическое программирование
+    path_length = {}
+    for task in all_tasks:
+        path_length[task] = 0
+    
+    # Сортируем задачи в топологическом порядке
+    topo_order = topo_sort(dependencies)
+    if topo_order is None:
+        return None
+    
+    # Обновляем длины путей в порядке топологической сортировки
+    for task in topo_order:
+        duration, deps = tasks[task]
+        # Добавляем длительность к максимальному пути до текущей задачи
+        max_prev = 0
+        for dep in deps:
+            max_prev = max(max_prev, path_length[dep])
+        path_length[task] = max_prev + duration
+    
+    # Критический путь — максимальная длина среди всех задач
+    return max(path_length[task] for task in all_tasks)

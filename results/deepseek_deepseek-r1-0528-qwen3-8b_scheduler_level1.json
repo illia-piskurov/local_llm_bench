@@ -1,9 +1,0 @@
-{
-  "model": "deepseek/deepseek-r1-0528-qwen3-8b",
-  "benchmark": "scheduler",
-  "level": "level1",
-  "tested_at": "2026-08-08 00:40:36",
-  "passed": 10,
-  "total": 10,
-  "failures": []
-}

@@ -1,0 +1,74 @@
+from collections import deque
+
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    """
+    Performs a topological sort on a directed acyclic graph of tasks.
+    
+    :param tasks: Dictionary where key is task name and value is a list of dependencies.
+    :return: A list of task names in topological order, or None if a cycle is detected.
+    """
+    # 1. Identify all unique tasks (keys and all items in dependency lists)
+    all_tasks = set(tasks.keys())
+    for dependencies in tasks.values():
+        for dep in dependencies:
+            all_tasks.add(dep)
+            
+    # 2. Initialize in-degree count and adjacency list
+    in_degree = {task: 0 for task in all_tasks}
+    adj = {task: [] for task in all_tasks}
+    
+    for task, dependencies in tasks.items():
+        for dep in dependencies:
+            # dep must be completed before task (dep -> task)
+            adj[dep].append(task)
+            in_degree[task] += 1
+            
+    # 3. Kahn's Algorithm
+    queue = deque([task for task in all_tasks if in_degree[task] == 0])
+    sorted_tasks = []
+    
+    while queue:
+        u = queue.popleft()
+        sorted_tasks.append(u)
+        
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+                
+    # 4. Check for cycles
+    if len(sorted_tasks) == len(all_tasks):
+        return sorted_tasks
+    else:
+        return None
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    """
+    Calculates the length of the critical path in a task dependency graph.
+    
+    :param tasks: Dictionary where key is task name and value is (duration, dependencies).
+    :return: The length of the longest path, or None if a cycle is detected.
+    """
+    # 1. Prepare dependency-only dictionary for topo_sort
+    deps_only = {name: deps for name, (dur, deps) in tasks.items()}
+    
+    # 2. Get topological order to detect cycles and define processing order
+    order = topo_sort(deps_only)
+    if order is None:
+        return None
+    
+    # 3. Dynamic Programming to find the longest path
+    # dist[u] stores the maximum duration of a path ending at task u
+    dist = {task: 0 for task in order}
+    
+    for u in order:
+        duration_u, dependencies_u = tasks.get(u, (0, []))
+        
+        max_prev_dist = 0
+        for dep in dependencies_u:
+            # Since 'order' is topological, 'dep' is already processed
+            max_prev_dist = max(max_prev_dist, dist.get(dep, 0))
+            
+        dist[u] = duration_u + max_prev_dist
+        
+    return max(dist.values()) if dist else 0
