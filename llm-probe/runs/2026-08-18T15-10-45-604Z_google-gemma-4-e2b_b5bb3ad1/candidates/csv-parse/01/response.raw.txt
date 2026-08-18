@@ -1,0 +1,110 @@
+export function solve(input) {
+    if (!input) {
+        return [];
+    }
+
+    // Step 1: Split input into rows, handling various newline conventions
+    const lines = input.split(/\r?\n/);
+
+    if (lines.length === 0) {
+        return [];
+    }
+
+    // Step 2: Parse the header row
+    let headers = [];
+    let dataRows = [];
+
+    const headerLine = lines[0].trim();
+    if (headerLine) {
+        headers = headerLine.split(',');
+    }
+
+    // Step 3: Process data rows
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const values = [];
+        
+        // A robust way to parse fields when quoted content is allowed.
+        let currentFieldStart = 0;
+        let inQuotes = false;
+        let fieldBuffer = '';
+
+        for (let j = 0; j < line.length; j++) {
+            const char = line[j];
+
+            if (char === '"') {
+                // Check for escaped quote ""
+                if (inQuotes && j + 1 < line.length && line[j + 1] === '"') {
+                    fieldBuffer += '"';
+                    j++; // Skip the next quote
+                } else {
+                    inQuotes = !inQuotes;
+                    // If we are starting a quoted field, don't add the quote itself yet (it will be handled by the split logic implicitly)
+                    if (!inQuotes && j > currentFieldStart) {
+                        // When closing quotes, ensure we capture the final content correctly.
+                    }
+                }
+            } else if (char === ',' && !inQuotes) {
+                // End of field found outside quotes
+                const field = line.substring(currentFieldStart, j).trim();
+                values.push(field);
+                currentFieldStart = j + 1;
+            }
+        }
+
+        // Capture the last field
+        const lastField = line.substring(currentFieldStart).trim();
+        values.push(lastField);
+        
+        // Since simple state machine is tricky for complex CSV structure, we use a slightly simpler approach tailored to the rules: re-evaluating based on quote boundaries if needed. 
+
+        // --- Reverting to simplified split logic focusing only on field extraction based on quotes ---
+        
+        const rowValues = [];
+        let current = 0;
+        inQuotes = false;
+        
+        for (let k = 0; k < line.length; k++) {
+            const char = line[k];
+
+            if (char === '"') {
+                // Handle escaped quotes "" inside quoted fields
+                if (inQuotes && k + 1 < line.length && line[k + 1] === '"') {
+                    rowValues.push('"');
+                    current += 2; // Skip both quote characters
+                    k++;
+                } else {
+                    // Toggle quote state
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                // End of field detected outside quotes
+                const value = line.substring(current, k).trim();
+                rowValues.push(value);
+                current = k + 1;
+            }
+        }
+        
+        // Capture the final segment
+        const lastValue = line.substring(current).trim();
+        rowValues.push(lastValue);
+
+        if (rowValues.length === headers.length) {
+            let obj = {};
+            for (let idx = 0; idx < headers.length; idx++) {
+                // Ensure we handle the case where parsing results in an empty string if not properly quoted, though trim should handle most cases.
+                obj[headers[idx]] = rowValues[idx] || "";
+            }
+            dataRows.push(obj);
+        }
+    }
+
+    if (headers.length === 0) {
+        return [];
+    }
+    
+    // Step 4: Return the result
+    return dataRows;
+}

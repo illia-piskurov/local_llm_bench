@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ff6t8x3xspdt926w489y5",
+  "object": "chat.completion",
+  "created": 1787065268,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { items = [], filter, sort, page = 1, pageSize = 10 } = input;\n    let filteredItems = [...items];\n\n    if (filter) {\n        const { field, op, value } = filter;\n        const fieldValue = items[0][field] !== undefined ? items[0][field] : '';\n        const caseInsensitiveValue = typeof value === 'string' ? value.toLowerCase() : value;\n\n        filteredItems = filteredItems.filter(item => {\n            const itemField = item[field];\n            if (op === 'eq') return itemField === value;\n            if (op === 'neq') return itemField !== value;\n            if (op === 'gt') return Number(itemField) > Number(value);\n            if (op === 'gte') return Number(itemField) >= Number(value);\n            if (op === 'lt') return Number(itemField) < Number(value);\n            if (op === 'lte') return Number(itemField) <= Number(value);\n            if (op === 'contains' && typeof itemField === 'string') {\n                const lowerCaseItem = itemField.toLowerCase();\n                return lowerCaseItem.includes(caseInsensitiveValue);\n            }\n            return false;\n        });\n    }\n\n    if (sort) {\n        const { field, dir } = sort;\n        filteredItems.sort((a, b) => {\n            const aVal = a[field];\n            const bVal = b[field];\n\n            if (typeof aVal === 'string' && typeof bVal === 'string') {\n                return dir === 'asc'\n                    ? aVal.localeCompare(bVal)\n                    : bVal.localeCompare(aVal);\n            }\n\n            const numA = Number(aVal) || 0;\n            const numB = Number(bVal) || 0;\n\n            return dir === 'asc' ? numA - numB : numB - numA;\n        });\n    }\n\n    const totalItems = filteredItems.length;\n    const startIndex = (page - 1) * pageSize;\n    const endIndex = startIndex + pageSize;\n    const paginatedItems = filteredItems.slice(startIndex, endIndex);\n\n    return {\n        items: paginatedItems,\n        total: totalItems > 0 ? totalItems : 0,\n        page: page,\n        totalPages: Math.ceil(totalItems / pageSize) || 0\n    };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 399,
+    "completion_tokens": 515,
+    "total_tokens": 914,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

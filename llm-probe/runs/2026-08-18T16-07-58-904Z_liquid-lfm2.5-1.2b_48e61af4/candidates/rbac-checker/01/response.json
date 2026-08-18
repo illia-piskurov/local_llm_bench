@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ncp4q9wwheevcfmfmunqhm",
+  "object": "chat.completion",
+  "created": 1787069334,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { roles, users, requests } = input;\n  const denyRules = roles[users.user]?.denies || [];\n  const allowRules = users.roles?.includes('*') ? [] : users.roles;\n\n  const results = requests.map(({ user, permission }) => {\n    const userRoles = roles[user] || [];\n    let matches = false;\n    if (allowRules.length > 0) {\n      for (const role of allowRules) {\n        if (role === '*' || role.includes(permission)) {\n          matches = true;\n          break;\n        }\n      }\n    } else if (denyRules.length > 0) {\n      const denyMatch = denyRules.some(d => permission === d);\n      matches = !denyMatch;\n    } else {\n      matches = userRoles.includes(permission) || userRoles.includes('*');\n    }\n    return matches;\n  });\n  return results;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 436,
+    "completion_tokens": 217,
+    "total_tokens": 653,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

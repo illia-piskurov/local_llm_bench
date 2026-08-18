@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-g0eno9q8jm5ypo2dsh8bo",
+  "object": "chat.completion",
+  "created": 1787075593,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const n = input.n;\n  const edges = input.edges;\n\n  // Build adjacency list and in-degree count\n  const adj = new Array(n).fill().map(() => []);\n  const inDegree = new Array(n).fill(0);\n\n  for (const [from, to] of edges) {\n    adj[from].push(to);\n    inDegree[to]++;\n  }\n\n  // Initialize queue with nodes having in-degree 0\n  const queue = [];\n  for (let i = 0; i < n; i++) {\n    if (inDegree[i] === 0) queue.push(i);\n  }\n\n  // Perform topological sort\n  const result = [];\n\n  while (queue.length > 0) {\n    const node = queue.shift();\n    result.push(node);\n\n    for (const neighbor of adj[node]) {\n      inDegree[neighbor]--;\n      if (inDegree[neighbor] === 0) queue.push(neighbor);\n    }\n  }\n\n  // If the result contains all nodes, it is a valid topological ordering\n  if (result.length === n) return result;\n  return null;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 169,
+    "completion_tokens": 239,
+    "total_tokens": 408,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

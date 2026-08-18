@@ -1,0 +1,616 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-18T16-07-58-904Z_liquid-lfm2.5-1.2b_48e61af4",
+  "status": "completed",
+  "startedAt": "2026-08-18T16:07:58.904Z",
+  "model": "liquid/lfm2.5-1.2b",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "hardware": "AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon",
+  "temperature": 0.1,
+  "maxTokens": 16000,
+  "samples": 1,
+  "taskIds": [
+    "flat-to-tree",
+    "paginate-and-sort",
+    "deep-merge",
+    "csv-parse",
+    "render-template",
+    "shopping-cart",
+    "query-string-parser",
+    "schema-validator",
+    "state-reducer",
+    "rbac-checker",
+    "i18n-pluralize",
+    "sql-query-builder",
+    "json-schema-deref-validate",
+    "cron-next-runs",
+    "longest-substring-no-repeat",
+    "group-anagrams",
+    "top-k-frequent",
+    "merge-intervals",
+    "flatten-tree",
+    "shortest-path-grid",
+    "lcs-length",
+    "topological-sort",
+    "rotate-square-matrix",
+    "validate-sudoku-board",
+    "deep-equal",
+    "bytecode-vm-evolution",
+    "event-emitter-evolution"
+  ],
+  "nodeVersion": "v24.14.0",
+  "candidates": [
+    {
+      "taskId": "flat-to-tree",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 3163,
+      "generationMs": 3141,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 316,
+        "completion_tokens": 160,
+        "total_tokens": 476,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 160,
+      "tokensPerSec": 51,
+      "passed": 0,
+      "total": 4,
+      "error": "cannot read property 'parentId' of undefined"
+    },
+    {
+      "taskId": "paginate-and-sort",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 7248,
+      "generationMs": 7229,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 428,
+        "completion_tokens": 363,
+        "total_tokens": 791,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 363,
+      "tokensPerSec": 50,
+      "passed": 0,
+      "total": 4,
+      "error": "expecting ':'"
+    },
+    {
+      "taskId": "deep-merge",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 3081,
+      "generationMs": 3057,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 257,
+        "completion_tokens": 141,
+        "total_tokens": 398,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 141,
+      "tokensPerSec": 46,
+      "passed": 1,
+      "total": 4,
+      "error": "'result' is read-only"
+    },
+    {
+      "taskId": "csv-parse",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 4838,
+      "generationMs": 4817,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 285,
+        "completion_tokens": 229,
+        "total_tokens": 514,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 229,
+      "tokensPerSec": 48,
+      "passed": 0,
+      "total": 4,
+      "error": "continue must be inside loop"
+    },
+    {
+      "taskId": "render-template",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 5342,
+      "generationMs": 5314,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 281,
+        "completion_tokens": 254,
+        "total_tokens": 535,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 254,
+      "tokensPerSec": 48,
+      "passed": 0,
+      "total": 4,
+      "error": "'key' is not defined"
+    },
+    {
+      "taskId": "shopping-cart",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 6389,
+      "generationMs": 6366,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 460,
+        "completion_tokens": 301,
+        "total_tokens": 761,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 301,
+      "tokensPerSec": 47,
+      "passed": 0,
+      "total": 4,
+      "error": "'tax' is not defined"
+    },
+    {
+      "taskId": "query-string-parser",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 11156,
+      "generationMs": 11136,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 370,
+        "completion_tokens": 545,
+        "total_tokens": 915,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 545,
+      "tokensPerSec": 49,
+      "passed": 0,
+      "total": 5,
+      "error": "expecting ':'"
+    },
+    {
+      "taskId": "schema-validator",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 5060,
+      "generationMs": 5038,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 360,
+        "completion_tokens": 241,
+        "total_tokens": 601,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 241,
+      "tokensPerSec": 48,
+      "passed": 0,
+      "total": 4
+    },
+    {
+      "taskId": "state-reducer",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 8925,
+      "generationMs": 8900,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 373,
+        "completion_tokens": 434,
+        "total_tokens": 807,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 434,
+      "tokensPerSec": 49,
+      "passed": 0,
+      "total": 4,
+      "error": "cannot read property of undefined"
+    },
+    {
+      "taskId": "rbac-checker",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 4697,
+      "generationMs": 4674,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 436,
+        "completion_tokens": 217,
+        "total_tokens": 653,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 217,
+      "tokensPerSec": 46,
+      "passed": 0,
+      "total": 3,
+      "error": "cannot read property 'length' of undefined"
+    },
+    {
+      "taskId": "i18n-pluralize",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 2757,
+      "generationMs": 2738,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 360,
+        "completion_tokens": 120,
+        "total_tokens": 480,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 120,
+      "tokensPerSec": 44,
+      "passed": 0,
+      "total": 3,
+      "error": "not a function"
+    },
+    {
+      "taskId": "sql-query-builder",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 10843,
+      "generationMs": 10825,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 543,
+        "completion_tokens": 521,
+        "total_tokens": 1064,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 521,
+      "tokensPerSec": 48,
+      "passed": 0,
+      "total": 3,
+      "error": "invalid redefinition of lexical identifier"
+    },
+    {
+      "taskId": "json-schema-deref-validate",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 9009,
+      "generationMs": 8984,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 447,
+        "completion_tokens": 431,
+        "total_tokens": 878,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 431,
+      "tokensPerSec": 48,
+      "passed": 1,
+      "total": 3
+    },
+    {
+      "taskId": "cron-next-runs",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 14198,
+      "generationMs": 14180,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 365,
+        "completion_tokens": 698,
+        "total_tokens": 1063,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 698,
+      "tokensPerSec": 49,
+      "passed": 0,
+      "total": 3,
+      "error": "extraneous characters at the end"
+    },
+    {
+      "taskId": "longest-substring-no-repeat",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 3492,
+      "generationMs": 3470,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 126,
+        "completion_tokens": 165,
+        "total_tokens": 291,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 165,
+      "tokensPerSec": 48,
+      "passed": 1,
+      "total": 5
+    },
+    {
+      "taskId": "group-anagrams",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 2985,
+      "generationMs": 2962,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 161,
+        "completion_tokens": 140,
+        "total_tokens": 301,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 140,
+      "tokensPerSec": 47,
+      "passed": 1,
+      "total": 5
+    },
+    {
+      "taskId": "top-k-frequent",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 2998,
+      "generationMs": 2980,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 148,
+        "completion_tokens": 141,
+        "total_tokens": 289,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 141,
+      "tokensPerSec": 47,
+      "passed": 0,
+      "total": 5,
+      "error": "'k' is not defined"
+    },
+    {
+      "taskId": "merge-intervals",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 3331,
+      "generationMs": 3308,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 174,
+        "completion_tokens": 160,
+        "total_tokens": 334,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 160,
+      "tokensPerSec": 48,
+      "passed": 2,
+      "total": 6
+    },
+    {
+      "taskId": "flatten-tree",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 2337,
+      "generationMs": 2318,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 187,
+        "completion_tokens": 107,
+        "total_tokens": 294,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 107,
+      "tokensPerSec": 46,
+      "passed": 2,
+      "total": 4
+    },
+    {
+      "taskId": "shortest-path-grid",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 6727,
+      "generationMs": 6703,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 171,
+        "completion_tokens": 330,
+        "total_tokens": 501,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 330,
+      "tokensPerSec": 49,
+      "passed": 2,
+      "total": 4
+    },
+    {
+      "taskId": "lcs-length",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 3830,
+      "generationMs": 3807,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 129,
+        "completion_tokens": 184,
+        "total_tokens": 313,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 184,
+      "tokensPerSec": 48,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "topological-sort",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 4831,
+      "generationMs": 4805,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 178,
+        "completion_tokens": 229,
+        "total_tokens": 407,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 229,
+      "tokensPerSec": 48,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "rotate-square-matrix",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "extract_error",
+      "durationMs": 2206,
+      "generationMs": 2206,
+      "finishReason": "stop",
+      "error": "Response did not contain export function solve(input)"
+    },
+    {
+      "taskId": "validate-sudoku-board",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 5637,
+      "generationMs": 5604,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 202,
+        "completion_tokens": 275,
+        "total_tokens": 477,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 275,
+      "tokensPerSec": 49,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "deep-equal",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 4635,
+      "generationMs": 4605,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 168,
+        "completion_tokens": 223,
+        "total_tokens": 391,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 223,
+      "tokensPerSec": 48,
+      "passed": 7,
+      "total": 8
+    },
+    {
+      "taskId": "bytecode-vm-evolution",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 18094,
+      "generationMs": 18064,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 609,
+        "completion_tokens": 909,
+        "total_tokens": 1518,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 909,
+      "tokensPerSec": 50,
+      "passed": 0,
+      "total": 6,
+      "error": "cannot read property 'startsWith' of undefined"
+    },
+    {
+      "taskId": "event-emitter-evolution",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 9558,
+      "generationMs": 9537,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 449,
+        "completion_tokens": 478,
+        "total_tokens": 927,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 478,
+      "tokensPerSec": 50,
+      "passed": 0,
+      "total": 3,
+      "error": "expecting ';'"
+    }
+  ],
+  "completedAt": "2026-08-18T16:10:47.971Z"
+}

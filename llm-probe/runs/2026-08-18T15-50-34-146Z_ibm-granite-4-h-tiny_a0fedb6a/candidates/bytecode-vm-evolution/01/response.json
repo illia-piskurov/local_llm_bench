@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-79hn9txilqldqmr6bog4zv",
+  "object": "chat.completion",
+  "created": 1787068516,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const program = input.program.split('\\n');\n  let stack = [];\n  let output = [];\n  let lineNum = 0;\n  let steps = 0;\n\n  for (const line of program) {\n    lineNum++;\n    if (!line.trim() || line.startsWith('#')) continue; // Ignore empty lines and comments\n\n    const [inst, ...args] = line.split(' ');\n    steps++;\n\n    if (steps > 1000) throw new Error('Execution step limit exceeded');\n\n    switch (inst) {\n      case 'PUSH':\n        stack.push(parseInt(args[0]));\n        break;\n      case 'POP':\n        if (!stack.length) throw new Error(`Stack underflow at line ${lineNum}`);\n        stack.pop();\n        break;\n      case 'ADD':\n        if (stack.length < 2) throw new Error(`Stack underflow at line ${lineNum}`);\n        const b = stack.pop();\n        const a = stack.pop();\n        stack.push(a + b);\n        break;\n      case 'SUB':\n        if (stack.length < 2) throw new Error(`Stack underflow at line ${lineNum}`);\n        const d = stack.pop();\n        const c = stack.pop();\n        stack.push(c - d);\n        break;\n      case 'MUL':\n        if (stack.length < 2) throw new Error(`Stack underflow at line ${lineNum}`);\n        const f = stack.pop();\n        const e = stack.pop();\n        stack.push(e * f);\n        break;\n      case 'DIV':\n        if (stack.length < 2) throw new Error(`Stack underflow at line ${lineNum}`);\n        const h = stack.pop();\n        const g = stack.pop();\n        if (!g) throw new Error(`Division by zero at line ${lineNum}`);\n        stack.push(Math.trunc(g / h));\n        break;\n      case 'DUP':\n        if (!stack.length) throw new Error(`Stack underflow at line ${lineNum}`);\n        stack.push(stack[stack.length - 1]);\n        break;\n      case 'SWAP':\n        if (stack.length < 2) throw new Error(`Stack underflow at line ${lineNum}`);\n        [stack[stack.length - 2], stack[stack.length - 1]] = [stack[stack.length - 1], stack[stack.length - 2]];\n        break;\n      case 'PRINT':\n        if (!stack.length) throw new Error(`Stack underflow at line ${lineNum}`);\n        output.push(stack[stack.length - 1].toString());\n        break;\n      case 'LABEL':\n        // No-op\n        break;\n      case 'JMP':\n        const target = args[0];\n        let labelFound = false;\n        for (const l of program) {\n          if (!l.trim() || l.startsWith('#')) continue; // Ignore empty lines and comments\n          const [labelInst, name] = l.split(' ');\n          if (name === target) {\n            lineNum = program.indexOf(l);\n            labelFound = true;\n            break;\n          }\n        }\n        if (!labelFound) throw new Error(`Label '${target}' not found at line ${lineNum}`);\n        continue; // Jump to the labeled line\n      case 'JZ':\n        const jzValue = stack.pop();\n        if (!stack.length) throw new Error(`Stack underflow at line ${lineNum}`);\n        const jmpTarget = args[0];\n        let jmpFound = false;\n        for (const l of program) {\n          if (!l.trim() || l.startsWith('#')) continue; // Ignore empty lines and comments\n          const [labelInst, name] = l.split(' ');\n          if (name === jmpTarget && jzValue === 0) {\n            lineNum = program.indexOf(l);\n            jmpFound = true;\n            break;\n          }\n        }\n        if (!jmpFound) throw new Error(`Label '${jmpTarget}' not found at line ${lineNum}`);\n        continue; // Jump to the labeled line\n      case 'JNZ':\n        const jnzValue = stack.pop();\n        if (!stack.length) throw new Error(`Stack underflow at line ${lineNum}`);\n        const jmp2Target = args[0];\n        let jmp2Found = false;\n        for (const l of program) {\n          if (!l.trim() || l.startsWith('#')) continue; // Ignore empty lines and comments\n          const [labelInst, name] = l.split(' ');\n          if (name === jmp2Target && jnzValue !== 0) {\n            lineNum = program.indexOf(l);\n            jmp2Found = true;\n            break;\n          }\n        }\n        if (!jmp2Found) throw new Error(`Label '${jmp2Target}' not found at line ${lineNum}`);\n        continue; // Jump to the labeled line\n      default:\n        throw new Error(`Unknown instruction '${inst}' at line ${lineNum}`);\n    }\n  }\n\n  return { output, error: undefined };\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 544,
+    "completion_tokens": 1035,
+    "total_tokens": 1579,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

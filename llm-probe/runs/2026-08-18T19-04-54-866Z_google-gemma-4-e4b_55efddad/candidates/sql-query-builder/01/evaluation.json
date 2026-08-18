@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "passed": 3,
+  "total": 3,
+  "tests": [
+    {
+      "id": "simple-select-all",
+      "passed": true
+    },
+    {
+      "id": "select-with-expr-and-joins",
+      "passed": true
+    },
+    {
+      "id": "where-in-and-null-and-offset",
+      "passed": true
+    }
+  ],
+  "durationMs": 20
+}

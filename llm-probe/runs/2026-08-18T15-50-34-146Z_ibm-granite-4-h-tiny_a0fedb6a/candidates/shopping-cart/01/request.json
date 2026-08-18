@@ -1,0 +1,16 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Calculate totals for a shopping cart from input.items (array of { price: number, qty: number, category?: string }) and optional input.coupon and input.taxRate (e.g. 0.08 for 8%).\nRules:\n1. subtotal: sum of (price * qty) for all items.\n2. discount: from input.coupon (if provided):\n   - { type: 'percent', value: 20 }: 20% off subtotal.\n   - { type: 'fixed', value: 15 }: flat $15 off subtotal (capped at subtotal).\n   - { type: 'category_percent', category: 'food', value: 10 }: 10% off only items in that category.\n   If coupon is absent or unknown type, discount is 0. Discount cannot exceed subtotal.\n3. tax: Math.round((subtotal - discount) * taxRate * 100) / 100. (0 if taxRate omitted).\n4. total: Math.round((subtotal - discount + tax) * 100) / 100.\nRound subtotal, discount, tax, total to 2 decimal places (Math.round(x * 100) / 100). Return { subtotal, discount, tax, total }.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"items\":[{\"price\":100,\"qty\":2,\"category\":\"electronics\"},{\"price\":20,\"qty\":1,\"category\":\"books\"}],\"coupon\":{\"type\":\"percent\",\"value\":10},\"taxRate\":0.05}\noutput: {\"subtotal\":220,\"discount\":22,\"tax\":9.9,\"total\":207.9}"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

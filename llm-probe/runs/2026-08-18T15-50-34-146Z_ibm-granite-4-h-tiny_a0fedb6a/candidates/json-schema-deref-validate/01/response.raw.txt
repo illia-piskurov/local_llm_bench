@@ -1,0 +1,95 @@
+function solve(input) {
+  const definitions = input.definitions;
+  const schema = input.schema;
+
+  function resolveRef(refPath, currentDefinitions) {
+    let pathParts = refPath.substring(2).split('/');
+    let definitionName = pathParts[0];
+    pathParts = pathParts.slice(1);
+    return resolveDefinition(definitionName, definitions, pathParts, currentDefinitions);
+  }
+
+  function resolveDefinition(name, allDefs, subpaths = [], fromDef = {}) {
+    const def = allDefs[name] || {};
+    if (!subpaths.length) {
+      return def;
+    }
+    let nextPart = subpaths[0];
+    let resolvedDef = def[nextPart];
+    if (resolvedDef && typeof resolvedDef === 'string' && resolvedDef.startsWith('#/')) {
+      return resolveDefinition(resolvedDef.substring(2), allDefs, subpaths.slice(1), fromDef);
+    }
+    return { ...def, ...resolvedDef };
+  }
+
+  function validate(data, schema, path = '#') {
+    const errors = [];
+    if (schema.type) {
+      switch (schema.type) {
+        case 'string':
+          if (typeof data !== 'string') {
+            errors.push({ path, message: "Expected type string" });
+          }
+          if ('minLength' in schema && data.length < schema.minLength) {
+            errors.push({ path, message: `Length must be at least ${schema.minLength}` });
+          }
+          break;
+        case 'number':
+          if (typeof data !== 'number') {
+            errors.push({ path, message: "Expected type number" });
+          }
+          if ('minimum' in schema && data < schema.minimum) {
+            errors.push({ path, message: `Must be at least ${schema.minimum}` });
+          }
+          break;
+        case 'boolean':
+          if (typeof data !== 'boolean') {
+            errors.push({ path, message: "Expected type boolean" });
+          }
+          break;
+        case 'object':
+          if (typeof data !== 'object' || Array.isArray(data)) {
+            errors.push({ path, message: "Expected type object" });
+          } else {
+            const { properties, required = [], additionalProperties = false } = schema;
+            for (const [key, propSchema] of Object.entries(properties)) {
+              if (!additionalProperties && !required.includes(key) && data.hasOwnProperty(key)) {
+                errors.push({ path: `${path}/${key}`, message: "Unexpected key" });
+              }
+              const nestedErrors = validate(data[key], propSchema, `${path}/${key}`);
+              errors.push(...nestedErrors);
+            }
+          }
+          break;
+        case 'array':
+          if (!Array.isArray(data)) {
+            errors.push({ path, message: "Expected type array" });
+          } else {
+            const { items, minItems = 0 } = schema;
+            if (data.length < minItems) {
+              errors.push({ path, message: `Length must be at least ${minItems}` });
+            }
+            for (let i = 0; i < data.length; i++) {
+              const nestedErrors = validate(data[i], items, `${path}/items/${i}`);
+              errors.push(...nestedErrors);
+            }
+          }
+          break;
+        case 'enum':
+          if (!schema.enum.includes(data)) {
+            errors.push({ path, message: `Value not in enum` });
+          }
+          break;
+      }
+    }
+    return errors;
+  }
+
+  function validateData() {
+    const resolvedSchema = resolveRef(schema.$ref, definitions);
+    const validationErrors = validate(input.data, resolvedSchema);
+    return { valid: validationErrors.length === 0, errors: validationErrors };
+  }
+
+  return validateData();
+}

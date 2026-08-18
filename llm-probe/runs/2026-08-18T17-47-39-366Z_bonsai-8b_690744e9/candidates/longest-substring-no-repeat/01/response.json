@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-dbxd5x795ohpo097x2ann",
+  "object": "chat.completion",
+  "created": 1787075537,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const text = input.text;\n  let start = 0,\n      seen = new Map(),\n      maxLen = 0;\n\n  for (let end = 0; end < text.length; end++) {\n    while (seen.has(text[end]) && seen.get(text[end]) >= start) {\n      seen.delete(text[start]);\n      start++;\n    }\n    seen.set(text[end], end);\n    maxLen = Math.max(maxLen, end - start + 1);\n  }\n\n  return { length: maxLen };\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 120,
+    "completion_tokens": 115,
+    "total_tokens": 235,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

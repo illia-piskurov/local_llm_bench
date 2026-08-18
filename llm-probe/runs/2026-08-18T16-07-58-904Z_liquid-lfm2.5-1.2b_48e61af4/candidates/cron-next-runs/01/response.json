@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ytocew7cj95t53gsl45yx",
+  "object": "chat.completion",
+  "created": 1787069362,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { cron, from, count } = input;\n  const fromUtc = new Date(from);\n  const now = new Date();\n  const result = [];\n\n  const parseCron = (cronStr) => {\n    const regex = /^(\\*|[0-9]+)\\s*(minute|hour|day-of-month|month|day-of-week))/;\n    let match;\n    while ((match = regex.exec(cronStr)) !== null) {\n      const [pattern, value] = match;\n      switch (pattern) {\n        case 'minute':\n          const min = parseInt(value, 10);\n          if (min >= 0 && min <= 59) now.setSeconds(now.getSeconds() + (min * 60));\n          break;\n        case 'hour':\n          const hr = parseInt(value, 10);\n          if (hr >= 0 && hr <= 23) now.setHours(now.getHours() + (hr * 60));\n          break;\n        case 'day-of-month':\n          const dm = parseInt(value, 10);\n          if (dm >= 1 && dm <= 31) now.setMonth(now.getMonth() + 1, now.getDate());\n          break;\n        case 'month':\n          const m = parseInt(value, 10);\n          if (m >= 1 && m <= 12) now.setFullYear(now.getFullYear(), now.getMonth() + 1, dm);\n          break;\n        case 'day-of-week':\n          const wd = parseInt(value, 10);\n          if (wd !== '*' && wd >= 0 && wd <= 6) now.setUTCHours(now.getUTCHours() + (wd - 1));\n          break;\n        default:\n          throw new Error(`Unknown pattern: ${pattern}`);\n      }\n    }\n  };\n\n  parseCron(cron);\n\n  const nextTimes = [];\n  let currentTime = now;\n  while (currentTime <= fromUtc) {\n    if (!nextTimes.includes(currentTime)) {\n      nextTimes.push(currentTime.toISOString().replace(/T/,'00') + 'Z');\n    }\n    currentTime.setSeconds(currentTime.getSeconds() + 1);\n  }\n\n  for (let t of nextTimes) {\n    const diff = currentTime - new Date(t);\n    if (diff > 0 && diff < 60 * 1000) continue; // skip within minute\n    if (diff >= 0 && diff <= 59 * 1000) {\n      const hours = Math.floor(diff / 3600);\n      const minutes = Math.floor((diff % 3600) / 60);\n      const day = new Date(t).getDate();\n      const month = new Date(t).getMonth() + 1;\n      const dayOfWeek = new Date(t).getUTCHours() % 7;\n      if (day === 1 || (day === 15 && dayOfWeek === 0)) { // adjust for 1-based week\n        result.push(t);\n      }\n    }\n  }\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 365,
+    "completion_tokens": 698,
+    "total_tokens": 1063,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

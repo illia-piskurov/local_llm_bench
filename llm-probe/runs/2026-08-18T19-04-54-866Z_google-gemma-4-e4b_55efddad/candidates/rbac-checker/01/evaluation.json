@@ -1,0 +1,20 @@
+{
+  "status": "passed",
+  "passed": 3,
+  "total": 3,
+  "tests": [
+    {
+      "id": "wildcard-namespace",
+      "passed": true
+    },
+    {
+      "id": "custom-user-allows",
+      "passed": true
+    },
+    {
+      "id": "deny-overrides-role-and-allows",
+      "passed": true
+    }
+  ],
+  "durationMs": 21
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-s052twwri65gf2qosuu2d",
+  "object": "chat.completion",
+  "created": 1787068259,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  if (!input.trim()) return [];\n  const lines = input.split(/\\\\r?\\\\n/).filter(line => line.trim());\n  const headers = lines[0].split(',').map(header => header.trim());\n  const parseValue = (value) => {\n    if (/^\"/.test(value)) {\n      value = value.replace(/^\"|\"$/g, '');\n      value = value.replace(/\"\"/g, '\"');\n    }\n    return value.trim();\n  };\n  return lines.slice(1).map(line => {\n    const values = line.split(',');\n    return headers.reduce((obj, header, index) => {\n      obj[header] = parseValue(values[index]);\n      return obj;\n    }, {});\n  });\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 256,
+    "completion_tokens": 157,
+    "total_tokens": 413,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

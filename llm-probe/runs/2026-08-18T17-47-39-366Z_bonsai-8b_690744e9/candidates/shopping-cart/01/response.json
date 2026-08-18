@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-vefz04p6xr5bp950ncqgx",
+  "object": "chat.completion",
+  "created": 1787075309,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n  const items = input.items;\n  let subtotal = 0;\n\n  // Calculate subtotal\n  for (const item of items) {\n    subtotal += item.price * item.qty;\n  }\n\n  // Apply discount based on coupon\n  let discount = 0;\n  if (input.coupon) {\n    if (input.coupon.type === 'percent' && input.coupon.value >= 0) {\n      discount = Math.min(subtotal, subtotal * input.coupon.value / 100);\n    } else if (input.coupon.type === 'fixed' && input.coupon.value >= 0) {\n      discount = Math.min(input.coupon.value, Math.max(0, subtotal - input.coupon.value));\n    } else if (input.coupon.type === 'category_percent' && input.coupon.category === 'food') {\n      const foodTotal = items.reduce((sum, item) => \n        item.price * item.qty + (item.category === 'food' ? 0 : 0), 0);\n      discount = Math.min(subtotal, subtotal - (foodTotal / 100));\n    }\n  }\n\n  // Apply tax\n  let tax;\n  if (input.taxRate !== undefined) {\n    const taxAmount = Math.round((subtotal - discount) * input.taxRate * 100) / 100;\n    tax = taxAmount;\n  }\n\n  // Calculate total\n  let finalTotal = subtotal - discount + tax;\n  finalTotal = Math.round(finalTotal * 100) / 100;\n\n  return {\n    subtotal: Math.round(subtotal * 100) / 100,\n    discount: Math.round(discount * 100) / 100,\n    tax: tax,\n    total: finalTotal\n  };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 443,
+    "completion_tokens": 390,
+    "total_tokens": 833,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

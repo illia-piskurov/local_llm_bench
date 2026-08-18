@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-4txjny86o9j6ch7g9ubpdk",
+  "object": "chat.completion",
+  "created": 1787080233,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    if (!input || !input.objects || input.objects.length === 0) {\n        return {};\n    }\n\n    /**\n     * Checks if a value is a plain object (not null, not an array).\n     * @param {*} obj The item to check.\n     * @returns {boolean} True if it's a plain object.\n     */\n    function isPlainObject(obj) {\n        return typeof obj === 'object' && obj !== null && !Array.isArray(obj);\n    }\n\n    /**\n     * Recursively merges two objects: target (existing state) and source (new data).\n     * Source overrides target, unless both values are plain objects, in which case they merge recursively.\n     * Keys with undefined source values are ignored.\n     * @param {object} target The accumulated object (non-mutated).\n     * @param {object} source The new object to merge from.\n     * @returns {object} A newly created merged object.\n     */\n    function deepMerge(target, source) {\n        const result = { ...target };\n\n        for (const key in source) {\n            if (!source.hasOwnProperty(key)) continue;\n            const sourceValue = source[key];\n            const targetValue = target[key];\n\n            // Rule: Keys with undefined value are ignored (previous value is retained).\n            if (sourceValue === undefined) {\n                continue;\n            }\n\n            let mergedValue;\n\n            // Check for recursive merge condition: both values must be plain objects.\n            if (isPlainObject(targetValue) && isPlainObject(sourceValue)) {\n                mergedValue = deepMerge(targetValue, sourceValue);\n            } else {\n                // Rule: Arrays and primitive values are replaced entirely by the later value.\n                // This handles cases where one or both inputs are non-plain objects (e.g., arrays, primitives).\n                mergedValue = sourceValue;\n            }\n\n            result[key] = mergedValue;\n        }\n        return result;\n    }\n\n\n    // Use reduce to process the array of objects sequentially, merging each one into the accumulated result.\n    const initialResult = {};\n    return input.objects.reduce((accumulator, currentObject) => {\n        // Ensure we treat everything as non-mutating copies for the merge operation.\n        // The deepMerge function handles the necessary cloning and recursion.\n        return deepMerge(accumulator, currentObject);\n    }, initialResult);\n}",
+        "reasoning_content": "Plan:\n1.  Define the structure of the `solve` function that accepts an input object containing an array of objects (`input.objects`).\n2.  Handle the edge case where `input.objects` is empty or null/undefined (return `{}`).\n3.  Implement a recursive deep merge function that processes the array of source objects sequentially (left to right, later overriding earlier).\n4.  The merge logic must follow these rules:\n    *   Plain object keys are merged recursively.\n    *   Arrays and primitive values replace existing values entirely.\n    *   Keys with `undefined` value are ignored (the existing value is kept).\n    *   No mutation of inputs occurs.\n\nDetailed implementation steps for merging two objects (`target`, `source`):\n1.  Iterate over keys in `source`.\n2.  For each key:\n    a. If the source value is `undefined`, skip it (ignore the update, keep `target[key]`).\n    b. Check if both `target[key]` and `source[key]` are plain objects (and not null/array).\n    c. If they are, recursively merge them: `new_value = merge(target[key], source[key])`.\n    d. Otherwise (if one or both are non-plain objects, arrays, or primitives), the source value wins: `new_value = source[key]`.\n3.  Assign `new_value` to the result object for this key.\n\nThe overall process will use `reduce` on `input.objects`, starting with an empty `{}` accumulator.\n\nLet's refine the merge function structure. Since we are processing an array of objects, we need a core recursive merger that handles two inputs (the running accumulated result and the next object).\n\nHelper function checks:\n1.  `isObject(item)`: Check if something is an object and not null or an Array. `typeof item === 'object' && item !== null && !Array.isArray(item)`.\n2.  The recursive merge will combine `acc` (accumulator) with `currentObj` (next object).\n\nLet's implement the core merging logic.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 234,
+    "completion_tokens": 1022,
+    "total_tokens": 1256,
+    "completion_tokens_details": {
+      "reasoning_tokens": 462
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

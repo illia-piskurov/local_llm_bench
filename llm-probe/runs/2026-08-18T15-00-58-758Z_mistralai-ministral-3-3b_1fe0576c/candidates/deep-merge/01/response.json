@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-44qur2bjq2ux75n7y4suhe",
+  "object": "chat.completion",
+  "created": 1787065294,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    if (!input?.objects || input.objects.length === 0) return {};\n\n    const result = {};\n    let current = result;\n\n    for (const obj of input.objects) {\n        for (const key in obj) {\n            const value = obj[key];\n            if (value === undefined) continue;\n\n            if (typeof value === 'object' && !Array.isArray(value)) {\n                if (!(key in current)) {\n                    current[key] = {};\n                    current = current[key];\n                } else if (!Array.isArray(current[key]) && typeof current[key] === 'object') {\n                    const merged = mergeObjects([current[key], value]);\n                    Object.assign(current[key], merged);\n                    current = current[key];\n                }\n            } else {\n                current[key] = value;\n            }\n        }\n\n        // Reset for next object\n        current = result;\n    }\n\n    return result;\n}\n\nfunction mergeObjects(objects) {\n    const result = {};\n    let current = result;\n\n    for (const obj of objects) {\n        if (!obj || typeof obj !== 'object') continue;\n\n        for (const key in obj) {\n            const value = obj[key];\n            if (value === undefined) continue;\n\n            if (typeof value === 'object' && !Array.isArray(value)) {\n                if (!(key in current)) {\n                    current[key] = {};\n                    current = current[key];\n                } else if (!Array.isArray(current[key]) && typeof current[key] === 'object') {\n                    const merged = mergeObjects([current[key], value]);\n                    Object.assign(current[key], merged);\n                    current = current[key];\n                }\n            } else {\n                current[key] = value;\n            }\n        }\n\n        current = result;\n    }\n\n    return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 221,
+    "completion_tokens": 371,
+    "total_tokens": 592,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

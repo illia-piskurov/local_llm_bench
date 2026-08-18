@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-pv40584j0fwxesh7fefuh",
+  "object": "chat.completion",
+  "created": 1787075632,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  if (typeof input !== 'object' || input === null) return false;\n\n  if (input.a === null && input.b === null) return true;\n  if (input.a === null || input.b === null) return false;\n\n  const keysA = Object.keys(input.a);\n  const keysB = Object.keys(input.b);\n\n  if (keysA.length !== keysB.length) return false;\n\n  for (const key of keysA) {\n    if (!input.a.hasOwnProperty(key) || !input.b.hasOwnProperty(key)) return false;\n    if (typeof input.a[key] === 'object' && typeof input.b[key] === 'object') {\n      if (!solve(input.a[key]) || !solve(input.b[key])) return false;\n    } else if (typeof input.a[key] !== typeof input.b[key]) return false;\n  }\n\n  return true;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 156,
+    "completion_tokens": 189,
+    "total_tokens": 345,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

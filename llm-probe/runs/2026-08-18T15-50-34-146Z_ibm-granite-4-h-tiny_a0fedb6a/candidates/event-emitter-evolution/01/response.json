@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-j0u9m8q48sb5f5wg7c2j",
+  "object": "chat.completion",
+  "created": 1787068547,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const listeners = {};\n\n  for (const { op, event, listenerId, payload } of input.operations) {\n    if (!listeners[event]) listeners[event] = [];\n\n    switch (op) {\n      case \"on\":\n        listeners[event].push({ id: listenerId });\n        break;\n      case \"once\":\n        listeners[event].push({ id: listenerId, once: true });\n        break;\n      case \"off\":\n        listeners[event] = listeners[event].filter((l) => l.id !== listenerId);\n        break;\n      case \"emit\":\n        for (const { id } of listeners[event]) {\n          if ((op === \"emit\" && id.id === event) || (id.once && op === \"emit\" && id.id.startsWith(event + \".\"))) {\n            console.log({ log: [{ listenerId: id, event, payload }] });\n          }\n        }\n        break;\n    }\n  }\n\n  return { log: [] };\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 402,
+    "completion_tokens": 203,
+    "total_tokens": 605,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

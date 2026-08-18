@@ -1,0 +1,16 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Merge overlapping or touching [start, end] intervals from input.intervals. Return the merged intervals as a plain Array of [start, end] pairs sorted by start. Do not wrap the result in an object.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"intervals\":[[1,3],[2,6],[8,10]]}\noutput: [[1,6],[8,10]]"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

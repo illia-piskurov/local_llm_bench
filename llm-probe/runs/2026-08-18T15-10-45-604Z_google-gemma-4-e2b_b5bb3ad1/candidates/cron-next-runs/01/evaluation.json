@@ -1,0 +1,13 @@
+{
+  "status": "timeout",
+  "passed": 1,
+  "total": 3,
+  "tests": [
+    {
+      "id": "hourly-run",
+      "passed": true
+    }
+  ],
+  "durationMs": 124,
+  "error": "interrupted"
+}

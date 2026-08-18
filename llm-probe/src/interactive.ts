@@ -580,9 +580,15 @@ async function showLeaderboard(runsDir: string): Promise<void> {
   const s = spinner();
   s.start("Generating benchmark leaderboard…");
   try {
-    const md = await syncLeaderboard(runsDir);
-    s.stop("Leaderboard synced to runs/LEADERBOARD.md");
-    log.message(`\n${md}`);
+    const { markdown, htmlPath } = await syncLeaderboard(runsDir);
+    s.stop("Leaderboard synced to runs/LEADERBOARD.md & runs/LEADERBOARD.html");
+    log.message(`\n${markdown}`);
+    // Open the HTML report in the default browser
+    const { spawn } = await import("node:child_process");
+    const opener = process.platform === "win32" ? "cmd" : process.platform === "darwin" ? "open" : "xdg-open";
+    const args    = process.platform === "win32" ? ["/c", "start", "", htmlPath] : [htmlPath];
+    spawn(opener, args, { detached: true, stdio: "ignore" }).unref();
+    log.info(`Opened in browser: ${htmlPath}`);
   } catch (err) {
     s.error("Failed to generate leaderboard");
     log.error(err instanceof Error ? err.message : String(err));

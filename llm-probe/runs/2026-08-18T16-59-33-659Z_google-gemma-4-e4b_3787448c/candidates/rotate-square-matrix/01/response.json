@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-psaden96hj8qlu1w1i2d7",
+  "object": "chat.completion",
+  "created": 1787074540,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const matrix = input.matrix;\n    if (!matrix || matrix.length === 0) {\n        return [];\n    }\n\n    const rows = matrix.length;\n    const cols = matrix[0].length;\n\n    // The new matrix will have dimensions (cols x rows)\n    // Initialize the result matrix structure: 'rows' number of arrays, each of size 'cols'.\n    let rotatedMatrix = [];\n    for (let i = 0; i < cols; i++) {\n        rotatedMatrix[i] = Array(rows).fill(undefined);\n    }\n\n    // Transformation rule for 90 degrees clockwise:\n    // Original coordinates (r, c) move to new coordinates (c, rows - 1 - r)\n    for (let r = 0; r < rows; r++) {\n        for (let c = 0; c < cols; c++) {\n            const newValue = matrix[r][c];\n            // In the rotated matrix:\n            // New row index = original column index (c)\n            const newRow = c;\n            // New column index = rows - 1 - original row index (r)\n            const newCol = rows - 1 - r;\n\n            rotatedMatrix[newRow][newCol] = newValue;\n        }\n    }\n\n    return rotatedMatrix;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 146,
+    "completion_tokens": 306,
+    "total_tokens": 452,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

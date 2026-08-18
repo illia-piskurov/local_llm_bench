@@ -1,0 +1,16 @@
+{
+  "model": "liquid/lfm2.5-1.2b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Return the length of the longest substring of input.text that contains no duplicate characters.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"text\":\"abcabcbb\"}\noutput: 3"
+    }
+  ],
+  "temperature": 0.1,
+  "max_tokens": 16000,
+  "stream": false
+}

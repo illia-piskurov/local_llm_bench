@@ -1,0 +1,124 @@
+export function solve(input) {
+    const definitions = input.definitions || {};
+    const schema = input.schema;
+    const data = input.data;
+
+    const errors = [];
+
+    /**
+     * Helper function to resolve a JSON Pointer ($ref) against definitions.
+     * @param {string} refPath - The path string, e.g., "#/definitions/User"
+     * @returns {object|undefined} The resolved schema object or undefined if not found.
+     */
+    function resolveRef(refPath) {
+        if (!refPath || !refPath.startsWith('#/')) return undefined;
+
+        const parts = refPath.substring(2).split('/');
+        let current = definitions;
+
+        for (const part of parts) {
+            if (current && current[part] !== undefined) {
+                current = current[part];
+            } else {
+                return undefined; // Path broken
+            }
+        }
+        return current;
+    }
+
+    /**
+     * Recursively validate a piece of data against a schema fragment.
+     * @param {*} currentData - The data being validated (from input.data).
+     * @param {object} currentSchema - The corresponding schema fragment (resolved $ref).
+     * @param {string} pathPrefix - The path prefix for error reporting.
+     * @param {Array<any>} currentErrors - Errors accumulated in this branch.
+     */
+    function validateRecursive(currentData, currentSchema, pathPrefix, currentErrors) {
+        if (currentSchema === undefined) {
+            // If schema resolution failed and we are validating data, we stop this branch validation.
+            return;
+        }
+
+        const dataType = Array.isArray(currentData) ? 'array' : typeof currentData;
+        const expectedType = currentSchema.type;
+
+        // 1. Type Check
+        if (expectedType && dataType !== expectedType) {
+            // Special handling for numeric types where data might be a string representation, though standard JSON parsing handles this mostly fine if input is valid.
+            if (!(expectedType === 'number' && dataType === 'string' && !isNaN(parseFloat(currentData)))) {
+                currentErrors.push({ path: pathPrefix, message: `Expected type ${expectedType}, but got ${dataType}` });
+                return; // Stop further structural checks if the fundamental type is wrong
+            }
+        }
+
+        // 2. Object Validation
+        if (expectedType === 'object' && dataType === 'object' && currentData !== null) {
+            const properties = currentSchema.properties || {};
+            const required = currentSchema.required || [];
+            const additionalProperties = currentSchema.additionalProperties === false;
+
+            // Check required properties
+            for (const prop of required) {
+                const propPath = `${pathPrefix}/${prop}`;
+                if (!(prop in currentData)) {
+                    currentErrors.push({ path: propPath, message: `Missing required property '${prop}'` });
+                }
+            }
+
+            // Check properties and additionalProperties
+            for (const key in currentData) {
+                const dataPath = `${pathPrefix}/${key}`;
+                if (properties && properties[key] !== undefined) {
+                    validateRecursive(currentData[key], properties[key], dataPath, currentErrors);
+                } else if (!additionalProperties) {
+                    // Additional properties check
+                    if (currentSchema.additionalProperties === false) {
+                        currentErrors.push({ path: dataPath, message: `Additional property '${key}' not allowed` });
+                    }
+                }
+            }
+        }
+
+        // 3. Array Validation
+        if (expectedType === 'array' && dataType === 'array') {
+            const itemsSchema = currentSchema.items;
+            const minItems = currentSchema.minItems;
+
+            if (currentData.length < (minItems || 0)) {
+                currentErrors.push({ path: pathPrefix, message: `Array must have at least ${minItems} items` });
+            }
+
+            if (itemsSchema) {
+                for (let i = 0; i < currentData.length; i++) {
+                    const itemPath = `${pathPrefix}/items/${i}`;
+                    validateRecursive(currentData[i], itemsSchema, itemPath, currentErrors);
+                }
+            }
+        }
+
+        // 4. String Validation (If not handled implicitly by object/array context)
+        if (expectedType === 'string') {
+            if (currentData !== undefined && typeof currentData === 'string') {
+                if (currentSchema.minLength !== undefined && currentData.length < currentSchema.minLength) {
+                    currentErrors.push({ path: pathPrefix, message: `String must be at least ${currentSchema.minLength} characters long` });
+                }
+                if (currentSchema.enum && !currentSchema.enum.includes(currentData)) {
+                    currentErrors.push({ path: pathPrefix, message: `Value not in enum: ${currentSchema.enum.join(', ')}` });
+                }
+            }
+        }
+    }
+
+    // --- Start Validation ---
+
+    // Step 1: Validate the data against the root schema
+    if (schema) {
+        validateRecursive(data, schema, "#", errors);
+    }
+
+    // Clean up and return results
+    return {
+        valid: errors.length === 0,
+        errors: errors
+    };
+}

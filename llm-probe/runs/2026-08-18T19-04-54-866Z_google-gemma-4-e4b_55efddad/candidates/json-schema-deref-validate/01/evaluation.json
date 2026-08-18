@@ -1,0 +1,22 @@
+{
+  "status": "failed",
+  "passed": 1,
+  "total": 3,
+  "tests": [
+    {
+      "id": "all-valid-resolved",
+      "passed": false,
+      "error": "Expected {\"valid\":true,\"errors\":[]}, got {\"valid\":false,\"errors\":[{\"path\":\"#/tags/items/0\",\"message\":\"Reference failed to resolve for #/definitions/Tag\"},{\"path\":\"#/tags/items/1\",\"message\":\"Reference failed to resolve for #/definitions/Tag\"}]}"
+    },
+    {
+      "id": "additional-properties-false",
+      "passed": false,
+      "error": "Expected {\"valid\":false,\"errors\":[{\"path\":\"#/extra\",\"message\":\"Additional property not allowed\"}]}, got {\"valid\":false,\"errors\":[{\"path\":\"#/extra\",\"message\":\"Additional properties are not allowed\"}]}"
+    },
+    {
+      "id": "missing-required",
+      "passed": true
+    }
+  ],
+  "durationMs": 24
+}

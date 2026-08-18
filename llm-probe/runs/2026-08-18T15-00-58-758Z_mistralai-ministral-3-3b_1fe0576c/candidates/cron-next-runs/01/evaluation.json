@@ -1,0 +1,14 @@
+{
+  "status": "timeout",
+  "passed": 0,
+  "total": 3,
+  "tests": [
+    {
+      "id": "hourly-run",
+      "passed": false,
+      "error": "Expected [\"2026-08-18T11:00:00.000Z\",\"2026-08-18T12:00:00.000Z\"], got [\"2026-08-18T11:00:00.000Z\",\"2026-08-18T11:00:01.000Z\"]"
+    }
+  ],
+  "durationMs": 174,
+  "error": "interrupted"
+}

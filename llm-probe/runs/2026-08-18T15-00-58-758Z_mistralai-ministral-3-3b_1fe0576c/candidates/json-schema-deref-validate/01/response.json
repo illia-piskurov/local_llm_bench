@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-8m9dj8zqz4bxvbwu2jbx0p",
+  "object": "chat.completion",
+  "created": 1787065502,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { definitions, schema, data } = input;\n    const resolvedSchema = resolveRefs(definitions, schema);\n    const errors = validate(resolvedSchema, data, \"\");\n    return { valid: errors.length === 0, errors };\n}\n\nfunction resolveRefs(definitions, refPath) {\n    if (typeof refPath !== \"string\" || !refPath.startsWith(\"#/definitions/\")) {\n        return refPath;\n    }\n    const parts = refPath.split(\"/\");\n    let current = definitions;\n    for (let i = 1; i < parts.length - 1; i++) {\n        const key = parts[i];\n        if (!current[key]) throw new Error(`Missing definition path: ${refPath}`);\n        current = current[key];\n    }\n    return current[parts.slice(-1)[0]];\n}\n\nfunction validate(schema, data, path) {\n    const errors = [];\n    const type = schema.type;\n    const isObject = type === \"object\";\n    const isArray = type === \"array\";\n\n    if (isObject && typeof data !== \"object\" || !data || Array.isArray(data)) {\n        return [{ path: `${path}`, message: `Expected type object` }];\n    }\n\n    if (isArray && !(Array.isArray(data))) {\n        return [{ path: `${path}`, message: `Expected type array` }];\n    }\n\n    if (!isObject && !isArray) {\n        const expectedType = schema.type;\n        const actualType = typeof data;\n        if (expectedType !== actualType) {\n            errors.push({ path: `${path}`, message: `Expected type ${expectedType}` });\n        }\n        return validateEnum(data, schema.enum || [], `${path}`);\n    }\n\n    if (!isArray && schema.properties) {\n        const properties = schema.properties;\n        for (const prop in data) {\n            const propPath = `${path}/${prop}`;\n            if (!properties[prop]) {\n                errors.push({ path: propPath, message: `Property not defined` });\n            } else {\n                const propSchema = resolveRefs(definitions || {}, properties[prop]);\n                validate(propSchema, data[prop], propPath);\n            }\n        }\n\n        if (schema.required && schema.required.length > 0) {\n            for (const requiredProp of schema.required) {\n                const propPath = `${path}/${requiredProp}`;\n                if (!(requiredProp in data)) {\n                    errors.push({ path: propPath, message: `Required property ${requiredProp}` });\n                }\n            }\n        }\n\n        if (schema.additionalProperties === false && Object.keys(data).length > 0) {\n            for (const prop in data) {\n                const propPath = `${path}/${prop}`;\n                if (!properties[prop]) {\n                    errors.push({ path: propPath, message: `Unexpected property ${prop}` });\n                }\n            }\n        }\n    }\n\n    if (isArray && schema.items) {\n        const itemsSchema = resolveRefs(definitions || {}, schema.items);\n        for (let i = 0; i < data.length; i++) {\n            validate(itemsSchema, data[i], `${path}/items/${i}`);\n        }\n        if (schema.minItems !== undefined && data.length < schema.minItems) {\n            errors.push({ path: `${path}`, message: `Minimum ${schema.minItems} items required` });\n        }\n    }\n\n    return errors;\n}\n\nfunction validateEnum(value, allowedValues, path) {\n    const isValid = allowedValues.includes(value);\n    if (!isValid) {\n        return [{ path: path, message: `Value not in enum` }];\n    }\n    return [];\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 407,
+    "completion_tokens": 766,
+    "total_tokens": 1173,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

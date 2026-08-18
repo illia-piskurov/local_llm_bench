@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-bvvqgi2tvf65i4rugfrwfx",
+  "object": "chat.completion",
+  "created": 1787065357,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const query = input.query.startsWith('?') ? input.query.slice(1) : input.query;\n    if (!query) return {};\n\n    const pairs = query.split('&').map(pair => pair.trim());\n    const result = {};\n\n    for (const [key, value] of pairs.map(pair => {\n        const [k, v] = pair.split('=');\n        return [decodeURIComponent(k || 'true'), decodeURIComponent(v || '')];\n    })) {\n        let current = result;\n        const parts = key.split(/\\[|\\]/);\n\n        for (let i = 0; i < parts.length - 1; i++) {\n            const part = parts[i];\n            if (!current[part]) {\n                current[part] = typeof parts[i + 1] === 'string' && parts[i + 1].endsWith('[]') ? [] : {};\n            }\n            current = current[part];\n        }\n\n        const lastPart = parts.pop();\n        if (lastPart.endsWith('[]')) {\n            const arrayKey = lastPart.slice(0, -2);\n            if (!current[arrayKey]) current[arrayKey] = [];\n            current[arrayKey].push(value === 'true' ? true : value === 'false' ? false : Number.isFinite(Number(value)) ? Number(value) : value);\n        } else {\n            const parsedValue =\n                value.toLowerCase() === 'true' ? true :\n                value.toLowerCase() === 'false' ? false :\n                Number.isFinite(Number(value)) ? Number(value) : value;\n            current[lastPart] = parsedValue;\n        }\n    }\n\n    return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 350,
+    "completion_tokens": 360,
+    "total_tokens": 710,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

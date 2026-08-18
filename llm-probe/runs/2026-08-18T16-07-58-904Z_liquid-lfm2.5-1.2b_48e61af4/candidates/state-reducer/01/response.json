@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-avpkuuybawamx05zkas4v8",
+  "object": "chat.completion",
+  "created": 1787069325,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { state, actions } = input;\n  let newState = { ...state };\n  \n  actions.forEach(action => {\n    const pathParts = action.path.split('.');\n    let current = newState;\n    \n    for (let i = 0; i < pathParts.length - 1; i++) {\n      const part = pathParts[i];\n      if (!current[part]) {\n        current[part] = {};\n      }\n      current = current[part];\n    }\n    \n    switch (action.type) {\n      case 'SET':\n        Object.assign(current, { [action.path]: action.value });\n        break;\n      case 'TOGGLE':\n        current[action.path] = !current[action.path];\n        break;\n      case 'ARRAY_PUSH':\n        const array = current[action.path];\n        if (!Array.isArray(array)) {\n          array = [];\n        }\n        array.push(action.value);\n        current[action.path] = array;\n        break;\n      case 'ARRAY_REMOVE':\n        if (Array.isArray(current[action.path]) && action.index >= 0 && action.index < current[pathParts.length - 1]) {\n          current[action.path] = current[action.path].slice(0, action.index) + current[action.path].slice(action.index + 1);\n        }\n        break;\n      case 'DELETE':\n        current = deleteDeep(current, action.path);\n        break;\n    }\n  });\n  \n  return newState;\n}\n\nfunction deleteDeep(obj, path) {\n  const parts = path.split('.');\n  let result = obj;\n  for (let i = 0; i < parts.length - 1; i++) {\n    result = result[parts[i]];\n  }\n  const lastPart = parts[parts.length - 1];\n  if (result[lastPart] === undefined) return result;\n  return deleteDeep(result[lastPart], lastPart.split('.').slice(-2));\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 373,
+    "completion_tokens": 434,
+    "total_tokens": 807,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

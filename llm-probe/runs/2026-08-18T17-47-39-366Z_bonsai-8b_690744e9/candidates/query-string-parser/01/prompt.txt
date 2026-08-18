@@ -1,0 +1,17 @@
+Parse a URL query string from input.query (e.g. 'a=1&b[]=x&b[]=y&user[name]=Alice&user[age]=30') into a plain object.
+Rules:
+- Strip leading '?' if present. If query is empty, return {}.
+- Pairs are separated by '&'. Keys and values are separated by '='. Decode keys and values using decodeURIComponent. If '=' is omitted, the value is boolean true.
+- Keys ending with '[]' (e.g. tags[]=js&tags[]=ts) collect values into an Array.
+- Keys with nested brackets (e.g. user[address][city]=Paris) create nested plain objects.
+- If a decoded value represents a finite number ('42', '-3.14'), parse it as number. If 'true' or 'false', parse as boolean. Otherwise keep as string.
+- Return the resulting plain object.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"query":"?search=laptop&filters[brand]=Apple&tags[]=sale&tags[]=m3&page=1&active=true"}
+output: {"search":"laptop","filters":{"brand":"Apple"},"tags":["sale","m3"],"page":1,"active":true}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-9x63j4l0svlyyfwn38y0cj",
+  "object": "chat.completion",
+  "created": 1787065258,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const nodes = input.nodes;\n    const nodeMap = new Map();\n    const roots = [];\n\n    // Build a map of nodes by id for quick lookup\n    nodes.forEach(node => {\n        nodeMap.set(node.id, { ...node });\n    });\n\n    // Identify root nodes (parentId is null or not in the map)\n    nodes.forEach(node => {\n        if (!node.parentId || !nodeMap.has(node.parentId)) {\n            roots.push({ ...node });\n        }\n    });\n\n    // Build children relationships\n    const result = [];\n    for (const root of roots) {\n        const children = [];\n        const parentNode = nodeMap.get(root.id);\n\n        nodes.forEach(node => {\n            if (node.parentId === parentNode.id && !children.some(child => child.id === node.id)) {\n                children.push({ ...node });\n            }\n        });\n\n        result.push({\n            ...root,\n            children: children.length > 0 ? children : []\n        });\n    }\n\n    return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 301,
+    "completion_tokens": 221,
+    "total_tokens": 522,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

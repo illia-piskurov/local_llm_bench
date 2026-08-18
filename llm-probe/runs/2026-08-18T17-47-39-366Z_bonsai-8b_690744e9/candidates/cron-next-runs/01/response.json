@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-dh84ylvtda7eatta6zjdn",
+  "object": "chat.completion",
+  "created": 1787075503,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n  const cron = input.cron.trim().split(' ');\n  const from = new Date(input.from);\n  const count = input.count;\n  \n  // Parse cron expression into fields\n  let [min, hour, dayOfMonth, month, dayOfWeek] = cron;\n  \n  // Convert to numerical values for matching\n  const minNum = parseInt(min, 10) || 0;\n  const hourNum = parseInt(hour, 10) || 0;\n  const dayOfMonthNum = parseInt(dayOfMonth, 10) || 0;\n  const monthNum = parseInt(month, 10) || 0;\n  const dayOfWeekNum = parseInt(dayOfWeek, 10) || 0;\n\n  // Parse from ISO string to Date object\n  from.setUTCFullYear(from.getFullYear() + 1970, from.getMonth(), from.getDate());\n\n  const result = [];\n\n  for (let i = 0; i < count; i++) {\n    let current = from;\n    let next = from;\n    \n    while (true) {\n      // Check if current matches the cron expression\n      function matches(cronField, value) {\n        if (cronField === '*') return true;\n        \n        const parts = cronField.split('-');\n        if (parts.length === 2) {\n          const [start, end] = parts;\n          startNum = parseInt(start, 10);\n          endNum = parseInt(end, 10);\n          return value >= startNum && value <= endNum;\n        } else if (parts.length === 1) {\n          const step = parts[0];\n          if (/^(?:[1-9]|[12][0-9]|3[01])$/i.test(step)) {\n            // Handle ranges like 9-17\n            return value >= parseInt(step.split('-')[0], 10) && value <= parseInt(step.split('-')[1], 10);\n          } else if (step.includes('*/')) {\n            // Handle steps like 1/15 or 1-5/2\n            const stepParts = step.split('/');\n            const stepNum = parseInt(stepParts[0], 10);\n            const stepInterval = parseInt(stepParts[1], 10) || 1;\n            return current.getTime() + (stepNum * stepInterval) < next.getTime();\n          } else {\n            // Handle single values like 9 or 15\n            return value === parseInt(step, 10);\n          }\n        }\n        \n        return false;\n      }\n\n      if (matches(min, current.getMinute())) {\n        if (matches(hour, current.getHours())) {\n          if (matches(dayOfMonth, current.getDate())) {\n            if (matches(month, current.getMonth() + 1)) {\n              if (matches(dayOfWeek, current.getDay())) {\n                result.push(current.toISOString());\n                next = current;\n                break;\n              }\n            }\n          }\n        }\n      }\n\n      // If all fields match, move to next possible time\n      if (current.getTime() < from.getTime()) {\n        current.setFullYear(from.getFullYear() + 1970);\n        current.setMonth(from.getMonth() + 1);\n        current.setDate(1);\n        current.setHours(0);\n        current.setMinutes(0);\n      } else {\n        next = current;\n        break;\n      }\n\n      // Skip to next possible time\n      if (next.getTime() < from.getTime()) {\n        next.setFullYear(from.getFullYear() + 1970);\n        next.setMonth(from.getMonth() + 1);\n        next.setDate(1);\n        next.setHours(0);\n        next.setMinutes(0);\n      }\n    }\n  }\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 405,
+    "completion_tokens": 781,
+    "total_tokens": 1186,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

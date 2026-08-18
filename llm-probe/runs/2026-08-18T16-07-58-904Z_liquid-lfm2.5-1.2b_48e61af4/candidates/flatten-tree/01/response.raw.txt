@@ -1,0 +1,16 @@
+```javascript
+export function solve(input) {
+  if (!input.root) return [];
+  const queue = [input.root];
+  const result = [];
+  while (queue.length > 0) {
+    result.push(queue.shift().value);
+    if (queue.length > 0) {
+      const node = queue.shift();
+      if (node.left) queue.push(node.left);
+      if (node.right) queue.push(node.right);
+    }
+  }
+  return result;
+}
+```

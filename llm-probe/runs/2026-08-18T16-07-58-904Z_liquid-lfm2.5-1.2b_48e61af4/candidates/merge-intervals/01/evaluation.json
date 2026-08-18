@@ -1,0 +1,36 @@
+{
+  "status": "failed",
+  "passed": 2,
+  "total": 6,
+  "tests": [
+    {
+      "id": "touching",
+      "passed": false,
+      "error": "Expected [[1,5]], got [[1,4],[null,null]]"
+    },
+    {
+      "id": "unsorted",
+      "passed": false,
+      "error": "Expected [[1,4],[5,7]], got [[5,7],[null,null],[null,null]]"
+    },
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "single",
+      "passed": true
+    },
+    {
+      "id": "no-merge",
+      "passed": false,
+      "error": "Expected [[1,2],[4,5],[7,8]], got [[1,2],[null,null],[null,null]]"
+    },
+    {
+      "id": "all-merge",
+      "passed": false,
+      "error": "Expected [[1,10]], got [[1,10],[null,null],[null,null]]"
+    }
+  ],
+  "durationMs": 23
+}

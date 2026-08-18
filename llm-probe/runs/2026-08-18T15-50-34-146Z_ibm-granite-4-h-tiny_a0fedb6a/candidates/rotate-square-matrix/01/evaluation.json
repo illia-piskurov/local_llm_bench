@@ -1,0 +1,26 @@
+{
+  "status": "failed",
+  "passed": 2,
+  "total": 4,
+  "tests": [
+    {
+      "id": "three",
+      "passed": false,
+      "error": "Expected [[7,4,1],[8,5,2],[9,6,3]], got [[3,6,9],[2,5,8],[1,4,7]]"
+    },
+    {
+      "id": "one",
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "mutation-check",
+      "passed": false,
+      "error": "Expected [[3,1],[4,2]], got [[2,4],[1,3]]"
+    }
+  ],
+  "durationMs": 28
+}

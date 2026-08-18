@@ -1,0 +1,10 @@
+Return the length of the longest common subsequence of strings input.a and input.b.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"a":"abcde","b":"ace"}
+output: 3

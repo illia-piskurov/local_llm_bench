@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-d8dtj4pg4p9ojvx3xix41",
+  "object": "chat.completion",
+  "created": 1787068370,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "function solve(input) {\n  const definitions = input.definitions;\n  const schema = input.schema;\n\n  function resolveRef(refPath, currentDefinitions) {\n    let pathParts = refPath.substring(2).split('/');\n    let definitionName = pathParts[0];\n    pathParts = pathParts.slice(1);\n    return resolveDefinition(definitionName, definitions, pathParts, currentDefinitions);\n  }\n\n  function resolveDefinition(name, allDefs, subpaths = [], fromDef = {}) {\n    const def = allDefs[name] || {};\n    if (!subpaths.length) {\n      return def;\n    }\n    let nextPart = subpaths[0];\n    let resolvedDef = def[nextPart];\n    if (resolvedDef && typeof resolvedDef === 'string' && resolvedDef.startsWith('#/')) {\n      return resolveDefinition(resolvedDef.substring(2), allDefs, subpaths.slice(1), fromDef);\n    }\n    return { ...def, ...resolvedDef };\n  }\n\n  function validate(data, schema, path = '#') {\n    const errors = [];\n    if (schema.type) {\n      switch (schema.type) {\n        case 'string':\n          if (typeof data !== 'string') {\n            errors.push({ path, message: \"Expected type string\" });\n          }\n          if ('minLength' in schema && data.length < schema.minLength) {\n            errors.push({ path, message: `Length must be at least ${schema.minLength}` });\n          }\n          break;\n        case 'number':\n          if (typeof data !== 'number') {\n            errors.push({ path, message: \"Expected type number\" });\n          }\n          if ('minimum' in schema && data < schema.minimum) {\n            errors.push({ path, message: `Must be at least ${schema.minimum}` });\n          }\n          break;\n        case 'boolean':\n          if (typeof data !== 'boolean') {\n            errors.push({ path, message: \"Expected type boolean\" });\n          }\n          break;\n        case 'object':\n          if (typeof data !== 'object' || Array.isArray(data)) {\n            errors.push({ path, message: \"Expected type object\" });\n          } else {\n            const { properties, required = [], additionalProperties = false } = schema;\n            for (const [key, propSchema] of Object.entries(properties)) {\n              if (!additionalProperties && !required.includes(key) && data.hasOwnProperty(key)) {\n                errors.push({ path: `${path}/${key}`, message: \"Unexpected key\" });\n              }\n              const nestedErrors = validate(data[key], propSchema, `${path}/${key}`);\n              errors.push(...nestedErrors);\n            }\n          }\n          break;\n        case 'array':\n          if (!Array.isArray(data)) {\n            errors.push({ path, message: \"Expected type array\" });\n          } else {\n            const { items, minItems = 0 } = schema;\n            if (data.length < minItems) {\n              errors.push({ path, message: `Length must be at least ${minItems}` });\n            }\n            for (let i = 0; i < data.length; i++) {\n              const nestedErrors = validate(data[i], items, `${path}/items/${i}`);\n              errors.push(...nestedErrors);\n            }\n          }\n          break;\n        case 'enum':\n          if (!schema.enum.includes(data)) {\n            errors.push({ path, message: `Value not in enum` });\n          }\n          break;\n      }\n    }\n    return errors;\n  }\n\n  function validateData() {\n    const resolvedSchema = resolveRef(schema.$ref, definitions);\n    const validationErrors = validate(input.data, resolvedSchema);\n    return { valid: validationErrors.length === 0, errors: validationErrors };\n  }\n\n  return validateData();\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 386,
+    "completion_tokens": 769,
+    "total_tokens": 1155,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

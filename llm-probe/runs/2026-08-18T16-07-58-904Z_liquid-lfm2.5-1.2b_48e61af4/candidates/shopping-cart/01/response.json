@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-c6s4xldp82syng5hdm4r8b",
+  "object": "chat.completion",
+  "created": 1787069302,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { items, coupon, taxRate } = input;\n  let subtotal = 0;\n  let discount = 0;\n\n  // Calculate subtotal\n  items.forEach(item => {\n    subtotal += item.price * item.qty;\n  });\n\n  // Apply coupon discount if provided\n  if (coupon) {\n    const { type, value } = coupon;\n    if (type === 'percent') {\n      discount = subtotal * (value / 100);\n    } else if (type === 'fixed') {\n      discount = Math.min(subtotal - 15, 15);\n    }\n  }\n\n  // Apply category-specific discount\n  const categoryDiscounts = {};\n  items.forEach(item => {\n    const category = item.category || '';\n    if (category === 'food' && categoryDiscounts[category]) {\n      discount += subtotal * categoryDiscounts[category];\n    }\n  });\n\n  // Calculate tax\n  const taxAmount = (subtotal - discount) * taxRate;\n  tax = Math.round(taxAmount / 100) * taxRate;\n\n  // Final total\n  const total = Math.round((subtotal - discount + tax) * 100) / 100;\n\n  return { subtotal, discount, tax, total };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 460,
+    "completion_tokens": 301,
+    "total_tokens": 761,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

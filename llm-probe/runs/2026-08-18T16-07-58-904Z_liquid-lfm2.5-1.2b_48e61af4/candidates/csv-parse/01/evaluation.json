@@ -1,0 +1,8 @@
+{
+  "status": "compile_error",
+  "passed": 0,
+  "total": 4,
+  "tests": [],
+  "durationMs": 21,
+  "error": "continue must be inside loop"
+}

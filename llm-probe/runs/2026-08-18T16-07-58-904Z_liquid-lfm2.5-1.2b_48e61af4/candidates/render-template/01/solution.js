@@ -1,0 +1,27 @@
+export function solve(input) {
+  const { template, data } = input;
+  const resolvedTemplate = template.replace(/\{(\w+)\}/g, (match, key) => {
+    const value = data[key] ?? null;
+    if (value === undefined || value === null) return '';
+    if (typeof value === 'string') return value;
+    return String(value);
+  });
+  const paths = resolvedTemplate.split(/(\s+)/).map(p => p.trim());
+  let result = '';
+  paths.forEach(path => {
+    const parts = path.split('.');
+    let current = data;
+    for (let i = 0; i < parts.length; i++) {
+      if (!current || parts[i] === '') continue;
+      const part = parts[i];
+      if (part.includes('.')) {
+        const key = part.split('.')[parts.length - 1];
+        current = current[key] || '';
+      } else {
+        current = current[key];
+      }
+    }
+    result += resolvedTemplate.replace(/\{(\w+)\}/g, (_, key) => current ? current[key] : '');
+  });
+  return result;
+}

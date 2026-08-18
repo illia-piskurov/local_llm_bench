@@ -1,0 +1,27 @@
+{
+  "status": "failed",
+  "passed": 1,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": false,
+      "error": "Expected {\"subtotal\":0,\"discount\":0,\"tax\":0,\"total\":0}, got {\"subtotal\":0,\"discount\":0,\"total\":null}"
+    },
+    {
+      "id": "category-discount",
+      "passed": false,
+      "error": "Expected {\"subtotal\":130,\"discount\":20,\"tax\":11,\"total\":121}, got {\"subtotal\":130,\"discount\":0,\"tax\":13,\"total\":143}"
+    },
+    {
+      "id": "fixed-discount-capped",
+      "passed": false,
+      "error": "Expected {\"subtotal\":10,\"discount\":10,\"tax\":0,\"total\":0}, got {\"subtotal\":10,\"discount\":0,\"total\":null}"
+    },
+    {
+      "id": "no-coupon-with-tax",
+      "passed": true
+    }
+  ],
+  "durationMs": 22
+}

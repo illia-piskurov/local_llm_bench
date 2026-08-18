@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-7tnwfc99weab6pw0jwfd",
+  "object": "chat.completion",
+  "created": 1787065575,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const words = new Set(input.words);\n    const groups = {};\n\n    for (const word of words) {\n        const sortedWord = [...word].sort().join('');\n        if (!groups[sortedWord]) groups[sortedWord] = [];\n        groups[sortedWord].push(word);\n    }\n\n    return Object.values(groups)\n        .map(group => group.sort())\n        .sort((a, b) => a[0].localeCompare(b[0]));\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 152,
+    "completion_tokens": 108,
+    "total_tokens": 260,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

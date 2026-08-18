@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-iysare8knwj7r2im8rloli",
+  "object": "chat.completion",
+  "created": 1787068453,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const wordMap = new Map();\n\n  for (const word of input.words) {\n    const sortedWord = word.split('').sort().join('');\n    if (!wordMap.has(sortedWord)) {\n      wordMap.set(sortedWord, []);\n    }\n    wordMap.get(sortedWord).push(word);\n  }\n\n  const groups = Array.from(wordMap.values());\n  groups.sort((a, b) => a[0].localeCompare(b[0]));\n\n  return groups;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 141,
+    "completion_tokens": 103,
+    "total_tokens": 244,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

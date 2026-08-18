@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-18T18-31-12-857Z_google-gemma-4-12b-qat_96f94e92",
+  "status": "running",
+  "startedAt": "2026-08-18T18:31:12.857Z",
+  "model": "google/gemma-4-12b-qat",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "hardware": "AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon",
+  "temperature": 1,
+  "maxTokens": 12000,
+  "samples": 1,
+  "taskIds": [
+    "flat-to-tree",
+    "paginate-and-sort",
+    "deep-merge",
+    "csv-parse",
+    "render-template",
+    "shopping-cart",
+    "query-string-parser",
+    "schema-validator",
+    "state-reducer",
+    "rbac-checker",
+    "i18n-pluralize",
+    "sql-query-builder",
+    "json-schema-deref-validate",
+    "cron-next-runs",
+    "longest-substring-no-repeat",
+    "group-anagrams",
+    "top-k-frequent",
+    "merge-intervals",
+    "flatten-tree",
+    "shortest-path-grid",
+    "lcs-length",
+    "topological-sort",
+    "rotate-square-matrix",
+    "validate-sudoku-board",
+    "deep-equal",
+    "bytecode-vm-evolution",
+    "event-emitter-evolution"
+  ],
+  "nodeVersion": "v24.14.0",
+  "candidates": [
+    {
+      "taskId": "flat-to-tree",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Cannot connect to http://127.0.0.1:1234/v1: fetch failed"
+    }
+  ]
+}

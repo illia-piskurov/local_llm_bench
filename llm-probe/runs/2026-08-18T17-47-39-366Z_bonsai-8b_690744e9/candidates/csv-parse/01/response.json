@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-pdtxwdidaonyl0r9h0nubc",
+  "object": "chat.completion",
+  "created": 1787075291,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const lines = input.split('\\n').filter(line => line.trim() !== '');\n  if (lines.length === 0 || lines[0].trim() === '') return [];\n\n  const headers = lines[0].split(',');\n  const result = [];\n\n  for (let i = 1; i < lines.length; i++) {\n    const row = [];\n    let value = '';\n    let inQuote = false;\n\n    for (let j = 0; j < headers.length; j++) {\n      if (lines[i][j] === '\"') {\n        inQuote = !inQuote;\n        value += lines[i][j];\n        continue;\n      }\n\n      if (inQuote) {\n        row.push(value);\n        value = '';\n        continue;\n      }\n\n      const commaIndex = lines[i].indexOf(',');\n      if (commaIndex !== -1) {\n        row.push(lines[i].trim());\n        value = '';\n      } else {\n        row.push(lines[i].trim());\n      }\n    }\n\n    if (row.length === headers.length) {\n      result.push({ [headers[k]]: row[k] for k in headers });\n    }\n  }\n\n  return result;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 266,
+    "completion_tokens": 247,
+    "total_tokens": 513,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

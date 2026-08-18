@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-xovjdnaxvxe389ke4lmouf",
+  "object": "chat.completion",
+  "created": 1787067230,
+  "model": "google/gemma-4-e2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const n = input.n;\n    const edges = input.edges;\n\n    if (n === 0) {\n        return [];\n    }\n\n    // 1. Initialize Adjacency List and In-degree array\n    const adj = Array(n).fill(0).map(() => []);\n    const inDegree = Array(n).fill(0);\n\n    // 2. Build graph and calculate in-degrees\n    for (const [u, v] of edges) {\n        // Assuming 0 <= u, v < n based on problem context\n        adj[u].push(v);\n        inDegree[v]++;\n    }\n\n    // 3. Initialize queue for Kahn's algorithm\n    const queue = [];\n    for (let i = 0; i < n; i++) {\n        if (inDegree[i] === 0) {\n            queue.push(i);\n        }\n    }\n\n    // 4. Perform Topological Sort\n    const result = [];\n    let head = 0; // Using index for queue simulation for slight optimization over shift() if implemented carefully, but standard push/shift is clearer here. We stick to standard array manipulation.\n\n    while (queue.length > 0) {\n        // Dequeue a node u\n        const u = queue.shift();\n        result.push(u);\n\n        // Iterate through neighbors v\n        for (const v of adj[u]) {\n            inDegree[v]--;\n            if (inDegree[v] === 0) {\n                queue.push(v);\n            }\n        }\n    }\n\n    // 5. Check for cycle\n    if (result.length === n) {\n        return result;\n    } else {\n        // A cycle exists if we couldn't process all nodes\n        return null;\n    }\n}",
+        "reasoning_content": "Thinking Process:\n\n1.  **Understand the Goal:** The request is to implement a function `solve(input)` that performs a topological sort on a directed graph defined by $N$ nodes and a list of edges. It must return the ordering as an array, or `null` if a cycle exists.\n2.  **Input Format:** `input` is an object: `{\"n\": N, \"edges\": [[u, v], ...]}`.\n3.  **Algorithm Choice:** Topological sorting is typically done using Kahn's algorithm (using in-degrees) or Depth First Search (DFS). Kahn's algorithm is generally robust for detecting cycles and naturally produces a valid sort.\n4.  **Kahn's Algorithm Steps:**\n    a. Initialize graph representation (Adjacency List).\n    b. Calculate the in-degree of every node.\n    c. Initialize a queue with all nodes having an in-degree of 0.\n    d. While the queue is not empty:\n        i. Dequeue a node $u$. Add $u$ to the result list.\n        ii. For every neighbor $v$ of $u$:\n            Decrement the in-degree of $v$.\n            If the in-degree of $v$ becomes 0, enqueue $v$.\n    e. Check Result: If the length of the resulting sorted list is equal to $N$, a topological sort exists. Otherwise, a cycle exists (because some nodes were never reached).\n\n5.  **Implementation Details (Constraints):**\n    *   Synchronous JavaScript ES2023 only. No `async`, no file I/O, etc.\n    *   No imports/requires.\n    *   Must be implemented within the provided function signature.\n\n6.  **Step-by-Step Implementation Plan:**\n\n    *   Parse $N$ and edges from `input`.\n    *   Build Adjacency List (`adj`) and In-degree array (`inDegree`).\n        *   Initialize `adj` (array of arrays) of size $N$.\n        *   Initialize `inDegree` array of size $N$ to zeros.\n    *   Process edges: Iterate through `edges = [[u, v]]`. For each edge $(u, v)$, add $v$ to $u$'s adjacency list and increment $\\text{inDegree}[v]$.\n    *   Initialize Queue (`queue`). Populate it with nodes $i$ where $\\text{inDegree}[i] = 0$.\n    *   Perform the sort:\n        *   Initialize `result` array.\n        *   Loop while `queue` is not empty.\n            *   Dequeue $u$. Add $u$ to `result`.\n            *   For each neighbor $v$ in $\\text{adj}[u]$:\n                *   Decrement $\\text{inDegree}[v]$.\n                *   If $\\text{inDegree}[v] == 0$, enqueue $v$.\n    *   Final Check: If `result.length === N`, return `result`. Else, return `null`.\n\n7.  **Refinement (Handling Input):** The input is a standard JavaScript object.\n\n    Let $N = \\text{input.n}$.\n\n8.  **Code Draft (Self-Correction/Review):** Ensure strict adherence to synchronous logic and data structures. Since we are limited to basic JS features, a simple array acting as a queue (using `shift()` for dequeuing) is acceptable in this context, though performance considerations usually favor index manipulation or linked lists if $N$ was huge. For typical competitive programming constraints, standard array operations suffice.\n\n**(Applying the plan to the required format)**",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 176,
+    "completion_tokens": 1210,
+    "total_tokens": 1386,
+    "completion_tokens_details": {
+      "reasoning_tokens": 785
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e2b"
+}

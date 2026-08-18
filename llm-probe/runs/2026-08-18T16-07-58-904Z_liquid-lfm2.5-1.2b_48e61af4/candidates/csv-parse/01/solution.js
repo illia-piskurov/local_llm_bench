@@ -1,0 +1,23 @@
+export function solve(input) {
+  if (!input || input.trim() === "") return [];
+  const lines = input.trim().split(/\r?\n/g);
+  const headers = lines[0].split(",");
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(/\r?\n/);
+    const obj = {};
+    headers.forEach((h, idx) => {
+      const val = values[idx];
+      if (val.trim() === "") continue;
+      let processed;
+      if (val.startsWith("\"") && val.endsWith("\"")) {
+        processed = val.slice(1, -2);
+      } else if (val.startsWith('"') && val.endsWith('"')) {
+        processed = val.slice(1, -1);
+      } else processed = val;
+      obj[headers[idx]] = processed.trim();
+    });
+    result.push(obj);
+  }
+  return result;
+}

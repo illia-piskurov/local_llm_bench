@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ivi32z1mp9r2uj1955qu6s",
+  "object": "chat.completion",
+  "created": 1787069353,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { schema, data } = input;\n  const definitions = input.definitions;\n  const errors = [];\n  const path = \"#/\";\n\n  function validateRef(path, refName) {\n    if (refName === \"\") return true;\n    const refSchema = schema.properties[refName];\n    if (!refSchema) return false;\n\n    const refType = refSchema.type;\n    const refPath = refSchema.path;\n\n    if (refType === 'object' && refSchema.properties) {\n      const obj = definitions[refName];\n      if (Object.keys(obj.properties).length === 0) return false;\n      for (const prop in obj.properties) {\n        const propPath = path + \"/\" + prop;\n        if (!validateRef(propPath, prop)) return false;\n      }\n    } else if (refType === 'array' && refSchema.items) {\n      const itemsSchema = schema.properties.items;\n      if (Array.isArray(data[refPath]) && data[refPath].length < itemsSchema.minItems) {\n        errors.push({ path: path + \"/\" + refPath, message: \"minItems required\" });\n      }\n    } else if (refType === 'string' || refType === 'number') {\n      const value = data[refPath];\n      if (typeof value !== refSchema.type) {\n        errors.push({ path: path + \"/\" + refPath, message: `Expected ${refSchema.type}, got ${value}` });\n      }\n    } else if (refType === 'enum') {\n      const allowedValues = refSchema.enum;\n      if (!allowedValues.includes(value)) {\n        errors.push({ path: path + \"/\" + refPath, message: `Value not in enum` });\n      }\n    }\n  }\n\n  validateRef(path, definitions[\"User\"]);\n  validateRef(path, definitions[\"Role\"]);\n\n  return { valid: errors.length === 0, errors };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 447,
+    "completion_tokens": 431,
+    "total_tokens": 878,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

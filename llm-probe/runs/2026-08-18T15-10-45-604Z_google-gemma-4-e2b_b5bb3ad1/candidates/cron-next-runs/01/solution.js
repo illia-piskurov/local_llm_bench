@@ -1,0 +1,104 @@
+export function solve(input) {
+    const cron = input.cron.trim().split(/\s+/);
+    const fromTimestampMs = new Date(input.from).getTime();
+    const count = input.count;
+
+    if (cron.length !== 5) {
+        return [];
+    }
+
+    // --- Cron Parsing Helper Function ---
+
+    /**
+     * Checks if a specific time matches the complex cron pattern rules.
+     * @param {number} m Minute (0-59)
+     * @param {number} h Hour (0-23)
+     * @param {number} dom Day of Month (1-31)
+     * @param {number} mon Month (1-12)
+     * @param {number} dow Day of Week (0-6)
+     * @param {string[]} cronFields The parsed cron fields.
+     */
+    function matchesCron(m, h, dom, mon, dow, fields) {
+        // Helper to check if a single value matches a field pattern
+        const checkField = (value, pattern) => {
+            if (pattern === '*') return true;
+
+            if (pattern.includes('-')) {
+                // Range: e.g., 9-17
+                const [startStr, endStr] = pattern.split('-');
+                const start = parseInt(startStr);
+                const end = parseInt(endStr);
+                return value >= start && value <= end;
+            }
+
+            if (pattern.includes('/')) {
+                // Step: e.g., */15
+                const parts = pattern.split('/');
+                const base = parseInt(parts[0]);
+                if (value % base === 0) {
+                    return true;
+                }
+            }
+
+            // Exact match (e.g., 5)
+            return value === parseInt(pattern);
+        };
+
+        // Apply checks based on field index (0=M, 1=H, 2=DM, 3=Mo, 4=DoW)
+        const [m_pat, h_pat, d_pat, mo_pat, dw_pat] = fields;
+
+        let match = true;
+
+        // Minute Check (Index 0)
+        if (!checkField(m, m_pat)) {
+            match = false;
+        }
+
+        // Hour Check (Index 1)
+        if (match && !checkField(h, h_pat)) {
+            match = false;
+        }
+
+        // Day of Month Check (Index 2)
+        if (match && !checkField(dom, d_pat)) {
+            match = false;
+        }
+
+        // Month Check (Index 3)
+        if (match && !checkField(mon, mo_pat)) {
+            match = false;
+        }
+
+        // Day of Week Check (Index 4)
+        if (match && !checkField(dow, dw_pat)) {
+            match = false;
+        }
+
+        return match;
+    }
+
+    // --- Iteration Logic ---
+
+    let results = [];
+    let currentMs = fromTimestampMs;
+
+    // Start iteration one minute after the 'from' time to find strictly *after* times.
+    // We start by setting the time to the next minute boundary relative to input.from.
+    let currentTimeMs = currentMs + 60000; // Start checking at T + 1 minute
+
+    while (results.length < count) {
+        const current = new Date(currentTimeMs);
+
+        // Since cron rules are generally applied on the minute level, we check if the calculated time matches.
+        if (matchesCron(current.getMinutes(), current.getHours(), current.getDate(), current.getMonth() + 1, current.getDay(), cron)) {
+            // Format output: ISO UTC timestamp with seconds and ms set to .000Z
+            const isoString = current.toISOString().replace(/\.\d{3}Z$/, '.000Z');
+            results.push(isoString);
+        }
+
+        // Move forward one minute
+        currentTimeMs += 60000;
+    }
+
+    return results;
+}

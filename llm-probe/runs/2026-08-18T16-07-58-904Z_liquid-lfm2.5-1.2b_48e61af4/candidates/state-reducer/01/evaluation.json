@@ -1,0 +1,19 @@
+{
+  "status": "runtime_error",
+  "passed": 0,
+  "total": 4,
+  "tests": [
+    {
+      "id": "nested-set-and-create-parents",
+      "passed": false,
+      "error": "Expected {\"config\":{\"theme\":{\"dark\":true}}}, got {\"config\":{\"theme\":{\"config.theme.dark\":true}}}"
+    },
+    {
+      "id": "toggle-non-boolean",
+      "passed": false,
+      "error": "Expected {\"ready\":true}, got {\"ready\":false}"
+    }
+  ],
+  "durationMs": 25,
+  "error": "cannot read property of undefined"
+}

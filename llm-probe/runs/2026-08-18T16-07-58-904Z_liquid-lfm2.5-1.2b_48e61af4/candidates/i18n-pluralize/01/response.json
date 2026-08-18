@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-98tn549t4aedkxgojwydmk",
+  "object": "chat.completion",
+  "created": 1787069339,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const locales = input.locales || {};\n  const lang = input.lang;\n  const key = input.key;\n  const params = input.params || {};\n  const locale = locales[lang] || locales['en'];\n  const value = locale[key];\n\n  if (typeof value === 'object' && value.count === 0) {\n    return params.count === 0 ? 'zero' : params.count === 1 ? 'one' : value.other;\n  }\n  return value.replace('#', params.count);\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 360,
+    "completion_tokens": 120,
+    "total_tokens": 480,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

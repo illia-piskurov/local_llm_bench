@@ -1,0 +1,18 @@
+Validate an object input.data against input.schema.
+Schema is an object where keys map to rules:
+- type: 'string' | 'number' | 'boolean' | 'array'
+- required (boolean): if true and value is undefined or null, error is 'Required'
+- min (number): for string (min length -> 'Too short'), number (min value -> 'Too small'), array (min items -> 'Too few items')
+- max (number): for string (max length -> 'Too long'), number (max value -> 'Too large'), array (max items -> 'Too many items')
+- pattern (string): regex string for string values -> 'Invalid format'
+If value is present and type does not match, error is 'Invalid type'.
+Collect all matching errors per field. Return { valid: boolean, errors: { [field]: string[] } }. If no errors, errors must be {} and valid must be true.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"schema":{"username":{"type":"string","required":true,"min":3},"age":{"type":"number","min":18}},"data":{"username":"al","age":16}}
+output: {"valid":false,"errors":{"username":["Too short"],"age":["Too small"]}}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ersmb5jyej2warvq6gq5w",
+  "object": "chat.completion",
+  "created": 1787069420,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const lines = input.program.split('\\n');\n    const stack = [];\n    let error = '';\n    let lineNum = 1;\n    const maxSteps = 1000;\n    const output = [];\n    let i = 0;\n\n    while (i < lines.length && lineNum <= maxSteps) {\n        const line = lines[lineNum];\n        lineNum++;\n\n        // Skip comments and empty lines\n        if (line.startsWith('#') || line.trim() === '') continue;\n\n        if (line === 'LABEL <name>') {\n            // No-op for execution\n            i++;\n            continue;\n        }\n\n        if (line.startsWith('JMP')) {\n            const jumpName = line.slice(4);\n            i++;\n            continue;\n        }\n\n        if (line.startsWith('JZ')) {\n            const val = parseInt(line.slice(4));\n            if (val === 0) {\n                error = `Division by zero at line ${lineNum}`;\n                break;\n            }\n            i++;\n            continue;\n        }\n\n        if (line.startsWith('JNZ')) {\n            const val = parseInt(line.slice(4));\n            i++;\n            continue;\n        }\n\n        // PUSH\n        if (line.startsWith('PUSH')) {\n            const parts = line.split(' ');\n            if (parts.length !== 2) {\n                error = `Invalid PUSH instruction at line ${lineNum}`;\n                break;\n            }\n            const arg = parseInt(parts[1]);\n            stack.push(arg);\n        } else if (line.startsWith('PRINT')) {\n            output.push(stack.pop() ?? '');\n        } else if (line.startsWith('SWAP')) {\n            [stack[stack.length - 1], stack[stack.length - 2]] = [stack[stack.length - 2], stack[stack.length - 1]];\n        } else if (line.startsWith('DUP')) {\n            stack.push(stack[stack.length - 1]);\n        } else if (line.startsWith('ADD')) {\n            if (stack.length < 2) error = `Stack underflow at line ${lineNum}`;\n            const b = stack.pop();\n            const a = stack.pop();\n            stack.push(a + b);\n        } else if (line.startsWith('SUB')) {\n            if (stack.length < 2) error = `Stack underflow at line ${lineNum}`;\n            const b = stack.pop();\n            const a = stack.pop();\n            stack.push(a - b);\n        } else if (line.startsWith('MUL')) {\n            if (stack.length < 2) error = `Stack underflow at line ${lineNum}`;\n            const b = stack.pop();\n            const a = stack.pop();\n            stack.push(a * b);\n        } else if (line.startsWith('DIV')) {\n            if (stack.length < 2) error = `Stack underflow at line ${lineNum}`;\n            const b = stack.pop();\n            const a = stack.pop();\n            if (b === 0) error = `Division by zero at line ${lineNum}`;\n            else stack.push(Math.trunc(a / b));\n        } else if (line.startsWith('POP')) {\n            if (stack.length < 1) error = `Stack underflow at line ${lineNum}`;\n            const val = stack.pop();\n            output.push(val);\n        } else if (line.startsWith('LABEL')) {\n            i++;\n            continue;\n        } else if (line.startsWith('PRINT')) {\n            // Only push if not popping\n            if (stack.length > 0) output.push(stack.pop());\n        } else if (line.startsWith('INVALID')) {\n            error = `Unknown instruction \"${line.slice(1)}\" at line ${lineNum}`;\n            break;\n        }\n\n        // Check step limit\n        if (i >= maxSteps) error = 'Execution step limit exceeded';\n    }\n\n    return { output, error };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 609,
+    "completion_tokens": 909,
+    "total_tokens": 1518,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

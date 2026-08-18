@@ -1,0 +1,62 @@
+```javascript
+export function solve(input) {
+    const cron = input.cron.split(' ');
+    const fromTimestamp = new Date(input.from).getTime();
+    const count = input.count;
+
+    function parseField(field) {
+        if (field === '*') return new Set([...Array(60)].map((_, i) => i));
+        const parts = field.split('/');
+        const listOrRange = parts[0];
+        const step = parts.length > 1 ? parseInt(parts[1]) : undefined;
+
+        const values = [];
+        if (listOrRange.includes('-')) {
+            const [start, end] = listOrRange.split('-').map(Number);
+            for (let i = start; i <= end; i += step || 1) values.push(i);
+        } else {
+            listOrRange.split(',').forEach(num => values.push(parseInt(num)));
+        }
+        return new Set(values);
+    }
+
+    const minuteSet = parseField(cron[0]);
+    const hourSet = parseField(cron[1]);
+    const dayOfMonthSet = cron[2] === '*' ? null : parseField(cron[2]);
+    const monthSet = cron[3] === '*' ? null : parseField(cron[3]);
+    const dayOfWeekSet = cron[4] === '*' ? null : parseField(cron[4]);
+
+    function isMatch(date) {
+        const minute = date.getMinutes();
+        const hour = date.getHours();
+        const dayOfMonth = date.getDate();
+        const month = date.getMonth() + 1;
+        const dayOfWeek = date.getDay();
+
+        return (
+            minuteSet.has(minute) &&
+            hourSet.has(hour) &&
+            (dayOfMonthSet === null || dayOfMonthSet.has(dayOfMonth)) &&
+            (monthSet === null || monthSet.has(month)) &&
+            (dayOfWeekSet === null || dayOfWeekSet.has(dayOfWeek))
+        );
+    }
+
+    const result = [];
+    let currentDate = new Date(fromTimestamp);
+
+    while (result.length < count) {
+        if (isMatch(currentDate)) {
+            result.push(
+                currentDate.toISOString().replace(/\.\d{3}Z$/, '.000Z')
+            );
+        }
+        // Move to next minute
+        const seconds = currentDate.getSeconds();
+        currentDate.setMilliseconds(0);
+        currentDate.setSeconds(seconds + 1);
+    }
+
+    return result;
+}
+```

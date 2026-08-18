@@ -1,0 +1,19 @@
+{
+  "status": "runtime_error",
+  "passed": 0,
+  "total": 3,
+  "tests": [
+    {
+      "id": "simple-select-all",
+      "passed": false,
+      "error": "Expected {\"sql\":\"SELECT * FROM products\",\"params\":[]}, got {\"sql\":\"FROM products\",\"params\":[]}"
+    },
+    {
+      "id": "select-with-expr-and-joins",
+      "passed": false,
+      "error": "Expected {\"sql\":\"SELECT id, COUNT(items.id) AS item_count FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id\",\"params\":[]}, got {\"sql\":\"id [object Object] FROM orders JOIN LEFT items ON orders.id = items.order_id GROUP BY orders.id\",\"params\":[]}"
+    }
+  ],
+  "durationMs": 25,
+  "error": "value is not iterable"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-tayl1sl7jnerw759pfyhk",
+  "object": "chat.completion",
+  "created": 1787068448,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const text = input.text;\n    let maxLength = 0;\n    let start = 0;\n    const charMap = new Map();\n\n    for (let end = 0; end < text.length; end++) {\n        const currentChar = text[end];\n        if (charMap.has(currentChar)) {\n            start = Math.max(start, charMap.get(currentChar) + 1);\n        }\n        maxLength = Math.max(maxLength, end - start + 1);\n        charMap.set(currentChar, end);\n    }\n\n    return maxLength;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 114,
+    "completion_tokens": 121,
+    "total_tokens": 235,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

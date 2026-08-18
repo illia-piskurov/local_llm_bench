@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-hgxxpu0omtfrnzg2qrhyc",
+  "object": "chat.completion",
+  "created": 1787068272,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  let subtotal = input.items.reduce((sum, item) => sum + item.price * item.qty, 0);\n  let discount = 0;\n  \n  if (input.coupon) {\n    switch (input.coupon.type) {\n      case 'percent':\n        discount = Math.min(subtotal * (input.coupon.value / 100), subtotal);\n        break;\n      case 'fixed':\n        discount = Math.min(input.coupon.value, subtotal);\n        break;\n      case 'category_percent':\n        if (input.coupon.category) {\n          const categoryItems = input.items.filter(item => item.category === input.coupon.category);\n          discount = Math.min(categoryItems.reduce((sum, item) => sum + item.price * item.qty, 0) * (input.coupon.value / 100), subtotal);\n        }\n        break;\n    }\n  }\n  \n  const taxRate = input.taxRate || 0;\n  const tax = Math.round(((subtotal - discount) * taxRate) * 100) / 100;\n  let total = Math.round((subtotal - discount + tax) * 100) / 100;\n  \n  return {\n    subtotal: Number(subtotal.toFixed(2)),\n    discount: Number(discount.toFixed(2)),\n    tax: Number(tax.toFixed(2)),\n    total: Number(total.toFixed(2))\n  };\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 408,
+    "completion_tokens": 285,
+    "total_tokens": 693,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

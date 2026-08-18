@@ -1,0 +1,43 @@
+```js
+export function solve(input) {
+  const items = input.items;
+  let subtotal = 0;
+
+  // Calculate subtotal
+  for (const item of items) {
+    subtotal += item.price * item.qty;
+  }
+
+  // Apply discount based on coupon
+  let discount = 0;
+  if (input.coupon) {
+    if (input.coupon.type === 'percent' && input.coupon.value >= 0) {
+      discount = Math.min(subtotal, subtotal * input.coupon.value / 100);
+    } else if (input.coupon.type === 'fixed' && input.coupon.value >= 0) {
+      discount = Math.min(input.coupon.value, Math.max(0, subtotal - input.coupon.value));
+    } else if (input.coupon.type === 'category_percent' && input.coupon.category === 'food') {
+      const foodTotal = items.reduce((sum, item) => 
+        item.price * item.qty + (item.category === 'food' ? 0 : 0), 0);
+      discount = Math.min(subtotal, subtotal - (foodTotal / 100));
+    }
+  }
+
+  // Apply tax
+  let tax;
+  if (input.taxRate !== undefined) {
+    const taxAmount = Math.round((subtotal - discount) * input.taxRate * 100) / 100;
+    tax = taxAmount;
+  }
+
+  // Calculate total
+  let finalTotal = subtotal - discount + tax;
+  finalTotal = Math.round(finalTotal * 100) / 100;
+
+  return {
+    subtotal: Math.round(subtotal * 100) / 100,
+    discount: Math.round(discount * 100) / 100,
+    tax: tax,
+    total: finalTotal
+  };
+}
+```

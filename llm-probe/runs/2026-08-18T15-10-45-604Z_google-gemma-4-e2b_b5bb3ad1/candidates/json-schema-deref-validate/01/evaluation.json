@@ -1,0 +1,22 @@
+{
+  "status": "failed",
+  "passed": 1,
+  "total": 3,
+  "tests": [
+    {
+      "id": "all-valid-resolved",
+      "passed": true
+    },
+    {
+      "id": "additional-properties-false",
+      "passed": false,
+      "error": "Expected {\"valid\":false,\"errors\":[{\"path\":\"#/extra\",\"message\":\"Additional property not allowed\"}]}, got {\"valid\":true,\"errors\":[]}"
+    },
+    {
+      "id": "missing-required",
+      "passed": false,
+      "error": "Expected {\"valid\":false,\"errors\":[{\"path\":\"#/age\",\"message\":\"Required property missing\"}]}, got {\"valid\":false,\"errors\":[{\"path\":\"#/age\",\"message\":\"Missing required property 'age'\"}]}"
+    }
+  ],
+  "durationMs": 24
+}

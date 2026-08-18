@@ -1,0 +1,16 @@
+{
+  "model": "google/gemma-4-e4b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Return k most frequent numbers from input.numbers. Sort by descending frequency; break ties by ascending number value.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"numbers\":[1,1,1,2,2,3],\"k\":2}\noutput: [1,2]"
+    }
+  ],
+  "temperature": 1,
+  "max_tokens": 16000,
+  "stream": false
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-onr8noaihti93rh7cb9xj",
+  "object": "chat.completion",
+  "created": 1787069309,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const query = input.query || '';\n  if (query.trim() === '') return {};\n\n  const decoder = (value) => {\n    if (value === null || value === undefined) return '';\n    let decoded = value.replace(/&/g, '&').replace(/\"/g, '&');\n    if (decoded.startsWith('decodeURI')) return decodeURIComponent(decoded);\n    if (decoded.match(/^([^&=]+)=(.*)$/)) {\n      const [key, val] = decoded.split('=', 2);\n      key = key.replace(/^\\./, '');\n      val = decoder(val);\n      return key === '[]' ? [] : new Map(val.split(',').map(v => [v.trim(), decoder(v)]));\n    }\n    return decoder(value);\n  };\n\n  const parsed = {};\n  let i = 0;\n  while (i < query.length) {\n    const char = query[i];\n    if (char === '?') i++;\n    else if (char === '&') {\n      const start = i;\n      while (i < query.length && query[i] !== '&') i++;\n      const key = decoder(query.slice(start, i));\n      const valuePart = query.slice(i + 1);\n      let value = '';\n      if (valuePart.startsWith('[') && valuePart.endsWith(']')) {\n        const inner = valuePart.substring(1, valuePart.length - 1);\n        let nested = {};\n        let j = 0;\n        while (j < inner.length && inner[j] !== ']') {\n          if (inner[j] === '[') nested = { ...nested, ...parse(key, parsed) };\n          else nested = { ...nested, [inner[j + 1]] = parseValue(inner[j + 1], parsed) };\n          j++;\n        }\n        value = nested;\n      } else {\n        value = valuePart;\n      }\n      parsed[key] = value ? parseValue(value, parsed) : true;\n      i++;\n    }\n  }\n  return parsed;\n}\n\nfunction parseValue(value, obj) {\n  const num = value.replace(/^\\d+/, '').trim();\n  if (!isNaN(num)) return Number(num);\n  if (num === 'true' || num === 'false') return obj[value];\n  return obj[value] ? obj[value] : null;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 370,
+    "completion_tokens": 545,
+    "total_tokens": 915,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-gtx3rguzuwesgz71afqn8",
+  "object": "chat.completion",
+  "created": 1787065623,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { n, edges } = input;\n    const adj = Array.from({ length: n }, () => []);\n    const inDegree = new Array(n).fill(0);\n\n    for (const [from, to] of edges) {\n        adj[from].push(to);\n        inDegree[to]++;\n    }\n\n    const queue = [];\n    for (let i = 0; i < n; i++) {\n        if (inDegree[i] === 0) {\n            queue.push(i);\n        }\n    }\n\n    let result = [];\n    while (queue.length > 0) {\n        const u = queue.shift();\n        result.push(u);\n\n        for (const v of adj[u]) {\n            inDegree[v]--;\n            if (inDegree[v] === 0) {\n                queue.push(v);\n            }\n        }\n    }\n\n    return inDegree.some(d => d !== 0) ? null : result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 164,
+    "completion_tokens": 204,
+    "total_tokens": 368,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

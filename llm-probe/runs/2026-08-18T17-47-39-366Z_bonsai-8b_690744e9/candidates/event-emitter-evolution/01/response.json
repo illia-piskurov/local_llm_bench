@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-9jevtit0bw6aj0x16dwowc",
+  "object": "chat.completion",
+  "created": 1787075685,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n  const eventEmitters = new Map();\n\n  const log = [];\n\n  for (const operation of input.operations) {\n    const { op, event, listenerId } = operation;\n\n    if (op === \"on\") {\n      // Register a persistent listener\n      if (!eventEmitters.has(event)) {\n        eventEmitters.set(event, []);\n      }\n      eventEmitters.get(event).push(listenerId);\n    } else if (op === \"once\") {\n      // Register a one-time listener\n      if (!eventEmitters.has(event)) {\n        eventEmitters.set(event, []);\n      }\n      eventEmitters.get(event).push({ op: \"once\", listenerId });\n    } else if (op === \"off\") {\n      // Unregister a specific listener\n      const listeners = eventEmitters.get(event);\n      if (listeners && listeners.includes(listenerId)) {\n        listeners.splice(listeners.indexOf(listenerId), 1);\n      }\n    } else if (op === \"emit\") {\n      // Emit an event and trigger listeners\n      const listeners = eventEmitters.get(event);\n      if (!listeners) continue;\n\n      for (const listener of listeners) {\n        if (listener.op === \"once\") {\n          log.push({ listenerId: listener.listenerId, event: event, payload: listener.payload });\n          // One-time listener is automatically removed after first invocation\n          const index = listeners.indexOf(listener);\n          listeners.splice(index, 1);\n        }\n      }\n    }\n  }\n\n  return { log };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 412,
+    "completion_tokens": 323,
+    "total_tokens": 735,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

@@ -1,0 +1,25 @@
+{
+  "status": "failed",
+  "passed": 3,
+  "total": 4,
+  "tests": [
+    {
+      "id": "all-valid",
+      "passed": true
+    },
+    {
+      "id": "required-missing",
+      "passed": true
+    },
+    {
+      "id": "type-mismatch",
+      "passed": true
+    },
+    {
+      "id": "array-rules",
+      "passed": false,
+      "error": "Expected {\"valid\":false,\"errors\":{\"list\":[\"Too few items\"]}}, got {\"valid\":true,\"errors\":{\"list\":[\"Too few items\"]}}"
+    }
+  ],
+  "durationMs": 21
+}

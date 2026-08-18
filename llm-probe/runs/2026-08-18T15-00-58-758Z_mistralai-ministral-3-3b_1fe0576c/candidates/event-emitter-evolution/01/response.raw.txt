@@ -1,0 +1,71 @@
+```javascript
+export function solve(input) {
+    const listeners = new Map();
+    const logEntries = [];
+
+    for (const operation of input.operations) {
+        if (operation.op === "on") {
+            const { event, listenerId } = operation;
+            if (!listeners.has(event)) {
+                listeners.set(event, []);
+            }
+            listeners.get(event).push(listenerId);
+        } else if (operation.op === "once") {
+            const { event, listenerId } = operation;
+            if (!listeners.has(event)) {
+                listeners.set(event, []);
+            }
+            listeners.get(event).push({ type: "once", id: listenerId });
+        } else if (operation.op === "off") {
+            const { event, listenerId } = operation;
+            if (listeners.has(event)) {
+                const existingListeners = listeners.get(event);
+                listeners.set(
+                    event,
+                    existingListeners.filter(l =>
+                        l.type !== "once" ? l.id !== listenerId : true
+                    )
+                );
+            }
+        } else if (operation.op === "emit") {
+            const { event, payload } = operation;
+            const matchingEvents = new Set();
+
+            // Collect all relevant events
+            for (const [e, listenersForE] of listeners) {
+                if (e === "*" || e.startsWith(event + ".")) {
+                    matchingEvents.add(e);
+                }
+            }
+
+            // Process each matched event
+            for (const e of matchingEvents) {
+                const currentListeners = listeners.get(e) || [];
+                const processedListeners = [];
+
+                for (const listener of currentListeners) {
+                    if (listener.type === "once") {
+                        logEntries.push({
+                            log: [
+                                { listenerId: listener.id, event: e, payload }
+                            ]
+                        });
+                        processedListeners.push(listener);
+                    } else {
+                        logEntries.push({
+                            log: [
+                                { listenerId: listener, event: e, payload }
+                            ]
+                        });
+                        processedListeners.push(listener);
+                    }
+                }
+
+                listeners.set(e, processedListeners);
+            }
+        }
+    }
+
+    return { log: logEntries.flat() };
+}
+```

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-py267zayph9m6bcnd06m4o",
+  "object": "chat.completion",
+  "created": 1787075407,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const locales = input.locales;\n  const lang = input.lang;\n  const key = input.key;\n  const params = input.params;\n\n  // Check if key exists in the specified locale\n  const value = locales[lang]?.[key];\n\n  // If not, check 'en' as fallback\n  if (!value) {\n    value = locales['en']?.[key];\n  }\n\n  // If key is still missing, return it as-is\n  if (!value) {\n    return key;\n  }\n\n  // Replace {var} with params[var] inside the value\n  const replacedValue = value.replace('{var}', params[key]);\n\n  // Check if the value is a plural object\n  if (typeof replacedValue === 'object' && replacedValue !== null) {\n    // Determine which version to use based on params.count and available keys\n    let version;\n    if (params.count === 0 && 'zero' in replacedValue) {\n      version = 'zero';\n    } else if (params.count === 1 && 'one' in replacedValue) {\n      version = 'one';\n    } else {\n      version = 'other';\n    }\n\n    // Replace '#' with params.count inside the version string\n    const versionStr = new Map(replacedValue).values()[version];\n    const versionStrWithCount = versionStr.replace('#', params.count);\n\n    // Return the final formatted string\n    return `${params[count]} items, ${params[name]}`;\n  } else {\n    // If it's a simple string, just return it after replacing {var}\n    return replacedValue;\n  }\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 331,
+    "completion_tokens": 340,
+    "total_tokens": 671,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

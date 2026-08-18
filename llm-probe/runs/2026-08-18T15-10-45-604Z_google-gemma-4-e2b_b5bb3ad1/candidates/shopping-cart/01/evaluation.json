@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "passed": 4,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "category-discount",
+      "passed": true
+    },
+    {
+      "id": "fixed-discount-capped",
+      "passed": true
+    },
+    {
+      "id": "no-coupon-with-tax",
+      "passed": true
+    }
+  ],
+  "durationMs": 28
+}

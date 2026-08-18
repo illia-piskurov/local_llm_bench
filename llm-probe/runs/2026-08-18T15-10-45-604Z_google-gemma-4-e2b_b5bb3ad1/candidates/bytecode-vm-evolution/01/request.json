@@ -1,0 +1,16 @@
+{
+  "model": "google/gemma-4-e2b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Implement a stack-based virtual machine interpreter that executes a bytecode program in input.program (multi-line string).\n\nSupported instructions (one per line, space-separated arguments):\n- PUSH <n>: pushes integer n onto stack\n- POP: pops top value from stack\n- ADD: pops b then a, pushes a + b\n- SUB: pops b then a, pushes a - b\n- MUL: pops b then a, pushes a * b\n- DIV: pops b then a, pushes Math.trunc(a / b). If b === 0, stop with error \"Division by zero at line <lineNum>\" (1-based line number in original program text)\n- DUP: duplicates top value of stack\n- SWAP: swaps top two values of stack\n- PRINT: appends top value of stack (converted to string) to output array without popping it\n- LABEL <name>: defines a jump target (no-op during execution)\n- JMP <name>: unconditional jump to label\n- JZ <name>: pops value; if value === 0 jumps to label, otherwise continues\n- JNZ <name>: pops value; if value !== 0 jumps to label, otherwise continues\n\nExecution rules:\n- Empty lines and lines starting with '#' are comments (ignored during execution, but count for 1-based line numbering).\n- If stack has fewer than required arguments for an instruction (e.g. ADD with < 2 items, POP with 0 items), stop with error \"Stack underflow at line <lineNum>\".\n- If unknown instruction encountered, stop with error \"Unknown instruction '<name>' at line <lineNum>\".\n- Maximum execution steps limit: 1000 instructions to prevent infinite loops. If exceeded, stop with error \"Execution step limit exceeded\".\n- Return { output: string[], error?: string }. If error occurred, include error message and output up to that point.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"program\":\"PUSH 10\\nPUSH 20\\nADD\\nPRINT\"}\noutput: {\"output\":[\"30\"]}\n\ninput: {\"program\":\"PUSH 3\\nLABEL loop\\nDUP\\nPRINT\\nPUSH 1\\nSUB\\nDUP\\nJNZ loop\\nPOP\"}\noutput: {\"output\":[\"3\",\"2\",\"1\"]}"
+    }
+  ],
+  "temperature": 1,
+  "max_tokens": 16000,
+  "stream": false
+}

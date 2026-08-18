@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ewy52qliqa634o1j256hd",
+  "object": "chat.completion",
+  "created": 1787082290,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const s1 = input.a;\n    const s2 = input.b;\n    const m = s1.length;\n    const n = s2.length;\n\n    // dp[i][j] stores the length of LCS of s1[0...i-1] and s2[0...j-1]\n    // We use m+1 and n+1 dimensions for easier indexing (handling empty prefixes)\n    const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));\n\n    for (let i = 1; i <= m; i++) {\n        for (let j = 1; j <= n; j++) {\n            if (s1[i - 1] === s2[j - 1]) {\n                // If characters match, extend the LCS from the previous diagonal position\n                dp[i][j] = dp[i - 1][j - 1] + 1;\n            } else {\n                // If they don't match, take the maximum of:\n                // 1. Excluding s1[i-1] (move up)\n                // 2. Excluding s2[j-1] (move left)\n                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n            }\n        }\n    }\n\n    return dp[m][n];\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 131,
+    "completion_tokens": 341,
+    "total_tokens": 472,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

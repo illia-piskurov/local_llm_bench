@@ -1,0 +1,33 @@
+{
+  "status": "failed",
+  "passed": 0,
+  "total": 5,
+  "tests": [
+    {
+      "id": "all-same",
+      "passed": false,
+      "error": "Expected 1, got {\"length\":1}"
+    },
+    {
+      "id": "mixed",
+      "passed": false,
+      "error": "Expected 3, got {\"length\":3}"
+    },
+    {
+      "id": "empty",
+      "passed": false,
+      "error": "Expected 0, got {\"length\":0}"
+    },
+    {
+      "id": "single",
+      "passed": false,
+      "error": "Expected 1, got {\"length\":1}"
+    },
+    {
+      "id": "all-unique",
+      "passed": false,
+      "error": "Expected 6, got {\"length\":6}"
+    }
+  ],
+  "durationMs": 21
+}

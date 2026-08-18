@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-23q0krt7lnyjem3u2z04lcl",
+  "object": "chat.completion",
+  "created": 1787069402,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { n, edges } = input;\n  const adjList = Array.from({ length: n }, () => []);\n  const inDegree = new Array(n).fill(0);\n\n  // Build graph and compute in-degrees\n  for (const [u, v] of edges) {\n    adjList[u].push(v);\n    inDegree[v]++;\n  }\n\n  const queue = [];\n  for (let i = 0; i < n; i++) {\n    if (inDegree[i] === 0) queue.push(i);\n  }\n\n  const result = [];\n  while (queue.length > 0) {\n    const node = queue.shift();\n    result.push(node);\n\n    for (const neighbor of adjList[node]) {\n      inDegree[neighbor]--;\n      if (inDegree[neighbor] === 0) queue.push(neighbor);\n    }\n  }\n\n  return result.length === n ? result : null;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 178,
+    "completion_tokens": 229,
+    "total_tokens": 407,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

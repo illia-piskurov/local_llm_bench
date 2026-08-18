@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-y20awu4jw1beg8o7uud9",
+  "object": "chat.completion",
+  "created": 1787068265,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const template = input.template;\n    const data = input.data;\n\n    const render = (value, path) => {\n        const keys = path.split(\".\");\n        let current = value;\n        for (const key of keys) {\n            if (current === undefined || current === null || !(key in current)) {\n                return \"\";\n            }\n            current = current[key];\n        }\n        return String(current);\n    };\n\n    const renderString = (str, data) => {\n        const placeholderRegex = /{{\\s*([^}]+)\\s*}}/g;\n        let result = str;\n        let match;\n        while ((match = placeholderRegex.exec(str))) {\n            const path = match[1];\n            const replacement = render(data, path);\n            result = result.replace(match[0], replacement);\n        }\n        return result;\n    };\n\n    return renderString(template, data);\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 254,
+    "completion_tokens": 189,
+    "total_tokens": 443,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

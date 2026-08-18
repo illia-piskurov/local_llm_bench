@@ -1,0 +1,16 @@
+{
+  "model": "liquid/lfm2.5-1.2b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Validate input.data against a JSON schema in input.schema, resolving $ref pointers using input.definitions.\nRules:\n1. $ref format: \"#/definitions/<Name>\" (or subpaths like \"#/definitions/<Name>/properties/<Prop>\"). Resolve pointers from input.definitions.\n2. Validation:\n   - type: 'string' | 'number' | 'boolean' | 'array' | 'object'\n   - object: 'properties', 'required' (array of required keys), 'additionalProperties: false' (disallows unlisted keys)\n   - array: 'items' (schema for elements), 'minItems' (minimum length)\n   - string: 'minLength'\n   - enum: array of allowed values\n3. Path in errors: root path is \"#\", property path is \"#/name\", array element is \"#/items/0\".\nReturn { valid: boolean, errors: Array<{ path: string, message: string }> }.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"definitions\":{\"User\":{\"type\":\"object\",\"required\":[\"id\",\"role\"],\"properties\":{\"id\":{\"type\":\"number\"},\"role\":{\"$ref\":\"#/definitions/Role\"}}},\"Role\":{\"type\":\"string\",\"enum\":[\"admin\",\"editor\",\"viewer\"]}},\"schema\":{\"$ref\":\"#/definitions/User\"},\"data\":{\"id\":\"100\",\"role\":\"superadmin\"}}\noutput: {\"valid\":false,\"errors\":[{\"path\":\"#/id\",\"message\":\"Expected type number\"},{\"path\":\"#/role\",\"message\":\"Value not in enum\"}]}"
+    }
+  ],
+  "temperature": 0.1,
+  "max_tokens": 16000,
+  "stream": false
+}

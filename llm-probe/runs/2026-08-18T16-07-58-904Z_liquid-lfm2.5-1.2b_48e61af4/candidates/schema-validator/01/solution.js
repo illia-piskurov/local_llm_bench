@@ -1,0 +1,26 @@
+export function solve(input) {
+  const schema = input.schema;
+  const errors = {};
+  const valid = true;
+
+  for (const field in schema) {
+    const rule = schema[field];
+    const value = input.data[field];
+
+    if (rule.required && (value === undefined || value === null)) {
+      errors[field] = ["Required"];
+    } else if (typeof value !== rule.type) {
+      errors[field] = "Invalid type";
+    } else if (rule.min !== undefined && value < rule.min) {
+      errors[field] = "Too small";
+    } else if (rule.max !== undefined && value > rule.max) {
+      errors[field] = "Too large";
+    } else if (Array.isArray(value) && rule.minItems && value.length < rule.minItems) {
+      errors[field] = "Too few items";
+    } else if (Array.isArray(value) && rule.maxItems && value.length > rule.maxItems) {
+      errors[field] = "Too many items";
+    }
+  }
+
+  return { valid: valid, errors };
+}

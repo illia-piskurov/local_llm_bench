@@ -1,0 +1,154 @@
+export function solve(input) {
+    const query = input && typeof input === 'object' ? input.query : '';
+
+    if (!query || query.trim() === '?') {
+        return {};
+    }
+
+    // 1. Preprocessing: Strip leading '?'
+    let cleanQuery = query.startsWith('?') ? query.substring(1) : query;
+
+    const pairs = [];
+    cleanQuery.split('&').forEach((pair) => {
+        if (pair) {
+            pairs.push(pair);
+        }
+    });
+
+    /**
+     * Parses a string value into its correct JS type: number, boolean, or string.
+     * @param {string} str The decoded string value.
+     * @returns {*} The typed value.
+     */
+    const parseValue = (str) => {
+        if (typeof str !== 'string') return str;
+
+        // Check for finite number
+        const num = Number(str);
+        if (!isNaN(num) && isFinite(num)) {
+            return num;
+        }
+
+        // Check for boolean keywords
+        if (str.toLowerCase() === 'true') {
+            return true;
+        }
+        if (str.toLowerCase() === 'false') {
+            return false;
+        }
+
+        // Default to string
+        return str;
+    };
+
+    /**
+     * Processes a key and value pair and updates the result object structure.
+     * @param {object} root The base object being built.
+     * @param {string} fullKey The raw, decoded key (e.g., 'user[address][city]').
+     * @param {string} rawValue The raw, decoded value.
+     */
+    const processPair = (root, fullKey, rawValue) => {
+        let value = parseValue(rawValue);
+
+        // Handle case where '=' was omitted (value is boolean true)
+        if (!fullKey && !['key_only'].includes(fullKey)) {
+            // This usually only happens if the pair itself was malformed or just a key without equals, 
+            // but based on rules: If no '=', value is true. We assume fullKey contains the base key name here.
+             value = true;
+        } else if (!rawValue && fullKey) {
+            // Case where we have 'key' with no '=' following it
+            value = true;
+        }
+
+
+        let currentObj = root;
+        const keys = [];
+
+        // Determine the structure path: Split by [ and clean up.
+        // Example: user[address][city] -> ['user', 'address', 'city']
+        if (fullKey.includes('[')) {
+            keys.push(...fullKey.match(/[^\[\]]+/g) || []);
+        } else {
+            keys.push(fullKey);
+        }
+
+        // 2. Handling Array accumulation: If the key ends with '[]' segment, it means we are collecting an array for the parent name.
+        const isArrayKey = fullKey && fullKey.endsWith('[]');
+
+        if (isArrayKey) {
+            // Example: tags[]=sale. Base key is 'tags'. We need to find the last meaningful segment before []
+            let baseKey = '';
+            // Find the content immediately preceding the final '[]' structure
+            const match = fullKey.match(/([^\[]+)\s*\[\]$/); 
+            if (match) {
+                baseKey = match[1];
+            } else {
+                baseKey = null; // Should not happen if isArrayKey is true
+            }
+
+             // Ensure the array exists at the base key name
+            if (!root[baseKey] || !Array.isArray(root[baseKey])) {
+                root[baseKey] = [];
+            }
+            
+            // Append value to the accumulated array
+            root[baseKey].push(value);
+            return; 
+        }
+
+
+        // 3. Standard Nested/Assignment Logic (Iterating through keys)
+        for (let i = 0; i < keys.length; i++) {
+            const keySegment = keys[i];
+
+            if (keySegment === '') continue; // Skip empty segments if they somehow sneak in
+
+            const isLastKey = i === keys.length - 1;
+
+            // If we are at the last segment, assign the value
+            if (isLastKey) {
+                let target;
+                
+                // Check if the parent object requires array treatment based on previous context (e.g., tags[0], tags[1] style simulation, though not explicitly required by prompt)
+                // For simplicity and adhering strictly to `[]` rules above: we just assign/overwrite.
+                
+                if (!currentObj[keySegment]) {
+                    currentObj[keySegment] = {};
+                }
+                
+                // Assign the final value (overwriting if multiple keys targeted the same leaf)
+                currentObj[keySegment] = value;
+
+            } else {
+                // Intermediate segment: Ensure it's an object container
+                if (!currentObj[keySegment] || typeof currentObj[keySegment] !== 'object') {
+                    currentObj[keySegment] = {};
+                }
+                currentObj = currentObj[keySegment];
+            }
+        }
+
+    };
+
+
+    // --- Main Execution ---
+    const result = {};
+
+    pairs.forEach(pair => {
+        let parts = pair.split('=');
+        let fullKey;
+        let rawValue;
+
+        if (parts.length === 1) {
+            fullKey = parts[0];
+            // Value is boolean true if no '=' separator
+            processPair(result, fullKey, ""); 
+        } else {
+            fullKey = parts[0];
+            rawValue = parts.slice(1).join('='); // Handle values containing '=' sign (e.g., key=v=a)
+            processPair(result, fullKey, rawValue);
+        }
+    });
+
+    return result;
+}

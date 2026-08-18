@@ -1,0 +1,23 @@
+```javascript
+export function solve(input) {
+    const { template, data } = input;
+    return template.split('{{').reduce((acc, part, i) => {
+        if (i === 0) return acc + part;
+
+        const [closingBrace, ...rest] = part.split('}}');
+        const path = rest.join('}}');
+
+        let value = data;
+        const trimmedPath = path.trim();
+        if (!trimmedPath) return acc + '}';
+
+        for (const segment of trimmedPath.split('.')) {
+            if (value === undefined || value === null) break;
+            value = value[segment];
+        }
+
+        const strValue = String(value);
+        return acc + strValue + '}}';
+    }, '');
+}
+```

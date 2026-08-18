@@ -1,0 +1,16 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Return true if input.a and input.b are deeply equal JSON values. Handle nulls, primitives, arrays, and plain objects recursively. Do not use JSON.stringify.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"a\":{\"x\":1,\"y\":[2,3]},\"b\":{\"x\":1,\"y\":[2,3]}}\noutput: true"
+    }
+  ],
+  "temperature": 0.1,
+  "max_tokens": 16000,
+  "stream": false
+}

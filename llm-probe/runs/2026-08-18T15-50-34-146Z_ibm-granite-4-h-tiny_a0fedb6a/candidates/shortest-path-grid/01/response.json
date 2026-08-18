@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-nt2ev3kcnq9yu414v309uq",
+  "object": "chat.completion",
+  "created": 1787068471,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const grid = input.grid;\n  const start = input.start;\n  const end = input.end;\n\n  const rows = grid.length;\n  const cols = grid[0].length;\n\n  const queue = [start];\n  const visited = new Set([start.toString()]);\n\n  let moves = 0;\n\n  while (queue.length > 0) {\n    const levelSize = queue.length;\n\n    for (let i = 0; i < levelSize; i++) {\n      const [x, y] = queue.shift();\n\n      if ([x, y].toString() === end.toString()) {\n        return moves;\n      }\n\n      const directions = [\n        [-1, 0],\n        [1, 0],\n        [0, -1],\n        [0, 1],\n      ];\n\n      for (const [dx, dy] of directions) {\n        const newX = x + dx;\n        const newY = y + dy;\n\n        if (\n          newX >= 0 &&\n          newX < rows &&\n          newY >= 0 &&\n          newY < cols &&\n          grid[newX][newY] === 0 &&\n          !visited.has([newX, newY].toString())\n        ) {\n          queue.push([newX, newY]);\n          visited.add([newX, newY].toString());\n        }\n      }\n    }\n\n    moves++;\n  }\n\n  return -1;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 153,
+    "completion_tokens": 289,
+    "total_tokens": 442,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

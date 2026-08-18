@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-u5rv32fb6fjgxn36qt8w9f",
+  "object": "chat.completion",
+  "created": 1787068345,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { table, select = ['*'], joins = [], where, groupBy, orderBy, limit, offset } = input.query;\n    let sql = `SELECT ${select.join(', ')}`;\n    sql += ` FROM ${table}`;\n\n    if (joins.length > 0) {\n        sql += ' ';\n        for (let i = 0; i < joins.length; i++) {\n            const { type = 'INNER', table: jTable, on } = joins[i];\n            sql += ` ${type.toUpperCase()} JOIN ${jTable}`;\n            if (Object.keys(on).length > 0) {\n                sql += ` ON ${Object.keys(on)[0]} ${on[Object.keys(on)[0]]}`;\n            }\n        }\n    }\n\n    if (where) {\n        sql += ' WHERE';\n        const params = [];\n        const appendWhere = (cond, level = 1) => {\n            let op;\n            switch (cond.op) {\n                case '=':\n                    op = '=';\n                    break;\n                case '!=':\n                    op = '<>';\n                    break;\n                case '>':\n                    op = '>';\n                    break;\n                case '<':\n                    op = '<';\n                    break;\n                case '>=':\n                    op = '>=';\n                    break;\n                case '<=':\n                    op = '<=';\n                    break;\n                case 'LIKE':\n                    op = 'LIKE';\n                    break;\n                case 'IN':\n                    op = 'IN';\n                    break;\n                case 'IS NULL':\n                    op = 'IS NULL';\n                    break;\n                case 'IS NOT NULL':\n                    op = 'IS NOT NULL';\n                    break;\n            }\n            if (op === 'IN') {\n                sql += ` ${cond.field} ${op} (${cond.value.map(() => '$').join(', ')})`;\n                params.push(...cond.value);\n            } else {\n                const field = cond.field;\n                let value = cond.value;\n                if (Array.isArray(value)) {\n                    sql += ` ${field} ${op} (${\n                        Array(cond.value.length)\n                            .fill()\n                            .map(() => '$')\n                            .join(', ')\n                    })`;\n                    params.push(...value);\n                } else {\n                    sql += ` ${field} ${op} $${params.length + 1}`;\n                    params.push(value);\n                }\n            }\n            if (level > 1 && cond.AND) {\n                appendWhere(cond.AND[0]);\n                for (let i = 1; i < cond.AND.length; i++) {\n                    sql += ` ${cond.AND[i].type.toUpperCase()} `;\n                    appendWhere(cond.AND[i]);\n                }\n            } else if (level > 1 && cond.OR) {\n                sql += ' OR ';\n                appendWhere(cond.OR[0]);\n                for (let i = 1; i < cond.OR.length; i++) {\n                    sql += ` ${cond.OR[i].type.toUpperCase()} `;\n                    appendWhere(cond.OR[i]);\n                }\n            } else if (level === 1) {\n                sql += ' ';\n            }\n        };\n        appendWhere(where);\n    }\n\n    if (groupBy && groupBy.length > 0) {\n        sql += ` GROUP BY ${groupBy.join(', ')}`;\n    }\n\n    if (orderBy && orderBy.length > 0) {\n        sql += ' ORDER BY';\n        for (let i = 0; i < orderBy.length; i++) {\n            const { field, dir = 'ASC' } = orderBy[i];\n            sql += ` ${field} ${dir.toUpperCase()}`;\n            if (i < orderBy.length - 1) {\n                sql += ', ';\n            }\n        }\n    }\n\n    if (limit !== undefined) {\n        sql += ` LIMIT ${limit}`;\n    }\n\n    if (offset !== undefined) {\n        sql += ` OFFSET ${offset || 0}`;\n    }\n\n    return { sql, params };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 490,
+    "completion_tokens": 809,
+    "total_tokens": 1299,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

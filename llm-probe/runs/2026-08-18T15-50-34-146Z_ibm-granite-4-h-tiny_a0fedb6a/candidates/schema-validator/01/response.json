@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-00z5iwc07miwhw745p8ye3g",
+  "object": "chat.completion",
+  "created": 1787068294,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const { schema, data } = input;\n  const errors = {};\n\n  for (const [field, fieldSchema] of Object.entries(schema)) {\n    if (!data[field]) {\n      if (fieldSchema.required) {\n        if (!(errors[field] || (errors[field] = [])))\n          errors[field] = ['Required'];\n      }\n      continue;\n    }\n\n    const value = data[field];\n    const { type, min, max, pattern } = fieldSchema;\n\n    switch (type) {\n      case 'string':\n        if (typeof value !== 'string') {\n          errors[field] = ['Invalid type'];\n          break;\n        }\n        if (pattern && !new RegExp(pattern).test(value)) {\n          errors[field] = ['Invalid format'];\n          break;\n        }\n        if (min != null && value.length < min) {\n          if (!(errors[field] || (errors[field] = [])))\n            errors[field] = ['Too short'];\n        }\n        if (max != null && value.length > max) {\n          if (!(errors[field] || (errors[field] = [])))\n            errors[field] = ['Too long'];\n        }\n        break;\n      case 'number':\n        if (typeof value !== 'number') {\n          errors[field] = ['Invalid type'];\n          break;\n        }\n        if (min != null && value < min) {\n          if (!(errors[field] || (errors[field] = [])))\n            errors[field] = ['Too small'];\n        }\n        if (max != null && value > max) {\n          if (!(errors[field] || (errors[field] = [])))\n            errors[field] = ['Too large'];\n        }\n        break;\n      case 'boolean':\n        if (typeof value !== 'boolean') {\n          errors[field] = ['Invalid type'];\n          break;\n        }\n        break;\n      case 'array':\n        if (!Array.isArray(value)) {\n          errors[field] = ['Invalid type'];\n          break;\n        }\n        if (min != null && value.length < min) {\n          if (!(errors[field] || (errors[field] = [])))\n            errors[field] = ['Too few items'];\n        }\n        if (max != null && value.length > max) {\n          if (!(errors[field] || (errors[field] = [])))\n            errors[field] = ['Too many items'];\n        }\n        break;\n    }\n  }\n\n  return { valid: Object.keys(errors).length === 0, errors };\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 337,
+    "completion_tokens": 513,
+    "total_tokens": 850,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

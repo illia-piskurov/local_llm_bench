@@ -1,0 +1,25 @@
+Compile a JSON query AST in input.query into a parameterized SQL string and params array.
+AST Structure:
+- table: string (e.g. 'users')
+- select: array of column strings (e.g. ['id', 'name']) or alias objects { expr: string, as: string }. Default ['*'].
+- joins: optional array of { type?: 'INNER'|'LEFT'|'RIGHT', table: string, on: { [leftCol: string]: string } }.
+- where: optional condition object with recursive AND/OR or { field: string, op: string, value: any }.
+  Supported ops: '=', '!=', '>', '<', '>=', '<=', 'LIKE', 'IN', 'IS NULL', 'IS NOT NULL'.
+  - For 'IS NULL' / 'IS NOT NULL', do not add a parameter.
+  - For 'IN', value is an array, produce `field IN ($1, $2)`.
+  - For other ops, add parameter `$n`.
+- groupBy: optional array of column strings.
+- orderBy: optional array of { field: string, dir?: 'ASC'|'DESC' } (default 'ASC').
+- limit: optional number.
+- offset: optional number.
+Placeholders are numbered sequentially starting at $1, $2...
+Return { sql: string, params: any[] }.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"query":{"table":"users","select":["id","email"],"where":{"AND":[{"field":"status","op":"=","value":"active"},{"OR":[{"field":"role","op":"=","value":"admin"},{"field":"age","op":">=","value":21}]}]},"orderBy":[{"field":"created_at","dir":"DESC"}],"limit":10}}
+output: {"sql":"SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3)) ORDER BY created_at DESC LIMIT 10","params":["active","admin",21]}

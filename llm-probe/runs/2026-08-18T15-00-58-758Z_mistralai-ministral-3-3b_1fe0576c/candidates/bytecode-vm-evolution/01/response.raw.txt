@@ -1,0 +1,105 @@
+```javascript
+export function solve(input) {
+    const program = input.program;
+    const lines = program.split('\n');
+    let stack = [];
+    let output = [];
+    let labels = new Map();
+    let pc = 0; // Program counter
+    let stepCount = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line || line.startsWith('#')) continue;
+        const parts = line.split(/\s+/);
+        const instruction = parts[0];
+
+        // Parse label
+        if (instruction === 'LABEL') {
+            labels.set(parts[1], i + 1); // Store 1-based line number
+            continue;
+        }
+
+        // Execute instruction
+        try {
+            stepCount++;
+            if (stepCount > 1000) throw new Error("Execution step limit exceeded");
+
+            switch (instruction) {
+                case 'PUSH':
+                    stack.push(parseInt(parts[1]));
+                    break;
+                case 'POP':
+                    if (stack.length === 0) throw new Error(`Stack underflow at line ${i + 1}`);
+                    stack.pop();
+                    break;
+                case 'ADD':
+                    if (stack.length < 2) throw new Error(`Stack underflow at line ${i + 1}`);
+                    const b = stack.pop(), a = stack.pop();
+                    stack.push(a + b);
+                    break;
+                case 'SUB':
+                    if (stack.length < 2) throw new Error(`Stack underflow at line ${i + 1}`);
+                    const c = stack.pop(), d = stack.pop();
+                    stack.push(d - c);
+                    break;
+                case 'MUL':
+                    if (stack.length < 2) throw new Error(`Stack underflow at line ${i + 1}`);
+                    const e = stack.pop(), f = stack.pop();
+                    stack.push(e * f);
+                    break;
+                case 'DIV':
+                    if (stack.length < 2) throw new Error(`Stack underflow at line ${i + 1}`);
+                    const g = stack.pop(), h = stack.pop();
+                    if (g === 0) throw new Error(`Division by zero at line ${i + 1}`);
+                    stack.push(Math.trunc(h / g));
+                    break;
+                case 'DUP':
+                    if (stack.length === 0) throw new Error(`Stack underflow at line ${i + 1}`);
+                    const top = stack[stack.length - 1];
+                    stack.push(top);
+                    break;
+                case 'SWAP':
+                    if (stack.length < 2) throw new Error(`Stack underflow at line ${i + 1}`);
+                    const last = stack.pop();
+                    const secondLast = stack.pop();
+                    stack.push(last, secondLast);
+                    break;
+                case 'PRINT':
+                    if (stack.length === 0) throw new Error(`Stack underflow at line ${i + 1}`);
+                    output.push(stack[stack.length - 1].toString());
+                    break;
+                case 'JMP':
+                    const jumpLabel = parts[1];
+                    if (!labels.has(jumpLabel)) throw new Error(`Unknown label '${jumpLabel}'`);
+                    pc = labels.get(jumpLabel) - 1; // Convert to 0-based
+                    continue;
+                case 'JZ':
+                    if (stack.length === 0) throw new Error(`Stack underflow at line ${i + 1}`);
+                    const zeroVal = stack.pop();
+                    if (zeroVal === 0 && labels.has(parts[1])) {
+                        pc = labels.get(parts[1]) - 1;
+                    }
+                    continue;
+                case 'JNZ':
+                    if (stack.length === 0) throw new Error(`Stack underflow at line ${i + 1}`);
+                    const nonZeroVal = stack.pop();
+                    if (nonZeroVal !== 0 && labels.has(parts[1])) {
+                        pc = labels.get(parts[1]) - 1;
+                    }
+                    continue;
+                default:
+                    throw new Error(`Unknown instruction '${instruction}' at line ${i + 1}`);
+            }
+
+            // Move to next instruction
+            if (pc >= lines.length) break;
+            pc++;
+        } catch (error) {
+            return { output, error: error.message };
+        }
+    }
+
+    return { output };
+}
+```

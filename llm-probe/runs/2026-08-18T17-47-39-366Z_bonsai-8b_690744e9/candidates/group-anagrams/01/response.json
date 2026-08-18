@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-14ggxazv1s6mcwpe7jrj49",
+  "object": "chat.completion",
+  "created": 1787075542,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const groups = {};\n  \n  for (const word of input.words) {\n    const key = word.sort().join('');\n    \n    if (!groups[key]) {\n      groups[key] = [];\n    }\n    \n    groups[key].push(word);\n  }\n\n  const sortedGroups = Object.entries(groups).reduce((acc, [key, value]) => {\n    acc[key] = [...value].sort();\n    return acc;\n  }, {});\n\n  const sortedKeys = Object.keys(sortedGroups).sort();\n\n  const result = {};\n  \n  for (const key of sortedKeys) {\n    result[key] = sortedGroups[key];\n  }\n\n  return result;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 147,
+    "completion_tokens": 139,
+    "total_tokens": 286,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

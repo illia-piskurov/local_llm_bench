@@ -1,0 +1,34 @@
+{
+  "status": "runtime_error",
+  "passed": 5,
+  "total": 8,
+  "tests": [
+    {
+      "id": "primitives-eq",
+      "passed": true
+    },
+    {
+      "id": "primitives-neq",
+      "passed": false,
+      "error": "Expected false, got true"
+    },
+    {
+      "id": "null",
+      "passed": true
+    },
+    {
+      "id": "null-vs-obj",
+      "passed": true
+    },
+    {
+      "id": "arrays",
+      "passed": true
+    },
+    {
+      "id": "array-length",
+      "passed": true
+    }
+  ],
+  "durationMs": 22,
+  "error": "cannot convert to object"
+}

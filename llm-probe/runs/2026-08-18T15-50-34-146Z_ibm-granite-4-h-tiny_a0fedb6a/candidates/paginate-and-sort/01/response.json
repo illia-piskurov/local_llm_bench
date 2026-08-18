@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-060r5uznmgva44bhl6i94ta",
+  "object": "chat.completion",
+  "created": 1787068239,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const items = input.items;\n  const filter = input.filter;\n  const sort = input.sort;\n  const page = input.page || 1;\n  const pageSize = input.pageSize || 10;\n\n  let filteredItems = [...items];\n  if (filter) {\n    const { field, op, value } = filter;\n    switch (op) {\n      case 'eq':\n        filteredItems = filteredItems.filter(item => item[field] === value);\n        break;\n      case 'neq':\n        filteredItems = filteredItems.filter(item => item[field] !== value);\n        break;\n      case 'gt':\n        filteredItems = filteredItems.filter(item => item[field] > value);\n        break;\n      case 'gte':\n        filteredItems = filteredItems.filter(item => item[field] >= value);\n        break;\n      case 'lt':\n        filteredItems = filteredItems.filter(item => item[field] < value);\n        break;\n      case 'lte':\n        filteredItems = filteredItems.filter(item => item[field] <= value);\n        break;\n      case 'contains':\n        filteredItems = filteredItems.filter(\n          item =>\n            String(item[field]).toLowerCase().includes(String(value).toLowerCase())\n        );\n        break;\n    }\n  }\n\n  let sortedItems = [...filteredItems];\n  if (sort) {\n    const { field, dir } = sort;\n    const reverse = dir === 'desc';\n    sortedItems.sort((a, b) => {\n      const valueA = a[field];\n      const valueB = b[field];\n      return reverse ? compare(valueB, valueA) : compare(valueA, valueB);\n    });\n  }\n\n  const total = sortedItems.length;\n  const totalPages = Math.ceil(total / pageSize);\n\n  const startIndex = (page - 1) * pageSize;\n  const endIndex = Math.min(startIndex + pageSize, total);\n  const paginatedItems = sortedItems.slice(startIndex, endIndex);\n\n  return {\n    items: paginatedItems,\n    total,\n    page,\n    totalPages\n  };\n}\n\nfunction compare(a, b) {\n  if (a < b) return -1;\n  if (a > b) return 1;\n  return 0;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 373,
+    "completion_tokens": 456,
+    "total_tokens": 829,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

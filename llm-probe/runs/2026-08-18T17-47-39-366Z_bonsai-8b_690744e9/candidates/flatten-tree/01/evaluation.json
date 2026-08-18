@@ -1,0 +1,18 @@
+{
+  "status": "runtime_error",
+  "passed": 1,
+  "total": 4,
+  "tests": [
+    {
+      "id": "null",
+      "passed": true
+    },
+    {
+      "id": "single",
+      "passed": false,
+      "error": "Expected [42], got []"
+    }
+  ],
+  "durationMs": 24,
+  "error": "cannot read property 'left' of null"
+}

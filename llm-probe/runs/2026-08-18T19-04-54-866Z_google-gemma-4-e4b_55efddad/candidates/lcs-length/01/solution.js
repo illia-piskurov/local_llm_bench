@@ -1,0 +1,26 @@
+export function solve(input) {
+    const s1 = input.a;
+    const s2 = input.b;
+    const m = s1.length;
+    const n = s2.length;
+
+    // dp[i][j] stores the length of LCS of s1[0...i-1] and s2[0...j-1]
+    // We use m+1 and n+1 dimensions for easier indexing (handling empty prefixes)
+    const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (s1[i - 1] === s2[j - 1]) {
+                // If characters match, extend the LCS from the previous diagonal position
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                // If they don't match, take the maximum of:
+                // 1. Excluding s1[i-1] (move up)
+                // 2. Excluding s2[j-1] (move left)
+                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+    }
+
+    return dp[m][n];
+}

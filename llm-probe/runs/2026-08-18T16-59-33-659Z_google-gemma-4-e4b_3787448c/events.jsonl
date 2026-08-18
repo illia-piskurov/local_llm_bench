@@ -1,0 +1,69 @@
+{"at":"2026-08-18T16:59:33.662Z","type":"run_started"}
+{"at":"2026-08-18T16:59:33.666Z","type":"request_started","taskId":"flat-to-tree","attempt":1}
+{"at":"2026-08-18T17:01:33.689Z","type":"provider_error","taskId":"flat-to-tree","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:01:33.693Z","type":"request_started","taskId":"paginate-and-sort","attempt":1}
+{"at":"2026-08-18T17:03:33.712Z","type":"provider_error","taskId":"paginate-and-sort","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:03:33.717Z","type":"request_started","taskId":"deep-merge","attempt":1}
+{"at":"2026-08-18T17:05:33.740Z","type":"provider_error","taskId":"deep-merge","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:05:33.743Z","type":"request_started","taskId":"csv-parse","attempt":1}
+{"at":"2026-08-18T17:07:33.764Z","type":"provider_error","taskId":"csv-parse","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:07:33.768Z","type":"request_started","taskId":"render-template","attempt":1}
+{"at":"2026-08-18T17:09:33.788Z","type":"provider_error","taskId":"render-template","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:09:33.792Z","type":"request_started","taskId":"shopping-cart","attempt":1}
+{"at":"2026-08-18T17:10:58.070Z","type":"response_received","taskId":"shopping-cart","attempt":1,"detail":{"durationMs":84277,"finishReason":"stop","usage":{"prompt_tokens":474,"completion_tokens":1084,"total_tokens":1558,"completion_tokens_details":{"reasoning_tokens":413}}}}
+{"at":"2026-08-18T17:10:58.169Z","type":"evaluation_finished","taskId":"shopping-cart","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-18T17:10:58.170Z","type":"request_started","taskId":"query-string-parser","attempt":1}
+{"at":"2026-08-18T17:12:58.185Z","type":"provider_error","taskId":"query-string-parser","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:12:58.188Z","type":"request_started","taskId":"schema-validator","attempt":1}
+{"at":"2026-08-18T17:14:58.205Z","type":"provider_error","taskId":"schema-validator","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:14:58.208Z","type":"request_started","taskId":"state-reducer","attempt":1}
+{"at":"2026-08-18T17:16:58.237Z","type":"provider_error","taskId":"state-reducer","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:16:58.240Z","type":"request_started","taskId":"rbac-checker","attempt":1}
+{"at":"2026-08-18T17:18:40.187Z","type":"response_received","taskId":"rbac-checker","attempt":1,"detail":{"durationMs":101945,"finishReason":"stop","usage":{"prompt_tokens":397,"completion_tokens":1313,"total_tokens":1710,"completion_tokens_details":{"reasoning_tokens":548}}}}
+{"at":"2026-08-18T17:18:40.308Z","type":"evaluation_finished","taskId":"rbac-checker","attempt":1,"detail":{"status":"passed","passed":3,"total":3}}
+{"at":"2026-08-18T17:18:40.309Z","type":"request_started","taskId":"i18n-pluralize","attempt":1}
+{"at":"2026-08-18T17:20:40.333Z","type":"provider_error","taskId":"i18n-pluralize","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:20:40.336Z","type":"request_started","taskId":"sql-query-builder","attempt":1}
+{"at":"2026-08-18T17:22:40.357Z","type":"provider_error","taskId":"sql-query-builder","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:22:40.360Z","type":"request_started","taskId":"json-schema-deref-validate","attempt":1}
+{"at":"2026-08-18T17:24:40.380Z","type":"provider_error","taskId":"json-schema-deref-validate","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:24:40.383Z","type":"request_started","taskId":"cron-next-runs","attempt":1}
+{"at":"2026-08-18T17:26:40.397Z","type":"provider_error","taskId":"cron-next-runs","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:26:40.399Z","type":"request_started","taskId":"longest-substring-no-repeat","attempt":1}
+{"at":"2026-08-18T17:26:54.895Z","type":"response_received","taskId":"longest-substring-no-repeat","attempt":1,"detail":{"durationMs":14495,"finishReason":"stop","usage":{"prompt_tokens":127,"completion_tokens":206,"total_tokens":333,"completion_tokens_details":{"reasoning_tokens":0}}}}
+{"at":"2026-08-18T17:26:54.988Z","type":"evaluation_finished","taskId":"longest-substring-no-repeat","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-18T17:26:54.990Z","type":"request_started","taskId":"group-anagrams","attempt":1}
+{"at":"2026-08-18T17:28:49.095Z","type":"response_received","taskId":"group-anagrams","attempt":1,"detail":{"durationMs":114117,"finishReason":"stop","usage":{"prompt_tokens":155,"completion_tokens":1683,"total_tokens":1838,"completion_tokens_details":{"reasoning_tokens":1264}}}}
+{"at":"2026-08-18T17:28:49.188Z","type":"evaluation_finished","taskId":"group-anagrams","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-18T17:28:49.189Z","type":"request_started","taskId":"top-k-frequent","attempt":1}
+{"at":"2026-08-18T17:29:13.789Z","type":"response_received","taskId":"top-k-frequent","attempt":1,"detail":{"durationMs":24600,"finishReason":"stop","usage":{"prompt_tokens":147,"completion_tokens":341,"total_tokens":488,"completion_tokens_details":{"reasoning_tokens":0}}}}
+{"at":"2026-08-18T17:29:13.885Z","type":"evaluation_finished","taskId":"top-k-frequent","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-18T17:29:13.886Z","type":"request_started","taskId":"merge-intervals","attempt":1}
+{"at":"2026-08-18T17:31:04.706Z","type":"response_received","taskId":"merge-intervals","attempt":1,"detail":{"durationMs":110820,"finishReason":"stop","usage":{"prompt_tokens":172,"completion_tokens":1553,"total_tokens":1725,"completion_tokens_details":{"reasoning_tokens":1214}}}}
+{"at":"2026-08-18T17:31:04.799Z","type":"evaluation_finished","taskId":"merge-intervals","attempt":1,"detail":{"status":"passed","passed":6,"total":6}}
+{"at":"2026-08-18T17:31:04.800Z","type":"request_started","taskId":"flatten-tree","attempt":1}
+{"at":"2026-08-18T17:32:07.236Z","type":"response_received","taskId":"flatten-tree","attempt":1,"detail":{"durationMs":62422,"finishReason":"stop","usage":{"prompt_tokens":186,"completion_tokens":847,"total_tokens":1033,"completion_tokens_details":{"reasoning_tokens":640}}}}
+{"at":"2026-08-18T17:32:07.328Z","type":"evaluation_finished","taskId":"flatten-tree","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-18T17:32:07.330Z","type":"request_started","taskId":"shortest-path-grid","attempt":1}
+{"at":"2026-08-18T17:33:43.044Z","type":"response_received","taskId":"shortest-path-grid","attempt":1,"detail":{"durationMs":95714,"finishReason":"stop","usage":{"prompt_tokens":168,"completion_tokens":1352,"total_tokens":1520,"completion_tokens_details":{"reasoning_tokens":829}}}}
+{"at":"2026-08-18T17:33:43.111Z","type":"evaluation_finished","taskId":"shortest-path-grid","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-18T17:33:43.112Z","type":"request_started","taskId":"lcs-length","attempt":1}
+{"at":"2026-08-18T17:34:02.405Z","type":"response_received","taskId":"lcs-length","attempt":1,"detail":{"durationMs":19292,"finishReason":"stop","usage":{"prompt_tokens":131,"completion_tokens":358,"total_tokens":489,"completion_tokens_details":{"reasoning_tokens":0}}}}
+{"at":"2026-08-18T17:34:02.477Z","type":"evaluation_finished","taskId":"lcs-length","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-18T17:34:02.478Z","type":"request_started","taskId":"topological-sort","attempt":1}
+{"at":"2026-08-18T17:35:40.123Z","type":"response_received","taskId":"topological-sort","attempt":1,"detail":{"durationMs":97644,"finishReason":"stop","usage":{"prompt_tokens":176,"completion_tokens":1796,"total_tokens":1972,"completion_tokens_details":{"reasoning_tokens":1326}}}}
+{"at":"2026-08-18T17:35:40.200Z","type":"evaluation_finished","taskId":"topological-sort","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-18T17:35:40.201Z","type":"request_started","taskId":"rotate-square-matrix","attempt":1}
+{"at":"2026-08-18T17:36:01.116Z","type":"response_received","taskId":"rotate-square-matrix","attempt":1,"detail":{"durationMs":20915,"finishReason":"stop","usage":{"prompt_tokens":146,"completion_tokens":306,"total_tokens":452,"completion_tokens_details":{"reasoning_tokens":0}}}}
+{"at":"2026-08-18T17:36:01.190Z","type":"evaluation_finished","taskId":"rotate-square-matrix","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-18T17:36:01.191Z","type":"request_started","taskId":"validate-sudoku-board","attempt":1}
+{"at":"2026-08-18T17:36:33.713Z","type":"response_received","taskId":"validate-sudoku-board","attempt":1,"detail":{"durationMs":32522,"finishReason":"stop","usage":{"prompt_tokens":207,"completion_tokens":424,"total_tokens":631,"completion_tokens_details":{"reasoning_tokens":0}}}}
+{"at":"2026-08-18T17:36:33.802Z","type":"evaluation_finished","taskId":"validate-sudoku-board","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-18T17:36:33.803Z","type":"request_started","taskId":"deep-equal","attempt":1}
+{"at":"2026-08-18T17:37:30.985Z","type":"response_received","taskId":"deep-equal","attempt":1,"detail":{"durationMs":57186,"finishReason":"stop","usage":{"prompt_tokens":165,"completion_tokens":671,"total_tokens":836,"completion_tokens_details":{"reasoning_tokens":0}}}}
+{"at":"2026-08-18T17:37:31.062Z","type":"evaluation_finished","taskId":"deep-equal","attempt":1,"detail":{"status":"passed","passed":8,"total":8}}
+{"at":"2026-08-18T17:37:31.063Z","type":"request_started","taskId":"bytecode-vm-evolution","attempt":1}
+{"at":"2026-08-18T17:39:31.085Z","type":"provider_error","taskId":"bytecode-vm-evolution","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:39:31.088Z","type":"request_started","taskId":"event-emitter-evolution","attempt":1}
+{"at":"2026-08-18T17:41:31.126Z","type":"provider_error","taskId":"event-emitter-evolution","attempt":1,"detail":{"message":"Request to http://127.0.0.1:1234/v1 timed out after 120000ms","name":"ProviderError"}}
+{"at":"2026-08-18T17:41:31.130Z","type":"run_finished","detail":{"status":"completed"}}

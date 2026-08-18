@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-q7wyjfrxy3gzg2m7sx1ee",
+  "object": "chat.completion",
+  "created": 1787075259,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const nodes = Object.entries(input.nodes).map(([_, node]) => ({ ...node, id: Number(node.id), name: node.name, parentId: Number(node.parentId) }));\n\n  const nodeMap = new Map();\n  for (const node of nodes) {\n    nodeMap.set(Number(node.id), node);\n  }\n\n  const rootNodes = [];\n  for (const [id, node] of entries(nodeMap)) {\n    if (node && node.getParentId() === null) {\n      rootNodes.push({ ...node, children: [] });\n    }\n  }\n\n  nodes.forEach((node) => {\n    if (node.parentId !== null) {\n      const parent = nodeMap.get(Number(node.parentId));\n      if (parent) {\n        parent.children.push({ ...node, parentId: node.getParentId() });\n      }\n    }\n  });\n\n  return rootNodes;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 290,
+    "completion_tokens": 187,
+    "total_tokens": 477,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

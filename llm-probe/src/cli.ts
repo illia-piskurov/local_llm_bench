@@ -106,8 +106,9 @@ async function main(): Promise<void> {
     return showReport(selector, runsDir);
   }
   if (command === "leaderboard" || command === "lb") {
-    const md = await syncLeaderboard(runsDir);
-    console.log(md);
+    const { markdown, htmlPath } = await syncLeaderboard(runsDir);
+    console.log(markdown);
+    console.log(`\nHTML leaderboard: ${htmlPath}`);
     return;
   }
   if (command === "inspect") return inspect(positionals[1], values.task?.[0], values.sample, runsDir);

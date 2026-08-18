@@ -1,0 +1,40 @@
+```javascript
+export function solve(input) {
+  const { items, coupon, taxRate } = input;
+  let subtotal = 0;
+  let discount = 0;
+
+  // Calculate subtotal
+  items.forEach(item => {
+    subtotal += item.price * item.qty;
+  });
+
+  // Apply coupon discount if provided
+  if (coupon) {
+    const { type, value } = coupon;
+    if (type === 'percent') {
+      discount = subtotal * (value / 100);
+    } else if (type === 'fixed') {
+      discount = Math.min(subtotal - 15, 15);
+    }
+  }
+
+  // Apply category-specific discount
+  const categoryDiscounts = {};
+  items.forEach(item => {
+    const category = item.category || '';
+    if (category === 'food' && categoryDiscounts[category]) {
+      discount += subtotal * categoryDiscounts[category];
+    }
+  });
+
+  // Calculate tax
+  const taxAmount = (subtotal - discount) * taxRate;
+  tax = Math.round(taxAmount / 100) * taxRate;
+
+  // Final total
+  const total = Math.round((subtotal - discount + tax) * 100) / 100;
+
+  return { subtotal, discount, tax, total };
+}
+```

@@ -1,0 +1,27 @@
+```javascript
+export function solve(input) {
+  const { roles, users, requests } = input;
+  const denyRules = roles[users.user]?.denies || [];
+  const allowRules = users.roles?.includes('*') ? [] : users.roles;
+
+  const results = requests.map(({ user, permission }) => {
+    const userRoles = roles[user] || [];
+    let matches = false;
+    if (allowRules.length > 0) {
+      for (const role of allowRules) {
+        if (role === '*' || role.includes(permission)) {
+          matches = true;
+          break;
+        }
+      }
+    } else if (denyRules.length > 0) {
+      const denyMatch = denyRules.some(d => permission === d);
+      matches = !denyMatch;
+    } else {
+      matches = userRoles.includes(permission) || userRoles.includes('*');
+    }
+    return matches;
+  });
+  return results;
+}
+```
