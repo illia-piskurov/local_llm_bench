@@ -1,0 +1,16 @@
+export function solve(input) {
+    const words = new Set(input.words);
+    const anagramGroups = {};
+
+    for (const word of words) {
+        const key = [...word].sort().join('');
+        if (!anagramGroups[key]) {
+            anagramGroups[key] = [];
+        }
+        anagramGroups[key].push(word);
+    }
+
+    return Object.values(anagramGroups)
+        .map(group => group.sort())
+        .sort((a, b) => a[0].localeCompare(b[0]));
+}

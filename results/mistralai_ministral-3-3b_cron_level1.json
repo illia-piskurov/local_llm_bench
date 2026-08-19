@@ -1,0 +1,17 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "cron",
+  "level": "level1",
+  "tested_at": "2026-08-19 14:17:34",
+  "passed": 0,
+  "total": 7,
+  "failures": [
+    "hourly_zero_minute: исключение/таймаут: can't compare offset-naive and offset-aware datetimes",
+    "exact_daily_time: исключение/таймаут: can't compare offset-naive and offset-aware datetimes",
+    "minute_list: исключение/таймаут: can't compare offset-naive and offset-aware datetimes",
+    "hour_range: исключение/таймаут: can't compare offset-naive and offset-aware datetimes",
+    "first_of_month: исключение/таймаут: can't compare offset-naive and offset-aware datetimes",
+    "specific_day_of_week: исключение/таймаут: can't compare offset-naive and offset-aware datetimes",
+    "strictly_after_exact_match: исключение/таймаут: can't compare offset-naive and offset-aware datetimes"
+  ]
+}

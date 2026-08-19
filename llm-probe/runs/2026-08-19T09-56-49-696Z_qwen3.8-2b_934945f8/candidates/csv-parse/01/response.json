@@ -1,0 +1,33 @@
+{
+  "id": "chatcmpl-6wrofo0p8ebomy6dlh6fj",
+  "object": "chat.completion",
+  "created": 1787133547,
+  "model": "qwen3.8-2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\n/**\n * Parse a CSV string into an array of object rows.\n * @param {string} csv - The CSV content as a single string\n * @returns {object[]|null|null[]} A JSON-compatible array of parsed objects, or empty arrays based on rules.\n */\nexport function solve(input) {\n  if (!input || input.trim() === '') return [];\n\n  const lines = input.split('\\n');\n  const result = [];\n\n  for (const line of lines) {\n    if (line.length === 0) continue;\n\n    const parsed = parseRow(line);\n    if (parsed) {\n      result.push(parsed.map(field => JSON.stringify(field)));\n    }\n  }\n\n  return result.length > 1 ? result : null;\n}\n\n/**\n * Parses a single CSV row into an array of value strings.\n * Handles quoted fields with escaped quotes (\"\") and unquoted values with whitespace trimming.\n * @param {string} line - A single line from the CSV input\n * @returns {object[]} Parsed object rows (may be empty)\n */\nfunction parseRow(line) {\n  const result = [];\n\n  let currentField = '';\n  let inQuotes = false;\n  let escapePending = true; // track if we're inside a quote and need to handle escapes\n\n  for (const ch of line) {\n    if (escapePending) {\n      currentField += ch;\n      escapePending = false;\n    } else if (ch === '\"') {\n      currentField += ch;\n\n      if (!inQuotes && !escapePending) {\n        inQuotes = true;\n        continue; // keep processing the quote, not ending field here yet\n      }\n\n      if (currentField.endsWith('\"')) {\n        result.push({ [currentField.slice(0, -1)]: '' });\n        currentField += '';\n        escapePending = false;\n      } else {\n        inQuotes = true;\n        continue; // keep processing the quote, not ending field here yet\n      }\n\n      if (escapePending) {\n        currentField += ch;\n        escapePending = true;\n      }\n    } else {\n      if (!inQuotes && !escapePending) {\n        const trimmed = currentField.trim();\n        if (trimmed.length > 0) {\n          result.push({ [currentField]: '' });\n        }\n        result[0] = trimFields(result, currentField);\n      }\n\n      escapePending = false;\n      currentField += ch;\n    }\n  }\n\n  // Handle last field (may be incomplete if line doesn't end with newline)\n  const trimmedCurrent = currentField.trim();\n  if (trimmedCurrent.length > 0 && !inQuotes) {\n    result.push({ [currentField]: '' });\n  }\n\n  return trimFields(result, currentField);\n}\n\n/**\n * Trims whitespace from the start and end of each field in the array.\n * @param {string[]} arr - Array of strings to trim\n * @param {string} prefix - The prefix value (current field)\n * @returns {object[]} Trimmed result\n */\nfunction trimFields(arr, prefix) {\n  const trimmed = [];\n\n  for (const field of arr) {\n    if (!field.startsWith(prefix)) {\n      trimmed.push({ [prefix]: '' });\n    } else {\n      trimmed[0] = trimFields(trimmed, field.slice(prefix.length));\n    }\n  }\n\n  return trimmed;\n}\n\n// === Testing (for verification) ===\nconsole.log(solve('name,age,city\\nAlice,30,New York'));\n// Expected: [{\"name\":\"Alice\",\"age\":\"30\",\"city\":\"New York\"}]\n\nconsole.log(solve('\"Smith, Bob\",25,\"Los \"\"Angeles\"\"\"}}');\n// Expected: [{\"name\":\"Smith, Bob\",\"age\":\"25\",\"city\":\"Los \\\"Angeles\\\"\"}]\n```\n\n**Time complexity:** O(n) where n is the total number of characters in the input string — each character is visited a constant number of times.\n\n**Space complexity:** O(n) for storing intermediate fields and the result array.",
+        "reasoning_content": "The problem requires parsing a CSV string into an array of objects.\n\nKey rules to implement:\n1. Split by `\\n` (newline) - ignore empty rows at the end\n2. Handle quoted fields with escaped quotes (`\"\"` = `\"`)\n3. Trim unquoted values, preserve whitespace in quoted ones\n4. Return `[]` for empty input or only header row\n\nThe algorithm:\n- Read CSV as a string\n- Split by newline\n- For each non-empty line, parse it field by field using the standard CSV parser (handling quotes and escaped quotes)\n- Build result array of objects\n\nI'll use the classic RFC 4180 CSV parsing approach with state machine logic for parsing quoted fields.\n",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 274,
+    "completion_tokens": 1067,
+    "total_tokens": 1341,
+    "completion_tokens_details": {
+      "reasoning_tokens": 152
+    }
+  },
+  "stats": {
+    "total_draft_tokens_count": 577,
+    "accepted_draft_tokens_count": 498,
+    "rejected_draft_tokens_count": 79
+  },
+  "system_fingerprint": "qwen3.8-2b"
+}

@@ -1,0 +1,14 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-08-19 13:58:37",
+  "passed": 2,
+  "total": 6,
+  "failures": [
+    "simple_where_equality: SQL: ожидали 'SELECT * FROM users WHERE status = $1', получили 'SELECT * FROM users WHERE field = ${len(params)}'; params: ожидали ['active'], получили ['status']",
+    "where_and_or_nested: SQL: ожидали 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', получили 'SELECT id, email FROM users WHERE (field = ${len(params)}) {op.upper()} ((field = ${len(params)}) {op.upper()} (field = ${len(params)}))'; params: ожидали ['active', 'admin', 21], получили ['status', 'role', 'age']",
+    "order_by_limit_offset: исключение/таймаут: string indices must be integers, not 'str'",
+    "multiple_and_conditions: SQL: ожидали 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', получили 'SELECT * FROM logs WHERE (field = ${len(params)}) {op.upper()} (field = ${len(params)}) {op.upper()} (field = ${len(params)})'; params: ожидали ['error', 404, 1000], получили ['level', 'code', 'timestamp']"
+  ]
+}

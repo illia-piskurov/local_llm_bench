@@ -1,0 +1,22 @@
+{
+  "status": "failed",
+  "passed": 1,
+  "total": 3,
+  "tests": [
+    {
+      "id": "simple-select-all",
+      "passed": true
+    },
+    {
+      "id": "select-with-expr-and-joins",
+      "passed": false,
+      "error": "Expected {\"sql\":\"SELECT id, COUNT(items.id) AS item_count FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id\",\"params\":[]}, got {\"sql\":\"SELECT * FROM orders\",\"params\":[]}"
+    },
+    {
+      "id": "where-in-and-null-and-offset",
+      "passed": false,
+      "error": "Expected {\"sql\":\"SELECT * FROM users WHERE (id IN ($1, $2, $3) AND deleted_at IS NULL) LIMIT 5 OFFSET 15\",\"params\":[10,20,30]}, got {\"sql\":\"SELECT * FROM users\",\"params\":[]}"
+    }
+  ],
+  "durationMs": 25
+}

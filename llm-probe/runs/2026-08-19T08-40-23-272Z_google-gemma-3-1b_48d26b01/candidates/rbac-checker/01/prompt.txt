@@ -1,0 +1,20 @@
+Check access permissions for an array of requests in input.requests against security configuration.
+Input structure:
+- input.roles: { [roleName]: string[] } (array of permission rules granted by role)
+- input.users: { [userId]: { roles?: string[], allows?: string[], denies?: string[] } }
+- input.requests: Array of { user: string, permission: string }
+Rules:
+1. Explicit denies override everything: if any rule in user's 'denies' matches requested permission, result is false.
+2. Rule matching: exact match ('posts:read'), namespace wildcard ('posts:*' matches any 'posts:...'), or super wildcard ('*' matches anything).
+3. Access is granted (true) if any user's role grants it OR if listed in user's 'allows', unless denied.
+4. If user not found, result is false.
+Return an array of booleans corresponding to each request in input.requests.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"roles":{"viewer":["articles:read"],"admin":["*"]},"users":{"alice":{"roles":["viewer"]},"bob":{"roles":["admin"],"denies":["users:delete"]}},"requests":[{"user":"alice","permission":"articles:read"},{"user":"alice","permission":"articles:write"},{"user":"bob","permission":"articles:write"},{"user":"bob","permission":"users:delete"}]}
+output: [true,false,true,false]

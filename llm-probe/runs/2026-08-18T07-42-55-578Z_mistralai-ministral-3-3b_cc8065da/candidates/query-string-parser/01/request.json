@@ -1,0 +1,16 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Parse a URL query string from input.query (e.g. 'a=1&b[]=x&b[]=y&user[name]=Alice&user[age]=30') into a plain object.\nRules:\n- Strip leading '?' if present. If query is empty, return {}.\n- Pairs are separated by '&'. Keys and values are separated by '='. Decode keys and values using decodeURIComponent. If '=' is omitted, the value is boolean true.\n- Keys ending with '[]' (e.g. tags[]=js&tags[]=ts) collect values into an Array.\n- Keys with nested brackets (e.g. user[address][city]=Paris) create nested plain objects.\n- If a decoded value represents a finite number ('42', '-3.14'), parse it as number. If 'true' or 'false', parse as boolean. Otherwise keep as string.\n- Return the resulting plain object.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"query\":\"?search=laptop&filters[brand]=Apple&tags[]=sale&tags[]=m3&page=1&active=true\"}\noutput: {\"search\":\"laptop\",\"filters\":{\"brand\":\"Apple\"},\"tags\":[\"sale\",\"m3\"],\"page\":1,\"active\":true}"
+    }
+  ],
+  "temperature": 0.2,
+  "max_tokens": 2048,
+  "stream": false
+}

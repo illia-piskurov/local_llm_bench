@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-pnf9opizhbpzgtk1dd8ms",
+  "object": "chat.completion",
+  "created": 1787127671,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const roles = input.roles || {};\n    const users = input.users || {};\n    const requests = input.requests || [];\n\n    return requests.map(request => {\n        const { user, permission } = request;\n\n        // User not found in users -> false\n        if (!users[user]) {\n            return false;\n        }\n\n        const userConfig = users[user];\n        const userRoles = userConfig.roles || [];\n        const userAllows = userConfig.allows || [];\n        const userDenies = userConfig.denies || [];\n\n        // Check for explicit denies\n        for (const deny of userDenies) {\n            if (matchPermission(deny, permission)) {\n                return false;\n            }\n        }\n\n        // Check if permission is explicitly allowed\n        for (const allow of userAllows) {\n            if (matchPermission(allow, permission)) {\n                return true;\n            }\n        }\n\n        // Check if any role grants the permission\n        for (const role of userRoles) {\n            const rolePermissions = roles[role] || [];\n            for (const rolePermission of rolePermissions) {\n                if (matchPermission(rolePermission, permission)) {\n                    return true;\n                }\n            }\n        }\n\n        return false;\n    });\n}\n\nfunction matchPermission(pattern, permission) {\n    // Exact match\n    if (pattern === permission) {\n        return true;\n    }\n\n    // Namespace wildcard: posts:* matches posts:read, posts:write\n    if (pattern.endsWith('*')) {\n        const base = pattern.slice(0, -1);\n        if (permission.startsWith(base)) {\n            return true;\n        }\n    }\n\n    // Super wildcard: * matches anything\n    if (pattern === '*') {\n        return true;\n    }\n\n    return false;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 367,
+    "completion_tokens": 368,
+    "total_tokens": 735,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

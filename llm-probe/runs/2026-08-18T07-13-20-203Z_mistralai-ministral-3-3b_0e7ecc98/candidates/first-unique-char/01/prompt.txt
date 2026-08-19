@@ -1,0 +1,10 @@
+Return the index of the first character that appears exactly once in input.text, or -1 if none exists.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"text":"leetcode"}
+output: 0

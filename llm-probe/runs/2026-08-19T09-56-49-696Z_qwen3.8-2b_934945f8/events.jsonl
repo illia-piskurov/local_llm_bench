@@ -1,0 +1,23 @@
+{"at":"2026-08-19T09:56:49.701Z","type":"run_started"}
+{"at":"2026-08-19T09:56:49.702Z","type":"request_started","taskId":"flat-to-tree","attempt":1}
+{"at":"2026-08-19T09:57:20.864Z","type":"response_received","taskId":"flat-to-tree","attempt":1,"detail":{"durationMs":31161,"finishReason":"stop","usage":{"prompt_tokens":294,"completion_tokens":843,"total_tokens":1137,"completion_tokens_details":{"reasoning_tokens":247}}}}
+{"at":"2026-08-19T09:57:20.955Z","type":"evaluation_finished","taskId":"flat-to-tree","attempt":1,"detail":{"status":"failed","passed":1,"total":4}}
+{"at":"2026-08-19T09:57:20.956Z","type":"request_started","taskId":"paginate-and-sort","attempt":1}
+{"at":"2026-08-19T09:58:25.276Z","type":"response_received","taskId":"paginate-and-sort","attempt":1,"detail":{"durationMs":64308,"finishReason":"stop","usage":{"prompt_tokens":388,"completion_tokens":1852,"total_tokens":2240,"completion_tokens_details":{"reasoning_tokens":161}}}}
+{"at":"2026-08-19T09:58:25.282Z","type":"extract_error","taskId":"paginate-and-sort","attempt":1,"detail":{"message":"Response did not contain export function solve(input)"}}
+{"at":"2026-08-19T09:58:25.283Z","type":"request_started","taskId":"deep-merge","attempt":1}
+{"at":"2026-08-19T09:59:07.608Z","type":"response_received","taskId":"deep-merge","attempt":1,"detail":{"durationMs":42325,"finishReason":"stop","usage":{"prompt_tokens":226,"completion_tokens":1123,"total_tokens":1349,"completion_tokens_details":{"reasoning_tokens":134}}}}
+{"at":"2026-08-19T09:59:07.688Z","type":"evaluation_finished","taskId":"deep-merge","attempt":1,"detail":{"status":"failed","passed":3,"total":4}}
+{"at":"2026-08-19T09:59:07.690Z","type":"request_started","taskId":"csv-parse","attempt":1}
+{"at":"2026-08-19T09:59:48.392Z","type":"response_received","taskId":"csv-parse","attempt":1,"detail":{"durationMs":40709,"finishReason":"stop","usage":{"prompt_tokens":274,"completion_tokens":1067,"total_tokens":1341,"completion_tokens_details":{"reasoning_tokens":152}}}}
+{"at":"2026-08-19T09:59:48.462Z","type":"evaluation_finished","taskId":"csv-parse","attempt":1,"detail":{"status":"compile_error","passed":0,"total":4}}
+{"at":"2026-08-19T09:59:48.463Z","type":"request_started","taskId":"render-template","attempt":1}
+{"at":"2026-08-19T10:00:31.504Z","type":"response_received","taskId":"render-template","attempt":1,"detail":{"durationMs":43041,"finishReason":"stop","usage":{"prompt_tokens":268,"completion_tokens":1095,"total_tokens":1363,"completion_tokens_details":{"reasoning_tokens":105}}}}
+{"at":"2026-08-19T10:00:31.584Z","type":"evaluation_finished","taskId":"render-template","attempt":1,"detail":{"status":"compile_error","passed":0,"total":4}}
+{"at":"2026-08-19T10:00:31.586Z","type":"request_started","taskId":"shopping-cart","attempt":1}
+{"at":"2026-08-19T10:01:48.854Z","type":"response_received","taskId":"shopping-cart","attempt":1,"detail":{"durationMs":77266,"finishReason":"stop","usage":{"prompt_tokens":455,"completion_tokens":2025,"total_tokens":2480,"completion_tokens_details":{"reasoning_tokens":1151}}}}
+{"at":"2026-08-19T10:01:48.943Z","type":"evaluation_finished","taskId":"shopping-cart","attempt":1,"detail":{"status":"failed","passed":1,"total":4}}
+{"at":"2026-08-19T10:01:48.945Z","type":"request_started","taskId":"query-string-parser","attempt":1}
+{"at":"2026-08-19T10:05:14.400Z","type":"response_received","taskId":"query-string-parser","attempt":1,"detail":{"durationMs":205457,"finishReason":"stop","usage":{"prompt_tokens":350,"completion_tokens":1392,"total_tokens":1742,"completion_tokens_details":{"reasoning_tokens":211}}}}
+{"at":"2026-08-19T10:05:14.461Z","type":"evaluation_finished","taskId":"query-string-parser","attempt":1,"detail":{"status":"compile_error","passed":0,"total":5}}
+{"at":"2026-08-19T10:05:14.461Z","type":"request_started","taskId":"schema-validator","attempt":1}

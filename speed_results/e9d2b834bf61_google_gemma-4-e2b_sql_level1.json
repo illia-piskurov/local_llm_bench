@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "google/gemma-4-e2b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-08-19 14:05:56",
+  "stats": {
+    "input_tokens": 426,
+    "total_output_tokens": 2268,
+    "reasoning_output_tokens": 777,
+    "tokens_per_second": 21.478749798115853,
+    "time_to_first_token_seconds": 1.7724449999999998,
+    "model_load_time_seconds": null
+  }
+}

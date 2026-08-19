@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-9a79zcknn5wwa2qbi5oze",
+  "object": "chat.completion",
+  "created": 1787127987,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const numbers = input.numbers;\n    const k = input.k;\n    \n    // Count frequency of each number\n    const frequencyMap = {};\n    for (const num of numbers) {\n        frequencyMap[num] = (frequencyMap[num] || 0) + 1;\n    }\n    \n    // Create array of [number, frequency] pairs\n    const pairs = Object.entries(frequencyMap).map(([num, freq]) => [parseInt(num), freq]);\n    \n    // Sort by descending frequency, then by ascending number value\n    pairs.sort((a, b) => {\n        if (a[1] !== b[1]) {\n            return b[1] - a[1]; // descending frequency\n        }\n        return a[0] - b[0]; // ascending number value\n    });\n    \n    // Extract the first k numbers\n    const result = pairs.slice(0, k).map(pair => pair[0]);\n    \n    return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 137,
+    "completion_tokens": 212,
+    "total_tokens": 349,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

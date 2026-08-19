@@ -1,0 +1,27 @@
+{
+  "status": "failed",
+  "passed": 1,
+  "total": 4,
+  "tests": [
+    {
+      "id": "unreachable",
+      "passed": true
+    },
+    {
+      "id": "same",
+      "passed": false,
+      "error": "Expected 0, got -1"
+    },
+    {
+      "id": "route",
+      "passed": false,
+      "error": "Expected 4, got -1"
+    },
+    {
+      "id": "straight",
+      "passed": false,
+      "error": "Expected 3, got -1"
+    }
+  ],
+  "durationMs": 30
+}

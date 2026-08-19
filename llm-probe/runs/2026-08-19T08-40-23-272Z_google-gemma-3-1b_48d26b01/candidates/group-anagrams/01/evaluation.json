@@ -1,0 +1,32 @@
+{
+  "status": "failed",
+  "passed": 1,
+  "total": 5,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "single",
+      "passed": false,
+      "error": "Expected [[\"solo\"]], got [\"loos\"]"
+    },
+    {
+      "id": "repeated",
+      "passed": false,
+      "error": "Expected [[\"ab\",\"ab\",\"ba\"]], got [\"ab\"]"
+    },
+    {
+      "id": "no-match",
+      "passed": false,
+      "error": "Expected [[\"bird\"],[\"cat\"],[\"dog\"]], got [\"act\",\"dgo\",\"bdir\"]"
+    },
+    {
+      "id": "numbers",
+      "passed": false,
+      "error": "Expected [[\"abc\",\"bca\"],[\"xyz\",\"zyx\"]], got [\"abc\",\"xyz\"]"
+    }
+  ],
+  "durationMs": 29
+}

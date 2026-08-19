@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-i5ey97zytbhbziesk8uic",
+  "object": "chat.completion",
+  "created": 1787128824,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const items = input.items;\n\n  if (!input.filter) {\n    return { items: [], total: 0, page: 1, totalPages: 1 };\n  }\n\n  if (!input.sort) {\n    return { items: [...input.items], total: 0, page: 1, totalPages: 1 };\n  }\n\n  const filteredItems = input.filter(item => {\n    const field = item[input.filter().field];\n    const op = item[input.filter().op];\n    return (op === 'contains' && item[input.filter().value]) || (op === 'eq' && item[input.filter().value]);\n  });\n\n  const sortedItems = input.sort(item => {\n    const field = item[input.sort.field];\n    const dir = item[input.sort.dir];\n    return dir === 'asc' ? (-1) : 1;\n  });\n\n\n  const paginatedItems = items.slice(0, input.page);\n  const totalPages = Math.ceil(input.total / input.pageSize);\n\n  return {\n    items: paginatedItems,\n    total: totalPages,\n    page: input.page,\n    totalPages: totalPages\n  };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 400,
+    "completion_tokens": 304,
+    "total_tokens": 704,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

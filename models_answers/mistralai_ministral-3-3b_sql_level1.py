@@ -1,0 +1,69 @@
+def compile_query(query: dict) -> dict:
+    table = query.get('table', '')
+    select = query.get('select', ['*'])
+    where_clause = ''
+    params = []
+    order_by = []
+    limit_offset = []
+
+    # Сбор SELECT
+    if len(select) == 1 and select[0] == '*':
+        select_str = 'SELECT *'
+    else:
+        select_str = f'SELECT {", ".join(select)}'
+
+    # Обработка WHERE
+    def process_condition(cond):
+        nonlocal params
+        if isinstance(cond, dict):
+            field = cond['field']
+            op = cond['op']
+            value = cond['value']
+
+            # Плейсхолдеры для значений
+            params.append(value)
+            placeholders = [f'${i+1}' for i in range(len(params))]
+            placeholder = ','.join(placeholders)
+
+            if op == '=':
+                return f'{field} = {placeholder}'
+            elif op == '!=':
+                return f'{field} != {placeholder}'
+            elif op in ('>', '<', '>=', '<='):
+                return f'{field} {op} {placeholder}'
+        else:  # Логические условия (AND/OR)
+            conditions = []
+            for c in cond.values():
+                if isinstance(c, list):  # AND/OR списки
+                    processed = [process_condition(item) for item in c]
+                    conditions.append(f'({", ".join(processed)})')
+                else:  # Рекурсия для вложенных условий
+                    conditions.append(process_condition(c))
+            return f'{", ".join(conditions)}'
+
+    if query.get('where'):
+        where_clause = ' WHERE ' + process_condition(query['where'])
+
+    # Обработка ORDER BY
+    if query.get('orderBy'):
+        for item in query['orderBy']:
+            order_by.append(f"{item['field']} {'DESC' if item.get('dir') == 'DESC' else 'ASC'}")
+
+    # Обработка LIMIT/OFFSET
+    limit = query.get('limit')
+    offset = query.get('offset')
+    if limit is not None:
+        limit_offset.append(f'LIMIT {limit}')
+    if offset is not None:
+        limit_offset.append(f'OFFSET {offset}')
+
+    sql_parts = [select_str]
+    if where_clause:
+        sql_parts.append(where_clause)
+    if order_by:
+        sql_parts.append(' ORDER BY ' + ', '.join(order_by))
+    if limit_offset:
+        sql_parts.extend(limit_offset)
+
+    sql = ' '.join(sql_parts)
+    return {"sql": sql, "params": params}

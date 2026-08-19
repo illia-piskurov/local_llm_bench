@@ -1,0 +1,33 @@
+{
+  "status": "failed",
+  "passed": 0,
+  "total": 5,
+  "tests": [
+    {
+      "id": "tie",
+      "passed": false,
+      "error": "Expected [1,4], got [\"1\",\"4\",\"2\"]"
+    },
+    {
+      "id": "negative",
+      "passed": false,
+      "error": "Expected [-2,-1], got [\"-2\",\"-1\"]"
+    },
+    {
+      "id": "all",
+      "passed": false,
+      "error": "Expected [3,1,2], got [\"3\",\"1\",\"2\"]"
+    },
+    {
+      "id": "single",
+      "passed": false,
+      "error": "Expected [7], got [\"7\"]"
+    },
+    {
+      "id": "k-equals-total",
+      "passed": false,
+      "error": "Expected [1,2,3], got [\"1\",\"2\",\"3\"]"
+    }
+  ],
+  "durationMs": 28
+}

@@ -1,0 +1,79 @@
+from datetime import datetime, timedelta
+import re
+
+def parse_cron_field(field):
+    """Разбирает одно поле cron-выражения."""
+    if field == '*':
+        return set(range(1, 7))  # Для минуты: 0-59; для часа: 0-23; для дня месяца: 1-31; для месяца: 1-12; для дня недели: 0-6
+
+    if field.isdigit():
+        return {int(field)}
+
+    # Разбиваем на списки и диапазоны
+    parts = re.split(r'[,\s-]', field)
+    result = set()
+
+    for part in parts:
+        if not part:
+            continue
+        if '-' in part:
+            start, end = map(int, part.split('-'))
+            result.update(range(start, end + 1))
+        else:
+            try:
+                num = int(part)
+                result.add(num)
+            except ValueError:
+                pass
+
+    return result
+
+def cron_to_datetime(cron_str):
+    """Преобразует cron-выражение в набор дат."""
+    fields = cron_str.split()
+    if len(fields) != 5:
+        raise ValueError("Cron expression must have exactly 5 fields")
+
+    minute_field, hour_field, day_of_month_field, month_field, day_of_week_field = fields
+
+    # Разбираем каждое поле
+    minutes = parse_cron_field(minute_field)
+    hours = parse_cron_field(hour_field)
+    days_of_month = parse_cron_field(day_of_month_field)
+    months = parse_cron_field(month_field)
+    days_of_week = parse_cron_field(day_of_week_field)
+
+    # Генерируем даты в диапазоне 1-31 дней для дня месяца
+    for month in range(1, 13):
+        if month not in months:
+            continue
+
+        for day in days_of_month:
+            try:
+                dt = datetime(year=2024, month=month, day=day)
+                # Проверяем день недели (переводим в формат datetime)
+                week_day = dt.weekday()  # Monday is 0
+                if week_day in days_of_week:
+                    yield dt
+
+            except ValueError:  # Если день не существует для данного месяца
+                continue
+
+def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+    """Возвращает список следующих моментов запуска cron-выражения."""
+    try:
+        start_dt = datetime.fromisoformat(from_time.replace('Z', '+00:00'))
+    except ValueError:
+        raise ValueError("Invalid ISO 8601 UTC format")
+
+    next_dates = []
+    current_dt = start_dt
+
+    while len(next_dates) < count:
+        # Находим следующую дату, удовлетворяющую cron
+        for candidate in cron_to_datetime(cron):
+            if candidate > current_dt:
+                next_dates.append(candidate.isoformat().replace('+00:00', 'Z'))
+                current_dt = candidate
+
+    return next_dates[:count]

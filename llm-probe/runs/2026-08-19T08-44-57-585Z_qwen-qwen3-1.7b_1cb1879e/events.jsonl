@@ -1,0 +1,28 @@
+{"at":"2026-08-19T08:44:57.589Z","type":"run_started"}
+{"at":"2026-08-19T08:44:57.590Z","type":"request_started","taskId":"flat-to-tree","attempt":1}
+{"at":"2026-08-19T08:49:54.700Z","type":"response_received","taskId":"flat-to-tree","attempt":1,"detail":{"durationMs":297114,"finishReason":"stop","usage":{"prompt_tokens":286,"completion_tokens":7549,"total_tokens":7835,"completion_tokens_details":{"reasoning_tokens":7405}}}}
+{"at":"2026-08-19T08:49:54.822Z","type":"evaluation_finished","taskId":"flat-to-tree","attempt":1,"detail":{"status":"runtime_error","passed":1,"total":4}}
+{"at":"2026-08-19T08:49:54.824Z","type":"request_started","taskId":"paginate-and-sort","attempt":1}
+{"at":"2026-08-19T08:51:32.953Z","type":"response_received","taskId":"paginate-and-sort","attempt":1,"detail":{"durationMs":98125,"finishReason":"stop","usage":{"prompt_tokens":377,"completion_tokens":1709,"total_tokens":2086,"completion_tokens_details":{"reasoning_tokens":1360}}}}
+{"at":"2026-08-19T08:51:33.198Z","type":"evaluation_finished","taskId":"paginate-and-sort","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-19T08:51:33.201Z","type":"request_started","taskId":"deep-merge","attempt":1}
+{"at":"2026-08-19T09:12:21.070Z","type":"run_resumed"}
+{"at":"2026-08-19T09:12:21.073Z","type":"request_started","taskId":"deep-merge","attempt":1}
+{"at":"2026-08-19T09:17:28.497Z","type":"provider_error","taskId":"deep-merge","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
+{"at":"2026-08-19T09:17:28.502Z","type":"request_started","taskId":"csv-parse","attempt":1}
+{"at":"2026-08-19T09:17:34.180Z","type":"response_received","taskId":"csv-parse","attempt":1,"detail":{"durationMs":5677,"finishReason":"stop","usage":{"prompt_tokens":262,"completion_tokens":172,"total_tokens":434,"completion_tokens_details":{"reasoning_tokens":0}}}}
+{"at":"2026-08-19T09:17:34.277Z","type":"evaluation_finished","taskId":"csv-parse","attempt":1,"detail":{"status":"runtime_error","passed":0,"total":4}}
+{"at":"2026-08-19T09:17:34.278Z","type":"request_started","taskId":"render-template","attempt":1}
+{"at":"2026-08-19T09:30:18.453Z","type":"provider_error","taskId":"render-template","attempt":1,"detail":{"message":"Provider returned HTTP 400","name":"ProviderError","status":400,"body":"{\"error\":\"Engine protocol predict stream timed out after 600000ms without receiving data.\"}"}}
+{"at":"2026-08-19T09:30:18.460Z","type":"request_started","taskId":"shopping-cart","attempt":1}
+{"at":"2026-08-19T09:30:58.472Z","type":"response_received","taskId":"shopping-cart","attempt":1,"detail":{"durationMs":40010,"finishReason":"stop","usage":{"prompt_tokens":439,"completion_tokens":303,"total_tokens":742,"completion_tokens_details":{"reasoning_tokens":0}}}}
+{"at":"2026-08-19T09:30:58.632Z","type":"evaluation_finished","taskId":"shopping-cart","attempt":1,"detail":{"status":"runtime_error","passed":1,"total":4}}
+{"at":"2026-08-19T09:30:58.634Z","type":"request_started","taskId":"query-string-parser","attempt":1}
+{"at":"2026-08-19T09:36:04.252Z","type":"provider_error","taskId":"query-string-parser","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
+{"at":"2026-08-19T09:36:04.257Z","type":"request_started","taskId":"schema-validator","attempt":1}
+{"at":"2026-08-19T09:41:09.999Z","type":"provider_error","taskId":"schema-validator","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
+{"at":"2026-08-19T09:41:10.006Z","type":"request_started","taskId":"state-reducer","attempt":1}
+{"at":"2026-08-19T09:46:15.814Z","type":"provider_error","taskId":"state-reducer","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
+{"at":"2026-08-19T09:46:15.818Z","type":"request_started","taskId":"rbac-checker","attempt":1}
+{"at":"2026-08-19T09:51:21.842Z","type":"provider_error","taskId":"rbac-checker","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
+{"at":"2026-08-19T09:51:21.846Z","type":"request_started","taskId":"i18n-pluralize","attempt":1}

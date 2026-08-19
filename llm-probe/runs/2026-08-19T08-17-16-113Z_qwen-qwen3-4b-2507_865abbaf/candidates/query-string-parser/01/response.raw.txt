@@ -1,0 +1,97 @@
+```javascript
+export function solve(input) {
+    const query = input.query;
+    if (!query || query === '') return {};
+
+    // Strip leading '?'
+    const queryString = query.startsWith('?') ? query.substring(1) : query;
+
+    // Split by '&' to get pairs
+    const pairs = queryString.split('&');
+    
+    const result = {};
+
+    for (const pair of pairs) {
+        let [key, value] = pair.split('=');
+
+        // If no '=' found, value is true
+        if (!value) {
+            value = 'true';
+        }
+
+        // Decode key and value
+        key = decodeURIComponent(key);
+        value = decodeURIComponent(value);
+
+        // Handle nested keys with bracket notation
+        const keyParts = key.split('[');
+        const lastPart = keyParts[keyParts.length - 1];
+        
+        // Check if key ends with '[]' - indicates array collection
+        const hasArraySuffix = lastPart.endsWith('[]');
+        const isNested = keyParts.length > 1;
+        
+        // If it's a nested object (e.g. user[address][city])
+        if (isNested) {
+            const baseKey = keyParts.slice(0, -1).join('[');
+            const nestedKey = keyParts[keyParts.length - 1].replace(']', '');
+            
+            // Process the nested path
+            let current = result;
+            const parts = baseKey.split('[');
+            
+            // Traverse to the base object
+            for (let i = 0; i < parts.length - 1; i++) {
+                const part = parts[i];
+                if (!current[part]) {
+                    current[part] = {};
+                }
+                current = current[part];
+            }
+            
+            // Now handle the final key with value
+            if (hasArraySuffix) {
+                // Array collection - collect values in array
+                const arrayKey = nestedKey;
+                const arrayValue = value;
+                if (!current[arrayKey]) {
+                    current[arrayKey] = [];
+                }
+                current[arrayKey].push(arrayValue);
+            } else {
+                // Nested object - assign value
+                current[nestedKey] = parseValue(value);
+            }
+        } else {
+            // Simple key-value pair
+            if (hasArraySuffix) {
+                // Array collection - collect values in array
+                const arrayKey = key.replace('[]', '');
+                if (!result[arrayKey]) {
+                    result[arrayKey] = [];
+                }
+                result[arrayKey].push(parseValue(value));
+            } else {
+                result[key] = parseValue(value);
+            }
+        }
+    }
+
+    return result;
+}
+
+function parseValue(value) {
+    // Check if value is a finite number
+    if (typeof value === 'string' && /^-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(value)) {
+        const num = parseFloat(value);
+        if (!isNaN(num)) return Number.isInteger(num) ? parseInt(value) : num;
+    }
+    
+    // Check for boolean
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    
+    // Otherwise return as string
+    return value;
+}
+```

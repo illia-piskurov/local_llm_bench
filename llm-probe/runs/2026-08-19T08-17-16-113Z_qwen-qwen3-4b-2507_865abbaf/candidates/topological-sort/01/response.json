@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-bn9ostycp0cjo4v96pw5i",
+  "object": "chat.completion",
+  "created": 1787128052,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const n = input.n;\n    const edges = input.edges || [];\n    \n    // Build adjacency list and in-degree map\n    const adj = Array(n).fill().map(() => []);\n    const inDegree = Array(n).fill(0);\n    \n    for (const [from, to] of edges) {\n        adj[from].push(to);\n        inDegree[to]++;\n    }\n    \n    // Find all nodes with in-degree 0\n    const queue = [];\n    for (let i = 0; i < n; i++) {\n        if (inDegree[i] === 0) {\n            queue.push(i);\n        }\n    }\n    \n    // Topological sort using Kahn's algorithm\n    const result = [];\n    \n    while (queue.length > 0) {\n        const node = queue.shift();\n        result.push(node);\n        \n        // Update in-degrees of neighbors\n        for (const neighbor of adj[node]) {\n            inDegree[neighbor]--;\n            if (inDegree[neighbor] === 0) {\n                queue.push(neighbor);\n            }\n        }\n    }\n    \n    // If result length is less than n, there's a cycle\n    return result.length === n ? result : null;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 165,
+    "completion_tokens": 263,
+    "total_tokens": 428,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

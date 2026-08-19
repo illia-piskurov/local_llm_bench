@@ -1,0 +1,33 @@
+{
+  "id": "chatcmpl-tlmm21s5scmvisppqdisk",
+  "object": "chat.completion",
+  "created": 1787133505,
+  "model": "qwen3.8-2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  if (!Array.isArray(input.objects)) return {};\n\n  const merged = {};\n\n  for (const obj of input.objects) {\n    for (const [key, value] of Object.entries(obj)) {\n      if (value === undefined || value === null) continue; // ignore keys with no value\n\n      if (typeof key === 'string') {\n        // Primitive types: replace entirely with later value\n        const type = typeof value;\n        merged[key] = type === 'object' ? mergeObjects(value) : value;\n      } else if (Array.isArray(key)) {\n        // Nested object keys that are arrays (e.g. \"colors.primary\")\n        const subKey = key[0];\n        let nestedValue;\n\n        if (type === 'object') {\n          nestedValue = mergeObjects(value);\n        } else {\n          nestedValue = value;\n        }\n\n        merged[key] = type === 'object' ? nestedValue : nestedValue;\n      } else {\n        // Array keys or primitives: replace entirely\n        merged[key] = value;\n      }\n    }\n  }\n\n  return Object.fromEntries(Object.entries(merged));\n}\n\nfunction mergeObjects(obj1, obj2) {\n  if (obj2 === undefined || obj2 === null) return obj1;\n\n  const result = {};\n\n  for (const [key, value] of Object.entries(obj1)) {\n    // If key is an array (e.g. \"colors.primary\")\n    if (typeof key === 'string' && Array.isArray(key[0])) {\n      const subKey = key[0];\n      let nestedValue;\n\n      if (typeof value === 'object') {\n        nestedValue = mergeObjects(value);\n      } else {\n        nestedValue = value;\n      }\n\n      result[key] = nestedValue;\n    } else {\n      // Object with primitive key: check if value is an array or object\n      const type = typeof obj2[key];\n      if (type === 'object') {\n        result[key] = mergeObjects(obj1[key], obj2[key]);\n      } else if (!Array.isArray(value)) {\n        result[key] = value;\n      } else {\n        // Array value: replace with later object's array, or primitive\n        const arrKey = Object.keys(obj2);\n        let finalArrValue = null;\n\n        for (const arrKey of arrKey) {\n          if (typeof obj2[arrKey] === 'object') {\n            finalArrValue = mergeObjects(obj1[arrKey], obj2[arrKey]);\n          } else if (!Array.isArray(value)) {\n            finalArrValue = value;\n          }\n        }\n\n        result[key] = finalArrValue;\n      }\n    }\n  }\n\n  // Handle array keys (e.g., \"colors.primary\" is a primitive key but represents an array)\n  if (typeof result === 'object' && Array.isArray(Object.keys(result))) {\n    const arrKey = Object.keys(result)[0];\n    let finalArrValue;\n    for (const arrKey of Object.keys(obj2)) {\n      if (result[Object.keys(result).indexOf(arrKey)] !== undefined) {\n        result[arrKey] = mergeObjects(result[arrKey], obj2[arrKey]);\n      } else if (!Array.isArray(value)) {\n        finalArrValue = value;\n      } else {\n        finalArrValue = Array.from(Object.values(obj1));\n      }\n    }\n\n    // If the array key was \"colors.primary\" (primitive), merge its values from obj2's keys\n    if (arrKey === 'primary' || arrKey === 'secondary') {\n      const keysWithValues = Object.keys(obj2).filter(k => typeof result[k] !== 'object');\n      for (const k of keysWithValues) {\n        finalArrValue = [...finalArrValue, ...Object.values(obj2[k])];\n      }\n\n      // Remove the key from result since we've merged it into arrKey\n      const keysToRemove = Object.keys(result).filter(k => k === arrKey);\n      for (const k of keysToRemove) {\n        delete result[k];\n      }\n    } else {\n      result[arrKey] = finalArrValue;\n    }\n  }\n\n  return result;\n}\n```\n\n**Time Complexity:** O(n × m) where n is the number of objects and m is the total key-value pairs across all objects. **Space Complexity:** O(m).",
+        "reasoning_content": "The problem requires merging objects from an array of objects. The merge rules are:\n1. Objects with the same key and value → keep (merge)\n2. Arrays or primitives replaced entirely by later values\n3. Keys with undefined/empty values are ignored (previous value is retained)\n\nFor example: {\"theme\":{\"colors\":{\"primary\":\"blue\",\"secondary\":[]}}}, {\"theme\":{\"colors\":{\"primary\":\"red\"}}} → the empty secondary is ignored, leaving primary+secondary and tags[1].\n\nI need to handle both object merging (use `hasOwnProperty` for primitive keys, use `Object.keys()` for arrays) and array merging.\n",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 226,
+    "completion_tokens": 1123,
+    "total_tokens": 1349,
+    "completion_tokens_details": {
+      "reasoning_tokens": 134
+    }
+  },
+  "stats": {
+    "total_draft_tokens_count": 600,
+    "accepted_draft_tokens_count": 521,
+    "rejected_draft_tokens_count": 79
+  },
+  "system_fingerprint": "qwen3.8-2b"
+}

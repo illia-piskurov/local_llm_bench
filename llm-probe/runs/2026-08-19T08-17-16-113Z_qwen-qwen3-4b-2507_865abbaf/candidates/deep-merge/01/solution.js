@@ -1,0 +1,44 @@
+export function solve(input) {
+  if (!input || !input.objects || input.objects.length === 0) {
+    return {};
+  }
+
+  return input.objects.reduce((acc, obj) => {
+    return mergeObjects(acc, obj);
+  }, {});
+}
+
+function mergeObjects(left, right) {
+  if (!right || typeof right !== 'object') {
+    return left;
+  }
+
+  if (Array.isArray(right)) {
+    return [...right];
+  }
+
+  const result = {};
+
+  for (const key in left) {
+    if (left[key] === undefined) continue;
+    
+    if (typeof left[key] === 'object' && left[key] !== null && 
+        typeof right[key] === 'object' && right[key] !== null) {
+      result[key] = mergeObjects(left[key], right[key]);
+    } else {
+      result[key] = left[key];
+    }
+  }
+
+  for (const key in right) {
+    if (right[key] === undefined) continue;
+    
+    if (typeof right[key] === 'object' && right[key] !== null) {
+      result[key] = mergeObjects(left[key] || {}, right[key]);
+    } else {
+      result[key] = right[key];
+    }
+  }
+
+  return result;
+}

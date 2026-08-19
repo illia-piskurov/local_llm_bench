@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-o2cjvw0nj48px6lgy5tt3",
+  "object": "chat.completion",
+  "created": 1787127484,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  if (!input || !input.objects || input.objects.length === 0) {\n    return {};\n  }\n\n  return input.objects.reduce((acc, obj) => {\n    return mergeObjects(acc, obj);\n  }, {});\n}\n\nfunction mergeObjects(left, right) {\n  if (!right || typeof right !== 'object') {\n    return left;\n  }\n\n  if (Array.isArray(right)) {\n    return [...right];\n  }\n\n  const result = {};\n\n  for (const key in left) {\n    if (left[key] === undefined) continue;\n    \n    if (typeof left[key] === 'object' && left[key] !== null && \n        typeof right[key] === 'object' && right[key] !== null) {\n      result[key] = mergeObjects(left[key], right[key]);\n    } else {\n      result[key] = left[key];\n    }\n  }\n\n  for (const key in right) {\n    if (right[key] === undefined) continue;\n    \n    if (typeof right[key] === 'object' && right[key] !== null) {\n      result[key] = mergeObjects(left[key] || {}, right[key]);\n    } else {\n      result[key] = right[key];\n    }\n  }\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 219,
+    "completion_tokens": 266,
+    "total_tokens": 485,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

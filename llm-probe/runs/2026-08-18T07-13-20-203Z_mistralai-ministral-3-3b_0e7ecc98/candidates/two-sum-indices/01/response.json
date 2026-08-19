@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ncs276kseahccye82ovvx7",
+  "object": "chat.completion",
+  "created": 1787037257,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const numbers = [...input.numbers];\n    const target = input.target;\n    const n = numbers.length;\n\n    for (let i = 0; i < n - 1; ++i) {\n        for (let j = i + 1; j < n; ++j) {\n            if (numbers[i] + numbers[j] === target) {\n                return [i, j];\n            }\n        }\n    }\n\n    return [];\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 149,
+    "completion_tokens": 104,
+    "total_tokens": 253,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

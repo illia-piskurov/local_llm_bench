@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-w2dbtzyrhhcrg4wpyg7yto",
+  "object": "chat.completion",
+  "created": 1787128897,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const anagramGroups = {};\n  for (const word of input.words) {\n    const sortedWord = word.split(\"\").sort().join(\"\");\n    if (!anagramGroups[sortedWord]) {\n      anagramGroups[sortedWord] = [];\n    }\n    anagramGroups[sortedWord].push(word);\n  }\n\n  const result = Object.entries(anagramGroups).sort(([, valueA], [, valueB]) => valueA - valueB).map(([key]) => key);\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 149,
+    "completion_tokens": 129,
+    "total_tokens": 278,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

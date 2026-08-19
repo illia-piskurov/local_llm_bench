@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-2ezkfijzkpu8y36sznhqp5",
+  "object": "chat.completion",
+  "created": 1787128842,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  let subtotal = 0;\n  let discount = 0;\n  let tax = 0;\n\n  if (input.coupon && input.coupon.type === 'percent') {\n    const couponValue = input.coupon.value;\n    if (couponValue === '20') {\n      discount = 20;\n    } else if (couponValue === '15') {\n      discount = 15;\n    } else if (couponValue === 'category_percent') {\n      const category = input.items[0].category;\n      if (category) {\n        discount = input.items.filter(item => item.category === category).length > 0 ? 10 : 0;\n      } else {\n        discount = 0;\n      }\n    }\n  }\n\n  const taxRate = input.taxRate || 0;\n  const subtotal -= discount * (input.items.length - 1) * taxRate;\n  const total = subtotal + (input.items.length > 0 ? Math.round((subtotal - discount) * (taxRate * 100)) / 100 : 0) * 100;\n\n  return {\n    subtotal,\n    discount,\n    tax,\n    total\n  };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 468,
+    "completion_tokens": 309,
+    "total_tokens": 777,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

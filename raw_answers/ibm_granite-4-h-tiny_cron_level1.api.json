@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nimport datetime\n\ndef parse_cron(cron):\n    parts = cron.split()\n    if len(parts) != 5:\n        raise ValueError(\"Invalid cron expression\")\n    \n    minute, hour, day_of_month, month, day_of_week = map(lambda x: x.strip(), parts)\n    \n    def parse_range(value):\n        if '-' in value:\n            start, end = map(int, value.split('-'))\n            return range(start, end + 1)\n        elif ',' in value:\n            return set(map(int, value.split(',')))\n        else:\n            return {int(value)}\n    \n    minute_set = parse_range(minute) if minute != '*' else set(range(60))\n    hour_set = parse_range(hour) if hour != '*' else set(range(24))\n    day_of_month_set = parse_range(day_of_month) if day_of_month != '*' else set(range(1, 32))\n    month_set = parse_range(month) if month != '*' else set(range(1, 13))\n    day_of_week_set = parse_range(day_of_week) if day_of_week != '*' else set(range(7))\n    \n    return minute_set, hour_set, day_of_month_set, month_set, day_of_week_set\n\ndef next_runs(cron: str, from_time: str, count: int):\n    minute_set, hour_set, day_of_month_set, month_set, day_of_week_set = parse_cron(cron)\n    \n    start_dt = datetime.datetime.fromisoformat(from_time.rstrip('Z')) + datetime.timedelta(seconds=1)\n    \n    next_times = []\n    current_time = start_dt\n    while len(next_times) < count:\n        if (current_time.minute in minute_set and \n            current_time.hour in hour_set and \n            current_time.day in day_of_month_set and \n            current_time.month in month_set and \n            current_time.weekday() in day_of_week_set):\n            \n            next_times.append(current_time.isoformat().replace('+00:00', 'Z'))\n        \n        current_time += datetime.timedelta(seconds=1)\n    \n    return next_times\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 584,
+    "total_output_tokens": 431,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 30.32699252914593,
+    "time_to_first_token_seconds": 3.203604
+  },
+  "response_id": "resp_dc6afececdee45c461f60298781641e51200b5bb31532384"
+}

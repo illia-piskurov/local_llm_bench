@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-kapucrp0e8ln2nnyjcde5",
+  "object": "chat.completion",
+  "created": 1787127998,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const intervals = input.intervals || [];\n    \n    // If no intervals, return empty array\n    if (intervals.length === 0) {\n        return [];\n    }\n    \n    // Sort intervals by start time\n    intervals.sort((a, b) => a[0] - b[0]);\n    \n    const merged = [];\n    let currentStart = intervals[0][0];\n    let currentEnd = intervals[0][1];\n    \n    for (let i = 1; i < intervals.length; i++) {\n        const [start, end] = intervals[i];\n        \n        // If current interval overlaps or touches the previous one\n        if (start <= currentEnd) {\n            // Merge by extending the end if necessary\n            currentEnd = Math.max(currentEnd, end);\n        } else {\n            // No overlap, add current merged interval and start a new one\n            merged.push([currentStart, currentEnd]);\n            currentStart = start;\n            currentEnd = end;\n        }\n    }\n    \n    // Don't forget to add the last interval\n    merged.push([currentStart, currentEnd]);\n    \n    return merged;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 163,
+    "completion_tokens": 247,
+    "total_tokens": 410,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

@@ -1,0 +1,33 @@
+{
+  "id": "chatcmpl-a5mi74f0np4rxv76uxfc5",
+  "object": "chat.completion",
+  "created": 1787133708,
+  "model": "qwen3.8-2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\n/**\n * Parse a URL query string into a plain object.\n * Input is expected to be of the form {\"query\":\"...\"}\n */\nexport function solve(input) {\n  // Strip leading '{' and trailing '}' to get just the query value\n  const query = (input || {}).query?.replace(/^\"/, '').replace(/\"$/, '');\n\n  if (!query) return {};\n\n  let result = parseQueryString(query);\n  return Object.fromEntries(\n    new Map([...result.entries()].sort(([a], [b]) => a.localeCompare(b))\n  );\n}\n\n/**\n * Parse individual query string segments into key-value pairs.\n */\nfunction parseQueryString(query) {\n  const parts = query.split('&');\n  let currentKey = null;\n  let currentValue = '';\n\n  for (const segment of parts) {\n    if (!segment || segment.startsWith('#')) continue;\n\n    const eqIndex = segment.indexOf('=');\n\n    let key, value;\n\n    if (eqIndex !== -1) {\n      key = decodeURIComponent(segment.slice(0, eqIndex));\n      value = decodeURIComponent(segment.slice(eqIndex + 1));\n    } else {\n      // No '=' means the value is boolean true\n      currentKey = segment;\n      currentValue = 'true';\n\n      if (currentKey.endsWith('[]')) {\n        key = segment.replace(/(\\[\\])$/, '');\n        const values = [];\n        let i = 0;\n        while (i < value.length) {\n          const bracketStart = value.indexOf('[');\n          const bracketEnd = value.indexOf(']', bracketStart);\n\n          if (bracketStart === -1 || bracketEnd === -1) break;\n\n          // Check for nested brackets within the segment value\n          let innerKey, innerValue;\n          const nextBracket = value.indexOf('['), nextClose = value.indexOf(']', nextBracket + 1);\n          if (nextBracket !== -1 && nextClose !== -1 && bracketEnd > 0) {\n            // Nested key: extract from the part before this segment's closing bracket\n            innerKey = decodeURIComponent(value.slice(0, bracketStart));\n            innerValue = decodeURIComponent(value.slice(bracketEnd + 1, value.indexOf(']')));\n\n            if (innerKey.endsWith('[]')) {\n              const nestedValues = [];\n              let j = 0;\n              while (j < innerValue.length) {\n                const nb = innerValue.indexOf('['), nc = innerValue.indexOf(']', nb + 1);\n                if (nb === -1 || nc === -1) break;\n\n                const innerNextBracket = innerValue.indexOf('['), innerNextClose = innerValue.indexOf(']', innerNextBracket + 1);\n                if (innerNextBracket !== -1 && innerNextClose !== -1) {\n                  nestedValues.push(decodeURIComponent(innerValue.slice(0, nb)));\n                  innerKey = decodeURIComponent(innerValue.slice(nb + 1, innerNextBracket));\n                  break;\n                } else {\n                  // Non-nested segment value (e.g., 'a')\n                  const val = decodeURIComponent(value.slice(j, nextClose - 1));\n                  nestedValues.push(val);\n                }\n\n                j = innerValue.indexOf(']', nb + 1);\n              }\n              currentKey = innerKey;\n              currentValue = '[' + nestedValues.join(',') + ']';\n            } else {\n              // Nested array value (e.g., 'a,b')\n              const arrVal = decodeURIComponent(innerValue.slice(0, bracketEnd));\n              values.push(arrVal);\n            }\n\n            i += nextClose;\n          } else if (bracketStart !== -1) {\n            currentKey = key.replace(/(\\[\\])$/, '');\n            value = decodeURIComponent(value.slice(bracketStart + 1, value.indexOf(']')));\n            const arrVal = decodeURIComponent(value);\n            values.push(arrVal);\n\n            i += nextClose;\n          } else {\n            // Value without brackets (e.g., 'abc')\n            currentKey = key;\n            currentValue = decodeURIComponent(value);\n            break;\n          }\n\n          i++;\n        }\n      } else if (currentKey === null) {\n        // No '=' found, so the segment itself is a key with value 'true'\n        currentKey = segment.replace(/(\\[\\])$/, '');\n        currentValue = 'true';\n      }\n    }\n\n    // If we have both a key and value, store the pair\n    if (key !== null) {\n      result[key] = currentValue;\n      delete currentKey;\n      delete currentValue;\n    } else if (currentKey === null) {\n      // Single segment like \"b[]=x\" -> no '=' found\n      currentKey = '[]';\n      currentValue = decodeURIComponent(value);\n    }\n\n    // If we have a key with array value, process it\n    const arrIndex = result[key] ? [...result[key]].length : 0;\n    if (arrIndex >= values.length) {\n      break;\n    }\n    result[key][arrIndex] = currentValue;\n  }\n\n  return result;\n}\n```\n\n**Time complexity:** O(n) where n is the length of the query string, as we scan each character once.\n\n**Space complexity:** O(n) for storing the parsed object in worst case (all values).",
+        "reasoning_content": "The task requires parsing a query string into a plain object with specific rules. Key observations:\n\n1. The input is always `{\"query\":\"...\"}` - we need to strip the outer `{` and `}`, extract the value, then parse it as a query string.\n\n2. Parsing rules in order of precedence (left to right):\n   - Skip leading `&` characters\n   - Split by `&`, each segment splits on `=`\n   - If no `=` exists → boolean true\n   - Otherwise: key decoded with `decodeURIComponent`, value decoded the same way\n   - For keys ending in `[...]`: collect all values into an Array\n   - For nested brackets like `user[address][city]`: recurse into that segment\n\n3. Key ordering for object output should be lexicographic (standard JS behavior).\n\n4. Number parsing: if value is a finite number string, parse as number. If it's \"true\" or \"false\", parse as boolean. Otherwise keep as string.\n",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 350,
+    "completion_tokens": 1392,
+    "total_tokens": 1742,
+    "completion_tokens_details": {
+      "reasoning_tokens": 211
+    }
+  },
+  "stats": {
+    "total_draft_tokens_count": 744,
+    "accepted_draft_tokens_count": 620,
+    "rejected_draft_tokens_count": 124
+  },
+  "system_fingerprint": "qwen3.8-2b"
+}

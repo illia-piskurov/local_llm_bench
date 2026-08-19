@@ -1,0 +1,10 @@
+Return whether the brackets (), [] and {} in input.text are properly balanced. Ignore all non-bracket characters.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"text":"{[()]}"}
+output: true

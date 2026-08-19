@@ -1,0 +1,374 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-18T07-13-20-203Z_mistralai-ministral-3-3b_0e7ecc98",
+  "status": "completed",
+  "startedAt": "2026-08-18T07:13:20.203Z",
+  "model": "mistralai/ministral-3-3b",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "temperature": 0.2,
+  "maxTokens": 2048,
+  "samples": 1,
+  "taskIds": [
+    "first-unique-char",
+    "run-length-encode",
+    "longest-substring-no-repeat",
+    "group-anagrams",
+    "top-k-frequent",
+    "frequency-map",
+    "merge-intervals",
+    "count-primes",
+    "balanced-brackets",
+    "flatten-tree",
+    "two-sum-indices",
+    "shortest-path-grid",
+    "lcs-length",
+    "topological-sort",
+    "rotate-square-matrix",
+    "validate-sudoku-board",
+    "deep-equal"
+  ],
+  "nodeVersion": "v24.19.0",
+  "candidates": [
+    {
+      "taskId": "first-unique-char",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 4270,
+      "generationMs": 4250,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 119,
+        "completion_tokens": 98,
+        "total_tokens": 217,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 98,
+      "tokensPerSec": 23,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "taskId": "run-length-encode",
+      "attempt": 1,
+      "status": "failed",
+      "durationMs": 5498,
+      "generationMs": 5478,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 142,
+        "completion_tokens": 113,
+        "total_tokens": 255,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 113,
+      "tokensPerSec": 21,
+      "passed": 4,
+      "total": 5
+    },
+    {
+      "taskId": "longest-substring-no-repeat",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 6050,
+      "generationMs": 6032,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 115,
+        "completion_tokens": 115,
+        "total_tokens": 230,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 115,
+      "tokensPerSec": 19,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "group-anagrams",
+      "attempt": 1,
+      "status": "failed",
+      "durationMs": 5958,
+      "generationMs": 5936,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 152,
+        "completion_tokens": 115,
+        "total_tokens": 267,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 115,
+      "tokensPerSec": 19,
+      "passed": 4,
+      "total": 5
+    },
+    {
+      "taskId": "top-k-frequent",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 6370,
+      "generationMs": 6343,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 137,
+        "completion_tokens": 116,
+        "total_tokens": 253,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 116,
+      "tokensPerSec": 18,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "frequency-map",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 3696,
+      "generationMs": 3672,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 153,
+        "completion_tokens": 61,
+        "total_tokens": 214,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 61,
+      "tokensPerSec": 17,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "merge-intervals",
+      "attempt": 1,
+      "status": "failed",
+      "durationMs": 6777,
+      "generationMs": 6749,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 142,
+        "completion_tokens": 125,
+        "total_tokens": 267,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 125,
+      "tokensPerSec": 19,
+      "passed": 0,
+      "total": 6
+    },
+    {
+      "taskId": "count-primes",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 6364,
+      "generationMs": 6346,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 130,
+        "completion_tokens": 127,
+        "total_tokens": 257,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 127,
+      "tokensPerSec": 20,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "taskId": "balanced-brackets",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 6436,
+      "generationMs": 6416,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 121,
+        "completion_tokens": 123,
+        "total_tokens": 244,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 123,
+      "tokensPerSec": 19,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "taskId": "flatten-tree",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 5098,
+      "generationMs": 5071,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 174,
+        "completion_tokens": 85,
+        "total_tokens": 259,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 85,
+      "tokensPerSec": 17,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "two-sum-indices",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 5708,
+      "generationMs": 5687,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 149,
+        "completion_tokens": 104,
+        "total_tokens": 253,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 104,
+      "tokensPerSec": 18,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "shortest-path-grid",
+      "attempt": 1,
+      "status": "failed",
+      "durationMs": 14619,
+      "generationMs": 14589,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 154,
+        "completion_tokens": 280,
+        "total_tokens": 434,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 280,
+      "tokensPerSec": 19,
+      "passed": 1,
+      "total": 4
+    },
+    {
+      "taskId": "lcs-length",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 9598,
+      "generationMs": 9574,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 119,
+        "completion_tokens": 180,
+        "total_tokens": 299,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 180,
+      "tokensPerSec": 19,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "topological-sort",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 11007,
+      "generationMs": 10969,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 164,
+        "completion_tokens": 196,
+        "total_tokens": 360,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 196,
+      "tokensPerSec": 18,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "rotate-square-matrix",
+      "attempt": 1,
+      "status": "failed",
+      "durationMs": 2826,
+      "generationMs": 2793,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 133,
+        "completion_tokens": 35,
+        "total_tokens": 168,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 35,
+      "tokensPerSec": 13,
+      "passed": 2,
+      "total": 4
+    },
+    {
+      "taskId": "validate-sudoku-board",
+      "attempt": 1,
+      "status": "failed",
+      "durationMs": 16757,
+      "generationMs": 16725,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 198,
+        "completion_tokens": 304,
+        "total_tokens": 502,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 304,
+      "tokensPerSec": 18,
+      "passed": 3,
+      "total": 4
+    },
+    {
+      "taskId": "deep-equal",
+      "attempt": 1,
+      "status": "passed",
+      "durationMs": 12822,
+      "generationMs": 12788,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 151,
+        "completion_tokens": 239,
+        "total_tokens": 390,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 239,
+      "tokensPerSec": 19,
+      "passed": 8,
+      "total": 8
+    }
+  ],
+  "completedAt": "2026-08-18T07:15:31.165Z"
+}

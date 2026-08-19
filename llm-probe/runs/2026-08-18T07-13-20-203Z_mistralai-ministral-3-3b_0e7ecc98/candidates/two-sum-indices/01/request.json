@@ -1,0 +1,16 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Return the lexicographically smallest pair [i, j] (i < j) from input.numbers whose elements sum to input.target. Return [] if no such pair exists.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"numbers\":[2,7,11,15],\"target\":9}\noutput: [0,1]"
+    }
+  ],
+  "temperature": 0.2,
+  "max_tokens": 2048,
+  "stream": false
+}

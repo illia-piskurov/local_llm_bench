@@ -1,0 +1,77 @@
+```javascript
+export function solve(input) {
+    const schema = input.schema;
+    const data = input.data;
+    const errors = {};
+
+    for (const field in schema) {
+        const rule = schema[field];
+        const value = data[field];
+
+        let fieldErrors = [];
+
+        // Check type
+        if (value === undefined || value === null) {
+            if (rule.required) {
+                fieldErrors.push("Required");
+            }
+        } else {
+            const valueType = typeof value;
+            if (rule.type && valueType !== rule.type) {
+                fieldErrors.push("Invalid type");
+            }
+
+            // Check min
+            if (rule.min !== undefined) {
+                if (rule.type === "string") {
+                    if (value.length < rule.min) {
+                        fieldErrors.push("Too short");
+                    }
+                } else if (rule.type === "number") {
+                    if (value < rule.min) {
+                        fieldErrors.push("Too small");
+                    }
+                } else if (rule.type === "array") {
+                    if (value.length < rule.min) {
+                        fieldErrors.push("Too few items");
+                    }
+                }
+            }
+
+            // Check max
+            if (rule.max !== undefined) {
+                if (rule.type === "string") {
+                    if (value.length > rule.max) {
+                        fieldErrors.push("Too long");
+                    }
+                } else if (rule.type === "number") {
+                    if (value > rule.max) {
+                        fieldErrors.push("Too large");
+                    }
+                } else if (rule.type === "array") {
+                    if (value.length > rule.max) {
+                        fieldErrors.push("Too many items");
+                    }
+                }
+            }
+
+            // Check pattern
+            if (rule.pattern !== undefined && rule.type === "string") {
+                const regex = new RegExp(rule.pattern);
+                if (!regex.test(value)) {
+                    fieldErrors.push("Invalid format");
+                }
+            }
+        }
+
+        if (fieldErrors.length > 0) {
+            errors[field] = fieldErrors;
+        }
+    }
+
+    return {
+        valid: Object.keys(errors).length === 0,
+        errors: errors
+    };
+}
+```

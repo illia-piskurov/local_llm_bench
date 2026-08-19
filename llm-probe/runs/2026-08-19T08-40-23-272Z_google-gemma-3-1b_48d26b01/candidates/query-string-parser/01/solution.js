@@ -1,0 +1,29 @@
+export function solve(input) {
+  const result = {};
+
+  if (!input || typeof input !== 'string') {
+    return result;
+  }
+
+  const queryString = input.query === '' ? "" : input.query;
+
+  const parts = queryString.split('&');
+
+  for (const part of parts) {
+    const [key, value] = part.split('=');
+    if (key.length === 1) {
+      result[key] = decodeURIComponent(value);
+    } else if (key.includes('[]')) {
+      const array = [];
+      let current = key;
+      while (array.length < part.length) {
+        current = `${current}[${part.substring(0, part.indexOf('[]')}].${part.substring(part.indexOf('[]') + 1)}}`;
+      }
+      result[key] = decodeURIComponent(array);
+    } else {
+      result[key] = decodeURIComponent(value);
+    }
+  }
+
+  return result;
+}

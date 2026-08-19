@@ -1,0 +1,3574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>llm-probe report: mistralai/ministral-3-3b</title>
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-card: #111827;
+      --bg-card-hover: #172033;
+      --bg-panel: #0d1322;
+      --border: #1f293d;
+      --border-focus: #3b82f6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --accent-blue: #38bdf8;
+      --accent-green: #10b981;
+      --accent-green-bg: rgba(16, 185, 129, 0.12);
+      --accent-red: #f43f5e;
+      --accent-red-bg: rgba(244, 63, 94, 0.12);
+      --accent-amber: #f59e0b;
+      --accent-amber-bg: rgba(245, 158, 11, 0.12);
+      --code-bg: #070a12;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 32px 24px;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .title-area h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .model-badge {
+      font-size: 1.1rem;
+      color: var(--accent-blue);
+      font-family: ui-monospace, Consolas, monospace;
+      font-weight: 600;
+    }
+
+    .meta-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .meta-tag {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .kpi-card:hover {
+      border-color: #2e3d5a;
+      transform: translateY(-2px);
+    }
+
+    .kpi-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .kpi-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .kpi-sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .kpi-card.highlight {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.06), var(--bg-card));
+    }
+
+    .kpi-card.highlight .kpi-value {
+      color: var(--accent-blue);
+    }
+
+    /* Category breakdown */
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: var(--text-main);
+    }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .cat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .cat-card:hover {
+      border-color: var(--accent-blue);
+      background: var(--bg-card-hover);
+    }
+
+    .cat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--bg-panel);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-green);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* Filters Bar */
+    .controls-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .search-input {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      min-width: 240px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-filter {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .btn-filter:hover, .btn-filter.active {
+      background: var(--accent-blue);
+      color: #000;
+      border-color: var(--accent-blue);
+    }
+
+    /* Task Cards */
+    .task-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.15s ease;
+    }
+
+    .task-card:hover {
+      border-color: #2e3d5a;
+    }
+
+    .task-header {
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      background: var(--bg-card);
+    }
+
+    .task-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .task-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .indicator-success { background: var(--accent-green); box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+    .indicator-danger { background: var(--accent-red); box-shadow: 0 0 8px rgba(244, 63, 94, 0.4); }
+
+    .task-id {
+      font-family: ui-monospace, Consolas, monospace;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-main);
+    }
+
+    .task-title {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .cat-pill {
+      background: var(--bg-panel);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .tps-pill {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.8rem;
+      color: var(--accent-blue);
+    }
+
+    .badge {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-success { background: var(--accent-green-bg); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-danger { background: var(--accent-red-bg); color: var(--accent-red); border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-amber { background: var(--accent-amber-bg); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .chevron {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      transition: transform 0.2s ease;
+    }
+
+    .task-card.expanded .chevron {
+      transform: rotate(180deg);
+    }
+
+    .task-body {
+      display: none;
+      padding: 18px;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+    }
+
+    .task-card.expanded .task-body {
+      display: block;
+    }
+
+    .prompt-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+
+    .prompt-title {
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 14px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .alert {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      font-size: 0.85rem;
+    }
+
+    .alert-danger {
+      background: var(--accent-red-bg);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: var(--accent-red);
+    }
+
+    /* Code tabs */
+    .code-tabs {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .tab-buttons {
+      display: flex;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 9px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-right: 1px solid var(--border);
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background: var(--code-bg);
+      color: var(--accent-blue);
+      border-bottom: 2px solid var(--accent-blue);
+    }
+
+    .tab-panel {
+      display: none;
+      padding: 14px 16px;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .copy-btn {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-main);
+      border-color: var(--accent-blue);
+    }
+
+    pre {
+      font-family: ui-monospace, Consolas, Monaco, monospace;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    /* Tests table */
+    .tests-section h4 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .tests-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .tests-table th, .tests-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tests-table th {
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    .tests-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .test-icon { width: 24px; text-align: center; font-weight: 800; }
+    .test-passed .test-icon { color: var(--accent-green); }
+    .test-failed .test-icon { color: var(--accent-red); }
+
+    .err-msg {
+      color: var(--accent-red);
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.8rem;
+    }
+
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="title-area">
+        <h1>llm-probe <span class="model-badge">mistralai/ministral-3-3b</span></h1>
+        <div class="meta-tags">
+          <span class="meta-tag">Run: <code>2026-08-18T07-13-20-203Z_mistralai-ministral-3-3b_0e7ecc98</code></span>
+          <span class="meta-tag">Status: <strong style="color: var(--accent-green)">completed</strong></span>
+          
+          <span class="meta-tag">Started: 2026-08-18T07:13:20.203Z</span>
+          <span class="meta-tag">Completed: 2026-08-18T07:15:31.165Z</span>
+          <span class="meta-tag">Samples: 1</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- KPI Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card highlight">
+        <span class="kpi-label">pass@1 Accuracy</span>
+        <span class="kpi-value">65%</span>
+        <span class="kpi-sub">11 / 17 tasks passed</span>
+      </div>
+      
+      <div class="kpi-card">
+        <span class="kpi-label">Throughput</span>
+        <span class="kpi-value">19 <span style="font-size:1rem;font-weight:500;">tok/s</span></span>
+        <span class="kpi-sub">Mean generation speed</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Latency</span>
+        <span class="kpi-value">6343 <span style="font-size:1rem;font-weight:500;">ms</span></span>
+        <span class="kpi-sub">Median per candidate</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Total Tokens</span>
+        <span class="kpi-value">2,416</span>
+        <span class="kpi-sub">~142 tokens / task</span>
+      </div>
+      <div class="kpi-card highlight">
+        <span class="kpi-label">Quality/Speed Score</span>
+        <span class="kpi-value">63</span>
+        <span class="kpi-sub">Normalized Q/S composite</span>
+      </div>
+    </section>
+
+    <!-- Categories -->
+    <section>
+      <h2 class="section-title">Accuracy by Category</h2>
+      <div class="cat-grid">
+        
+            <div class="cat-card" onclick="filterByCategory('other')">
+              <div class="cat-header">
+                <span>other</span>
+                <span><strong>5/6</strong> (83%)</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 83%"></div>
+              </div>
+            </div>
+          
+            <div class="cat-card" onclick="filterByCategory('strings')">
+              <div class="cat-header">
+                <span>strings</span>
+                <span><strong>1/1</strong> (100%)</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 100%"></div>
+              </div>
+            </div>
+          
+            <div class="cat-card" onclick="filterByCategory('collections')">
+              <div class="cat-header">
+                <span>collections</span>
+                <span><strong>1/2</strong> (50%)</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 50%"></div>
+              </div>
+            </div>
+          
+            <div class="cat-card" onclick="filterByCategory('numbers')">
+              <div class="cat-header">
+                <span>numbers</span>
+                <span><strong>0/1</strong> (0%)</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+              </div>
+            </div>
+          
+            <div class="cat-card" onclick="filterByCategory('structures')">
+              <div class="cat-header">
+                <span>structures</span>
+                <span><strong>1/1</strong> (100%)</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 100%"></div>
+              </div>
+            </div>
+          
+            <div class="cat-card" onclick="filterByCategory('algorithms')">
+              <div class="cat-header">
+                <span>algorithms</span>
+                <span><strong>2/3</strong> (67%)</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 67%"></div>
+              </div>
+            </div>
+          
+            <div class="cat-card" onclick="filterByCategory('correctness')">
+              <div class="cat-header">
+                <span>correctness</span>
+                <span><strong>1/3</strong> (33%)</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 33%"></div>
+              </div>
+            </div>
+          
+      </div>
+    </section>
+
+    <!-- Filter Controls -->
+    <section class="controls-bar">
+      <input type="text" id="task-search" class="search-input" placeholder="Search task ID or title..." oninput="filterTasks()" />
+      <div class="filter-buttons">
+        <button type="button" class="btn-filter active" data-filter="all" onclick="filterByStatus('all')">All (17)</button>
+        <button type="button" class="btn-filter" data-filter="passed" onclick="filterByStatus('passed')">Passed (11)</button>
+        <button type="button" class="btn-filter" data-filter="failed" onclick="filterByStatus('failed')">Failed (6)</button>
+      </div>
+    </section>
+
+    <!-- Tasks List -->
+    <main class="task-cards" id="tasks-container">
+      
+      <div class="task-card" data-task-id="first-unique-char" data-category="other" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">first-unique-char</span>
+            <span class="task-title">first-unique-char</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">other</span>
+            <span class="badge badge-success">6/6</span>
+            <span class="tps-pill">23 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p></p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 6/6</span>
+            <span><strong>Gen Time:</strong> 4250 ms</span>
+            <span><strong>Speed:</strong> 23 tok/s</span>
+            <span><strong>Tokens:</strong> 98</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-first-unique-char-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-first-unique-char-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-first-unique-char-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-first-unique-char-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const text = input.text;
+    const charCount = new Map();
+    for (const char of text) {
+        charCount.set(char, (charCount.get(char) || 0) + 1);
+    }
+    for (let i = 0; i &lt; text.length; i++) {
+        if (charCount.get(text[i]) === 1) return i;
+    }
+    return -1;
+}</code></pre>
+            </div>
+            <div id="ref-code-first-unique-char-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>// No reference code available</code></pre>
+            </div>
+            
+            <div id="raw-resp-first-unique-char-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```js
+export function solve(input) {
+    const text = input.text;
+    const charCount = new Map();
+    for (const char of text) {
+        charCount.set(char, (charCount.get(char) || 0) + 1);
+    }
+    for (let i = 0; i &lt; text.length; i++) {
+        if (charCount.get(text[i]) === 1) return i;
+    }
+    return -1;
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (6/6)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>duplicate-prefix</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>none</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>empty</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>single</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>all-unique</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>last-unique</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="run-length-encode" data-category="other" data-status="failed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-danger"></span>
+            <span class="task-id">run-length-encode</span>
+            <span class="task-title">run-length-encode</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">other</span>
+            <span class="badge badge-danger">4/5</span>
+            <span class="tps-pill">21 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p></p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-danger">failed</span></span>
+            <span><strong>Tests:</strong> 4/5</span>
+            <span><strong>Gen Time:</strong> 5478 ms</span>
+            <span><strong>Speed:</strong> 21 tok/s</span>
+            <span><strong>Tokens:</strong> 113</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-run-length-encode-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-run-length-encode-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-run-length-encode-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-run-length-encode-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const text = input.text;
+    let result = [];
+    let count = 1;
+
+    for (let i = 1; i &lt; text.length; i++) {
+        if (text[i] === text[i - 1]) {
+            count++;
+        } else {
+            result.push(`${count}${text[i - 1]}`);
+            count = 1;
+        }
+    }
+    result.push(`${count}${text[text.length - 1]}`);
+
+    return result.join(&#039;&#039;);
+}</code></pre>
+            </div>
+            <div id="ref-code-run-length-encode-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>// No reference code available</code></pre>
+            </div>
+            
+            <div id="raw-resp-run-length-encode-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const text = input.text;
+    let result = [];
+    let count = 1;
+
+    for (let i = 1; i &lt; text.length; i++) {
+        if (text[i] === text[i - 1]) {
+            count++;
+        } else {
+            result.push(`${count}${text[i - 1]}`);
+            count = 1;
+        }
+    }
+    result.push(`${count}${text[text.length - 1]}`);
+
+    return result.join(&#039;&#039;);
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (4/5)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>single-chars</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>empty</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected &quot;&quot;, got &quot;1undefined&quot;</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>all-same</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>alternating</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>long-run</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="longest-substring-no-repeat" data-category="strings" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">longest-substring-no-repeat</span>
+            <span class="task-title">Longest substring without repeating characters</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">strings</span>
+            <span class="badge badge-success">5/5</span>
+            <span class="tps-pill">19 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Return the length of the longest substring of input.text that contains no duplicate characters.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 5/5</span>
+            <span><strong>Gen Time:</strong> 6032 ms</span>
+            <span><strong>Speed:</strong> 19 tok/s</span>
+            <span><strong>Tokens:</strong> 115</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-longest-substring-no-repeat-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-longest-substring-no-repeat-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-longest-substring-no-repeat-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-longest-substring-no-repeat-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const { text } = input;
+    let maxLength = 0;
+    const charSet = new Set();
+    let left = 0;
+
+    for (let right = 0; right &lt; text.length; right++) {
+        while (charSet.has(text[right])) {
+            charSet.delete(text[left]);
+            left++;
+        }
+        charSet.add(text[right]);
+        maxLength = Math.max(maxLength, right - left + 1);
+    }
+
+    return maxLength;
+}</code></pre>
+            </div>
+            <div id="ref-code-longest-substring-no-repeat-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  const seen = new Map();
+  let left = 0, best = 0;
+  for (let right = 0; right &lt; input.text.length; right++) {
+    const ch = input.text[right];
+    if (seen.has(ch) &amp;&amp; seen.get(ch) &gt;= left) left = seen.get(ch) + 1;
+    seen.set(ch, right);
+    best = Math.max(best, right - left + 1);
+  }
+  return best;
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-longest-substring-no-repeat-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const { text } = input;
+    let maxLength = 0;
+    const charSet = new Set();
+    let left = 0;
+
+    for (let right = 0; right &lt; text.length; right++) {
+        while (charSet.has(text[right])) {
+            charSet.delete(text[left]);
+            left++;
+        }
+        charSet.add(text[right]);
+        maxLength = Math.max(maxLength, right - left + 1);
+    }
+
+    return maxLength;
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (5/5)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>all-same</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>mixed</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>empty</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>single</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>all-unique</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="group-anagrams" data-category="collections" data-status="failed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-danger"></span>
+            <span class="task-id">group-anagrams</span>
+            <span class="task-title">Group anagrams</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">collections</span>
+            <span class="badge badge-danger">4/5</span>
+            <span class="tps-pill">19 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Group anagrams from input.words. Sort words inside each group alphabetically. Sort groups by their first word alphabetically.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-danger">failed</span></span>
+            <span><strong>Tests:</strong> 4/5</span>
+            <span><strong>Gen Time:</strong> 5936 ms</span>
+            <span><strong>Speed:</strong> 19 tok/s</span>
+            <span><strong>Tokens:</strong> 115</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-group-anagrams-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-group-anagrams-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-group-anagrams-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-group-anagrams-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const words = new Set(input.words);
+    const anagramGroups = {};
+
+    for (const word of words) {
+        const key = [...word].sort().join(&#039;&#039;);
+        if (!anagramGroups[key]) {
+            anagramGroups[key] = [];
+        }
+        anagramGroups[key].push(word);
+    }
+
+    return Object.values(anagramGroups)
+        .map(group =&gt; group.sort())
+        .sort((a, b) =&gt; a[0].localeCompare(b[0]));
+}</code></pre>
+            </div>
+            <div id="ref-code-group-anagrams-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  const map = new Map();
+  for (const word of input.words) {
+    const key = [...word].sort().join(&quot;&quot;);
+    const group = map.get(key);
+    if (group) group.push(word);
+    else map.set(key, [word]);
+  }
+  return [...map.values()]
+    .map(group =&gt; group.sort())
+    .sort((a, b) =&gt; a[0].localeCompare(b[0]));
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-group-anagrams-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const words = new Set(input.words);
+    const anagramGroups = {};
+
+    for (const word of words) {
+        const key = [...word].sort().join(&#039;&#039;);
+        if (!anagramGroups[key]) {
+            anagramGroups[key] = [];
+        }
+        anagramGroups[key].push(word);
+    }
+
+    return Object.values(anagramGroups)
+        .map(group =&gt; group.sort())
+        .sort((a, b) =&gt; a[0].localeCompare(b[0]));
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (4/5)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>empty</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>single</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>repeated</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected [[&quot;ab&quot;,&quot;ab&quot;,&quot;ba&quot;]], got [[&quot;ab&quot;,&quot;ba&quot;]]</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>no-match</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>numbers</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="top-k-frequent" data-category="collections" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">top-k-frequent</span>
+            <span class="task-title">Top K frequent numbers</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">collections</span>
+            <span class="badge badge-success">5/5</span>
+            <span class="tps-pill">18 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Return k most frequent numbers from input.numbers. Sort by descending frequency; break ties by ascending number value.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 5/5</span>
+            <span><strong>Gen Time:</strong> 6343 ms</span>
+            <span><strong>Speed:</strong> 18 tok/s</span>
+            <span><strong>Tokens:</strong> 116</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-top-k-frequent-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-top-k-frequent-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-top-k-frequent-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-top-k-frequent-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const numbers = [...input.numbers];
+    const frequencyMap = new Map();
+
+    for (const num of numbers) {
+        frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);
+    }
+
+    return Array.from(frequencyMap.entries())
+        .sort((a, b) =&gt; b[1] - a[1] || a[0] - b[0])
+        .slice(0, input.k)
+        .map(([num]) =&gt; num);
+}</code></pre>
+            </div>
+            <div id="ref-code-top-k-frequent-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  const freq = new Map();
+  for (const n of input.numbers) freq.set(n, (freq.get(n) ?? 0) + 1);
+  return [...freq.entries()]
+    .sort(([a, fa], [b, fb]) =&gt; fb - fa || a - b)
+    .slice(0, input.k)
+    .map(([n]) =&gt; n);
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-top-k-frequent-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const numbers = [...input.numbers];
+    const frequencyMap = new Map();
+
+    for (const num of numbers) {
+        frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);
+    }
+
+    return Array.from(frequencyMap.entries())
+        .sort((a, b) =&gt; b[1] - a[1] || a[0] - b[0])
+        .slice(0, input.k)
+        .map(([num]) =&gt; num);
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (5/5)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>tie</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>negative</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>all</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>single</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>k-equals-total</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="frequency-map" data-category="other" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">frequency-map</span>
+            <span class="task-title">frequency-map</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">other</span>
+            <span class="badge badge-success">4/4</span>
+            <span class="tps-pill">17 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p></p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 4/4</span>
+            <span><strong>Gen Time:</strong> 3672 ms</span>
+            <span><strong>Speed:</strong> 17 tok/s</span>
+            <span><strong>Tokens:</strong> 61</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-frequency-map-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-frequency-map-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-frequency-map-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-frequency-map-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const result = {};
+    for (const item of input.items) {
+        if (!result.hasOwnProperty(String(item))) {
+            result[String(item)] = 0;
+        }
+        result[String(item)]++;
+    }
+    return result;
+}</code></pre>
+            </div>
+            <div id="ref-code-frequency-map-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>// No reference code available</code></pre>
+            </div>
+            
+            <div id="raw-resp-frequency-map-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const result = {};
+    for (const item of input.items) {
+        if (!result.hasOwnProperty(String(item))) {
+            result[String(item)] = 0;
+        }
+        result[String(item)]++;
+    }
+    return result;
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (4/4)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>empty</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>numbers</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>single</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>all-same</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="merge-intervals" data-category="numbers" data-status="failed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-danger"></span>
+            <span class="task-id">merge-intervals</span>
+            <span class="task-title">Merge intervals</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">numbers</span>
+            <span class="badge badge-danger">0/6</span>
+            <span class="tps-pill">19 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Merge overlapping or touching [start, end] intervals from input.intervals. Return the merged intervals as a plain Array of [start, end] pairs sorted by start. Do not wrap the result in an object.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-danger">failed</span></span>
+            <span><strong>Tests:</strong> 0/6</span>
+            <span><strong>Gen Time:</strong> 6749 ms</span>
+            <span><strong>Speed:</strong> 19 tok/s</span>
+            <span><strong>Tokens:</strong> 125</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-merge-intervals-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-merge-intervals-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-merge-intervals-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-merge-intervals-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const intervals = [...input.intervals].sort((a, b) =&gt; a[0] - b[0]);
+    const merged = [];
+    for (const interval of intervals) {
+        if (!merged.length || interval[0] &gt; merged[merged.length - 1][1]) {
+            merged.push([...interval]);
+        } else {
+            merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], interval[1]);
+        }
+    }
+    return { intervals: merged };
+}</code></pre>
+            </div>
+            <div id="ref-code-merge-intervals-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  if (!input.intervals.length) return [];
+  const sorted = [...input.intervals].sort((a, b) =&gt; a[0] - b[0]);
+  const result = [sorted[0].slice()];
+  for (let i = 1; i &lt; sorted.length; i++) {
+    const last = result[result.length - 1];
+    if (sorted[i][0] &lt;= last[1]) last[1] = Math.max(last[1], sorted[i][1]);
+    else result.push(sorted[i].slice());
+  }
+  return result;
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-merge-intervals-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const intervals = [...input.intervals].sort((a, b) =&gt; a[0] - b[0]);
+    const merged = [];
+    for (const interval of intervals) {
+        if (!merged.length || interval[0] &gt; merged[merged.length - 1][1]) {
+            merged.push([...interval]);
+        } else {
+            merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], interval[1]);
+        }
+    }
+    return { intervals: merged };
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (0/6)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>touching</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected [[1,5]], got {&quot;intervals&quot;:[[1,5]]}</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>unsorted</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected [[1,4],[5,7]], got {&quot;intervals&quot;:[[1,4],[5,7]]}</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>empty</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected [], got {&quot;intervals&quot;:[]}</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>single</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected [[3,3]], got {&quot;intervals&quot;:[[3,3]]}</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>no-merge</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected [[1,2],[4,5],[7,8]], got {&quot;intervals&quot;:[[1,2],[4,5],[7,8]]}</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>all-merge</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected [[1,10]], got {&quot;intervals&quot;:[[1,10]]}</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="count-primes" data-category="other" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">count-primes</span>
+            <span class="task-title">count-primes</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">other</span>
+            <span class="badge badge-success">6/6</span>
+            <span class="tps-pill">20 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p></p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 6/6</span>
+            <span><strong>Gen Time:</strong> 6346 ms</span>
+            <span><strong>Speed:</strong> 20 tok/s</span>
+            <span><strong>Tokens:</strong> 127</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-count-primes-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-count-primes-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-count-primes-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-count-primes-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const n = input.n;
+    if (n &lt;= 2) return 0;
+
+    let count = 0;
+    for (let num = 2; num &lt; n; num++) {
+        let isPrime = true;
+        for (let i = 2, maxDivisor = Math.sqrt(num); i &lt;= maxDivisor; i++) {
+            if (num % i === 0) {
+                isPrime = false;
+                break;
+            }
+        }
+        if (isPrime) count++;
+    }
+    return count;
+}</code></pre>
+            </div>
+            <div id="ref-code-count-primes-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>// No reference code available</code></pre>
+            </div>
+            
+            <div id="raw-resp-count-primes-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const n = input.n;
+    if (n &lt;= 2) return 0;
+
+    let count = 0;
+    for (let num = 2; num &lt; n; num++) {
+        let isPrime = true;
+        for (let i = 2, maxDivisor = Math.sqrt(num); i &lt;= maxDivisor; i++) {
+            if (num % i === 0) {
+                isPrime = false;
+                break;
+            }
+        }
+        if (isPrime) count++;
+    }
+    return count;
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (6/6)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>zero</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>one</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>two</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>three</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>twenty</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>large</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="balanced-brackets" data-category="other" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">balanced-brackets</span>
+            <span class="task-title">balanced-brackets</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">other</span>
+            <span class="badge badge-success">6/6</span>
+            <span class="tps-pill">19 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p></p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 6/6</span>
+            <span><strong>Gen Time:</strong> 6416 ms</span>
+            <span><strong>Speed:</strong> 19 tok/s</span>
+            <span><strong>Tokens:</strong> 123</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-balanced-brackets-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-balanced-brackets-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-balanced-brackets-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-balanced-brackets-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const text = input.text;
+    const stack = [];
+    const bracketPairs = { &#039;)&#039;: &#039;(&#039;, &#039;]&#039;: &#039;[&#039;, &#039;}&#039;: &#039;{&#039; };
+
+    for (const char of text) {
+        if (char === &#039;(&#039; || char === &#039;[&#039; || char === &#039;{&#039;) {
+            stack.push(char);
+        } else if (bracketPairs[char]) {
+            const lastOpen = stack.pop();
+            if (lastOpen !== bracketPairs[char]) return false;
+        }
+    }
+
+    return stack.length === 0;
+}</code></pre>
+            </div>
+            <div id="ref-code-balanced-brackets-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>// No reference code available</code></pre>
+            </div>
+            
+            <div id="raw-resp-balanced-brackets-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const text = input.text;
+    const stack = [];
+    const bracketPairs = { &#039;)&#039;: &#039;(&#039;, &#039;]&#039;: &#039;[&#039;, &#039;}&#039;: &#039;{&#039; };
+
+    for (const char of text) {
+        if (char === &#039;(&#039; || char === &#039;[&#039; || char === &#039;{&#039;) {
+            stack.push(char);
+        } else if (bracketPairs[char]) {
+            const lastOpen = stack.pop();
+            if (lastOpen !== bracketPairs[char]) return false;
+        }
+    }
+
+    return stack.length === 0;
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (6/6)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>wrong-order</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>open</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>text</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>empty</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>only-text</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>nested</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="flatten-tree" data-category="structures" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">flatten-tree</span>
+            <span class="task-title">Flatten binary tree to array</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">structures</span>
+            <span class="badge badge-success">4/4</span>
+            <span class="tps-pill">17 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Given a binary tree as input.root (object with value, left, right or null), return its values as an array in breadth-first (level-order) order. Return [] for a null root.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 4/4</span>
+            <span><strong>Gen Time:</strong> 5071 ms</span>
+            <span><strong>Speed:</strong> 17 tok/s</span>
+            <span><strong>Tokens:</strong> 85</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-flatten-tree-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-flatten-tree-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-flatten-tree-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-flatten-tree-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    if (!input?.root) return [];
+    const queue = [input.root];
+    const result = [];
+
+    while (queue.length &gt; 0) {
+        const node = queue.shift();
+        result.push(node.value);
+        if (node.left) queue.push(node.left);
+        if (node.right) queue.push(node.right);
+    }
+
+    return result;
+}</code></pre>
+            </div>
+            <div id="ref-code-flatten-tree-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  if (!input.root) return [];
+  const result = [];
+  const queue = [input.root];
+  while (queue.length) {
+    const node = queue.shift();
+    result.push(node.value);
+    if (node.left) queue.push(node.left);
+    if (node.right) queue.push(node.right);
+  }
+  return result;
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-flatten-tree-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    if (!input?.root) return [];
+    const queue = [input.root];
+    const result = [];
+
+    while (queue.length &gt; 0) {
+        const node = queue.shift();
+        result.push(node.value);
+        if (node.left) queue.push(node.left);
+        if (node.right) queue.push(node.right);
+    }
+
+    return result;
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (4/4)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>null</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>single</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>left-only</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>full</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="two-sum-indices" data-category="other" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">two-sum-indices</span>
+            <span class="task-title">two-sum-indices</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">other</span>
+            <span class="badge badge-success">5/5</span>
+            <span class="tps-pill">18 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p></p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 5/5</span>
+            <span><strong>Gen Time:</strong> 5687 ms</span>
+            <span><strong>Speed:</strong> 18 tok/s</span>
+            <span><strong>Tokens:</strong> 104</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-two-sum-indices-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-two-sum-indices-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-two-sum-indices-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-two-sum-indices-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const numbers = [...input.numbers];
+    const target = input.target;
+    const n = numbers.length;
+
+    for (let i = 0; i &lt; n - 1; ++i) {
+        for (let j = i + 1; j &lt; n; ++j) {
+            if (numbers[i] + numbers[j] === target) {
+                return [i, j];
+            }
+        }
+    }
+
+    return [];
+}</code></pre>
+            </div>
+            <div id="ref-code-two-sum-indices-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>// No reference code available</code></pre>
+            </div>
+            
+            <div id="raw-resp-two-sum-indices-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const numbers = [...input.numbers];
+    const target = input.target;
+    const n = numbers.length;
+
+    for (let i = 0; i &lt; n - 1; ++i) {
+        for (let j = i + 1; j &lt; n; ++j) {
+            if (numbers[i] + numbers[j] === target) {
+                return [i, j];
+            }
+        }
+    }
+
+    return [];
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (5/5)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>duplicates</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>multiple</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>none</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>negative</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>zeros</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="shortest-path-grid" data-category="algorithms" data-status="failed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-danger"></span>
+            <span class="task-id">shortest-path-grid</span>
+            <span class="task-title">Shortest path in grid</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">algorithms</span>
+            <span class="badge badge-danger">1/4</span>
+            <span class="tps-pill">19 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Return the minimum number of 4-directional moves from input.start to input.end through 0-cells in input.grid (1-cells are blocked). Return -1 if unreachable.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-danger">failed</span></span>
+            <span><strong>Tests:</strong> 1/4</span>
+            <span><strong>Gen Time:</strong> 14589 ms</span>
+            <span><strong>Speed:</strong> 19 tok/s</span>
+            <span><strong>Tokens:</strong> 280</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-shortest-path-grid-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-shortest-path-grid-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-shortest-path-grid-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-shortest-path-grid-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const { grid, start, end } = input;
+    const rows = grid.length;
+    const cols = grid[0].length;
+    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    const visited = Array(rows).fill().map(() =&gt; Array(cols).fill(false));
+    const queue = [{ x: start[0], y: start[1], steps: 0 }];
+    const target = { x: end[0], y: end[1] };
+
+    while (queue.length) {
+        const { x, y, steps } = queue.shift();
+        if ([x, y] === target &amp;&amp; grid[x][y] === 0) return steps;
+
+        visited[x][y] = true;
+        for (const [dx, dy] of directions) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx &gt;= 0 &amp;&amp; nx &lt; rows &amp;&amp; ny &gt;= 0 &amp;&amp; ny &lt; cols &amp;&amp;
+                !visited[nx][ny] &amp;&amp; grid[nx][ny] === 0) {
+                queue.push({ x: nx, y: ny, steps: steps + 1 });
+            }
+        }
+    }
+
+    return -1;
+}</code></pre>
+            </div>
+            <div id="ref-code-shortest-path-grid-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  const { grid, start, end } = input;
+  const rows = grid.length, cols = grid[0]?.length ?? 0;
+  if (grid[start[0]][start[1]] === 1 || grid[end[0]][end[1]] === 1) return -1;
+  const visited = Array.from({ length: rows }, () =&gt; new Array(cols).fill(false));
+  const queue = [[start[0], start[1], 0]];
+  visited[start[0]][start[1]] = true;
+  while (queue.length) {
+    const [r, c, dist] = queue.shift();
+    if (r === end[0] &amp;&amp; c === end[1]) return dist;
+    for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+      const nr = r + dr, nc = c + dc;
+      if (nr &gt;= 0 &amp;&amp; nr &lt; rows &amp;&amp; nc &gt;= 0 &amp;&amp; nc &lt; cols &amp;&amp; !visited[nr][nc] &amp;&amp; grid[nr][nc] === 0) {
+        visited[nr][nc] = true;
+        queue.push([nr, nc, dist + 1]);
+      }
+    }
+  }
+  return -1;
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-shortest-path-grid-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const { grid, start, end } = input;
+    const rows = grid.length;
+    const cols = grid[0].length;
+    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    const visited = Array(rows).fill().map(() =&gt; Array(cols).fill(false));
+    const queue = [{ x: start[0], y: start[1], steps: 0 }];
+    const target = { x: end[0], y: end[1] };
+
+    while (queue.length) {
+        const { x, y, steps } = queue.shift();
+        if ([x, y] === target &amp;&amp; grid[x][y] === 0) return steps;
+
+        visited[x][y] = true;
+        for (const [dx, dy] of directions) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx &gt;= 0 &amp;&amp; nx &lt; rows &amp;&amp; ny &gt;= 0 &amp;&amp; ny &lt; cols &amp;&amp;
+                !visited[nx][ny] &amp;&amp; grid[nx][ny] === 0) {
+                queue.push({ x: nx, y: ny, steps: steps + 1 });
+            }
+        }
+    }
+
+    return -1;
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (1/4)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>unreachable</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>same</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected 0, got -1</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>route</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected 4, got -1</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>straight</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected 3, got -1</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="lcs-length" data-category="algorithms" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">lcs-length</span>
+            <span class="task-title">Longest common subsequence length</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">algorithms</span>
+            <span class="badge badge-success">5/5</span>
+            <span class="tps-pill">19 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Return the length of the longest common subsequence of strings input.a and input.b.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 5/5</span>
+            <span><strong>Gen Time:</strong> 9574 ms</span>
+            <span><strong>Speed:</strong> 19 tok/s</span>
+            <span><strong>Tokens:</strong> 180</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-lcs-length-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-lcs-length-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-lcs-length-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-lcs-length-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const a = input.a;
+    const b = input.b;
+    const m = a.length;
+    const n = b.length;
+
+    const dp = Array.from({ length: m + 1 }, () =&gt; new Array(n + 1).fill(0));
+
+    for (let i = 1; i &lt;= m; i++) {
+        for (let j = 1; j &lt;= n; j++) {
+            if (a[i - 1] === b[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+    }
+
+    return dp[m][n];
+}</code></pre>
+            </div>
+            <div id="ref-code-lcs-length-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  const a = input.a, b = input.b;
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, () =&gt; new Array(n + 1).fill(0));
+  for (let i = 1; i &lt;= m; i++)
+    for (let j = 1; j &lt;= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
+  return dp[m][n];
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-lcs-length-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const a = input.a;
+    const b = input.b;
+    const m = a.length;
+    const n = b.length;
+
+    const dp = Array.from({ length: m + 1 }, () =&gt; new Array(n + 1).fill(0));
+
+    for (let i = 1; i &lt;= m; i++) {
+        for (let j = 1; j &lt;= n; j++) {
+            if (a[i - 1] === b[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+    }
+
+    return dp[m][n];
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (5/5)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>none</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>equal</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>mixed</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>empty-a</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>single</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="topological-sort" data-category="algorithms" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">topological-sort</span>
+            <span class="task-title">Topological sort</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">algorithms</span>
+            <span class="badge badge-success">5/5</span>
+            <span class="tps-pill">18 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Given input.n nodes (0..n-1) and input.edges as [from, to] directed pairs, return one valid topological ordering as an array. Return null if a cycle exists.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 5/5</span>
+            <span><strong>Gen Time:</strong> 10969 ms</span>
+            <span><strong>Speed:</strong> 18 tok/s</span>
+            <span><strong>Tokens:</strong> 196</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-topological-sort-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-topological-sort-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-topological-sort-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-topological-sort-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const { n, edges } = input;
+    const adj = Array.from({ length: n }, () =&gt; []);
+    const inDegree = new Array(n).fill(0);
+
+    for (const [from, to] of edges) {
+        adj[from].push(to);
+        inDegree[to]++;
+    }
+
+    const queue = [];
+    for (let i = 0; i &lt; n; i++) {
+        if (inDegree[i] === 0) queue.push(i);
+    }
+
+    let result = [];
+    while (queue.length &gt; 0) {
+        const u = queue.shift();
+        result.push(u);
+
+        for (const v of adj[u]) {
+            inDegree[v]--;
+            if (inDegree[v] === 0) queue.push(v);
+        }
+    }
+
+    return inDegree.some(d =&gt; d !== 0) ? null : result;
+}</code></pre>
+            </div>
+            <div id="ref-code-topological-sort-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  const { n, edges } = input;
+  const indegree = new Array(n).fill(0);
+  const adj = Array.from({ length: n }, () =&gt; []);
+  for (const [u, v] of edges) { adj[u].push(v); indegree[v]++; }
+  const queue = [];
+  for (let i = 0; i &lt; n; i++) if (indegree[i] === 0) queue.push(i);
+  const result = [];
+  while (queue.length) {
+    const node = queue.shift();
+    result.push(node);
+    for (const nb of adj[node]) { indegree[nb]--; if (indegree[nb] === 0) queue.push(nb); }
+  }
+  return result.length === n ? result : null;
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-topological-sort-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const { n, edges } = input;
+    const adj = Array.from({ length: n }, () =&gt; []);
+    const inDegree = new Array(n).fill(0);
+
+    for (const [from, to] of edges) {
+        adj[from].push(to);
+        inDegree[to]++;
+    }
+
+    const queue = [];
+    for (let i = 0; i &lt; n; i++) {
+        if (inDegree[i] === 0) queue.push(i);
+    }
+
+    let result = [];
+    while (queue.length &gt; 0) {
+        const u = queue.shift();
+        result.push(u);
+
+        for (const v of adj[u]) {
+            inDegree[v]--;
+            if (inDegree[v] === 0) queue.push(v);
+        }
+    }
+
+    return inDegree.some(d =&gt; d !== 0) ? null : result;
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (5/5)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>cycle</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>single</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>no-edges</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>chain</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>self-loop</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="rotate-square-matrix" data-category="correctness" data-status="failed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-danger"></span>
+            <span class="task-id">rotate-square-matrix</span>
+            <span class="task-title">Rotate square matrix 90° clockwise</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">correctness</span>
+            <span class="badge badge-danger">2/4</span>
+            <span class="tps-pill">13 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Return a new matrix that is input.matrix rotated 90 degrees clockwise. Do not mutate input.matrix.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-danger">failed</span></span>
+            <span><strong>Tests:</strong> 2/4</span>
+            <span><strong>Gen Time:</strong> 2793 ms</span>
+            <span><strong>Speed:</strong> 13 tok/s</span>
+            <span><strong>Tokens:</strong> 35</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-rotate-square-matrix-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-rotate-square-matrix-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-rotate-square-matrix-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-rotate-square-matrix-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const matrix = [...input.matrix];
+    return matrix.map((row, i) =&gt; row.reverse()).reverse();
+}</code></pre>
+            </div>
+            <div id="ref-code-rotate-square-matrix-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  const m = input.matrix;
+  const n = m.length;
+  if (n === 0) return [];
+  return Array.from({ length: n }, (_, c) =&gt;
+    Array.from({ length: n }, (__, r) =&gt; m[n - 1 - r][c])
+  );
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-rotate-square-matrix-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const matrix = [...input.matrix];
+    return matrix.map((row, i) =&gt; row.reverse()).reverse();
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (2/4)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>three</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected [[7,4,1],[8,5,2],[9,6,3]], got [[9,8,7],[6,5,4],[3,2,1]]</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>one</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>empty</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>mutation-check</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected [[3,1],[4,2]], got [[4,3],[2,1]]</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="validate-sudoku-board" data-category="correctness" data-status="failed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-danger"></span>
+            <span class="task-id">validate-sudoku-board</span>
+            <span class="task-title">Validate Sudoku board</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">correctness</span>
+            <span class="badge badge-danger">3/4</span>
+            <span class="tps-pill">18 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Return whether a 9×9 Sudoku board (input.board: string[9], each 9 chars) is valid. &#039;.&#039; means empty. Check rows, columns and all 3×3 boxes.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-danger">failed</span></span>
+            <span><strong>Tests:</strong> 3/4</span>
+            <span><strong>Gen Time:</strong> 16725 ms</span>
+            <span><strong>Speed:</strong> 18 tok/s</span>
+            <span><strong>Tokens:</strong> 304</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-validate-sudoku-board-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-validate-sudoku-board-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-validate-sudoku-board-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-validate-sudoku-board-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const board = input.board;
+    const boxes = Array(9).fill().map((_, i) =&gt; Math.floor(i / 3));
+
+    for (let row = 0; row &lt; 9; row++) {
+        const seen = new Set();
+        for (let col = 0; col &lt; 9; col++) {
+            const cell = board[row][col];
+            if (cell !== &#039;.&#039;) {
+                if (seen.has(cell)) return false;
+                seen.add(cell);
+            }
+        }
+    }
+
+    for (let col = 0; col &lt; 9; col++) {
+        const seen = new Set();
+        for (let row = 0; row &lt; 9; row++) {
+            const cell = board[row][col];
+            if (cell !== &#039;.&#039;) {
+                if (seen.has(cell)) return false;
+                seen.add(cell);
+            }
+        }
+    }
+
+    for (const box of boxes) {
+        const seen = new Set();
+        for (let i = 0; i &lt; 9; i++) {
+            const row = Math.floor(i / 3) + box * 3;
+            const col = i % 3 * 3;
+            const cell = board[row][col];
+            if (cell !== &#039;.&#039;) {
+                if (seen.has(cell)) return false;
+                seen.add(cell);
+            }
+        }
+    }
+
+    return true;
+}</code></pre>
+            </div>
+            <div id="ref-code-validate-sudoku-board-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  const rows = Array.from({ length: 9 }, () =&gt; new Set());
+  const cols = Array.from({ length: 9 }, () =&gt; new Set());
+  const boxes = Array.from({ length: 9 }, () =&gt; new Set());
+  for (let r = 0; r &lt; 9; r++) {
+    for (let c = 0; c &lt; 9; c++) {
+      const ch = input.board[r][c];
+      if (ch === &#039;.&#039;) continue;
+      const box = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+      if (rows[r].has(ch) || cols[c].has(ch) || boxes[box].has(ch)) return false;
+      rows[r].add(ch); cols[c].add(ch); boxes[box].add(ch);
+    }
+  }
+  return true;
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-validate-sudoku-board-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const board = input.board;
+    const boxes = Array(9).fill().map((_, i) =&gt; Math.floor(i / 3));
+
+    for (let row = 0; row &lt; 9; row++) {
+        const seen = new Set();
+        for (let col = 0; col &lt; 9; col++) {
+            const cell = board[row][col];
+            if (cell !== &#039;.&#039;) {
+                if (seen.has(cell)) return false;
+                seen.add(cell);
+            }
+        }
+    }
+
+    for (let col = 0; col &lt; 9; col++) {
+        const seen = new Set();
+        for (let row = 0; row &lt; 9; row++) {
+            const cell = board[row][col];
+            if (cell !== &#039;.&#039;) {
+                if (seen.has(cell)) return false;
+                seen.add(cell);
+            }
+        }
+    }
+
+    for (const box of boxes) {
+        const seen = new Set();
+        for (let i = 0; i &lt; 9; i++) {
+            const row = Math.floor(i / 3) + box * 3;
+            const col = i % 3 * 3;
+            const cell = board[row][col];
+            if (cell !== &#039;.&#039;) {
+                if (seen.has(cell)) return false;
+                seen.add(cell);
+            }
+        }
+    }
+
+    return true;
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (3/4)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>row-duplicate</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-failed">
+          <td class="test-icon">✗</td>
+          <td class="test-id"><code>box-duplicate</code></td>
+          <td class="test-status"><span class="badge badge-danger">Failed</span></td>
+          <td class="test-error"><span class="err-msg">Expected false, got true</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>empty</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>col-duplicate</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+      <div class="task-card" data-task-id="deep-equal" data-category="correctness" data-status="passed">
+        <div class="task-header" onclick="toggleTaskCard(this)">
+          <div class="task-header-left">
+            <span class="status-indicator indicator-success"></span>
+            <span class="task-id">deep-equal</span>
+            <span class="task-title">Deep equality check</span>
+          </div>
+          <div class="task-header-right">
+            <span class="cat-pill">correctness</span>
+            <span class="badge badge-success">8/8</span>
+            <span class="tps-pill">19 t/s</span>
+            <span class="chevron">▼</span>
+          </div>
+        </div>
+        <div class="task-body">
+          <div class="prompt-box">
+            <div class="prompt-title">Task Specification</div>
+            <p>Return true if input.a and input.b are deeply equal JSON values. Handle nulls, primitives, arrays, and plain objects recursively. Do not use JSON.stringify.</p>
+          </div>
+          
+        <div class="sample-content" data-sample="1">
+          <div class="meta-row">
+            <span><strong>Attempt:</strong> #1</span>
+            <span><strong>Status:</strong> <span class="badge badge-success">passed</span></span>
+            <span><strong>Tests:</strong> 8/8</span>
+            <span><strong>Gen Time:</strong> 12788 ms</span>
+            <span><strong>Speed:</strong> 19 tok/s</span>
+            <span><strong>Tokens:</strong> 239</span>
+          </div>
+
+          
+
+          <div class="code-tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-btn active" onclick="switchCodeTab(this, 'cand-code-deep-equal-1')">Solution Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'ref-code-deep-equal-1')">Reference Code</button>
+              <button type="button" class="tab-btn" onclick="switchCodeTab(this, 'raw-resp-deep-equal-1')">Raw LLM Response</button>
+            </div>
+            <div id="cand-code-deep-equal-1" class="tab-panel active">
+              <div class="code-header">
+                <span>JavaScript (ES2023)</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+    const isEqual = (a, b) =&gt; {
+        if (a === b) return true;
+
+        // Handle primitives and null
+        if (typeof a !== &#039;object&#039; || typeof b !== &#039;object&#039; || a === null || b === null) {
+            return false;
+        }
+
+        // Handle arrays
+        if (Array.isArray(a) &amp;&amp; Array.isArray(b)) {
+            if (a.length !== b.length) return false;
+            for (let i = 0; i &lt; a.length; i++) {
+                if (!isEqual(a[i], b[i])) return false;
+            }
+            return true;
+        }
+
+        // Handle plain objects
+        const keysA = new Set(Object.keys(a));
+        const keysB = new Set(Object.keys(b));
+
+        if (keysA.size !== keysB.size) return false;
+
+        for (const key of keysA) {
+            if (!keysB.has(key) || !isEqual(a[key], b[key])) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    return isEqual(input.a, input.b);
+}</code></pre>
+            </div>
+            <div id="ref-code-deep-equal-1" class="tab-panel">
+              <div class="code-header">
+                <span>Reference Implementation</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>export function solve(input) {
+  function eq(a, b) {
+    if (a === b) return true;
+    if (a === null || b === null) return false;
+    if (typeof a !== typeof b) return false;
+    if (Array.isArray(a) !== Array.isArray(b)) return false;
+    if (Array.isArray(a)) {
+      if (a.length !== b.length) return false;
+      return a.every((v, i) =&gt; eq(v, b[i]));
+    }
+    if (typeof a === &#039;object&#039;) {
+      const ka = Object.keys(a), kb = Object.keys(b);
+      if (ka.length !== kb.length) return false;
+      return ka.every(k =&gt; Object.prototype.hasOwnProperty.call(b, k) &amp;&amp; eq(a[k], b[k]));
+    }
+    return false;
+  }
+  return eq(input.a, input.b);
+}</code></pre>
+            </div>
+            
+            <div id="raw-resp-deep-equal-1" class="tab-panel">
+              <div class="code-header">
+                <span>Raw Response</span>
+                <button type="button" class="copy-btn" onclick="copyCode(this)">Copy</button>
+              </div>
+              <pre><code>```javascript
+export function solve(input) {
+    const isEqual = (a, b) =&gt; {
+        if (a === b) return true;
+
+        // Handle primitives and null
+        if (typeof a !== &#039;object&#039; || typeof b !== &#039;object&#039; || a === null || b === null) {
+            return false;
+        }
+
+        // Handle arrays
+        if (Array.isArray(a) &amp;&amp; Array.isArray(b)) {
+            if (a.length !== b.length) return false;
+            for (let i = 0; i &lt; a.length; i++) {
+                if (!isEqual(a[i], b[i])) return false;
+            }
+            return true;
+        }
+
+        // Handle plain objects
+        const keysA = new Set(Object.keys(a));
+        const keysB = new Set(Object.keys(b));
+
+        if (keysA.size !== keysB.size) return false;
+
+        for (const key of keysA) {
+            if (!keysB.has(key) || !isEqual(a[key], b[key])) {
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+    return isEqual(input.a, input.b);
+}
+```</code></pre>
+            </div>
+          </div>
+
+          
+          <div class="tests-section">
+            <h4>Test Case Breakdown (8/8)</h4>
+            <div class="table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Test ID</th>
+                    <th>Status</th>
+                    <th>Detail / Mismatch</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>primitives-eq</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>primitives-neq</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>null</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>null-vs-obj</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>arrays</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>array-length</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>nested</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+        <tr class="test-row test-passed">
+          <td class="test-icon">✓</td>
+          <td class="test-id"><code>key-count</code></td>
+          <td class="test-status"><span class="badge badge-success">Passed</span></td>
+          <td class="test-error"><span class="text-dim">None</span></td>
+        </tr>
+      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      
+        </div>
+      </div>
+    
+    </main>
+
+    <footer class="footer">
+      Generated by <strong>llm-probe</strong> • Local LLM JavaScript Benchmark
+    </footer>
+  </div>
+
+  <script>
+    let currentStatusFilter = 'all';
+    let currentCategoryFilter = 'all';
+
+    function toggleTaskCard(headerEl) {
+      const card = headerEl.closest('.task-card');
+      card.classList.toggle('expanded');
+    }
+
+    function switchCodeTab(btn, targetPanelId) {
+      const tabsContainer = btn.closest('.code-tabs');
+      tabsContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      tabsContainer.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const panel = document.getElementById(targetPanelId);
+      if (panel) panel.classList.add('active');
+    }
+
+    function copyCode(btn) {
+      const panel = btn.closest('.tab-panel');
+      const codeEl = panel.querySelector('code');
+      if (codeEl) {
+        navigator.clipboard.writeText(codeEl.innerText).then(() => {
+          const original = btn.innerText;
+          btn.innerText = 'Copied!';
+          setTimeout(() => btn.innerText = original, 1500);
+        });
+      }
+    }
+
+    function filterByStatus(status) {
+      currentStatusFilter = status;
+      document.querySelectorAll('.btn-filter').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === status);
+      });
+      filterTasks();
+    }
+
+    function filterByCategory(cat) {
+      currentCategoryFilter = (currentCategoryFilter === cat) ? 'all' : cat;
+      filterTasks();
+    }
+
+    function filterTasks() {
+      const query = document.getElementById('task-search').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.task-card');
+
+      cards.forEach(card => {
+        const taskId = card.dataset.taskId.toLowerCase();
+        const category = card.dataset.category.toLowerCase();
+        const status = card.dataset.status;
+
+        const matchesQuery = !query || taskId.includes(query) || card.innerText.toLowerCase().includes(query);
+        const matchesStatus = (currentStatusFilter === 'all') ||
+                              (currentStatusFilter === 'passed' && status === 'passed') ||
+                              (currentStatusFilter === 'failed' && status !== 'passed');
+        const matchesCat = (currentCategoryFilter === 'all') || (category === currentCategoryFilter.toLowerCase());
+
+        if (matchesQuery && matchesStatus && matchesCat) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

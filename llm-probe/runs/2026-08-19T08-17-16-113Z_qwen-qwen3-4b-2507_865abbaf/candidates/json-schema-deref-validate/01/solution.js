@@ -1,0 +1,173 @@
+export function solve(input) {
+    const { definitions, schema, data } = input;
+    
+    // Resolve $ref pointers
+    function resolveRef(ref) {
+        if (!ref || ref === "#") return {};
+        
+        const parts = ref.split("/").filter(p => p);
+        if (parts[0] !== "#") return {};
+        
+        const defName = parts[1];
+        if (!defName) return {};
+        
+        const defPath = parts[1];
+        if (defPath === "definitions" && parts.length === 2) {
+            return definitions[defPath] || {};
+        }
+        
+        // Handle subpaths like #/definitions/Name/properties/Prop
+        if (parts.length >= 3 && parts[1] === "definitions") {
+            const defName = parts[2];
+            const propPath = parts.slice(3).join("/");
+            
+            if (definitions[defName] && propPath) {
+                const def = definitions[defName];
+                const parts = propPath.split("/");
+                let current = def;
+                
+                for (const part of parts) {
+                    if (part === "properties") {
+                        if (current.properties) {
+                            current = current.properties;
+                        } else {
+                            return {};
+                        }
+                    } else if (part === "items") {
+                        if (current.items) {
+                            current = current.items;
+                        } else {
+                            return {};
+                        }
+                    } else if (part === "required") {
+                        if (current.required) {
+                            current = current.required;
+                        } else {
+                            return {};
+                        }
+                    } else {
+                        if (current.properties && current.properties[part]) {
+                            current = current.properties[part];
+                        } else {
+                            return {};
+                        }
+                    }
+                }
+                return current;
+            }
+        }
+        
+        return {};
+    }
+    
+    function validate(data, schema, path = "") {
+        const errors = [];
+        
+        if (schema === undefined) {
+            errors.push({ path: path, message: "Schema is required" });
+            return { valid: false, errors };
+        }
+        
+        if (schema.type === "object") {
+            if (!schema.properties) {
+                errors.push({ path: path, message: "Object schema must have properties" });
+                return { valid: false, errors };
+            }
+            
+            const required = schema.required || [];
+            const keys = Object.keys(schema.properties);
+            
+            for (const key of keys) {
+                const propSchema = schema.properties[key];
+                const propPath = path ? path + "/properties/" + key : "/properties/" + key;
+                
+                if (propSchema) {
+                    const value = data[key];
+                    const result = validate(value, propSchema, propPath);
+                    errors.push(...result.errors);
+                    if (!result.valid) return result;
+                }
+            }
+            
+            // Check required fields
+            for (const key of required) {
+                if (!(key in data)) {
+                    errors.push({ path: path + "/required/" + key, message: `Required property "${key}" is missing` });
+                }
+            }
+            
+            // Check for additional properties
+            if (schema.additionalProperties === false) {
+                const keys = Object.keys(data);
+                for (const key of keys) {
+                    if (!schema.properties[key]) {
+                        errors.push({ path: path + "/properties/" + key, message: "Additional property not allowed" });
+                    }
+                }
+            }
+        } else if (schema.type === "array") {
+            if (!schema.items) {
+                errors.push({ path: path, message: "Array schema must have items" });
+                return { valid: false, errors };
+            }
+            
+            if (Array.isArray(data)) {
+                if (schema.minItems && data.length < schema.minItems) {
+                    errors.push({ path: path, message: `Array length must be at least ${schema.minItems}` });
+                }
+                
+                for (let i = 0; i < data.length; i++) {
+                    const itemPath = path + "/items/" + i;
+                    const result = validate(data[i], schema.items, itemPath);
+                    errors.push(...result.errors);
+                    if (!result.valid) return result;
+                }
+            } else {
+                errors.push({ path: path, message: "Expected array, got " + typeof data });
+            }
+        } else if (schema.type === "string") {
+            if (typeof data !== "string") {
+                errors.push({ path: path, message: "Expected string, got " + typeof data });
+            } else if (schema.minLength && data.length < schema.minLength) {
+                errors.push({ path: path, message: `String length must be at least ${schema.minLength}` });
+            }
+        } else if (schema.type === "number") {
+            if (typeof data !== "number") {
+                errors.push({ path: path, message: "Expected number, got " + typeof data });
+            }
+        } else if (schema.type === "boolean") {
+            if (typeof data !== "boolean") {
+                errors.push({ path: path, message: "Expected boolean, got " + typeof data });
+            }
+        } else if (schema.type === "enum") {
+            if (!Array.isArray(schema.enum)) {
+                errors.push({ path: path, message: "Enum must be an array" });
+            } else if (!schema.enum.includes(data)) {
+                errors.push({ path: path, message: "Value not in enum" });
+            }
+        }
+        
+        return { valid: errors.length === 0, errors };
+    }
+    
+    // Resolve all $ref pointers in schema
+    function resolveSchema(schema) {
+        if (!schema) return schema;
+        
+        if (schema.$ref) {
+            const ref = schema.$ref;
+            const resolved = resolveRef(ref);
+            if (resolved && resolved.type) {
+                return resolved;
+            }
+        }
+        
+        return schema;
+    }
+    
+    // Resolve schema and validate
+    const resolvedSchema = resolveSchema(schema);
+    const result = validate(data, resolvedSchema);
+    
+    return result;
+}

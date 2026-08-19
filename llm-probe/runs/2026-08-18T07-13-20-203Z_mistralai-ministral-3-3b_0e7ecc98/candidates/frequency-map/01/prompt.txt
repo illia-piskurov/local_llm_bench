@@ -1,0 +1,10 @@
+Return an object mapping each element of input.items (strings or numbers) to its count. Preserve the type of the key as a string in the object key.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"items":["a","b","a","c","b","a"]}
+output: {"a":3,"b":2,"c":1}

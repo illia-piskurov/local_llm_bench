@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-0q42zn5ci7t7phgu1pv4oq",
+  "object": "chat.completion",
+  "created": 1787127457,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { items, filter, sort, page = 1, pageSize = 10 } = input;\n  \n  // Filter items\n  let filteredItems = [...items];\n  \n  if (filter) {\n    const { field, op, value } = filter;\n    \n    filteredItems = filteredItems.filter(item => {\n      const fieldValue = item[field];\n      \n      if (fieldValue === undefined) return false;\n      \n      switch (op) {\n        case 'eq':\n          return fieldValue === value;\n        case 'neq':\n          return fieldValue !== value;\n        case 'gt':\n          return fieldValue > value;\n        case 'gte':\n          return fieldValue >= value;\n        case 'lt':\n          return fieldValue < value;\n        case 'lte':\n          return fieldValue <= value;\n        case 'contains':\n          return String(fieldValue).toLowerCase().includes(String(value).toLowerCase());\n        default:\n          return false;\n      }\n    });\n  }\n  \n  // Sort items\n  if (sort) {\n    const { field, dir } = sort;\n    const compare = (a, b) => {\n      const valA = a[field];\n      const valB = b[field];\n      \n      if (valA === undefined && valB === undefined) return 0;\n      if (valA === undefined) return dir === 'asc' ? 1 : -1;\n      if (valB === undefined) return dir === 'asc' ? -1 : 1;\n      \n      if (typeof valA === 'string' && typeof valB === 'string') {\n        return dir === 'asc' \n          ? String(valA).localeCompare(String(valB)) \n          : String(valB).localeCompare(String(valA));\n      } else {\n        return dir === 'asc' \n          ? valA - valB \n          : valB - valA;\n      }\n    };\n    \n    filteredItems.sort((a, b) => compare(a, b));\n  }\n  \n  // Paginate\n  const startIndex = (page - 1) * pageSize;\n  const endIndex = startIndex + pageSize;\n  const paginatedItems = filteredItems.slice(startIndex, endIndex);\n  \n  const total = filteredItems.length;\n  const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);\n  \n  return {\n    items: paginatedItems,\n    total,\n    page,\n    totalPages\n  };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 377,
+    "completion_tokens": 506,
+    "total_tokens": 883,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

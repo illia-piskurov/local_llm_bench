@@ -1,0 +1,99 @@
+```javascript
+export function solve(input) {
+  const output = [];
+  let currentInput = input;
+
+  while (currentInput.length < 2) {
+    const line = currentInput.trim();
+    if (line === "#") {
+      continue;
+    }
+
+    if (line.startsWith("PUSH")) {
+      const num = parseInt(line.substring(2));
+      currentInput += "PUSH " + num;
+    } else if (line.startsWith("LABEL")) {
+      output.push({"label": line.substring(3)})
+    } else if (line.startsWith("DUP")) {
+      output.push({"label": line.substring(3)})
+    } else if (line.startsWith("SWAP")) {
+      output.push({"label": line.substring(3)})
+    } else if (line.startsWith("PRINT")) {
+      output.push({"label": "PRINT"});
+    } else if (line.startsWith("JMP")) {
+      output.push({"label": line.substring(3)})
+    } else if (line.startsWith("JNZ")) {
+      output.push({"label": line.substring(3)})
+    } else {
+      console.error("Unknown instruction '<name>' at line <lineNum>");
+      return null;
+    }
+
+    currentInput = currentInput.substring(0, line.length);
+  }
+
+  if (currentInput.length === 2) {
+    const program = currentInput.substring(0, currentInput.length - 1);
+    const instructionCount = program.split("\n").length;
+    if (instructionCount !== 2) {
+      console.error("Stack underflow at line <lineNum>");
+      return null;
+    }
+
+    let outputArray = [];
+    let i = 0;
+
+    while(i<2){
+        const instruction = program[i];
+
+        if (instruction === "PUSH") {
+            const num = parseInt(instruction);
+            if(num < 1 || num > 100) return null;
+            outputArray.push({"value": num});
+            i++;
+        } else if(instruction === "POP"){
+            if (outputArray.length >= 2){
+                outputArray.pop();
+            }
+        } else if(instruction === "ADD") {
+            const b = parseInt(instruction);
+            const a = outputArray[0];
+            outputArray[0] += b;
+            outputArray.push(a + b);
+        } else if (instruction === "SUB"){
+            const b = parseInt(instruction);
+            const a = outputArray[0];
+            outputArray[0] -= b;
+            outputArray.push(a - b);
+
+        } else if (instruction === "MUL") {
+             const b = parseInt(instruction);
+             const a = outputArray[0];
+              outputArray[0] *= b;
+              outputArray.push(outputArray[0]);
+           } else if (instruction === "DIV"){
+               if(outputArray.length >= 2){
+                   outputArray.pop();
+               }
+               const b = parseInt(instruction);
+               if(b == 0) return null;
+               outputArray[0] /= b;
+               outputArray.push(outputArray[0]);
+           } else if (instruction === "DUP"){
+              outputArray.push(outputArray[0]);
+           } else {
+             console.error("Unknown instruction '<name>' at line <lineNum>");
+             return null;
+           }
+
+        i++;
+    }
+
+     if (outputArray.length > 1) {
+       return {"output": outputArray};
+     }
+  }
+
+  return null;
+}
+```

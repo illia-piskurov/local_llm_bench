@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-9sces5qnqou3i98ir1qxou",
+  "object": "chat.completion",
+  "created": 1787128877,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  let sql = 'SELECT *';\n  if (input.query && input.query.table) {\n    sql += ` FROM ${input.query.table}`;\n  }\n\n  if (input.where) {\n    sql += ` WHERE ${input.where.toSql()}`;\n  }\n\n  if (input.orderBy) {\n    sql += ` ORDER BY ${input.orderBy.field} $${input.orderBy.dir}`;\n  }\n\n  if (input.limit) {\n    sql += ` LIMIT $${input.limit}`;\n  }\n\n  if (input.offset) {\n    sql += ` OFFSET $${input.offset}`;\n  }\n\n\n  return { sql, params: [] };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 517,
+    "completion_tokens": 174,
+    "total_tokens": 691,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

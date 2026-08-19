@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-j02qeuc1yk0e2a1qrc2ty",
+  "object": "chat.completion",
+  "created": 1787127529,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const template = input.template;\n    const data = input.data || {};\n    \n    function resolvePath(path, obj) {\n        if (!path) return \"\";\n        \n        const parts = path.split('.');\n        let current = obj;\n        \n        for (let part of parts) {\n            if (current === undefined || current === null) {\n                return \"\";\n            }\n            \n            // Handle array access (e.g. items.0)\n            if (part.startsWith('0') || part.startsWith('1') || part.startsWith('2') || \n                part.startsWith('3') || part.startsWith('4') || part.startsWith('5') || \n                part.startsWith('6') || part.startsWith('7') || part.startsWith('8') || \n                part.startsWith('9')) {\n                const index = parseInt(part);\n                if (Array.isArray(current)) {\n                    if (index >= 0 && index < current.length) {\n                        current = current[index];\n                    } else {\n                        current = undefined;\n                    }\n                } else {\n                    current = undefined;\n                }\n            } else {\n                current = current[part];\n            }\n            \n            if (current === undefined || current === null) {\n                return \"\";\n            }\n        }\n        \n        // Convert non-string primitives to strings\n        if (typeof current === 'number') return current.toString();\n        if (typeof current === 'boolean') return current.toString();\n        if (typeof current === 'object' && current !== null) return JSON.stringify(current);\n        \n        return current;\n    }\n    \n    let result = template;\n    const regex = /\\{\\{(\\s*([^{}]*)\\s*)\\}\\}/g;\n    \n    let match;\n    while ((match = regex.exec(template)) !== null) {\n        const path = match[2].trim();\n        if (!path) continue;\n        \n        const value = resolvePath(path, data);\n        result = result.replace(new RegExp(`{{\\\\s*${path}\\\\s*}}`, 'g'), value);\n    }\n    \n    return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 256,
+    "completion_tokens": 425,
+    "total_tokens": 681,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

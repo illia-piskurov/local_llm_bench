@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ov9xknvadfdzovu8p2fnld",
+  "object": "chat.completion",
+  "created": 1787128849,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const result = {};\n\n  if (!input || typeof input !== 'string') {\n    return result;\n  }\n\n  const queryString = input.query === '' ? \"\" : input.query;\n\n  const parts = queryString.split('&');\n\n  for (const part of parts) {\n    const [key, value] = part.split('=');\n    if (key.length === 1) {\n      result[key] = decodeURIComponent(value);\n    } else if (key.includes('[]')) {\n      const array = [];\n      let current = key;\n      while (array.length < part.length) {\n        current = `${current}[${part.substring(0, part.indexOf('[]')}].${part.substring(part.indexOf('[]') + 1)}}`;\n      }\n      result[key] = decodeURIComponent(array);\n    } else {\n      result[key] = decodeURIComponent(value);\n    }\n  }\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 354,
+    "completion_tokens": 236,
+    "total_tokens": 590,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

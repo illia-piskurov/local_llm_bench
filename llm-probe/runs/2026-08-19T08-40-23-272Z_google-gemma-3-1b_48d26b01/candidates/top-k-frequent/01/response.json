@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-flceshen0v5io4oax5wwi8",
+  "object": "chat.completion",
+  "created": 1787128900,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  if (!input || !input.numbers || input.numbers.length === 0) {\n    return [];\n  }\n\n  const frequencies = {};\n  for (const num of input.numbers) {\n    frequencies[num] = (frequencies[num] || 0) + 1;\n  }\n\n  const sortedFrequencies = Object.entries(frequencies).sort((a, b) => b[1] - a[1]);\n\n  return sortedFrequencies.map(item => item[0]);\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 141,
+    "completion_tokens": 128,
+    "total_tokens": 269,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

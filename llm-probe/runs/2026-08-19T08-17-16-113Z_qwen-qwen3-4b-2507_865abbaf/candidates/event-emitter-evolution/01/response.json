@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-k8ijss0e4w04pjv06sdjco",
+  "object": "chat.completion",
+  "created": 1787128181,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const listeners = {};\n    const log = [];\n    \n    for (const operation of input.operations) {\n        switch (operation.op) {\n            case \"on\":\n                const { event, listenerId } = operation;\n                if (!listeners[event]) {\n                    listeners[event] = [];\n                }\n                listeners[event].push(listenerId);\n                break;\n                \n            case \"once\":\n                const { event: onceEvent, listenerId: onceListenerId } = operation;\n                if (!listeners[onceEvent]) {\n                    listeners[onceEvent] = [];\n                }\n                listeners[onceEvent].push({\n                    id: onceListenerId,\n                    type: \"once\"\n                });\n                break;\n                \n            case \"off\":\n                const { event: offEvent, listenerId: offListenerId } = operation;\n                if (listeners[offEvent]) {\n                    const index = listeners[offEvent].findIndex(listener => \n                        listener && listener.id === offListenerId\n                    );\n                    if (index !== -1) {\n                        listeners[offEvent].splice(index, 1);\n                    }\n                }\n                break;\n                \n            case \"emit\":\n                const { event: emitEvent, payload } = operation;\n                const matchedListeners = [];\n                \n                // Check for wildcard and prefix matches\n                const eventMatch = (event, target) => {\n                    if (target === \"*\") return true;\n                    if (target.endsWith(\"*\")) {\n                        return event.startsWith(target.slice(0, -1));\n                    }\n                    return event === target;\n                };\n                \n                // First, check for exact matches\n                if (listeners[emitEvent]) {\n                    for (const listener of listeners[emitEvent]) {\n                        if (listener && typeof listener === \"string\") {\n                            matchedListeners.push(listener);\n                        }\n                    }\n                }\n                \n                // Then check for wildcard and prefix matches\n                for (const [key, list] of Object.entries(listeners)) {\n                    if (key === \"*\") {\n                        for (const listener of list) {\n                            if (listener && typeof listener === \"string\") {\n                                matchedListeners.push(listener);\n                            }\n                        }\n                    } else if (key.endsWith(\"*\")) {\n                        if (emitEvent.startsWith(key.slice(0, -1))) {\n                            for (const listener of list) {\n                                if (listener && typeof listener === \"string\") {\n                                    matchedListeners.push(listener);\n                                }\n                            }\n                        }\n                    }\n                }\n                \n                // Process each matched listener\n                for (const listenerId of matchedListeners) {\n                    // Check if it's a one-time listener\n                    let isOnce = false;\n                    if (typeof listenerId === \"object\" && listenerId.type === \"once\") {\n                        isOnce = true;\n                        // Remove it after first invocation\n                        const index = listeners[emitEvent].findIndex(l => l.id === listenerId.id);\n                        if (index !== -1) {\n                            listeners[emitEvent].splice(index, 1);\n                        }\n                    }\n                    \n                    log.push({\n                        listenerId: listenerId,\n                        event: emitEvent,\n                        payload: payload\n                    });\n                }\n                break;\n        }\n    }\n    \n    return { log };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 408,
+    "completion_tokens": 663,
+    "total_tokens": 1071,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

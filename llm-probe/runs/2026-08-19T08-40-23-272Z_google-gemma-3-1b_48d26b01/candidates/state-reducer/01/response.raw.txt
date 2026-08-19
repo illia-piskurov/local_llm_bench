@@ -1,0 +1,42 @@
+```javascript
+export function solve(input) {
+  const state = { ...input.state };
+
+  if (input.actions && input.actions.length > 0) {
+    const action = input.actions[0];
+    switch (action.type) {
+      case 'SET':
+        if (!state.user) {
+          state.user = {};
+        }
+        state.user.name = action.path;
+        break;
+      case 'TOGGLE':
+        if (!state.user) {
+          state.user = {};
+        }
+        state.user.active = !state.user.active;
+        break;
+      case 'ARRAY_PUSH':
+        if (!state.tags) {
+          state.tags = [];
+        }
+        state.tags.push(action.path);
+        break;
+      case 'ARRAY_REMOVE':
+        if (state.tags && state.tags.indexOf(action.path) !== -1) {
+          const index = state.tags.indexOf(action.path);
+          if (index !== -1) {
+            state.tags.splice(index, 1);
+          }
+        }
+        break;
+      case 'DELETE':
+        delete state.user[action.path];
+        break;
+    }
+  }
+
+  return state;
+}
+```

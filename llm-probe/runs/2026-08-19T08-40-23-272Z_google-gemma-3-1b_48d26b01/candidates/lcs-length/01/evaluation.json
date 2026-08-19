@@ -1,0 +1,31 @@
+{
+  "status": "failed",
+  "passed": 2,
+  "total": 5,
+  "tests": [
+    {
+      "id": "none",
+      "passed": true
+    },
+    {
+      "id": "equal",
+      "passed": false,
+      "error": "Expected 3, got 0"
+    },
+    {
+      "id": "mixed",
+      "passed": false,
+      "error": "Expected 4, got 0"
+    },
+    {
+      "id": "empty-a",
+      "passed": true
+    },
+    {
+      "id": "single",
+      "passed": false,
+      "error": "Expected 1, got 0"
+    }
+  ],
+  "durationMs": 27
+}

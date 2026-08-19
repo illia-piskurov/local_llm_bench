@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-19T09-56-49-696Z_qwen3.8-2b_934945f8",
+  "status": "running",
+  "startedAt": "2026-08-19T09:56:49.696Z",
+  "model": "qwen3.8-2b",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "hardware": "AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon",
+  "temperature": 0.8,
+  "maxTokens": 16000,
+  "samples": 1,
+  "taskIds": [
+    "flat-to-tree",
+    "paginate-and-sort",
+    "deep-merge",
+    "csv-parse",
+    "render-template",
+    "shopping-cart",
+    "query-string-parser",
+    "schema-validator",
+    "state-reducer",
+    "rbac-checker",
+    "i18n-pluralize",
+    "sql-query-builder",
+    "json-schema-deref-validate",
+    "cron-next-runs",
+    "longest-substring-no-repeat",
+    "group-anagrams",
+    "top-k-frequent",
+    "merge-intervals",
+    "flatten-tree",
+    "shortest-path-grid",
+    "lcs-length",
+    "topological-sort",
+    "rotate-square-matrix",
+    "validate-sudoku-board",
+    "deep-equal",
+    "bytecode-vm-evolution",
+    "event-emitter-evolution"
+  ],
+  "nodeVersion": "v24.19.0",
+  "candidates": [
+    {
+      "taskId": "flat-to-tree",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 31184,
+      "generationMs": 31161,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 294,
+        "completion_tokens": 843,
+        "total_tokens": 1137,
+        "completion_tokens_details": {
+          "reasoning_tokens": 247
+        }
+      },
+      "completionTokens": 843,
+      "tokensPerSec": 27,
+      "passed": 1,
+      "total": 4
+    },
+    {
+      "taskId": "paginate-and-sort",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "extract_error",
+      "durationMs": 64308,
+      "generationMs": 64308,
+      "finishReason": "stop",
+      "error": "Response did not contain export function solve(input)"
+    },
+    {
+      "taskId": "deep-merge",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 42349,
+      "generationMs": 42325,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 226,
+        "completion_tokens": 1123,
+        "total_tokens": 1349,
+        "completion_tokens_details": {
+          "reasoning_tokens": 134
+        }
+      },
+      "completionTokens": 1123,
+      "tokensPerSec": 27,
+      "passed": 3,
+      "total": 4
+    },
+    {
+      "taskId": "csv-parse",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 40725,
+      "generationMs": 40709,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 274,
+        "completion_tokens": 1067,
+        "total_tokens": 1341,
+        "completion_tokens_details": {
+          "reasoning_tokens": 152
+        }
+      },
+      "completionTokens": 1067,
+      "tokensPerSec": 26,
+      "passed": 0,
+      "total": 4,
+      "error": "expecting ','"
+    },
+    {
+      "taskId": "render-template",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 43061,
+      "generationMs": 43041,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 268,
+        "completion_tokens": 1095,
+        "total_tokens": 1363,
+        "completion_tokens_details": {
+          "reasoning_tokens": 105
+        }
+      },
+      "completionTokens": 1095,
+      "tokensPerSec": 25,
+      "passed": 0,
+      "total": 4,
+      "error": "unexpected token in expression: '}'"
+    },
+    {
+      "taskId": "shopping-cart",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 77295,
+      "generationMs": 77266,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 455,
+        "completion_tokens": 2025,
+        "total_tokens": 2480,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1151
+        }
+      },
+      "completionTokens": 2025,
+      "tokensPerSec": 26,
+      "passed": 1,
+      "total": 4
+    },
+    {
+      "taskId": "query-string-parser",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 205473,
+      "generationMs": 205457,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 350,
+        "completion_tokens": 1392,
+        "total_tokens": 1742,
+        "completion_tokens_details": {
+          "reasoning_tokens": 211
+        }
+      },
+      "completionTokens": 1392,
+      "tokensPerSec": 7,
+      "passed": 0,
+      "total": 5,
+      "error": "expecting ','"
+    }
+  ]
+}

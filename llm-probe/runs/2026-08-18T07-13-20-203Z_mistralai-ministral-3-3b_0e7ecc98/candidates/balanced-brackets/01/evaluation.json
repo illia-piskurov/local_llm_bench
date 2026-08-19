@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "passed": 6,
+  "total": 6,
+  "tests": [
+    {
+      "id": "wrong-order",
+      "passed": true
+    },
+    {
+      "id": "open",
+      "passed": true
+    },
+    {
+      "id": "text",
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "only-text",
+      "passed": true
+    },
+    {
+      "id": "nested",
+      "passed": true
+    }
+  ],
+  "durationMs": 20
+}

@@ -1,0 +1,20 @@
+```javascript
+export function solve(input) {
+  if (!input || Object.keys(input).length === 0) {
+    return {};
+  }
+
+  const result = {};
+  for (const obj of input.objects) {
+    const newObj = {};
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        newObj[key] = solve(obj[key]);
+      }
+    }
+    result[key] = newObj;
+  }
+
+  return result;
+}
+```

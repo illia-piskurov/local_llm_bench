@@ -1,0 +1,67 @@
+export function solve(input) {
+    const roles = input.roles || {};
+    const users = input.users || {};
+    const requests = input.requests || [];
+
+    return requests.map(request => {
+        const { user, permission } = request;
+
+        // User not found in users -> false
+        if (!users[user]) {
+            return false;
+        }
+
+        const userConfig = users[user];
+        const userRoles = userConfig.roles || [];
+        const userAllows = userConfig.allows || [];
+        const userDenies = userConfig.denies || [];
+
+        // Check for explicit denies
+        for (const deny of userDenies) {
+            if (matchPermission(deny, permission)) {
+                return false;
+            }
+        }
+
+        // Check if permission is explicitly allowed
+        for (const allow of userAllows) {
+            if (matchPermission(allow, permission)) {
+                return true;
+            }
+        }
+
+        // Check if any role grants the permission
+        for (const role of userRoles) {
+            const rolePermissions = roles[role] || [];
+            for (const rolePermission of rolePermissions) {
+                if (matchPermission(rolePermission, permission)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    });
+}
+
+function matchPermission(pattern, permission) {
+    // Exact match
+    if (pattern === permission) {
+        return true;
+    }
+
+    // Namespace wildcard: posts:* matches posts:read, posts:write
+    if (pattern.endsWith('*')) {
+        const base = pattern.slice(0, -1);
+        if (permission.startsWith(base)) {
+            return true;
+        }
+    }
+
+    // Super wildcard: * matches anything
+    if (pattern === '*') {
+        return true;
+    }
+
+    return false;
+}

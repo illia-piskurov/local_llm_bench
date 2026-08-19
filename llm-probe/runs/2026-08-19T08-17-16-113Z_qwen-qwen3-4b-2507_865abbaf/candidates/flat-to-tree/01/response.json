@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-cst0le3uoxi0our6snln64",
+  "object": "chat.completion",
+  "created": 1787127436,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    if (!input || !Array.isArray(input.nodes)) {\n        return [];\n    }\n\n    const nodeMap = new Map();\n    const roots = [];\n\n    // Build a map of id to node\n    input.nodes.forEach(node => {\n        nodeMap.set(node.id, { ...node, children: [] });\n    });\n\n    // Group nodes by parent\n    const parentChildrenMap = new Map();\n\n    input.nodes.forEach(node => {\n        const parentId = node.parentId;\n        if (parentId === null || parentId === undefined) {\n            roots.push(node.id);\n        } else {\n            if (!parentChildrenMap.has(parentId)) {\n                parentChildrenMap.set(parentId, []);\n            }\n            parentChildrenMap.get(parentId).push(node.id);\n        }\n    });\n\n    // Build the tree structure\n    const result = [];\n\n    roots.forEach(rootId => {\n        const root = nodeMap.get(rootId);\n        if (!root) return;\n\n        // Get children from parentChildrenMap\n        const childrenIds = parentChildrenMap.get(rootId) || [];\n        const children = childrenIds.map(id => {\n            const childNode = nodeMap.get(id);\n            if (!childNode) return null;\n            return {\n                ...childNode,\n                children: []\n            };\n        }).filter(Boolean);\n\n        // Assign children to root\n        root.children = children;\n\n        // Recursively build children trees\n        children.forEach(child => {\n            const childChildrenIds = parentChildrenMap.get(child.id) || [];\n            const childChildren = childChildrenIds.map(id => {\n                const childNode = nodeMap.get(id);\n                if (!childNode) return null;\n                return {\n                    ...childNode,\n                    children: []\n                };\n            }).filter(Boolean);\n\n            child.children = childChildren;\n        });\n\n        result.push(root);\n    });\n\n    return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 286,
+    "completion_tokens": 386,
+    "total_tokens": 672,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

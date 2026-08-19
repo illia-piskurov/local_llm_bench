@@ -1,0 +1,65 @@
+export function solve(input) {
+  const nodes = input.nodes;
+  if (!nodes || nodes.length === 0) return [];
+
+  // Step 1: Build a map of all parents so we can efficiently find parent references during reduction
+  const parentMap = new Map();
+  for (const node of nodes) {
+    const parentId = node.parentId ?? "";
+    if (parentId !== "") {
+      parentMap.set(parentId, true);
+    }
+  }
+
+  // Step 2: Use map to transform each node into a child object with children array
+  const resultNodes = nodes.map(node => ({
+    id: node.id,
+    name: node.name,
+    parentId: node.parentId ?? null,
+    children: []
+  }));
+
+  // Step 3: Flatten the tree back to array using reduce
+  return Array.prototype.reduce(
+    (acc, node) => {
+      const parentId = node.parentId;
+      if (!parentId || parentId === "") {
+        acc.push(node);
+        return acc;
+      }
+      const parentIndex = resultNodes.findIndex(n => n.id == parentId);
+      if (parentIndex !== -1) {
+        resultNodes[parentIndex].children.push(...resultNodes[node.id]);
+      }
+      return acc;
+    },
+    []
+  );
+
+  // Step 4: Sort nodes by original id to preserve relative order, then group into roots and children
+  const sorted = [...nodes]
+    .map(n => ({ ...n, id: parseInt(n.id) }))
+    .sort((a, b) => a.id - b.id);
+
+  return sorted.reduce(
+    (acc, node) => {
+      const parentId = node.parentId ?? null;
+      if (parentId === null || parentId === undefined || parentId === "") {
+        acc.push(node);
+        return acc;
+      }
+      const parentIndex = resultNodes.findIndex(n => n.id == parentId);
+      if (parentIndex !== -1) {
+        // Group all nodes with this parentId into a children array
+        const groupChildren = resultNodes.slice(parentId === null ? 0 : parentIndex + 1, parentIndex + 2).map(
+          child => ({ ...child })
+        );
+
+        acc.push({ id: node.id, name: node.name, parentId });
+        return [...acc, ...groupChildren];
+      }
+      return acc;
+    },
+    []
+  ).map(n => ({ ...n }));
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-hd8t6imuvxsd63hhui5x7",
+  "object": "chat.completion",
+  "created": 1787119440,
+  "model": "nvidia/nemotron-3-nano-4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const mergeObjects = (a, b) => {\n        const result = {};\n        for (const [k, v2] of Object.entries(b)) {\n            if (v2 === undefined) continue; // ignore key, keep previous value\n            if (v2 && typeof v2 === 'object' && !Array.isArray(v2)) {\n                const aVal = a[k];\n                result[k] = mergeObjects(aVal ? aVal : {}, v2);\n            } else {\n                result[k] = v2;\n            }\n        }\n        return result;\n    };\n    const objects = input?.objects ?? [];\n    let merged = {};\n    for (const obj of objects) merged = mergeObjects(merged, obj);\n    return merged || {};\n}",
+        "reasoning_content": "We need to produce an ES module with function solve(input). We must recursively merge objects left->right, later override earlier. If key is undefined in later object, keep previous value. For primitive and array replace entirely.\n\nImplement without mutating input.\n\nEdge: if input.objects empty -> {}.\n\nLet's implement.\n\nfunction mergeObjects(a,b) returns merged object:\n\nFor each (k,v2) of b:\nif v2 === undefined => skip key? Actually rule: Keys with undefined value are ignored (previous value is retained). Means later object has undefined for that key; we ignore the key, keep previous. So in merging a and b, when v2 is undefined, don't add to result.\n\nIf v2 != undefined:\nif typeof v2 === 'object':\nif (v2 && !Array.isArray(v2)) // plain object\n{\n    const mergedSub = mergeObjects(a[k], b[k])? Actually we want recursively merge a's key with later object. So for each subkey, same logic.\nElse if Array.isArray(v2) || typeof v2 === 'string' etc? Primitive or array replace.\nBut also plain objects: earlier values are merged.\n\nIf value is primitive (including string, number, boolean?) We'll treat as not object/array => replace entirely by later value (b). If b's value is undefined we ignore key. So fine.\n\nImplementation:\n\nfunction mergeObjects(a,b) {\n const result = {};\n for(const [k,v2] of Object.entries(b)) {\n if(v2===undefined) continue; // ignore key, keep previous\n // if v2 is plain object\n if(v2 && typeof v2 === 'object' && !Array.isArray(v2)) {\n   const aVal = a[k];\n   const mergedVal = mergeObjects(aVal? aVal : {}, v2);\n   result[k] = mergedVal;\n } else {\n   // replace entirely by later value (b)\n   if (!isNaN(v2) || typeof v2 !== 'object' && !Array.isArray(v2)) {\n     result[k] = v2;\n   }\n }\n }\n return result;\n}\n\nNow solve(input) => const objects = input.objects??.reduce((acc, o)=>{ mergeObjects(acc,o); return acc;}, {}); return objects || {};\n\nIf input not provided or objects undefined.\n\nBut ensure plain object only: we return result which is plain object. Good.\n\nEdge case: If a value is null (object?). But rule says primitives replaced entirely later value. Null is primitive? Could be considered primitive. If later value undefined ignore key; fine.\n\nNow produce module:\n\nexport function solve(input) {\n   const mergeObjects = (a,b)=>{...};\n   // ...\n}\n\nMake sure no mutation.\n\nLet's write final code.\n",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 233,
+    "completion_tokens": 744,
+    "total_tokens": 977,
+    "completion_tokens_details": {
+      "reasoning_tokens": 578
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "nvidia/nemotron-3-nano-4b"
+}

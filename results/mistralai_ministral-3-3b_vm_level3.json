@@ -1,0 +1,23 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-08-19 14:21:38",
+  "passed": 24,
+  "total": 37,
+  "failures": [
+    "comments_and_blank_lines: ожидалось ['7'], получено []",
+    "unconditional_jump_skips_code: неожиданное исключение: Error at line 2: Undefined label 'skip' at line 2",
+    "jz_taken_when_zero: неожиданное исключение: Error at line 2: Undefined label 'zero' at line 2",
+    "jz_not_taken_when_nonzero: неожиданное исключение: Error at line 2: Undefined label 'zero' at line 2",
+    "jnz_taken_when_nonzero: неожиданное исключение: Error at line 2: Undefined label 'nz' at line 2",
+    "jnz_not_taken_when_zero: неожиданное исключение: Error at line 2: Undefined label 'nz' at line 2",
+    "call_ret_basic: неожиданное исключение: Error at line 2: Undefined label 'double' at line 2",
+    "call_ret_nested: неожиданное исключение: Error at line 1: Undefined label 'func_a' at line 1",
+    "comparison_eq_gt_lt: неожиданное исключение: Error at line 3: Not enough values on stack for comparison at line 3",
+    "store_and_load: неожиданное исключение: Error at line 2: No value to store in variable 'x' at line 2",
+    "store_overwrite: неожиданное исключение: Error at line 2: No value to store in variable 'val' at line 2",
+    "recursive_factorial: неожиданное исключение: Error at line 2: Undefined label 'fact' at line 2",
+    "recursive_fibonacci: неожиданное исключение: Error at line 2: Undefined label 'fib' at line 2"
+  ]
+}

@@ -1,0 +1,43 @@
+export function solve(input) {
+  const parsedCron = input.split(" ");
+  const from = input[input.indexOf(" ") + 2];
+  const count = parseInt(input[input.indexOf(" ") + 3]);
+
+  if (count === 0) return [];
+
+  const nextDay = parsedCron.pop();
+  const nextMonth = parsedCron.pop();
+  const nextDayOfWeek = parsedCron.pop() || 'Sunday';
+
+  if (input.includes("*")) {
+    if (nextDay < from) {
+      return [];
+    }
+  } else if (input.includes("15")) {
+    if (nextDay === from && nextMonth === input.indexOf(" ") + 4 ) {
+      return [];
+    }
+
+  } else if (input.includes("1")) {
+    if (nextDay < from) {
+      return [];
+    }
+  } else if (input.includes("15")) {
+    if(nextDay === from && nextMonth === input.indexOf(" ") + 4 ) {
+        return []
+    }
+  }
+
+  const result = [];
+  if(nextDay < from) {
+      result.push(from);
+      result.push(nextDay);
+  } else if (nextMonth === input.indexOf(" ") + 4){
+      result.push(input.indexOf(" ") + 4);
+      result.push(nextMonth);
+
+  }
+
+
+  return result;
+}

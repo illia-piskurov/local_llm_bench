@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-iwcfu7tp7idt4fa15gntq",
+  "object": "chat.completion",
+  "created": 1787128855,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  let valid = true;\n  let errors = {};\n\n  for (const field in input.schema) {\n    if (input.schema[field].type === 'string') {\n      if (!input.data[field] || typeof input.data[field] !== 'string') {\n        errors[field] = \"Invalid data type\";\n      }\n    } else if (input.schema[field].type === 'number') {\n      if (input.data[field] === undefined || input.data[field] === null) {\n        errors[field] = \"Required\";\n      }\n    } else if (input.schema[field].type === 'boolean') {\n      if (!input.data[field]) {\n        errors[field] = \"Required\";\n      }\n    } else if (input.schema[field].type === 'array') {\n      if (input.data[field] && !Array.isArray(input.data[field])) {\n        errors[field] = \"Too many items\";\n      }\n    } else if (input.schema[field].pattern === 'Invalid format') {\n      errors[field] = \"Invalid format\";\n    }\n  }\n\n  return { valid, errors };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 355,
+    "completion_tokens": 290,
+    "total_tokens": 645,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

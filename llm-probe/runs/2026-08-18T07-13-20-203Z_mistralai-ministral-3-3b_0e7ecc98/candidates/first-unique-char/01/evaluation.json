@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "passed": 6,
+  "total": 6,
+  "tests": [
+    {
+      "id": "duplicate-prefix",
+      "passed": true
+    },
+    {
+      "id": "none",
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "single",
+      "passed": true
+    },
+    {
+      "id": "all-unique",
+      "passed": true
+    },
+    {
+      "id": "last-unique",
+      "passed": true
+    }
+  ],
+  "durationMs": 20
+}

@@ -1,0 +1,48 @@
+export function solve(input) {
+  const n = input.board.length;
+
+  // Check rows
+  for (let i = 0; i < n; i++) {
+    const seen = new Set();
+    for (let j = 0; j < n; j++) {
+      if (input.board[i][j] !== '.') {
+        seen.add(input.board[i][j]);
+      }
+    }
+    if (seen.size > 1) {
+      return false;
+    }
+  }
+
+  // Check columns
+  for (let i = 0; i < n; i++) {
+    const seen = new Set();
+    for (let j = 0; j < n; j++) {
+      if (input.board[i][j] !== '.') {
+        seen.add(input.board[i][j]);
+      }
+    }
+    if (seen.size > 1) {
+      return false;
+    }
+  }
+
+  // Check 3x3 boxes
+  for (let i = 0; i < n; i += 3) {
+    for (let j = 0; j < n; j += 3) {
+      const box = [];
+      for (let row = i; row < i + 3; row++) {
+        for (let col = j; col < j + 3; col++) {
+          if (input.board[row][col] !== '.') {
+            box.push(input.board[row][col]);
+          }
+        }
+      }
+      if (box.length > 1) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}

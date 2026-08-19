@@ -1,0 +1,8 @@
+{
+  "status": "invalid_output",
+  "passed": 0,
+  "total": 3,
+  "tests": [],
+  "durationMs": 23,
+  "error": "Test plural-forms returned a non-JSON value"
+}

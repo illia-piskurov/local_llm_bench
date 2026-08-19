@@ -1,0 +1,38 @@
+{
+  "status": "failed",
+  "passed": 0,
+  "total": 6,
+  "tests": [
+    {
+      "id": "touching",
+      "passed": false,
+      "error": "Expected [[1,5]], got {\"intervals\":[[1,5]]}"
+    },
+    {
+      "id": "unsorted",
+      "passed": false,
+      "error": "Expected [[1,4],[5,7]], got {\"intervals\":[[1,4],[5,7]]}"
+    },
+    {
+      "id": "empty",
+      "passed": false,
+      "error": "Expected [], got {\"intervals\":[]}"
+    },
+    {
+      "id": "single",
+      "passed": false,
+      "error": "Expected [[3,3]], got {\"intervals\":[[3,3]]}"
+    },
+    {
+      "id": "no-merge",
+      "passed": false,
+      "error": "Expected [[1,2],[4,5],[7,8]], got {\"intervals\":[[1,2],[4,5],[7,8]]}"
+    },
+    {
+      "id": "all-merge",
+      "passed": false,
+      "error": "Expected [[1,10]], got {\"intervals\":[[1,10]]}"
+    }
+  ],
+  "durationMs": 28
+}

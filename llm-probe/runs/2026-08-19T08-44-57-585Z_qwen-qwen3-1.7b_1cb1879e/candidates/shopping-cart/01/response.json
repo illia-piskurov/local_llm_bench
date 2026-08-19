@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-l4b4x6wxt6m0ogu7wgiltd",
+  "object": "chat.completion",
+  "created": 1787131818,
+  "model": "qwen/qwen3-1.7b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n  const { items, coupon, taxRate } = input;\n\n  let subtotal = 0;\n  let discount = 0;\n\n  // Calculate subtotal\n  for (const item of items) {\n    subtotal += item.price * item.qty;\n  }\n\n  // Apply coupon discount\n  if (coupon) {\n    const { type, value } = coupon;\n    let discountAmount = 0;\n\n    if (type === 'percent') {\n      discountAmount = subtotal * (value / 100);\n    } else if (type === 'fixed') {\n      discountAmount = Math.min(value, subtotal);\n    } else if (type === 'category_percent' && item.category) {\n      // Apply category-based discount\n      for (const item of items) {\n        if (item.category === coupon.category) {\n          discountAmount += item.price * item.qty;\n        }\n      }\n    }\n\n    discount = Math.min(discountAmount, subtotal);\n  }\n\n  // Calculate tax\n  let tax = 0;\n  if (taxRate !== undefined) {\n    tax = Math.round((subtotal - discount) * taxRate * 100) / 100;\n  }\n\n  // Calculate total\n  const total = Math.round(((subtotal - discount) + tax) * 100) / 100;\n\n  return { subtotal, discount, tax, total };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 439,
+    "completion_tokens": 303,
+    "total_tokens": 742,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-1.7b"
+}

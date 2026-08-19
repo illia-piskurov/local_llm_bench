@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-18T07-42-55-578Z_mistralai-ministral-3-3b_cc8065da",
+  "status": "completed",
+  "startedAt": "2026-08-18T07:42:55.578Z",
+  "model": "mistralai/ministral-3-3b",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "temperature": 0.2,
+  "maxTokens": 2048,
+  "samples": 1,
+  "taskIds": [
+    "query-string-parser"
+  ],
+  "nodeVersion": "v24.19.0",
+  "candidates": [
+    {
+      "taskId": "query-string-parser",
+      "attempt": 1,
+      "status": "failed",
+      "durationMs": 32845,
+      "generationMs": 32817,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 350,
+        "completion_tokens": 658,
+        "total_tokens": 1008,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 658,
+      "tokensPerSec": 20,
+      "passed": 2,
+      "total": 5
+    }
+  ],
+  "completedAt": "2026-08-18T07:43:28.491Z"
+}

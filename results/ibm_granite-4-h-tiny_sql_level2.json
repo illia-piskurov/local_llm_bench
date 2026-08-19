@@ -1,0 +1,19 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-08-19 13:59:15",
+  "passed": 2,
+  "total": 11,
+  "failures": [
+    "simple_where_equality: SQL: ожидали 'SELECT * FROM users WHERE status = $1', получили 'SELECT * FROM users WHERE field = ${len(params)}'; params: ожидали ['active'], получили ['status']",
+    "where_and_or_nested: SQL: ожидали 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', получили 'SELECT id, email FROM users (${i}, ${i}) WHERE AND AND (${i}, ${i})'; params: ожидали ['active', 'admin', 21], получили [{'field': 'status', 'op': '=', 'value': 'active'}, {'OR': [{'field': 'role', 'op': '=', 'value': 'admin'}, {'field': 'age', 'op': '>=', 'value': 21}]}]",
+    "order_by_limit_offset: исключение/таймаут: string indices must be integers, not 'str'",
+    "multiple_and_conditions: SQL: ожидали 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', получили 'SELECT * FROM logs (${i}, ${i}, ${i}) WHERE AND AND (${i}, ${i}, ${i})'; params: ожидали ['error', 404, 1000], получили [{'field': 'level', 'op': '=', 'value': 'error'}, {'field': 'code', 'op': '!=', 'value': 404}, {'field': 'timestamp', 'op': '>', 'value': 1000}]",
+    "left_join_with_group_by: SQL: ожидали 'SELECT orders.id, orders.total FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id, orders.total', получили 'SELECT orders.id, orders.total FROM orders LEFT JOIN items ON (orders.id = items.order_id) G R O U P B Y o r d e r s . i d , o r d e r s . t o t a l'",
+    "multiple_joins_inner_and_left: SQL: ожидали 'SELECT posts.title, users.name FROM posts INNER JOIN users ON posts.author_id = users.id LEFT JOIN comments ON posts.id = comments.post_id', получили 'SELECT posts.title, users.name FROM posts INNER JOIN users ON (posts.author_id = users.id) LEFT JOIN comments ON (posts.id = comments.post_id)'",
+    "where_in_operator: SQL: ожидали 'SELECT * FROM users WHERE id IN ($1, $2, $3)', получили 'SELECT * FROM users WHERE field = ${len(params)}'; params: ожидали [10, 20, 30], получили ['id']",
+    "where_is_null_and_like: SQL: ожидали 'SELECT * FROM customers WHERE (deleted_at IS NULL AND email LIKE $1)', получили 'SELECT * FROM customers (${i}, ${i}) WHERE AND AND (${i}, ${i})'; params: ожидали ['%@example.com'], получили [{'field': 'deleted_at', 'op': 'IS NULL'}, {'field': 'email', 'op': 'LIKE', 'value': '%@example.com'}]",
+    "where_is_not_null: SQL: ожидали 'SELECT * FROM tasks WHERE completed_at IS NOT NULL', получили 'SELECT * FROM tasks WHERE field = ${len(params)}'; params: ожидали [], получили ['completed_at']"
+  ]
+}

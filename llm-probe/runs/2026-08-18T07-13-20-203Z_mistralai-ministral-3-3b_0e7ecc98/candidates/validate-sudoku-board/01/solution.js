@@ -1,0 +1,41 @@
+export function solve(input) {
+    const board = input.board;
+    const boxes = Array(9).fill().map((_, i) => Math.floor(i / 3));
+
+    for (let row = 0; row < 9; row++) {
+        const seen = new Set();
+        for (let col = 0; col < 9; col++) {
+            const cell = board[row][col];
+            if (cell !== '.') {
+                if (seen.has(cell)) return false;
+                seen.add(cell);
+            }
+        }
+    }
+
+    for (let col = 0; col < 9; col++) {
+        const seen = new Set();
+        for (let row = 0; row < 9; row++) {
+            const cell = board[row][col];
+            if (cell !== '.') {
+                if (seen.has(cell)) return false;
+                seen.add(cell);
+            }
+        }
+    }
+
+    for (const box of boxes) {
+        const seen = new Set();
+        for (let i = 0; i < 9; i++) {
+            const row = Math.floor(i / 3) + box * 3;
+            const col = i % 3 * 3;
+            const cell = board[row][col];
+            if (cell !== '.') {
+                if (seen.has(cell)) return false;
+                seen.add(cell);
+            }
+        }
+    }
+
+    return true;
+}

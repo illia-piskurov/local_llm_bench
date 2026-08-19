@@ -1,0 +1,29 @@
+{
+  "status": "failed",
+  "passed": 4,
+  "total": 5,
+  "tests": [
+    {
+      "id": "single-chars",
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "passed": false,
+      "error": "Expected \"\", got \"1undefined\""
+    },
+    {
+      "id": "all-same",
+      "passed": true
+    },
+    {
+      "id": "alternating",
+      "passed": true
+    },
+    {
+      "id": "long-run",
+      "passed": true
+    }
+  ],
+  "durationMs": 20
+}

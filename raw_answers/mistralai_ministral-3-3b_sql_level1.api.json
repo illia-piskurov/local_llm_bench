@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "mistralai/ministral-3-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef compile_query(query: dict) -> dict:\n    table = query.get('table', '')\n    select = query.get('select', ['*'])\n    where_clause = ''\n    params = []\n    order_by = []\n    limit_offset = []\n\n    # Сбор SELECT\n    if len(select) == 1 and select[0] == '*':\n        select_str = 'SELECT *'\n    else:\n        select_str = f'SELECT {\", \".join(select)}'\n\n    # Обработка WHERE\n    def process_condition(cond):\n        nonlocal params\n        if isinstance(cond, dict):\n            field = cond['field']\n            op = cond['op']\n            value = cond['value']\n\n            # Плейсхолдеры для значений\n            params.append(value)\n            placeholders = [f'${i+1}' for i in range(len(params))]\n            placeholder = ','.join(placeholders)\n\n            if op == '=':\n                return f'{field} = {placeholder}'\n            elif op == '!=':\n                return f'{field} != {placeholder}'\n            elif op in ('>', '<', '>=', '<='):\n                return f'{field} {op} {placeholder}'\n        else:  # Логические условия (AND/OR)\n            conditions = []\n            for c in cond.values():\n                if isinstance(c, list):  # AND/OR списки\n                    processed = [process_condition(item) for item in c]\n                    conditions.append(f'({\", \".join(processed)})')\n                else:  # Рекурсия для вложенных условий\n                    conditions.append(process_condition(c))\n            return f'{\", \".join(conditions)}'\n\n    if query.get('where'):\n        where_clause = ' WHERE ' + process_condition(query['where'])\n\n    # Обработка ORDER BY\n    if query.get('orderBy'):\n        for item in query['orderBy']:\n            order_by.append(f\"{item['field']} {'DESC' if item.get('dir') == 'DESC' else 'ASC'}\")\n\n    # Обработка LIMIT/OFFSET\n    limit = query.get('limit')\n    offset = query.get('offset')\n    if limit is not None:\n        limit_offset.append(f'LIMIT {limit}')\n    if offset is not None:\n        limit_offset.append(f'OFFSET {offset}')\n\n    sql_parts = [select_str]\n    if where_clause:\n        sql_parts.append(where_clause)\n    if order_by:\n        sql_parts.append(' ORDER BY ' + ', '.join(order_by))\n    if limit_offset:\n        sql_parts.extend(limit_offset)\n\n    sql = ' '.join(sql_parts)\n    return {\"sql\": sql, \"params\": params}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 961,
+    "total_output_tokens": 582,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 17.009589638389276,
+    "time_to_first_token_seconds": 2.962914
+  },
+  "response_id": "resp_0c98c96e49108c0bc2110b11849b8ffed2a5e3d0498c07f2"
+}

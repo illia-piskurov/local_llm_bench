@@ -1,0 +1,50 @@
+export function solve(input) {
+  const items = input.items || [];
+  const coupon = input.coupon || null;
+  const taxRate = input.taxRate || 0;
+
+  // 1. Calculate subtotal
+  let subtotal = 0;
+  for (const item of items) {
+    subtotal += item.price * item.qty;
+  }
+  const subtotalRounded = Math.round(subtotal * 100) / 100;
+
+  // 2. Calculate discount
+  let discount = 0;
+
+  if (coupon) {
+    const { type, value, category } = coupon;
+
+    if (type === 'percent') {
+      discount = Math.min(subtotalRounded * (value / 100), subtotalRounded);
+    } else if (type === 'fixed') {
+      discount = Math.min(value, subtotalRounded);
+    } else if (type === 'category_percent') {
+      let categoryDiscount = 0;
+      for (const item of items) {
+        if (item.category === category) {
+          categoryDiscount += item.price * item.qty;
+        }
+      }
+      discount = Math.min(categoryDiscount * (value / 100), subtotalRounded);
+    }
+  }
+
+  // 3. Calculate tax
+  const taxableAmount = subtotalRounded - discount;
+  let tax = 0;
+  if (taxRate > 0) {
+    tax = Math.round(taxableAmount * taxRate * 100) / 100;
+  }
+
+  // 4. Calculate total
+  const total = Math.round((subtotalRounded - discount + tax) * 100) / 100;
+
+  return {
+    subtotal: subtotalRounded,
+    discount: Math.round(discount * 100) / 100,
+    tax: tax,
+    total: total
+  };
+}

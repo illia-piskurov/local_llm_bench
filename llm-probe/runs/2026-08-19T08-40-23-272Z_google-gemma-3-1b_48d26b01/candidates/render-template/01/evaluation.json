@@ -1,0 +1,26 @@
+{
+  "status": "failed",
+  "passed": 2,
+  "total": 4,
+  "tests": [
+    {
+      "id": "nested-and-arrays",
+      "passed": false,
+      "error": "Expected \"First: Apple, Second: Banana\", got \"First: {{items.0.title}}, Second: {{items.1.title}}\""
+    },
+    {
+      "id": "missing-and-whitespace",
+      "passed": false,
+      "error": "Expected \"Name: [Bob], Missing: [], Nullable: []\", got \"Name: [{{   user.name   }}], Missing: [{{ user.age }}], Nullable: [{{ extra }}]\""
+    },
+    {
+      "id": "no-placeholders",
+      "passed": true
+    },
+    {
+      "id": "empty-template",
+      "passed": true
+    }
+  ],
+  "durationMs": 20
+}

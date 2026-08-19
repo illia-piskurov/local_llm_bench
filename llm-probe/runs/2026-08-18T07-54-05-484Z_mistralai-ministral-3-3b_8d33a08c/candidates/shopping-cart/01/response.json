@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ipal6irrebieg1m17keccf",
+  "object": "chat.completion",
+  "created": 1787039645,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const items = input.items;\n    let subtotal = 0;\n\n    for (const item of items) {\n        subtotal += Math.round((item.price * item.qty) * 100) / 100;\n    }\n\n    const discount = calculateDiscount(items, input.coupon);\n    const taxableAmount = Math.round(((subtotal - discount) * 100) / 100);\n    const tax = input.taxRate ? Math.round((taxableAmount * input.taxRate) * 100) / 100 : 0;\n    const total = Math.round((subtotal - discount + tax) * 100) / 100;\n\n    return {\n        subtotal,\n        discount: Math.round(discount * 100) / 100,\n        tax: tax.toFixed(2),\n        total: total.toFixed(2)\n    };\n\n    function calculateDiscount(items, coupon) {\n        if (!coupon || !('type' in coupon)) return 0;\n\n        const subtotal = items.reduce((sum, item) => sum + Math.round((item.price * item.qty) * 100) / 100, 0);\n\n        switch (coupon.type) {\n            case 'percent':\n                return Math.min(subtotal * coupon.value / 100, subtotal);\n            case 'fixed':\n                return Math.min(coupon.value, subtotal);\n            case 'category_percent':\n                const categoryItems = items.filter(item => item.category === coupon.category);\n                const categorySubtotal = categoryItems.reduce((sum, item) =>\n                    sum + Math.round((item.price * item.qty) * 100) / 100, 0);\n                return Math.min(categorySubtotal * coupon.value / 100, subtotal);\n            default:\n                return 0;\n        }\n    }\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 458,
+    "completion_tokens": 420,
+    "total_tokens": 878,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

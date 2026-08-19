@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-c01u1twlbdadx8itiysia6",
+  "object": "chat.completion",
+  "created": 1787128066,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const matrix = input.matrix;\n    const rows = matrix.length;\n    const cols = matrix[0].length;\n    \n    // Create a new matrix rotated 90 degrees clockwise\n    const result = [];\n    \n    for (let c = 0; c < cols; c++) {\n        const newRow = [];\n        for (let r = rows - 1; r >= 0; r--) {\n            newRow.push(matrix[r][c]);\n        }\n        result.push(newRow);\n    }\n    \n    return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 134,
+    "completion_tokens": 119,
+    "total_tokens": 253,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

@@ -1,0 +1,29 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "cron",
+  "level": "level3",
+  "tested_at": "2026-08-19 14:03:00",
+  "passed": 0,
+  "total": 19,
+  "failures": [
+    "hourly_zero_minute: ожидался list, получено NoneType",
+    "exact_daily_time: ожидался list, получено NoneType",
+    "minute_list: ожидался list, получено NoneType",
+    "hour_range: ожидался list, получено NoneType",
+    "first_of_month: ожидался list, получено NoneType",
+    "specific_day_of_week: ожидался list, получено NoneType",
+    "strictly_after_exact_match: ожидался list, получено NoneType",
+    "every_15_minutes_in_work_hours: исключение/таймаут: invalid literal for int() with base 10: '*/15'",
+    "step_with_range: исключение/таймаут: invalid literal for int() with base 10: '20/5'",
+    "dom_and_dow_or_rule: ожидался list, получено NoneType",
+    "every_two_months: исключение/таймаут: invalid literal for int() with base 10: '*/2'",
+    "cross_year_boundary: ожидался list, получено NoneType",
+    "alias_hourly: исключение/таймаут: Invalid cron expression",
+    "alias_daily: исключение/таймаут: Invalid cron expression",
+    "alias_monthly: исключение/таймаут: Invalid cron expression",
+    "alias_weekly: исключение/таймаут: Invalid cron expression",
+    "leap_year_feb_29: ожидался list, получено NoneType",
+    "leap_year_next: ожидался list, получено NoneType",
+    "end_of_year_minute_transition: ожидался list, получено NoneType"
+  ]
+}

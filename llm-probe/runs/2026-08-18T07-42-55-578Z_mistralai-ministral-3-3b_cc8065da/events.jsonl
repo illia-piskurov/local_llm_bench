@@ -1,0 +1,5 @@
+{"at":"2026-08-18T07:42:55.581Z","type":"run_started"}
+{"at":"2026-08-18T07:42:55.582Z","type":"request_started","taskId":"query-string-parser","attempt":1}
+{"at":"2026-08-18T07:43:28.401Z","type":"response_received","taskId":"query-string-parser","attempt":1,"detail":{"durationMs":32817,"finishReason":"stop","usage":{"prompt_tokens":350,"completion_tokens":658,"total_tokens":1008,"completion_tokens_details":{"reasoning_tokens":0}}}}
+{"at":"2026-08-18T07:43:28.490Z","type":"evaluation_finished","taskId":"query-string-parser","attempt":1,"detail":{"status":"failed","passed":2,"total":5}}
+{"at":"2026-08-18T07:43:28.491Z","type":"run_finished","detail":{"status":"completed"}}
