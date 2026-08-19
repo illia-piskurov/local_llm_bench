@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-keltuskj5wepz7ev18uk0s",
+  "object": "chat.completion",
+  "created": 1787139454,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { cron, from, count } = input;\n  let nextTime = new Date(from);\n  let results = [];\n\n  while (results.length < count) {\n    for (const [minute, hour, dayOfMonth, month, dayOfWeek] of parseCron(cron)) {\n      if (\n        minute === '*' ||\n        minute.split(',').includes(nextTime.getMinutes().toString()) ||\n        minute.split('-').every(min => parseInt(min) <= nextTime.getMinutes()) ||\n        minute.includes('/15') && nextTime.getMinutes() % 15 === 0\n      ) {\n        continue;\n      }\n      if (\n        hour === '*' ||\n        hour.split(',').includes(nextTime.getHours().toString()) ||\n        hour.split('-').every(hour => parseInt(hour) <= nextTime.getHours()) ||\n        hour.includes('/15') && nextTime.getHours() % 15 === 0\n      ) {\n        continue;\n      }\n      if (\n        dayOfMonth === '*' ||\n        dayOfMonth.split(',').includes(nextTime.getDate().toString()) ||\n        dayOfMonth.split('-').every(day => parseInt(day) <= nextTime.getDate()) ||\n        dayOfMonth.includes('*') &&\n          (dayOfWeek === '*' || dayOfWeek.split(',').includes(nextTime.getDay()))\n      ) {\n        continue;\n      }\n      if (\n        month === '*' ||\n        month.split(',').includes(nextTime.getMonth().toString() + 1) ||\n        month.split('-').every(month => parseInt(month) <= nextTime.getMonth() + 1)\n      ) {\n        continue;\n      }\n      results.push(nextTime.toISOString());\n    }\n    nextTime.setSeconds(nextTime.getSeconds() + 60);\n  }\n\n  return results;\n}\n\nfunction parseCron(cron) {\n  const parts = cron.split(' ');\n  if (parts.length !== 5) {\n    throw new Error('Invalid cron expression');\n  }\n\n  for (let i = 0; i < 5; i++) {\n    switch (parts[i]) {\n      case '*':\n        break;\n      case ',':\n        parts[i] = parts[i].split(',');\n        break;\n      case '-':\n        parts[i] = parts[i].split('-');\n        if (parts[i][1] - parts[i][0] === 1) {\n          parts[i][0]++;\n          parts[i][1]--;\n        }\n        break;\n      case '/':\n        parts[i] = [parts[i].slice(0, -1), parseInt(parts[i].split('/')[1])];\n        if (parts[i][1] === 0) {\n          throw new Error('Step cannot be zero');\n        }\n        break;\n      default:\n        throw new Error('Invalid cron syntax');\n    }\n  }\n\n  return parts.map(part => Array.isArray(part) ? part.join(',') : parseInt(part));\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 401,
+    "completion_tokens": 588,
+    "total_tokens": 989,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

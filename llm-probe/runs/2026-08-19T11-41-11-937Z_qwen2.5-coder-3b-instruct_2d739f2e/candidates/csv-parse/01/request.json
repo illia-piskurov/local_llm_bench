@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Parse a CSV string in input.csv into an array of objects where keys are header column names from the first row. Rules:\n- Rows are separated by newline (\n or \r\n). Ignore empty lines at the end.\n- Values enclosed in double quotes \"...\" may contain commas and newlines; two double quotes \"\" represent an escaped quote.\n- Unquoted values should have leading/trailing whitespace trimmed. Quoted values preserve internal whitespace.\n- If input is empty or only has a header row, return [].\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"csv\":\"name,age,city\\nAlice,30,New York\\n\\\"Smith, Bob\\\",25,\\\"Los \\\"\\\"Angeles\\\"\\\"\\\"\"}\noutput: [{\"name\":\"Alice\",\"age\":\"30\",\"city\":\"New York\"},{\"name\":\"Smith, Bob\",\"age\":\"25\",\"city\":\"Los \\\"Angeles\\\"\"}]"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 13000,
+  "stream": false
+}

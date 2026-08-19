@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-in4wgfxg5fxzi9endln6f",
+  "object": "chat.completion",
+  "created": 1787139810,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const roles = input.roles;\n  const users = input.users;\n  const requests = input.requests;\n\n  return requests.map(request => {\n    const user = request.user;\n    const permission = request.permission;\n\n    // Check if the user is found in the users object\n    if (!users[user]) {\n      return false;\n    }\n\n    const rolesForUser = users[user].roles || [];\n    const allows = users[user].allows || [];\n    const denies = users[user].denies || [];\n\n    // Check if any rule in denies matches the requested permission\n    for (const deny of denies) {\n      if (matches(deny, permission)) {\n        return false;\n      }\n    }\n\n    // Check if any role grants the permission\n    for (const role of rolesForUser) {\n      if (matches(roles[role], permission)) {\n        return true;\n      }\n    }\n\n    // Check if the permission is listed in allows\n    if (allows.includes(permission)) {\n      return true;\n    }\n\n    // If none of the above conditions are met, access is denied\n    return false;\n  });\n}\n\n// Helper function to match a rule with a permission using wildcard support\nfunction matches(rule, permission) {\n  const regex = new RegExp(`^${rule}$`);\n  return regex.test(permission);\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 367,
+    "completion_tokens": 280,
+    "total_tokens": 647,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

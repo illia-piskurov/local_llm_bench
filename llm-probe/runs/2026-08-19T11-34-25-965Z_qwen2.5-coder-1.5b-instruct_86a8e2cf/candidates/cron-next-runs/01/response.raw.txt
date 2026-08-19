@@ -1,0 +1,82 @@
+```javascript
+export function solve(input) {
+  const { cron, from, count } = input;
+  let nextTime = new Date(from);
+  let results = [];
+
+  while (results.length < count) {
+    for (const [minute, hour, dayOfMonth, month, dayOfWeek] of parseCron(cron)) {
+      if (
+        minute === '*' ||
+        minute.split(',').includes(nextTime.getMinutes().toString()) ||
+        minute.split('-').every(min => parseInt(min) <= nextTime.getMinutes()) ||
+        minute.includes('/15') && nextTime.getMinutes() % 15 === 0
+      ) {
+        continue;
+      }
+      if (
+        hour === '*' ||
+        hour.split(',').includes(nextTime.getHours().toString()) ||
+        hour.split('-').every(hour => parseInt(hour) <= nextTime.getHours()) ||
+        hour.includes('/15') && nextTime.getHours() % 15 === 0
+      ) {
+        continue;
+      }
+      if (
+        dayOfMonth === '*' ||
+        dayOfMonth.split(',').includes(nextTime.getDate().toString()) ||
+        dayOfMonth.split('-').every(day => parseInt(day) <= nextTime.getDate()) ||
+        dayOfMonth.includes('*') &&
+          (dayOfWeek === '*' || dayOfWeek.split(',').includes(nextTime.getDay()))
+      ) {
+        continue;
+      }
+      if (
+        month === '*' ||
+        month.split(',').includes(nextTime.getMonth().toString() + 1) ||
+        month.split('-').every(month => parseInt(month) <= nextTime.getMonth() + 1)
+      ) {
+        continue;
+      }
+      results.push(nextTime.toISOString());
+    }
+    nextTime.setSeconds(nextTime.getSeconds() + 60);
+  }
+
+  return results;
+}
+
+function parseCron(cron) {
+  const parts = cron.split(' ');
+  if (parts.length !== 5) {
+    throw new Error('Invalid cron expression');
+  }
+
+  for (let i = 0; i < 5; i++) {
+    switch (parts[i]) {
+      case '*':
+        break;
+      case ',':
+        parts[i] = parts[i].split(',');
+        break;
+      case '-':
+        parts[i] = parts[i].split('-');
+        if (parts[i][1] - parts[i][0] === 1) {
+          parts[i][0]++;
+          parts[i][1]--;
+        }
+        break;
+      case '/':
+        parts[i] = [parts[i].slice(0, -1), parseInt(parts[i].split('/')[1])];
+        if (parts[i][1] === 0) {
+          throw new Error('Step cannot be zero');
+        }
+        break;
+      default:
+        throw new Error('Invalid cron syntax');
+    }
+  }
+
+  return parts.map(part => Array.isArray(part) ? part.join(',') : parseInt(part));
+}
+```

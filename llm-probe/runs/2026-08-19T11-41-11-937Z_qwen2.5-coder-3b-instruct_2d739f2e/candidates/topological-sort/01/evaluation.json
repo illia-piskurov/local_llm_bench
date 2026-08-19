@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "passed": 5,
+  "total": 5,
+  "tests": [
+    {
+      "id": "cycle",
+      "passed": true
+    },
+    {
+      "id": "single",
+      "passed": true
+    },
+    {
+      "id": "no-edges",
+      "passed": true
+    },
+    {
+      "id": "chain",
+      "passed": true
+    },
+    {
+      "id": "self-loop",
+      "passed": true
+    }
+  ],
+  "durationMs": 31
+}

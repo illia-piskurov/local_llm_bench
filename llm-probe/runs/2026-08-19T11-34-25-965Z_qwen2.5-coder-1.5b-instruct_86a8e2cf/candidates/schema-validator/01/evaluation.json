@@ -1,0 +1,21 @@
+{
+  "status": "runtime_error",
+  "passed": 3,
+  "total": 4,
+  "tests": [
+    {
+      "id": "all-valid",
+      "passed": true
+    },
+    {
+      "id": "required-missing",
+      "passed": true
+    },
+    {
+      "id": "type-mismatch",
+      "passed": true
+    }
+  ],
+  "durationMs": 39,
+  "error": "cannot read property 'push' of undefined"
+}

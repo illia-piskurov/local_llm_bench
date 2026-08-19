@@ -1,0 +1,33 @@
+{
+  "status": "failed",
+  "passed": 5,
+  "total": 6,
+  "tests": [
+    {
+      "id": "touching",
+      "passed": true
+    },
+    {
+      "id": "unsorted",
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "passed": false,
+      "error": "Expected [], got [null]"
+    },
+    {
+      "id": "single",
+      "passed": true
+    },
+    {
+      "id": "no-merge",
+      "passed": true
+    },
+    {
+      "id": "all-merge",
+      "passed": true
+    }
+  ],
+  "durationMs": 31
+}

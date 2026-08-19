@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-hv1rvxx5zcedqknmk69pwg",
+  "object": "chat.completion",
+  "created": 1787139918,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const text = input.text;\n    const n = text.length;\n    if (n === 0) return 0;\n\n    let maxLength = 0;\n    let start = 0;\n    const charIndexMap = new Map();\n\n    for (let end = 0; end < n; end++) {\n        const currentChar = text[end];\n        \n        // If the character is already in the map and its index is not before the current start\n        if (charIndexMap.has(currentChar) && charIndexMap.get(currentChar) >= start) {\n            // Move the start to one position after the last occurrence of the current character\n            start = charIndexMap.get(currentChar) + 1;\n        }\n\n        // Update the map with the current character's index\n        charIndexMap.set(currentChar, end);\n\n        // Calculate the length of the current substring and update maxLength if necessary\n        maxLength = Math.max(maxLength, end - start + 1);\n    }\n\n    return maxLength;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 116,
+    "completion_tokens": 219,
+    "total_tokens": 335,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

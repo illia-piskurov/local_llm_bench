@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-z94a928r6qge2rbo54z1tq",
+  "object": "chat.completion",
+  "created": 1787139934,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { numbers, k } = input;\n  \n  // Create a frequency map of the numbers\n  const frequencyMap = {};\n  for (const num of numbers) {\n    frequencyMap[num] = (frequencyMap[num] || 0) + 1;\n  }\n  \n  // Convert the frequency map into an array of [number, frequency] pairs\n  const frequencyPairs = Object.entries(frequencyMap);\n  \n  // Sort the pairs by descending frequency, then by ascending number\n  frequencyPairs.sort((a, b) => {\n    if (b[1] === a[1]) {\n      return Number.parseInt(a[0], 10) - Number.parseInt(b[0], 10); // Ascending order for ties\n    }\n    return b[1] - a[1]; // Descending order by frequency\n  });\n  \n  // Extract the top k numbers from the sorted pairs\n  const result = frequencyPairs.slice(0, k).map(pair => Number.parseInt(pair[0], 10));\n  \n  return result;\n}\n```\n\nThis solution uses JavaScript's `Object.entries` to convert the frequency map into an array of key-value pairs. It then sorts these pairs first by frequency in descending order and then by number value in ascending order in case of ties. Finally, it slices the sorted array to get the top k numbers and returns them as a JSON-compatible array.",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 137,
+    "completion_tokens": 301,
+    "total_tokens": 438,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

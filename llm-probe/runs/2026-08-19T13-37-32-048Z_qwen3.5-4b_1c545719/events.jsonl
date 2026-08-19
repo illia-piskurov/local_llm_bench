@@ -1,0 +1,7 @@
+{"at":"2026-08-19T13:37:32.050Z","type":"run_started"}
+{"at":"2026-08-19T13:37:32.051Z","type":"request_started","taskId":"flat-to-tree","attempt":1}
+{"at":"2026-08-19T13:38:50.427Z","type":"response_received","taskId":"flat-to-tree","attempt":1,"detail":{"durationMs":78375,"finishReason":"stop","usage":{"prompt_tokens":294,"completion_tokens":1048,"total_tokens":1342,"completion_tokens_details":{"reasoning_tokens":689}}}}
+{"at":"2026-08-19T13:38:50.765Z","type":"evaluation_finished","taskId":"flat-to-tree","attempt":1,"detail":{"status":"failed","passed":1,"total":4}}
+{"at":"2026-08-19T13:38:50.766Z","type":"request_started","taskId":"paginate-and-sort","attempt":1}
+{"at":"2026-08-19T13:43:55.128Z","type":"provider_error","taskId":"paginate-and-sort","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
+{"at":"2026-08-19T13:43:55.133Z","type":"request_started","taskId":"deep-merge","attempt":1}

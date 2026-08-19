@@ -1,0 +1,30 @@
+{
+  "status": "failed",
+  "passed": 3,
+  "total": 5,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "primitives-and-leading-qmark",
+      "passed": false,
+      "error": "Expected {\"num\":100,\"neg\":-5,\"flag\":false,\"str\":\"hello\"}, got {\"num\":\"100\",\"neg\":\"-5\",\"flag\":\"false\",\"str\":\"hello\"}"
+    },
+    {
+      "id": "array-brackets",
+      "passed": true
+    },
+    {
+      "id": "nested-object",
+      "passed": false,
+      "error": "Expected {\"user\":{\"address\":{\"city\":\"Paris\",\"zip\":75001}}}, got {\"user[address][city]\":{\"user[address][city]\":\"Paris\"},\"user[address][zip]\":{\"user[address][zip]\":\"75001\"}}"
+    },
+    {
+      "id": "encoded-and-no-value-flag",
+      "passed": true
+    }
+  ],
+  "durationMs": 43
+}

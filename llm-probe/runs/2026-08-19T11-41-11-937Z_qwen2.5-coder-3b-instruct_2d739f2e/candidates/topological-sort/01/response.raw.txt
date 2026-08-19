@@ -1,0 +1,41 @@
+```javascript
+export function solve(input) {
+    const n = input.n;
+    const edges = input.edges;
+
+    // Build adjacency list and in-degree array
+    const adjList = new Array(n).fill(null).map(() => []);
+    const inDegree = new Array(n).fill(0);
+
+    for (const [from, to] of edges) {
+        adjList[from].push(to);
+        inDegree[to]++;
+    }
+
+    // Queue for BFS
+    const queue = [];
+    for (let i = 0; i < n; i++) {
+        if (inDegree[i] === 0) {
+            queue.push(i);
+        }
+    }
+
+    const result = [];
+
+    while (queue.length > 0) {
+        const node = queue.shift();
+        result.push(node);
+
+        // Decrease in-degree of neighbors
+        for (const neighbor of adjList[node]) {
+            inDegree[neighbor]--;
+            if (inDegree[neighbor] === 0) {
+                queue.push(neighbor);
+            }
+        }
+    }
+
+    // Check if all nodes were visited
+    return result.length === n ? result : null;
+}
+```

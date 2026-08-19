@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-s8ct26uab901frrdgk6iln",
+  "object": "chat.completion",
+  "created": 1787139836,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { table, select, joins, where, groupBy, orderBy, limit, offset } = input.query;\n    \n    // Prepare SELECT clause\n    let selectClause = '*';\n    if (select.length > 0) {\n        selectClause = select.map(col => typeof col === 'string' ? col : `${col.as} AS ${col.expr}`).join(', ');\n    }\n\n    // Prepare WHERE clause\n    const whereClauses = [];\n    function buildWhereClause(clause, params) {\n        if (typeof clause === 'string') {\n            whereClauses.push(clause);\n        } else if (clause.field && clause.op && clause.value !== undefined) {\n            let paramValue;\n            switch (clause.op) {\n                case 'IS NULL':\n                    whereClauses.push(`${clause.field} IS NULL`);\n                    break;\n                case 'IS NOT NULL':\n                    whereClauses.push(`${clause.field} IS NOT NULL`);\n                    break;\n                case 'IN':\n                    const inValues = clause.value.map((value, i) => `$${i + 1}`).join(', ');\n                    whereClauses.push(`${clause.field} IN (${inValues})`);\n                    params.push(...clause.value);\n                    break;\n                default:\n                    paramValue = `$${params.length + 1}`;\n                    whereClauses.push(`${clause.field} ${clause.op} ${paramValue}`);\n                    params.push(clause.value);\n            }\n        } else if (clause.AND || clause.OR) {\n            buildWhereClause(clause.AND, params);\n            buildWhereClause(clause.OR, params);\n            const conjunction = clause.OR ? 'OR' : 'AND';\n            whereClauses.push(`(${whereClauses.join(' ')})`);\n        }\n    }\n\n    if (where) {\n        buildWhereClause(where, []);\n    }\n\n    // Prepare GROUP BY and ORDER BY clauses\n    let groupByClause = '';\n    if (groupBy.length > 0) {\n        groupByClause = `GROUP BY ${groupBy.map(col => typeof col === 'string' ? col : col.as).join(', ')}`;\n    }\n\n    let orderByClause = '';\n    if (orderBy.length > 0) {\n        orderByClause = `ORDER BY ${orderBy.map(item => `${item.field} ${item.dir || 'ASC'}`).join(', ')}`;\n    }\n\n    // Prepare LIMIT and OFFSET clause\n    let limitClause = '';\n    if (limit !== undefined) {\n        limitClause = `LIMIT ${limit}`;\n    }\n\n    let offsetClause = '';\n    if (offset !== undefined) {\n        offsetClause = `OFFSET ${offset}`;\n    }\n\n    // Construct the final SQL query\n    const sql = `SELECT ${selectClause} FROM ${table} ${joins ? joins.map(j => `LEFT JOIN ${j.table} ON ${j.on[leftCol]} = ${j.on[rightCol]}`).join(' ') : ''} ${whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : ''} ${groupByClause} ${orderByClause} ${limitClause} ${offsetClause}`;\n\n    return { sql, params: [] }; // Adjust the parameters array if needed based on your query structure\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 496,
+    "completion_tokens": 664,
+    "total_tokens": 1160,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

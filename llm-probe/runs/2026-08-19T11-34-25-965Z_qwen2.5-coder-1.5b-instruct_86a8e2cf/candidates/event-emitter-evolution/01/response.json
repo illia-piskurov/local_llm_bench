@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-5e7ngurpdrnz3w6q8aitv",
+  "object": "chat.completion",
+  "created": 1787139572,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const events = {};\n  const log = [];\n\n  for (const op of input.operations) {\n    switch (op.op) {\n      case 'on':\n        registerListener(op.event, op.listenerId);\n        break;\n      case 'once':\n        registerOnceListener(op.event, op.listenerId);\n        break;\n      case 'off':\n        removeListener(op.event, op.listenerId);\n        break;\n      case 'emit':\n        emitEvent(op.event, op.payload);\n        break;\n    }\n  }\n\n  return { log };\n\n  function registerListener(event, listenerId) {\n    if (!events[event]) events[event] = [];\n    events[event].push(listenerId);\n  }\n\n  function registerOnceListener(event, listenerId) {\n    const onOffCallback = (payload) => {\n      removeListener(event, listenerId);\n      return payload;\n    };\n    registerListener(event, onOffCallback);\n  }\n\n  function removeListener(event, listenerId) {\n    if (!events[event]) return;\n\n    events[event] = events[event].filter(id => id !== listenerId);\n\n    const wildcardListeners = [];\n    for (const [k, v] of Object.entries(events)) {\n      if (!k.startsWith('*')) continue;\n      wildcardListeners.push(...v.filter(id => id === listenerId));\n    }\n\n    for (const listenerId of wildcardListeners) {\n      removeListener(k.slice(1), listenerId);\n    }\n  }\n\n  function emitEvent(event, payload) {\n    if (!events[event]) return;\n\n    const results = [];\n    for (const listenerId of events[event]) {\n      const result = listeners[listenerId](payload);\n      results.push({ listenerId, event, payload: result });\n    }\n\n    log.push(...results);\n\n    return results;\n  }\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 408,
+    "completion_tokens": 371,
+    "total_tokens": 779,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

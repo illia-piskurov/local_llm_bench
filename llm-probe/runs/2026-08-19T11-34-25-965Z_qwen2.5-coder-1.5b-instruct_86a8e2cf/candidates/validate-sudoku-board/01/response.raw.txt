@@ -1,0 +1,61 @@
+```js
+export function solve(input) {
+  const board = input.board.map(row => row.split('').map(Number));
+
+  for (let i = 0; i < 9; i++) {
+    if (!validateRow(board[i])) return false;
+    if (!validateColumn(board, i)) return false;
+  }
+
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      const box = [];
+      for (let k = 0; k < 3; k++) {
+        for (let l = 0; l < 3; l++) {
+          box.push(board[i * 3 + k][j * 3 + l]);
+        }
+      }
+      if (!validateBox(box)) return false;
+    }
+  }
+
+  return true;
+}
+
+function validateRow(row) {
+  const seen = new Set();
+  for (let num of row) {
+    if (num !== null && !seen.has(num)) {
+      seen.add(num);
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+function validateColumn(board, colIdx) {
+  const seen = new Set();
+  for (let i = 0; i < 9; i++) {
+    const num = board[i][colIdx];
+    if (num !== null && !seen.has(num)) {
+      seen.add(num);
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+function validateBox(box) {
+  const seen = new Set();
+  for (let num of box) {
+    if (num !== null && !seen.has(num)) {
+      seen.add(num);
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+```

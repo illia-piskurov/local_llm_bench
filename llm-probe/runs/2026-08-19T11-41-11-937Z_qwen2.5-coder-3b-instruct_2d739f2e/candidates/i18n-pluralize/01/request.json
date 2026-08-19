@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Translate and format a string using input.locales, input.lang, input.key, and input.params.\nRules:\n- input.locales[lang][key] can be a plain string with '{var}' placeholders, or a plural object: { zero?: string, one?: string, other: string }.\n- If it is a plural object, choose:\n  - params.count === 0 and 'zero' exists -> use zero\n  - params.count === 1 and 'one' exists -> use one\n  - otherwise -> use other\n- Replace '{var}' with params[var]. Inside plural strings, replace '#' with params.count.\n- If key is missing in input.locales[lang], fallback to input.locales['en'][key]. If still missing, return key itself.\n- Return the resulting string.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"locales\":{\"en\":{\"cart_summary\":{\"zero\":\"You have no items, {name}\",\"one\":\"You have 1 item, {name}\",\"other\":\"You have # items, {name}\"}}},\"lang\":\"en\",\"key\":\"cart_summary\",\"params\":{\"count\":3,\"name\":\"Alice\"}}\noutput: \"You have 3 items, Alice\""
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 13000,
+  "stream": false
+}

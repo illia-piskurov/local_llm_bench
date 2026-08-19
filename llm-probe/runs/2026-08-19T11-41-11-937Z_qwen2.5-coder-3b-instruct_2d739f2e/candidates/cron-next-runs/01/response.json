@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-j0prjaezdfiegcfs98t6eb",
+  "object": "chat.completion",
+  "created": 1787139896,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nfunction solve(input) {\n  const [minute, hour, dayOfMonth, month, dayOfWeek] = input.cron.split(' ');\n  let fromTimestamp = new Date(input.from).getTime();\n  \n  function parseField(field) {\n    if (field === '*') return null;\n    if (field.includes('-')) {\n      const [start, end] = field.split('-').map(Number);\n      return Array.from({ length: Math.ceil((end - start + 1) / 15) }, (_, i) => start + i * 15);\n    }\n    if (field.includes('/')) {\n      const [start, step] = field.split('/').map(Number);\n      let arr = [];\n      for (let i = start; i <= 23; i += step) {\n        arr.push(i);\n      }\n      return arr;\n    }\n    return [Number(field)];\n  }\n\n  function isMatch(date, minute, hour, dayOfMonth, month, dayOfWeek) {\n    if (minute !== null && date.getMinutes() !== minute) return false;\n    if (hour !== null && date.getHours() !== hour) return false;\n    if (dayOfMonth !== null && date.getDate() !== dayOfMonth) return false;\n    if (month !== null && date.getMonth() + 1 !== month) return false;\n    if (dayOfWeek !== null && date.getDay() !== dayOfWeek) return false;\n    return true;\n  }\n\n  function nextDate(fromTimestamp, minute, hour, dayOfMonth, month, dayOfWeek) {\n    let now = new Date(fromTimestamp);\n    while (!isMatch(now, minute, hour, dayOfMonth, month, dayOfWeek)) {\n      now.setDate(now.getDate() + 1);\n    }\n    return now;\n  }\n\n  const minuteList = parseField(minute);\n  const hourList = parseField(hour);\n  const dayOfMonthList = parseField(dayOfMonth);\n  const monthList = parseField(month);\n  const dayOfWeekList = parseField(dayOfWeek);\n\n  let result = [];\n  for (let i = 0; i < input.count; i++) {\n    fromTimestamp = nextDate(fromTimestamp, minuteList[i % minuteList.length], hourList[i % hourList.length],\n      dayOfMonthList[i % dayOfMonthList.length], monthList[i % monthList.length],\n      dayOfWeekList[i % dayOfWeekList.length]).getTime();\n    result.push(new Date(fromTimestamp).toISOString().split('.')[0] + 'Z');\n  }\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 401,
+    "completion_tokens": 523,
+    "total_tokens": 924,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

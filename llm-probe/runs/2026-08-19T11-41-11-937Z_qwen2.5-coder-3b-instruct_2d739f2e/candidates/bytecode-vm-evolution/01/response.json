@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-xychyfnoz332d7r57u09q",
+  "object": "chat.completion",
+  "created": 1787140017,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const lines = input.program.split('\\n');\n    const output = [];\n    let stack = [];\n    let lineNum = 0;\n    let executionStep = 0;\n\n    while (lineNum < lines.length && executionStep < 1000) {\n        lineNum++;\n        const [instruction, ...args] = lines[lineNum - 1].trim().split(' ');\n\n        if (!instruction || instruction.startsWith('#')) continue; // Skip empty and comment lines\n\n        switch (instruction) {\n            case 'PUSH':\n                if (args.length === 0) return { output, error: `Stack underflow at line ${lineNum}` };\n                stack.push(Number(args[0]));\n                break;\n            case 'POP':\n                if (stack.length === 0) return { output, error: `Stack underflow at line ${lineNum}` };\n                stack.pop();\n                break;\n            case 'ADD':\n                if (stack.length < 2) return { output, error: `Stack underflow at line ${lineNum}` };\n                const b = stack.pop();\n                const a = stack.pop();\n                stack.push(a + b);\n                break;\n            case 'SUB':\n                if (stack.length < 2) return { output, error: `Stack underflow at line ${lineNum}` };\n                const b = stack.pop();\n                const a = stack.pop();\n                stack.push(a - b);\n                break;\n            case 'MUL':\n                if (stack.length < 2) return { output, error: `Stack underflow at line ${lineNum}` };\n                const b = stack.pop();\n                const a = stack.pop();\n                stack.push(a * b);\n                break;\n            case 'DIV':\n                if (stack.length < 2) return { output, error: `Stack underflow at line ${lineNum}` };\n                const b = stack.pop();\n                const a = stack.pop();\n                if (b === 0) return { output, error: `Division by zero at line ${lineNum}` };\n                stack.push(Math.trunc(a / b));\n                break;\n            case 'DUP':\n                if (stack.length === 0) return { output, error: `Stack underflow at line ${lineNum}` };\n                const value = stack[stack.length - 1];\n                stack.push(value);\n                break;\n            case 'SWAP':\n                if (stack.length < 2) return { output, error: `Stack underflow at line ${lineNum}` };\n                [stack[stack.length - 2], stack[stack.length - 1]] = [stack[stack.length - 1], stack[stack.length - 2]];\n                break;\n            case 'PRINT':\n                if (stack.length === 0) return { output, error: `Stack underflow at line ${lineNum}` };\n                output.push(stack.pop().toString());\n                break;\n            case 'LABEL':\n                // Labels are just defined as comments for now\n                continue;\n            case 'JMP':\n                const labelName = args[0];\n                let found = false;\n                for (let i = lineNum; i < lines.length; i++) {\n                    if (lines[i].trim().startsWith(`LABEL ${labelName}`)) {\n                        found = true;\n                        lineNum = i + 1;\n                        break;\n                    }\n                }\n                if (!found) return { output, error: `Unknown label '${labelName}' at line ${lineNum}` };\n                break;\n            case 'JZ':\n                const jzLabelName = args[0];\n                let value = stack.pop();\n                if (value === 0) {\n                    let found = false;\n                    for (let i = lineNum; i < lines.length; i++) {\n                        if (lines[i].trim().startsWith(`LABEL ${jzLabelName}`)) {\n                            found = true;\n                            lineNum = i + 1;\n                            break;\n                        }\n                    }\n                    if (!found) return { output, error: `Unknown label '${jzLabelName}' at line ${lineNum}` };\n                } else {\n                    lineNum--;\n                }\n                break;\n            case 'JNZ':\n                const jnzLabelName = args[0];\n                let value = stack.pop();\n                if (value !== 0) {\n                    let found = false;\n                    for (let i = lineNum; i < lines.length; i++) {\n                        if (lines[i].trim().startsWith(`LABEL ${jnzLabelName}`)) {\n                            found = true;\n                            lineNum = i + 1;\n                            break;\n                        }\n                    }\n                    if (!found) return { output, error: `Unknown label '${jnzLabelName}' at line ${lineNum}` };\n                } else {\n                    lineNum--;\n                }\n                break;\n            default:\n                return { output, error: `Unknown instruction '${instruction}' at line ${lineNum}` };\n        }\n\n        executionStep++;\n    }\n\n    if (executionStep >= 1000) {\n        return { output, error: \"Execution step limit exceeded\" };\n    }\n\n    return { output };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 551,
+    "completion_tokens": 1071,
+    "total_tokens": 1622,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

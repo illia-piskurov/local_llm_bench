@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ldrw522ss0elkymnhlnn5n",
+  "object": "chat.completion",
+  "created": 1787139475,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "import { strict as assert } from 'assert';\n\nexport function solve(input) {\n  let maxLength = 0;\n  let start = 0;\n  const charIndexMap = {};\n\n  for (let i = 0; i < input.text.length; i++) {\n    const char = input.text[i];\n\n    if (charIndexMap[char] !== undefined && charIndexMap[char] >= start) {\n      start = charIndexMap[char] + 1;\n    }\n\n    maxLength = Math.max(maxLength, i - start + 1);\n    charIndexMap[char] = i;\n  }\n\n  return maxLength;\n}\n\n// Check function to verify the correctness of the solution\nfunction check() {\n  assert.strictEqual(solve({\"text\": \"abcabcbb\"}), 3);\n  assert.strictEqual(solve({\"text\": \"aabbccddde\"}), 4);\n  assert.strictEqual(solve({\"text\": \"bbbbb\"}), 1);\n  console.log(\"All test cases passed!\");\n}\n\ncheck();\n```\n\nThis solution defines a function `solve` that takes an object with a `text` property, then finds the length of the longest substring without any duplicate characters. It uses a map to keep track of the last index where each character was seen and updates the start point whenever it encounters a duplicate character. The check function tests the solution with various inputs to ensure its correctness.",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 116,
+    "completion_tokens": 284,
+    "total_tokens": 400,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

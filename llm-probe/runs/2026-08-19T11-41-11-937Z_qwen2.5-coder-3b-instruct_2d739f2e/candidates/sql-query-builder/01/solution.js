@@ -1,0 +1,72 @@
+export function solve(input) {
+    const { table, select, joins, where, groupBy, orderBy, limit, offset } = input.query;
+    
+    // Prepare SELECT clause
+    let selectClause = '*';
+    if (select.length > 0) {
+        selectClause = select.map(col => typeof col === 'string' ? col : `${col.as} AS ${col.expr}`).join(', ');
+    }
+
+    // Prepare WHERE clause
+    const whereClauses = [];
+    function buildWhereClause(clause, params) {
+        if (typeof clause === 'string') {
+            whereClauses.push(clause);
+        } else if (clause.field && clause.op && clause.value !== undefined) {
+            let paramValue;
+            switch (clause.op) {
+                case 'IS NULL':
+                    whereClauses.push(`${clause.field} IS NULL`);
+                    break;
+                case 'IS NOT NULL':
+                    whereClauses.push(`${clause.field} IS NOT NULL`);
+                    break;
+                case 'IN':
+                    const inValues = clause.value.map((value, i) => `$${i + 1}`).join(', ');
+                    whereClauses.push(`${clause.field} IN (${inValues})`);
+                    params.push(...clause.value);
+                    break;
+                default:
+                    paramValue = `$${params.length + 1}`;
+                    whereClauses.push(`${clause.field} ${clause.op} ${paramValue}`);
+                    params.push(clause.value);
+            }
+        } else if (clause.AND || clause.OR) {
+            buildWhereClause(clause.AND, params);
+            buildWhereClause(clause.OR, params);
+            const conjunction = clause.OR ? 'OR' : 'AND';
+            whereClauses.push(`(${whereClauses.join(' ')})`);
+        }
+    }
+
+    if (where) {
+        buildWhereClause(where, []);
+    }
+
+    // Prepare GROUP BY and ORDER BY clauses
+    let groupByClause = '';
+    if (groupBy.length > 0) {
+        groupByClause = `GROUP BY ${groupBy.map(col => typeof col === 'string' ? col : col.as).join(', ')}`;
+    }
+
+    let orderByClause = '';
+    if (orderBy.length > 0) {
+        orderByClause = `ORDER BY ${orderBy.map(item => `${item.field} ${item.dir || 'ASC'}`).join(', ')}`;
+    }
+
+    // Prepare LIMIT and OFFSET clause
+    let limitClause = '';
+    if (limit !== undefined) {
+        limitClause = `LIMIT ${limit}`;
+    }
+
+    let offsetClause = '';
+    if (offset !== undefined) {
+        offsetClause = `OFFSET ${offset}`;
+    }
+
+    // Construct the final SQL query
+    const sql = `SELECT ${selectClause} FROM ${table} ${joins ? joins.map(j => `LEFT JOIN ${j.table} ON ${j.on[leftCol]} = ${j.on[rightCol]}`).join(' ') : ''} ${whereClauses.length > 0 ? 'WHERE ' + whereClauses.join(' AND ') : ''} ${groupByClause} ${orderByClause} ${limitClause} ${offsetClause}`;
+
+    return { sql, params: [] }; // Adjust the parameters array if needed based on your query structure
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ua2lm4a6jca0vrp79m9lu1d",
+  "object": "chat.completion",
+  "created": 1787139865,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const validate = (schema, data, path) => {\n        if (!schema || !data) return { valid: false, errors: [] };\n\n        if (Array.isArray(schema)) {\n            return {\n                valid: schema.every((item, index) =>\n                    validate(item, data[index], `${path}/items/${index}`)\n                ),\n                errors: []\n            };\n        }\n\n        const type = schema.type;\n\n        switch (type) {\n            case 'string':\n                return {\n                    valid: typeof data === 'string' && (schema.minLength ? data.length >= schema.minLength : true),\n                    errors: []\n                };\n\n            case 'number':\n                return {\n                    valid: typeof data === 'number',\n                    errors: []\n                };\n\n            case 'boolean':\n                return {\n                    valid: typeof data === 'boolean',\n                    errors: []\n                };\n\n            case 'object':\n                const required = schema.required || [];\n                const additionalProperties = schema.additionalProperties !== false;\n\n                if (!additionalProperties && !Object.keys(data).every(key => required.includes(key))) {\n                    return {\n                        valid: false,\n                        errors: [{ path, message: \"Required properties are missing\" }]\n                    };\n                }\n\n                let suberrors = [];\n\n                for (const [key, subSchema] of Object.entries(schema.properties || {})) {\n                    const subPath = `${path}/properties/${key}`;\n                    const value = data[key];\n                    const result = validate(subSchema, value, subPath);\n                    if (!result.valid) suberrors.push(...result.errors);\n                }\n\n                return {\n                    valid: suberrors.length === 0,\n                    errors: [...suberrors]\n                };\n\n            case 'array':\n                if (Array.isArray(schema.items)) {\n                    return {\n                        valid: data.every((item, index) =>\n                            validate(schema.items[index], item, `${path}/items/${index}`)\n                        ),\n                        errors: []\n                    };\n                }\n\n                const result = validate(schema.items || {}, data[0], path);\n                return { ...result, valid: result.valid && data.length >= (schema.minItems || 0) };\n\n            case 'enum':\n                if (!Array.isArray(data)) {\n                    return {\n                        valid: false,\n                        errors: [{ path, message: \"Expected type array\" }]\n                    };\n                }\n\n                return {\n                    valid: data.some(value => schema.enum.includes(value)),\n                    errors: []\n                };\n\n            default:\n                throw new Error(`Unsupported type: ${type}`);\n        }\n    };\n\n    const definitions = input.definitions || {};\n    const schemaPath = input.schema;\n    const dataPath = input.data;\n\n    let resolvedSchema = null;\n    let resolvedData = null;\n\n    if (schemaPath.startsWith(\"#/definitions\")) {\n        const parts = schemaPath.split(\"/\").slice(2);\n        resolvedSchema = definitions[parts.join(\"/\")];\n    }\n\n    if (dataPath.startsWith(\"#/\")) {\n        const pathParts = dataPath.split(\"/\");\n        let current = input;\n        for (const part of pathParts.slice(1)) {\n            if (!current || typeof current !== 'object') return { valid: false, errors: [{ path: dataPath, message: \"Invalid data structure\" }] };\n            current = current[part];\n        }\n        resolvedData = current;\n    } else {\n        throw new Error(\"Invalid input.data path\");\n    }\n\n    if (!resolvedSchema || !resolvedData) return { valid: false, errors: [] };\n\n    return validate(resolvedSchema, resolvedData, \"#\");\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 390,
+    "completion_tokens": 727,
+    "total_tokens": 1117,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

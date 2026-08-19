@@ -1,0 +1,18 @@
+{
+  "status": "runtime_error",
+  "passed": 1,
+  "total": 3,
+  "tests": [
+    {
+      "id": "wildcard-namespace",
+      "passed": false,
+      "error": "Expected [true,false], got [false,false]"
+    },
+    {
+      "id": "custom-user-allows",
+      "passed": true
+    }
+  ],
+  "durationMs": 31,
+  "error": "nothing to repeat"
+}

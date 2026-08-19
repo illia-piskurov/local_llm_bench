@@ -1,0 +1,29 @@
+{
+  "status": "failed",
+  "passed": 4,
+  "total": 5,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "single",
+      "passed": true
+    },
+    {
+      "id": "repeated",
+      "passed": true
+    },
+    {
+      "id": "no-match",
+      "passed": false,
+      "error": "Expected [[\"bird\"],[\"cat\"],[\"dog\"]], got [[\"cat\"],[\"dog\"],[\"bird\"]]"
+    },
+    {
+      "id": "numbers",
+      "passed": true
+    }
+  ],
+  "durationMs": 33
+}

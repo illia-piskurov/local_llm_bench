@@ -1,0 +1,25 @@
+{
+  "status": "failed",
+  "passed": 3,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "numeric-gt-filter",
+      "passed": true
+    },
+    {
+      "id": "desc-sort-and-second-page",
+      "passed": false,
+      "error": "Expected {\"items\":[{\"id\":\"a\",\"p\":100}],\"total\":3,\"page\":2,\"totalPages\":2}, got {\"items\":[{\"id\":\"b\",\"p\":300},{\"id\":\"c\",\"p\":200},{\"id\":\"a\",\"p\":100}],\"total\":3,\"page\":2,\"totalPages\":2}"
+    },
+    {
+      "id": "contains-case-insensitive",
+      "passed": true
+    }
+  ],
+  "durationMs": 34
+}

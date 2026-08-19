@@ -1,0 +1,25 @@
+{
+  "status": "failed",
+  "passed": 3,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "category-discount",
+      "passed": true
+    },
+    {
+      "id": "fixed-discount-capped",
+      "passed": true
+    },
+    {
+      "id": "no-coupon-with-tax",
+      "passed": false,
+      "error": "Expected {\"subtotal\":59.97,\"discount\":0,\"tax\":4.8,\"total\":64.77}, got {\"subtotal\":59.97,\"discount\":0,\"tax\":5,\"total\":64.97}"
+    }
+  ],
+  "durationMs": 31
+}

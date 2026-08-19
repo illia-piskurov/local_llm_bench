@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-c0c3s7cnvcuialept50x4e",
+  "object": "chat.completion",
+  "created": 1787139824,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const locales = input.locales;\n    const lang = input.lang;\n    const key = input.key;\n    const params = input.params;\n\n    // Helper function to handle plural strings\n    function formatPlural(str, count, name) {\n        if (typeof str === 'object') {\n            const pluralForm = Object.keys(str).find(pluralKey => {\n                switch (pluralKey) {\n                    case 'zero':\n                        return count === 0;\n                    case 'one':\n                        return count === 1;\n                    default:\n                        return true;\n                }\n            });\n            if (pluralForm) {\n                return str[pluralForm].replace(/#/, params.count);\n            }\n        }\n        return str.replace(/\\{name\\}/, name).replace(/\\{count\\}/, params.count);\n    }\n\n    // Find the localized key\n    let localeKey = locales[lang] && locales[lang][key];\n    if (!localeKey) {\n        localeKey = locales['en'] && locales['en'][key];\n    }\n    \n    // If still not found, use the key itself\n    if (!localeKey) {\n        return key;\n    }\n\n    // Format and return the string\n    return formatPlural(localeKey, params.count, params.name);\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 327,
+    "completion_tokens": 273,
+    "total_tokens": 600,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

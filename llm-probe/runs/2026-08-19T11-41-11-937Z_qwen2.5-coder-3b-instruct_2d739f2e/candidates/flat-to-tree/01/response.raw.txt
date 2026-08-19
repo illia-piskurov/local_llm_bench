@@ -1,0 +1,28 @@
+```javascript
+export function solve(input) {
+    const nodesMap = new Map();
+    
+    // Populate a map with node objects for quick lookup by id.
+    input.nodes.forEach(node => {
+        nodesMap.set(node.id, { ...node });
+    });
+
+    // Create the root nodes.
+    const roots = [];
+    input.nodes.forEach(node => {
+        if (node.parentId === null) {
+            roots.push(nodesMap.get(node.id));
+        }
+    });
+
+    // Populate children for each node in the tree.
+    roots.forEach(root => {
+        root.children = input.nodes.filter(child => child.parentId === root.id)
+                                  .map(child => nodesMap.get(child.id));
+    });
+
+    return roots;
+}
+```
+
+This solution uses a map to efficiently look up nodes by their IDs, allowing us to construct a hierarchical structure without mutating the original input. The main function iterates over the input nodes to identify root nodes and then recursively populates their children based on the `parentId` attribute.

@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Parse a 5-field cron expression in input.cron (minute hour day-of-month month day-of-week) and calculate the next input.count run times strictly after input.from (ISO UTC timestamp).\nFields:\n- minute (0-59), hour (0-23), day of month (1-31), month (1-12), day of week (0-6, 0=Sunday)\nSyntax per field: `*`, lists `1,15`, ranges `9-17`, step `*/15` or `1-5/2`.\nDay of month & Day of week rule: if both are not `*`, day matches if EITHER matches (OR rule). If one is `*`, the other is strictly matched.\nReturn an Array of input.count ISO UTC timestamp strings (seconds & ms set to 00:00.000Z).\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"cron\":\"*/15 9-17 * * 1-5\",\"from\":\"2026-08-18T10:00:00.000Z\",\"count\":3}\noutput: [\"2026-08-18T10:15:00.000Z\",\"2026-08-18T10:30:00.000Z\",\"2026-08-18T10:45:00.000Z\"]"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

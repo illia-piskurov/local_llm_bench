@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-s1zx912uayoslehwvgy0o",
+  "object": "chat.completion",
+  "created": 1787139386,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    return input.requests.map(request => {\n        const user = request.user;\n        const permission = request.permission;\n\n        if (!input.users[user]) return false; // User not found\n\n        let allow = input.users[user].allows || [];\n        const deny = input.users[user].denies || [];\n\n        for (const rule of allow) {\n            if (rule === '*' || rule.startsWith(permission + ':') || rule === permission) {\n                return true;\n            }\n        }\n\n        for (const rule of deny) {\n            if (rule === '*' || rule.startsWith(permission + ':') || rule === permission) {\n                return false;\n            }\n        }\n\n        return true; // Default: allow if no explicit deny found\n    });\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 367,
+    "completion_tokens": 160,
+    "total_tokens": 527,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

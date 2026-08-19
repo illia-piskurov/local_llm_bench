@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "passed": 4,
+  "total": 4,
+  "tests": [
+    {
+      "id": "row-duplicate",
+      "passed": true
+    },
+    {
+      "id": "box-duplicate",
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "col-duplicate",
+      "passed": true
+    }
+  ],
+  "durationMs": 28
+}

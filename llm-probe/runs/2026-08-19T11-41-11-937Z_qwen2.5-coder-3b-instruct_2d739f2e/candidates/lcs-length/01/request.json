@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Return the length of the longest common subsequence of strings input.a and input.b.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"a\":\"abcde\",\"b\":\"ace\"}\noutput: 3"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 13000,
+  "stream": false
+}

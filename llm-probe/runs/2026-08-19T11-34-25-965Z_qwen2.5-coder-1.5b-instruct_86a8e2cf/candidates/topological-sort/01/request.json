@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Given input.n nodes (0..n-1) and input.edges as [from, to] directed pairs, return one valid topological ordering as an array. Return null if a cycle exists.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"n\":4,\"edges\":[[0,1],[0,2],[1,3],[2,3]]}\noutput: [0,1,2,3]"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

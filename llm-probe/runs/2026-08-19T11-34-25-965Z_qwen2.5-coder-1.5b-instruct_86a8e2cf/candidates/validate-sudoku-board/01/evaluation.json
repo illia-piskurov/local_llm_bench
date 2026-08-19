@@ -1,0 +1,25 @@
+{
+  "status": "failed",
+  "passed": 3,
+  "total": 4,
+  "tests": [
+    {
+      "id": "row-duplicate",
+      "passed": true
+    },
+    {
+      "id": "box-duplicate",
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "passed": false,
+      "error": "Expected true, got false"
+    },
+    {
+      "id": "col-duplicate",
+      "passed": true
+    }
+  ],
+  "durationMs": 30
+}

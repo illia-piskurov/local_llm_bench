@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-qvm5fh2ip49evaie262exp",
+  "object": "chat.completion",
+  "created": 1787139537,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const isNull = (val) => val === null;\n    const isPrimitive = (val) => typeof val !== 'object' && !(Array.isArray(val));\n\n    const isEqual = (a, b) => {\n        if (isNull(a) || isNull(b)) return a === b;\n\n        if (isPrimitive(a) || isPrimitive(b)) return a === b;\n\n        if (!Array.isArray(a) && !Array.isArray(b)) {\n            if (typeof a !== typeof b) throw new TypeError(`Cannot compare ${typeof a} and ${typeof b}`);\n            return a === b;\n        }\n\n        if (a.length !== b.length) return false;\n\n        for (let i = 0; i < a.length; i++) {\n            const result = isEqual(a[i], b[i]);\n            if (!result) throw new TypeError(`Items at index ${i} are not equal`);\n        }\n\n        return true;\n    };\n\n    return isEqual(input.a, input.b);\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 152,
+    "completion_tokens": 208,
+    "total_tokens": 360,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

@@ -1,0 +1,23 @@
+{
+  "status": "runtime_error",
+  "passed": 1,
+  "total": 5,
+  "tests": [
+    {
+      "id": "none",
+      "passed": true
+    },
+    {
+      "id": "equal",
+      "passed": false,
+      "error": "Expected 3, got 0"
+    },
+    {
+      "id": "mixed",
+      "passed": false,
+      "error": "Expected 4, got 0"
+    }
+  ],
+  "durationMs": 28,
+  "error": "cannot read property 'length' of undefined"
+}

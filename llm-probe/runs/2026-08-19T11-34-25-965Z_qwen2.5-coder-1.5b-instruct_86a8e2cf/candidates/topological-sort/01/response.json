@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-uavcfl3war9hmiloxmi9tb",
+  "object": "chat.completion",
+  "created": 1787139515,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n  const n = input.n;\n  const edges = input.edges;\n  const indegree = new Array(n).fill(0);\n\n  for (const [from, to] of edges) {\n    indegree[to]++;\n  }\n\n  const queue = [];\n  const result = [];\n\n  for (let i = 0; i < n; i++) {\n    if (indegree[i] === 0) {\n      queue.push(i);\n    }\n  }\n\n  while (queue.length > 0) {\n    const current = queue.shift();\n    result.push(current);\n\n    for (const to of edges.filter(([from, _]) => from === current)) {\n      indegree[to]--;\n      if (indegree[to] === 0) {\n        queue.push(to);\n      }\n    }\n  }\n\n  return result.length === n ? result : null;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 165,
+    "completion_tokens": 186,
+    "total_tokens": 351,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

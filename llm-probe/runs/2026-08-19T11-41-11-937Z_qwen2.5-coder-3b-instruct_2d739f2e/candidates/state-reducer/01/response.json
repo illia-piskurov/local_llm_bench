@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-3qm11je3ihojr6y9hid8f",
+  "object": "chat.completion",
+  "created": 1787139780,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { state, actions } = input;\n\n  // Helper function to create a deep copy of an object\n  const cloneObject = (obj) => JSON.parse(JSON.stringify(obj));\n\n  let currentState = cloneObject(state);\n\n  actions.forEach(action => {\n    switch (action.type) {\n      case 'SET':\n        setProperty(currentState, action.path, action.value);\n        break;\n      case 'TOGGLE':\n        toggleProperty(currentState, action.path);\n        break;\n      case 'ARRAY_PUSH':\n        arrayPush(currentState, action.path, action.item);\n        break;\n      case 'ARRAY_REMOVE':\n        arrayRemove(currentState, action.path, action.index);\n        break;\n      case 'DELETE':\n        deleteProperty(currentState, action.path);\n        break;\n    }\n  });\n\n  return currentState;\n}\n\n// Helper functions\nfunction setProperty(obj, path, value) {\n  const parts = path.split('.');\n  let currentObj = obj;\n\n  for (let i = 0; i < parts.length - 1; i++) {\n    if (!currentObj[parts[i]]) {\n      currentObj[parts[i]] = {};\n    }\n    currentObj = currentObj[parts[i]];\n  }\n\n  currentObj[parts[parts.length - 1]] = value;\n}\n\nfunction toggleProperty(obj, path) {\n  const parts = path.split('.');\n  let currentObj = obj;\n\n  for (let i = 0; i < parts.length - 1; i++) {\n    if (!currentObj[parts[i]]) {\n      currentObj[parts[i]] = {};\n    }\n    currentObj = currentObj[parts[i]];\n  }\n\n  const key = parts[parts.length - 1];\n  if (currentObj[key] !== undefined) {\n    currentObj[key] = !currentObj[key];\n  } else {\n    currentObj[key] = true;\n  }\n}\n\nfunction arrayPush(obj, path, item) {\n  const parts = path.split('.');\n  let currentObj = obj;\n\n  for (let i = 0; i < parts.length - 1; i++) {\n    if (!currentObj[parts[i]]) {\n      currentObj[parts[i]] = {};\n    }\n    currentObj = currentObj[parts[i]];\n  }\n\n  const key = parts[parts.length - 1];\n  if (!Array.isArray(currentObj[key])) {\n    currentObj[key] = [item];\n  } else {\n    currentObj[key].push(item);\n  }\n}\n\nfunction arrayRemove(obj, path, index) {\n  const parts = path.split('.');\n  let currentObj = obj;\n\n  for (let i = 0; i < parts.length - 1; i++) {\n    if (!currentObj[parts[i]]) {\n      currentObj[parts[i]] = {};\n    }\n    currentObj = currentObj[parts[i]];\n  }\n\n  const key = parts[parts.length - 1];\n  if (Array.isArray(currentObj[key]) && index >= 0 && index < currentObj[key].length) {\n    currentObj[key].splice(index, 1);\n  }\n}\n\nfunction deleteProperty(obj, path) {\n  const parts = path.split('.');\n  let currentObj = obj;\n\n  for (let i = 0; i < parts.length - 1; i++) {\n    if (!currentObj[parts[i]]) {\n      return;\n    }\n    currentObj = currentObj[parts[i]];\n  }\n\n  delete currentObj[parts[parts.length - 1]];\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 320,
+    "completion_tokens": 730,
+    "total_tokens": 1050,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

@@ -1,0 +1,56 @@
+```javascript
+export function solve(input) {
+  // Create a map for quick lookup by id
+  const nodeMap = new Map();
+  
+  if (input && Array.isArray(input.nodes)) {
+    for (const node of input.nodes) {
+      nodeMap.set(node.id, node);
+    }
+  }
+  
+  // Find root nodes and build tree structure
+  const roots = [];
+  
+  // First pass: identify all parents that exist in the input
+  for (const node of input.nodes) {
+    if (!node.parentId || !nodeMap.has(node.parentId)) {
+      // This is a root or has no parent reference
+      roots.push(node);
+    } else {
+      // Add to children map
+      const parentChildren = nodeMap.get(node.parentId).children;
+      if (parentChildren) {
+        parentChildren.push(node);
+      } else {
+        nodeMap.set(node.parentId, { ...node });
+      }
+    }
+  }
+  
+  // Build complete tree structure with children arrays for all nodes
+  const result = [];
+  
+  for (const root of roots) {
+    let node = nodeMap.get(root.id);
+    
+    if (!node) {
+      continue;
+    }
+    
+    // Ensure children array exists and is empty initially
+    if (!node.children) {
+      node.children = [];
+    }
+    
+    result.push(node);
+  }
+  
+  return result.map(node => ({
+    id: node.id,
+    name: node.name,
+    parentId: node.parentId,
+    children: []
+  }));
+}
+```
