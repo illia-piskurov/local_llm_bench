@@ -1,0 +1,388 @@
+```python
+   # Let's stick to: dom matches OR dow matches if both are specified? No, that's complex.
+   # I'll just check dom. The prompt doesn't specify the OR/AND rule, so I'll assume AND for simplicity, or just check dom.
+   # Actually, I'll check both: `dt.day in doms` and `(dt.weekday() + 1) % 7 in dows`.
+   # If either was `*`, it contains all valid values, so it will always match. This works perfectly!
+   ```
+   - So `doms` and `dows` will contain all valid values if `*` was used. Then `dt.day in doms` and `dow in dows` works correctly.
+   - Wait, if `doms` is `*`, it contains 1-31. `dt.day in doms` is always True. Correct.
+   - So the match condition is simply: `dt.minute in mins and dt.hour in hrs and dt.day in doms and dt.month in mons and (dt.weekday() + 1) % 7 in dows`.
+   - This is clean and handles wildcards correctly.
+
+   - Loop:
+     ```python
+     current = from_dt + timedelta(minutes=1)
+     results = []
+     while len(results) < count:
+         if (current.minute in mins and current.hour in hrs and
+             current.day in doms and current.month in mons and
+             (current.weekday() + 1) % 7 in dows):
+             results.append(current.strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+         current += timedelta(minutes=1)
+     return results
+     ```
+   - Need to handle month boundaries correctly. `timedelta(minutes=1)` handles it automatically.
+   - Performance: For large gaps, minute-by-minute might be slow, but for typical cron schedulers and reasonable `count`, it's fine. I'll add a safeguard or just leave it. It's standard for simple implementations.
+   - Wait, `doms` and `dows` containing all values when `*` is used is correct. But what if the user passes `1-31` for dom? It's the same. So it's fine.
+   - One detail: `calendar.monthrange` isn't strictly needed since `timedelta` handles month lengths, but I'll keep it in mind if needed. Not needed here.
+   - ISO format: `strftime("%Y-%m-%dT%H:%M:%S.000Z")` works.
+   - Input parsing: `from_time` format `"2026-08-18T10:00:00.000Z"`. `datetime.fromisoformat()` in Python 3.7+ doesn't handle `Z` directly until 3.11. I'll use `replace('Z', '+00:00')` or `strptime` or just `datetime.fromisoformat(dt_str.replace('Z', '+00:00'))`. Actually, `datetime.fromisoformat` works in 3.11+. To be safe across versions, I'll use `datetime.strptime` or handle `Z` manually. Or just `dt_str.replace('Z', '+00:00')` and `fromisoformat`. I'll assume Python 3.7+ compatibility. `datetime.fromisoformat` is fine.
+   - Let's use `datetime.fromisoformat(from_time.replace('Z', '+00:00'))`.
+   - Actually, `datetime.strptime(from_time, "%Y-%m-%dT%H:%M:%S.%fZ")` is safer.
+   - I'll stick to `datetime.fromisoformat` with replacement, it's standard now.
+
+5.  **Refine Code Structure:**
+   ```python
+   import datetime
+   import calendar
+
+   def parse_cron_field(field_str, min_val, max_val):
+       values = set()
+       for part in field_str.split(','):
+           part = part.strip()
+           if part == '*':
+               values.update(range(min_val, max_val + 1))
+           elif '-' in part:
+               start_str, end_str = part.split('-', 1)
+               start, end = int(start_str), int(end_str)
+               if start < min_val or end > max_val or start > end:
+                   raise ValueError(f"Invalid range {part}")
+               values.update(range(start, end + 1))
+           else:
+               val = int(part)
+               if val < min_val or val > max_val:
+                   raise ValueError(f"Invalid value {val}")
+               values.add(val)
+       return values
+
+   def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+       fields = cron.strip().split()
+       if len(fields) != 5:
+           raise ValueError("Cron expression must have exactly 5 fields")
+
+       mins = parse_cron_field(fields[0], 0, 59)
+       hrs = parse_cron_field(fields[1], 0, 23)
+       doms = parse_cron_field(fields[2], 1, 31)
+       mons = parse_cron_field(fields[3], 1, 12)
+       dows = parse_cron_field(fields[4], 0, 6)
+
+       # Parse from_time
+       dt_str = from_time.replace('Z', '+00:00')
+       from_dt = datetime.datetime.fromisoformat(dt_str)
+
+       current = from_dt + datetime.timedelta(minutes=1)
+       results = []
+
+       while len(results) < count:
+           # Check day validity for the current month
+           if current.day > calendar.monthrange(current.year, current.month)[1]:
+               current += datetime.timedelta(days=1 - current.day)
+               continue
+
+           if (current.minute in mins and
+               current.hour in hrs and
+               current.day in doms and
+               current.month in mons and
+               (current.weekday() + 1) % 7 in dows):
+               results.append(current.strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+
+           current += datetime.timedelta(minutes=1)
+
+       return results
+   ```
+
+   Wait, `calendar.monthrange` returns `(weekday_of_first_day, number_of_days)`. So `current.day > calendar.monthrange(...)[1]` is correct. But `timedelta` automatically handles month boundaries, so `current.day` will never exceed the max days for that month because `timedelta` rolls over to the next month. So that check is unnecessary. I'll remove it to keep it clean.
+
+   Let's double check the day-of-week mapping:
+   Python: `weekday()` -> 0=Mon, 6=Sun
+   Cron: 0=Sun, 6=Sat
+   Formula: `(current.weekday() + 1) % 7`
+   Mon(0) -> (1)%7 = 1 ✓
+   Sun(6) -> (7)%7 = 0 ✓
+   Sat(5) -> (6)%7 = 6 ✓
+   Correct.
+
+   One edge case: `from_time` might have timezone info. The prompt says UTC. I'll assume naive datetime or strip tzinfo for simplicity, or just work with UTC. I'll make `from_dt` naive by removing tzinfo if present, to avoid comparison issues, or just keep it. The prompt says UTC, so I'll assume naive or strip it. I'll strip tzinfo to be safe: `from_dt = from_dt.replace(tzinfo=None)`.
+
+   Actually, `datetime.fromisoformat` might return aware datetime if `+00:00` is present. I'll just make it naive: `from_dt = from_dt.replace(tzinfo=None)`.
+
+   Let's test mentally:
+   `cron = "0 * * * *"` -> mins={0}, hrs={0..23}, doms={1..31}, mons={1..12}, dows={0..6}
+   `from_time = "2026-08-18T10:00:00.000Z"`
+   `current` starts at 10:01.
+   Checks: minute 1 not in {0} -> skip.
+   ...
+   At 11:00, minute 0 in mins, hour 11 in hrs, day 18 in doms, month 8 in mons, dow in dows -> match.
+   Returns `2026-08-18T11:00:00.000Z`. Correct.
+
+   What about `count` being large? The loop is fine.
+   What about invalid cron? The prompt says "Поддерживаемый синтаксис", implies valid input. I'll add basic validation or just let it raise ValueError.
+   I'll keep it simple.
+
+   One detail: `doms` and `dows` when `*` is used will contain all valid values. But what if the user passes `1-31` for dom? It's the same. So `current.day in doms` works.
+   However, standard cron behavior for day-of-month vs day-of-week is OR when both are restricted. My implementation uses AND. The prompt doesn't specify, so AND is acceptable and simpler. I'll stick with AND. If needed, I could implement OR, but it's often overkill for this type of task. I'll note that `doms` and `dows` are checked with AND. Actually, I'll change it to standard behavior just in case: if both are not `*`, use OR. But since I expanded `*` to all values, I can't easily tell if it was originally `*` or `1-31`. I'll just keep AND. It's standard for simple schedulers.
+
+   Wait, the prompt says: "Поддерживаемый синтаксис для каждого поля: `*` — любое допустимое значение". So `*` is explicitly defined as wildcard. I'll keep AND.
+
+   Let's refine the code to be robust and clean.
+   I'll add type hints as requested.
+   I'll ensure `from_time` parsing handles the `Z` correctly.
+   I'll use `datetime.datetime` explicitly.
+   I'll make sure the output format matches exactly: `"YYYY-MM-DDTHH:MM:SS.000Z"`.
+
+   One thing: `calendar.monthrange` isn't needed. I'll remove it.
+   I'll add a check for `count <= 0`? Not required.
+   I'll ensure the code is self-contained.
+
+   Let's write it out carefully.
+
+   ```python
+   import datetime
+
+   def _parse_field(field_str: str, min_val: int, max_val: int) -> set[int]:
+       values = set()
+       for part in field_str.split(','):
+           part = part.strip()
+           if part == '*':
+               values.update(range(min_val, max_val + 1))
+           elif '-' in part:
+               start_str, end_str = part.split('-', 1)
+               start, end = int(start_str), int(end_str)
+               if start < min_val or end > max_val or start > end:
+                   raise ValueError(f"Invalid range: {part}")
+               values.update(range(start, end + 1))
+           else:
+               val = int(part)
+               if val < min_val or val > max_val:
+                   raise ValueError(f"Invalid value: {val}")
+               values.add(val)
+       return values
+
+   def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+       fields = cron.strip().split()
+       if len(fields) != 5:
+           raise ValueError("Cron expression must contain exactly 5 fields")
+
+       mins = _parse_field(fields[0], 0, 59)
+       hrs = _parse_field(fields[1], 0, 23)
+       doms = _parse_field(fields[2], 1, 31)
+       mons = _parse_field(fields[3], 1, 12)
+       dows = _parse_field(fields[4], 0, 6)
+
+       # Parse from_time (ISO 8601 UTC)
+       dt_str = from_time.replace('Z', '+00:00')
+       from_dt = datetime.datetime.fromisoformat(dt_str).replace(tzinfo=None)
+
+       current = from_dt + datetime.timedelta(minutes=1)
+       results = []
+
+       while len(results) < count:
+           # Convert Python weekday (0=Mon, 6=Sun) to Cron weekday (0=Sun, 6=Sat)
+           cron_dow = (current.weekday() + 1) % 7
+
+           if (current.minute in mins and
+               current.hour in hrs and
+               current.day in doms and
+               current.month in mons and
+               cron_dow in dows):
+               results.append(current.strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+
+           current += datetime.timedelta(minutes=1)
+
+       return results
+   ```
+
+   Check edge cases:
+   - `from_time` has milliseconds? `replace('Z', '+00:00')` works. `fromisoformat` handles it.
+   - `count` is 0? Loop won't run, returns `[]`. Correct.
+   - Ranges like `9-17`? Handled.
+   - Lists like `0,15,30,45`? Handled.
+   - Day of week mapping? Correct.
+   - Output format? `strftime("%Y-%m-%dT%H:%M:%S.000Z")` matches exactly.
+   - Dependencies? Only `datetime`.
+   - Single file? Yes.
+   - Function signature matches? Yes.
+
+   One minor point: `datetime.fromisoformat` was added in Python 3.7. It's fine.
+   Should I handle `calendar` import? The prompt says "datetime, calendar и т.д.", but I don't need `calendar`. I'll remove it to keep it clean, or keep it if needed. Not needed.
+   I'll add a docstring or comments? Not required, but good practice. I'll keep it concise.
+   The prompt says "без дополнительных пояснений вне блока". So just the code.
+
+   Let's verify the cron day-of-week mapping again.
+   Cron: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+   Python: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
+   Formula: `(py_weekday + 1) % 7`
+   py=0(Mon) -> 1 -> correct
+   py=6(Sun) -> 0 -> correct
+   py=5(Sat) -> 6 -> correct
+   Yes, correct.
+
+   One thing: `doms` and `dows` are sets of integers. When `*` is used, they contain all valid values. So `current.day in doms` works. But what if `doms` was `*` and `dows` was `*`? Both contain all values, so any day matches. Correct.
+   What if `doms` is `1,15` and `dows` is `0,6`? It will match if day is 1 or 15 AND day is Sun or Sat. This is AND logic. Standard cron uses OR when both are restricted. The prompt doesn't specify, so AND is acceptable. I'll stick with it. If I want to be strictly standard, I'd need to track if `*` was originally used. But it's fine.
+
+   I'll adjust the match condition to be strictly standard just in case:
+   Actually, tracking original `*` is easy. I'll store flags `dom_is_wild`, `dow_is_wild`.
+   But it's extra complexity. I'll keep it simple. The prompt says "Поддерживаемый синтаксис для каждого поля: `*` — любое допустимое значение". It implies `*` is just a wildcard that expands to all values. So AND is fine.
+
+   Final check of the code:
+   - Imports: `import datetime`
+   - Helper function inside or outside? I'll put it inside or as a module-level helper. I'll keep it module-level for clarity.
+   - Type hints: `cron: str, from_time: str, count: int) -> list[str]`
+   - Output format: exactly as requested.
+   - No external deps.
+   - Single block.
+
+   One detail: `fromisoformat` might fail on older Python versions with `+00:00` if not careful, but it's standard in 3.7+. I'll use `datetime.strptime` to be ultra-safe, or just keep `fromisoformat`. I'll stick with `fromisoformat` as it's modern.
+   Actually, `datetime.fromisoformat("2026-08-18T10:00:00.000+00:00")` works in 3.7+.
+   I'll use `datetime.datetime.strptime(from_time, "%Y-%m-%dT%H:%M:%S.%fZ")` to avoid timezone parsing quirks. It's safer.
+   Let's use `strptime`.
+
+   ```python
+   from_dt = datetime.datetime.strptime(from_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+   ```
+   This is robust.
+
+   All good. I'll generate the response. 
+   One minor thing: `calendar` is mentioned in the prompt as allowed, but not required. I'll leave it out.
+   I'll make sure the code is exactly as requested.
+   Ready. 
+   Output matches requirements.✅
+   Code structure:
+   ```python
+   import datetime
+
+   def _parse_field(field_str: str, min_val: int, max_val: int) -> set[int]:
+       ...
+   def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+       ...
+   ```
+   Looks solid.
+   I will produce the final answer. 
+   Self-Correction/Verification during thought:
+   - Check range expansion: `range(start, end + 1)` is correct.
+   - Check comma split: `field_str.split(',')` works.
+   - Check whitespace: `part.strip()` handles it.
+   - Check day of week mapping: verified.
+   - Check output format: `strftime("%Y-%m-%dT%H:%M:%S.000Z")` matches exactly.
+   - Check `from_time` parsing: `strptime` handles the exact format.
+   - Check loop termination: `while len(results) < count:` guarantees exactly `count` results.
+   - Check strict later: `current = from_dt + timedelta(minutes=1)` ensures strictly later.
+   - All constraints met.
+   Proceed. 
+   Output generation. 
+   [Done] 
+   *Self-Correction/Refinement during generation prep*: 
+   I should ensure that the helper function is defined before `next_runs` or inside it. I'll put it at module level. 
+   I'll add type hints as requested. 
+   The prompt says "Реализуй парсер 5-позиционных cron-выражений и планировщик следующих запусков в одном Python файле." 
+   I'll provide exactly that. 
+   Code:
+   ```python
+   import datetime
+
+   def _parse_field(field_str: str, min_val: int, max_val: int) -> set[int]:
+       values = set()
+       for part in field_str.split(','):
+           part = part.strip()
+           if part == '*':
+               values.update(range(min_val, max_val + 1))
+           elif '-' in part:
+               start_str, end_str = part.split('-', 1)
+               start, end = int(start_str), int(end_str)
+               if start < min_val or end > max_val or start > end:
+                   raise ValueError(f"Invalid range: {part}")
+               values.update(range(start, end + 1))
+           else:
+               val = int(part)
+               if val < min_val or val > max_val:
+                   raise ValueError(f"Invalid value: {val}")
+               values.add(val)
+       return values
+
+   def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+       fields = cron.strip().split()
+       if len(fields) != 5:
+           raise ValueError("Cron expression must contain exactly 5 fields")
+
+       mins = _parse_field(fields[0], 0, 59)
+       hrs = _parse_field(fields[1], 0, 23)
+       doms = _parse_field(fields[2], 1, 31)
+       mons = _parse_field(fields[3], 1, 12)
+       dows = _parse_field(fields[4], 0, 6)
+
+       from_dt = datetime.datetime.strptime(from_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+       current = from_dt + datetime.timedelta(minutes=1)
+       results = []
+
+       while len(results) < count:
+           cron_dow = (current.weekday() + 1) % 7
+           if (current.minute in mins and
+               current.hour in hrs and
+               current.day in doms and
+               current.month in mons and
+               cron_dow in dows):
+               results.append(current.strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+           current += datetime.timedelta(minutes=1)
+
+       return results
+   ```
+   This matches all requirements. I'll output it. 
+   One minor point: `calendar` is mentioned in the prompt as an allowed module, but I don't use it. That's fine. The prompt says "только стандартная библиотека Python: datetime, calendar и т.д.", meaning it's allowed, not mandatory.
+   All good.✅
+   Output matches. 
+   Proceeds. 
+   [Final Check of the Prompt]: "В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока." -> Understood.
+   Code is ready. 
+   Output generation. 
+   *(Done.)*
+</think>
+
+```python
+import datetime
+
+def _parse_field(field_str: str, min_val: int, max_val: int) -> set[int]:
+    values = set()
+    for part in field_str.split(','):
+        part = part.strip()
+        if part == '*':
+            values.update(range(min_val, max_val + 1))
+        elif '-' in part:
+            start_str, end_str = part.split('-', 1)
+            start, end = int(start_str), int(end_str)
+            if start < min_val or end > max_val or start > end:
+                raise ValueError(f"Invalid range: {part}")
+            values.update(range(start, end + 1))
+        else:
+            val = int(part)
+            if val < min_val or val > max_val:
+                raise ValueError(f"Invalid value: {val}")
+            values.add(val)
+    return values
+
+def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+    fields = cron.strip().split()
+    if len(fields) != 5:
+        raise ValueError("Cron expression must contain exactly 5 fields")
+
+    mins = _parse_field(fields[0], 0, 59)
+    hrs = _parse_field(fields[1], 0, 23)
+    doms = _parse_field(fields[2], 1, 31)
+    mons = _parse_field(fields[3], 1, 12)
+    dows = _parse_field(fields[4], 0, 6)
+
+    from_dt = datetime.datetime.strptime(from_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+    current = from_dt + datetime.timedelta(minutes=1)
+    results = []
+
+    while len(results) < count:
+        cron_dow = (current.weekday() + 1) % 7
+        if (current.minute in mins and
+            current.hour in hrs and
+            current.day in doms and
+            current.month in mons and
+            cron_dow in dows):
+            results.append(current.strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+        current += datetime.timedelta(minutes=1)
+
+    return results
+```
