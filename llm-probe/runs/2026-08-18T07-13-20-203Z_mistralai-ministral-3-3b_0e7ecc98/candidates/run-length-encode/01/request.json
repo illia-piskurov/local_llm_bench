@@ -1,0 +1,16 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Run-length encode input.text: replace consecutive repeated characters with count+char (e.g. 'aaabbc' → '3a2b1c'). Return the encoded string.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"text\":\"aaabbc\"}\noutput: \"3a2b1c\""
+    }
+  ],
+  "temperature": 0.2,
+  "max_tokens": 2048,
+  "stream": false
+}

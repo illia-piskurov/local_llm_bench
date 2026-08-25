@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-u8ksnzax5jj3prfcs6qf",
+  "object": "chat.completion",
+  "created": 1787128909,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  let start = input.start;\n  let end = input.end;\n\n  if (start === end) {\n    return 0;\n  }\n\n  let queue = [[start, 1]];\n  let visited = new Set();\n  visited.add(start);\n\n  while (queue.length > 0) {\n    let current = queue.shift();\n    let row = current[0];\n    let col = current[1];\n\n    if (row === end) {\n      return queue.length;\n    }\n\n    for (let dr = -1; dr <= 1; dr++) {\n      for (let dc = -1; dc <= 1; dc++) {\n        if (dr === 0 && dc === 0) continue;\n\n        let newRow = row + dr;\n        let newCol = col + dc;\n\n        if (!newRow >= 0 && !newRow < input.grid.length && !newCol >= 0 && !newCol < input.grid[0].length && !visited.has(`${newRow},${newCol}`) && input.grid[newRow][newCol] === 0) {\n          queue.push([newRow, newCol]);\n          visited.add(`${newRow},${newCol}`);\n        }\n      }\n    }\n  }\n\n  return -1;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 162,
+    "completion_tokens": 318,
+    "total_tokens": 480,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

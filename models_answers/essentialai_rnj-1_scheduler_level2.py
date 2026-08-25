@@ -1,0 +1,55 @@
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    from collections import defaultdict
+
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task in tasks}
+    duration = {task: time for task, (time, _) in tasks.items()}
+
+    # Build the graph and calculate in-degrees
+    for task, (_, deps) in tasks.items():
+        for dep in deps:
+            if dep not in in_degree:
+                return None  # Invalid dependency
+            graph[dep].append(task)
+            in_degree[task] += 1
+
+    queue = [task for task, degree in in_degree.items() if degree == 0]
+    result = []
+
+    while queue:
+        current = queue.pop(0)
+        result.append(current)
+
+        for neighbor in graph[current]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    if len(result) != len(tasks):
+        return None
+
+    # Calculate the longest path
+    topo_order = result
+    earliest_start_time = {task: 0 for task in tasks}
+    latest_finish_time = {task: float('-inf') for task in tasks}
+
+    for task in topo_order:
+        if graph[task]:
+            earliest_start_time[task] = max(
+                earliest_start_time[dep] + duration[dep]
+                for dep in graph[task]
+            )
+
+    # Calculate the latest finish time
+    longest_path_duration = 0
+    for task in reversed(topo_order):
+        if not graph[task]:
+            latest_finish_time[task] = earliest_start_time[task] + duration[task]
+            longest_path_duration = max(longest_path_duration, latest_finish_time[task])
+        else:
+            latest_finish_time[task] = min(
+                latest_finish_time[neighbor] - duration[task]
+                for neighbor in graph[task]
+            )
+
+    return longest_path_duration

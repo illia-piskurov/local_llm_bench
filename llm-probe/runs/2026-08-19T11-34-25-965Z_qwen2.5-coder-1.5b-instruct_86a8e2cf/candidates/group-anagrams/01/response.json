@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-milww5dylum0yflgbr4jbmn",
+  "object": "chat.completion",
+  "created": 1787139485,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n  let groups = {};\n  \n  for (const word of input.words) {\n    const sortedWord = word.split('').sort().join('');\n    \n    if (!groups[sortedWord]) {\n      groups[sortedWord] = [];\n    }\n    \n    groups[sortedWord].push(word);\n  }\n  \n  return Object.values(groups).map(group => group.sort());\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 143,
+    "completion_tokens": 85,
+    "total_tokens": 228,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nimport datetime\n\ndef parse_cron(cron):\n    parts = cron.split()\n    if len(parts) != 5:\n        raise ValueError(\"Invalid cron expression\")\n    \n    minute, hour, day_of_month, month, day_of_week = map(lambda x: x.strip(), parts)\n    \n    macros = {\n        '@hourly': '0 * * * *',\n        '@daily': '0 0 * * *',\n        '@midnight': '0 0 * * *',\n        '@weekly': '0 0 * * 0',\n        '@monthly': '0 0 1 * *',\n        '@yearly': '0 0 1 1 *',\n        '@annually': '0 0 1 1 *'\n    }\n    \n    if cron in macros:\n        return parse_cron(macros[cron])\n    \n    def parse_range(value):\n        if '-' in value:\n            start, end = map(int, value.split('-'))\n            return range(start, end + 1)\n        elif ',' in value:\n            return set(map(int, value.split(',')))\n        else:\n            return {int(value)}\n    \n    minute_set = parse_range(minute) if minute != '*' else set(range(60))\n    hour_set = parse_range(hour) if hour != '*' else set(range(24))\n    day_of_month_set = parse_range(day_of_month) if day_of_month != '*' else set(range(1, 32))\n    month_set = parse_range(month) if month != '*' else set(range(1, 13))\n    day_of_week_set = parse_range(day_of_week) if day_of_week != '*' else set(range(7))\n    \n    return minute_set, hour_set, day_of_month_set, month_set, day_of_week_set\n\ndef next_runs(cron: str, from_time: str, count: int):\n    minute_set, hour_set, day_of_month_set, month_set, day_of_week_set = parse_cron(cron)\n    \n    start_dt = datetime.datetime.fromisoformat(from_time.rstrip('Z')) + datetime.timedelta(seconds=1)\n    \n    next_times = []\n    current_time = start_dt\n    while len(next_times) < count:\n        if (current_time.minute in minute_set and \n            current_time.hour in hour_set and \n            current_time.day in day_of_month_set and \n            current_time.month in month_set and \n            current_time.weekday() in day_of_week_set):\n            \n            next_times.append(current_time.isoformat().replace('+00:00', 'Z'))\n        \n        if current_time.second == 59:\n            current_time += datetime.timedelta(minutes=1)\n        else:\n            current_time += datetime.timedelta(seconds=1)\n        \n        if (current_time.month != month_set and \n            current_time.day == day_of_month_set and \n            current_time.hour == hour_set and \n            current_time.minute == minute_set):\n            \n            next_year = start_dt.year + 1 if current_time.month == 12 else start_dt.year\n            for month in range(1, 13):\n                if (month in month_set or month == '*') and \\\n                   (current_time.day == day_of_month_set or current_time.day == '*'):\n                    try:\n                        datetime.datetime(next_year, month, current_time.day)\n                        next_times.append(datetime.datetime(next_year, month, current_time.day).isoformat().replace('+00:00', 'Z'))\n                    except ValueError:\n                        pass\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 1276,
+    "total_output_tokens": 718,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 33.71143350969077,
+    "time_to_first_token_seconds": 5.1036220000000005
+  },
+  "response_id": "resp_d9ebfa1454267151bbe2e4cda8012d7836b24f6bd28bff80"
+}

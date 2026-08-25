@@ -11,9 +11,10 @@ from rich.text import Text
 
 import lmstudio
 from benchmarks import BY_ID, REGISTRY
-from benchmarks.base import Benchmark, ManualResult, StoredResult, TestResult
+from benchmarks.base import Benchmark, GenerationStats, ManualResult, SpeedSample, StoredResult, TestResult
+from host_configs import HostConfig, HostConfigStore
 from lmstudio import Model
-from storage import ResultStore
+from storage import ResultStore, SpeedResultStore
 
 if sys.platform == "win32":
     try:
@@ -30,6 +31,8 @@ store = ResultStore(
     raw_answers_dir=ROOT / "raw_answers",
     results_dir=ROOT / "results",
 )
+speed_store = SpeedResultStore(ROOT / "speed_results")
+host_store = HostConfigStore(ROOT / "host_configs.json", ROOT / "active_host.json")
 
 BACK = "__back__"
 
@@ -67,7 +70,47 @@ def level_status_plain(benchmark: Benchmark, model_key: str, level_id: str) -> s
     return f"{result.format()} ({result.tested_at})"
 
 
-def ensure_level_answer(model: Model, benchmark: Benchmark, level_id: str) -> Path | None:
+def generate_stats(response_stats: dict | None) -> GenerationStats:
+    if not response_stats:
+        return GenerationStats()
+    return GenerationStats(
+        input_tokens=response_stats.get("input_tokens"),
+        total_output_tokens=response_stats.get("total_output_tokens"),
+        reasoning_output_tokens=response_stats.get("reasoning_output_tokens"),
+        tokens_per_second=response_stats.get("tokens_per_second"),
+        time_to_first_token_seconds=response_stats.get("time_to_first_token_seconds"),
+        model_load_time_seconds=response_stats.get("model_load_time_seconds"),
+    )
+
+
+def save_speed_sample(host: HostConfig, model: Model, benchmark: Benchmark, level_id: str, response_stats: dict | None) -> None:
+    stats = generate_stats(response_stats)
+    if stats.tokens_per_second is None:
+        return
+
+    sample = SpeedSample(
+        host_id=host.id,
+        host_label=host.label,
+        model=model.key,
+        benchmark=benchmark.id,
+        level=level_id,
+        tested_at=now_str(),
+        stats=stats,
+    )
+    speed_store.save(sample)
+    console.print(
+        f"  [cyan]speed:[/cyan] {model.key} / {host.label} -> {stats.tokens_per_second:.2f} tok/s"
+    )
+
+
+def ensure_active_host() -> HostConfig | None:
+    active = host_store.get_active()
+    if active is not None:
+        return active
+    return choose_host_config()
+
+
+def ensure_level_answer(model: Model, benchmark: Benchmark, level_id: str, host: HostConfig) -> Path | None:
     """Гарантирует наличие ответа модели для данного уровня, генерируя предыдущие уровни
     при необходимости. Возвращает путь к файлу с кодом или None при ошибке."""
     level = benchmark.level_by_id(level_id)
@@ -78,7 +121,7 @@ def ensure_level_answer(model: Model, benchmark: Benchmark, level_id: str) -> Pa
 
     messages = []
     if level.requires:
-        prev_answer_path = ensure_level_answer(model, benchmark, level.requires)
+        prev_answer_path = ensure_level_answer(model, benchmark, level.requires, host)
         if prev_answer_path is None:
             return None
         _, prev_raw_path, _ = store.paths_for(benchmark, model.key, level.requires)
@@ -89,13 +132,19 @@ def ensure_level_answer(model: Model, benchmark: Benchmark, level_id: str) -> Pa
 
     console.print(f"  Отправляю задание [bold]«{level.name}»[/bold] модели (ждём ответ, таймаут не ограничен)...")
     try:
-        answer_text = lmstudio.ask_model(model.key, messages)
+        response = lmstudio.ask_model(model.key, messages)
     except Exception as e:
         console.print(f"  [red]error:[/red] модель не ответила: {e}")
         return None
 
-    raw_path.write_text(answer_text, encoding="utf-8")
-    code = benchmark.extract_code(answer_text)
+    raw_path.write_text(response.content, encoding="utf-8")
+    # Сохраняем полный JSON-ответ API для диагностики (например, reasoning-моделей с пустым content)
+    import json as _json
+    raw_path.with_suffix(".api.json").write_text(
+        _json.dumps(response.raw, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    save_speed_sample(host, model, benchmark, level_id, response.stats)
+    code = benchmark.extract_code(response.content)
     answer_path.write_text(code, encoding="utf-8")
     console.print(f"  Ответ сохранён в [cyan]{answer_path}[/cyan] (сырой ответ — в [dim]{raw_path}[/dim])")
     return answer_path
@@ -129,12 +178,24 @@ def run_level(model: Model, benchmark: Benchmark, level_id: str) -> None:
     level = benchmark.level_by_id(level_id)
     console.rule(f"[bold]{model.key}[/bold] — {benchmark.name} / {level.name}")
 
-    answer_path = ensure_level_answer(model, benchmark, level_id)
+    host = ensure_active_host()
+    if host is None:
+        return
+
+    try:
+        was_loaded_before = bool(lmstudio.loaded_instance_ids(model.key))
+    except Exception:
+        was_loaded_before = False
+
+    answer_path = ensure_level_answer(model, benchmark, level_id, host)
     if answer_path is None:
         return
 
-    console.print("  Выгружаю модель из памяти...")
-    lmstudio.unload_model(model.key, console=console)
+    if was_loaded_before:
+        console.print("  Модель уже была запущена вручную — не трогаю её.")
+    else:
+        console.print("  Выгружаю модель из памяти...")
+        lmstudio.unload_model(model.key, console=console)
 
     if level_id in benchmark.manual_levels:
         run_manual_level(model, benchmark, level_id, answer_path)
@@ -152,6 +213,124 @@ def run_level(model: Model, benchmark: Benchmark, level_id: str) -> None:
         evaluation=test_result,
     )
     store.save(benchmark, model.key, level_id, result)
+
+
+def format_host_label(host: HostConfig, active_id: str | None) -> str:
+    prefix = "* " if host.id == active_id else "  "
+    return f"{prefix}{host.label} [{host.id}]"
+
+
+def create_host_config() -> HostConfig | None:
+    label = questionary.text("Введите конфигурацию ПК (например, Ryzen 7 7840U | 32 GB | RTX 4070):").ask()
+    if not label:
+        return None
+    host = HostConfig.create(label)
+    host_store.add(host)
+    host_store.set_active(host.id)
+    console.print(f"  Конфигурация сохранена: [bold]{host.label}[/bold] ([cyan]{host.id}[/cyan])")
+    return host
+
+
+def choose_host_config() -> HostConfig | None:
+    while True:
+        hosts = host_store.load_all()
+        active_id = host_store.load_active_id()
+
+        choices = [Choice(title="Создать новую конфигурацию", value="__new__")]
+        for host in hosts:
+            choices.append(Choice(title=format_host_label(host, active_id), value=host.id))
+        choices.append(Choice(title="« Назад", value=BACK))
+
+        selected = questionary.select("Выберите конфигурацию ПК:", choices=choices).ask()
+
+        if selected in (None, BACK):
+            return host_store.get_active()
+        if selected == "__new__":
+            host = create_host_config()
+            if host is not None:
+                return host
+            continue
+
+        host = host_store.get(selected)
+        if host is None:
+            continue
+        host_store.set_active(host.id)
+        return host
+
+
+def quality_averages_by_model() -> dict[str, float]:
+    by_model: dict[str, list[float]] = {}
+    for result in store.all_saved():
+        by_model.setdefault(result.model, []).append(result.percent())
+    return {model: sum(values) / len(values) for model, values in by_model.items() if values}
+
+
+def efficiency_score(avg_speed: float, avg_quality: float | None, best_quality: float | None) -> float:
+    if avg_quality is None or best_quality is None or best_quality <= 0:
+        return avg_speed * 0.05
+
+    quality_norm = max(0.0, min(1.0, avg_quality / best_quality))
+    quality_weight = 0.05 + 0.95 * (quality_norm ** 3)
+    return avg_speed * quality_weight
+
+
+def show_speed_leaderboard() -> None:
+    host = choose_host_config()
+    if host is None:
+        console.print("[yellow]Сначала создайте или выберите конфигурацию ПК.[/yellow]")
+        return
+
+    samples = [
+        sample
+        for sample in speed_store.all_saved()
+        if sample.host_id == host.id and sample.stats.tokens_per_second is not None
+    ]
+    if not samples:
+        console.print(f"[yellow]Для конфигурации {host.label} пока нет speed-результатов.[/yellow]")
+        return
+
+    by_model: dict[str, list[SpeedSample]] = {}
+    for sample in samples:
+        by_model.setdefault(sample.model, []).append(sample)
+
+    quality_by_model = quality_averages_by_model()
+    rows = []
+    for model_key, items in by_model.items():
+        speeds = [item.stats.tokens_per_second for item in items if item.stats.tokens_per_second is not None]
+        if not speeds:
+            continue
+        avg_speed = sum(speeds) / len(speeds)
+        avg_quality = quality_by_model.get(model_key)
+        rows.append((model_key, avg_speed, avg_quality, len(speeds)))
+
+    best_quality = max((row[2] for row in rows if row[2] is not None), default=None)
+    scored_rows = [
+        (model_key, avg_speed, avg_quality, count, efficiency_score(avg_speed, avg_quality, best_quality))
+        for model_key, avg_speed, avg_quality, count in rows
+    ]
+    scored_rows.sort(key=lambda row: row[4], reverse=True)
+
+    table = Table(title=f"Рейтинг эффективности скорости — {host.label}", padding=(0, 1))
+    table.add_column("#", justify="right", style="bold cyan")
+    table.add_column("Модель", style="bold")
+    table.add_column("Токенов/с", justify="right")
+    table.add_column("Оценка", justify="right")
+    table.add_column("Эффективность", justify="right")
+    table.add_column("Сэмплов", justify="right")
+
+    for i, (model_key, avg_speed, avg_quality, count, score) in enumerate(scored_rows, start=1):
+        quality_text = "—" if avg_quality is None else f"{avg_quality:.0f}%"
+        quality_style = "dim" if avg_quality is None else score_color(avg_quality)
+        table.add_row(
+            str(i),
+            model_key,
+            f"{avg_speed:.2f}",
+            Text(quality_text, style=quality_style),
+            f"{score:.2f}",
+            str(count),
+        )
+
+    console.print(table)
 
 
 def print_models_menu(benchmark: Benchmark, models: list[Model]) -> None:
@@ -220,7 +399,7 @@ def choose_level(model: Model, benchmark: Benchmark) -> None:
         if level_id in (None, BACK):
             return
 
-        _, _, result_path = store.paths_for(benchmark, model.key, level_id)
+        answer_path, _, result_path = store.paths_for(benchmark, model.key, level_id)
 
         if result_path.exists():
             existing = store.load(benchmark, model.key, level_id)
@@ -244,7 +423,69 @@ def choose_level(model: Model, benchmark: Benchmark) -> None:
                 console.print("  Удаляю сохранённые ответ/сырой ответ/результат для этого уровня...")
                 store.clear(benchmark, model.key, level_id)
 
+        elif answer_path.exists():
+            # Ответ есть, но результат не сохранён — предыдущий запуск прервался до конца
+            console.print("\n  [yellow]Найден сохранённый ответ модели без результата тестов (прошлый запуск прервался?).[/yellow]")
+            redo = questionary.select(
+                "Что делать?",
+                choices=[
+                    Choice(title="Запустить тесты на сохранённом коде", value="t"),
+                    Choice(title="Запросить у модели заново", value="r"),
+                    Choice(title="Отмена", value="c"),
+                ],
+            ).ask()
+            if redo in (None, "c"):
+                continue
+            if redo == "r":
+                console.print("  Удаляю сохранённый ответ для этого уровня...")
+                store.clear(benchmark, model.key, level_id)
+
         run_level(model, benchmark, level_id)
+
+
+def run_all_tests() -> None:
+    host = ensure_active_host()
+    if host is None:
+        console.print("[yellow]Сначала создайте или выберите конфигурацию ПК.[/yellow]")
+        return
+
+    try:
+        models = lmstudio.list_llm_models()
+    except Exception as e:
+        console.print(f"[red]Не удалось получить список моделей: {e}[/red]")
+        return
+
+    if not models:
+        console.print("[yellow]LM Studio не вернул ни одной LLM модели.[/yellow]")
+        return
+
+    console.rule(f"[bold]Автопрогон всех тестов[/bold] — {host.label}")
+
+    total_runs = 0
+    skipped_manual = 0
+
+    for benchmark in REGISTRY:
+        auto_levels = [level_id for level_id in benchmark.level_order if level_id not in benchmark.manual_levels]
+        manual_levels = [level_id for level_id in benchmark.level_order if level_id in benchmark.manual_levels]
+
+        if not auto_levels:
+            console.print(f"[dim]Пропускаю {benchmark.name}: только ручные уровни.[/dim]")
+            skipped_manual += len(manual_levels)
+            continue
+
+        console.rule(f"[bold]{benchmark.name}[/bold]")
+        for model in models:
+            console.print(f"[bold]{model.key}[/bold]")
+            for level_id in auto_levels:
+                run_level(model, benchmark, level_id)
+                total_runs += 1
+
+        skipped_manual += len(manual_levels) * len(models)
+
+    console.print(
+        f"[green]Готово:[/green] прогнано {total_runs} автоматических запусков; "
+        f"ручные уровни пропущены: {skipped_manual}."
+    )
 
 
 def choose_model(benchmark: Benchmark) -> None:
@@ -329,17 +570,129 @@ def show_leaderboard() -> None:
     console.print(table)
 
 
+def manage_deletion_menu() -> None:
+    DELETE_MODEL = "__delete_model__"
+    DELETE_LEVEL = "__delete_level__"
+    DELETE_ALL = "__delete_all__"
+    BACK = "__back__"
+
+    while True:
+        saved_results = store.all_saved()
+        saved_speeds = speed_store.all_saved()
+
+        all_models = sorted(list({r.model for r in saved_results} | {s.model for s in saved_speeds}))
+
+        if not all_models:
+            console.print("[yellow]Нет сохранённых результатов для удаления.[/yellow]")
+            return
+
+        choices = [
+            Choice(title="🗑️ Удалить ВСЕ результаты конкретной модели", value=DELETE_MODEL),
+            Choice(title="🎯 Удалить результаты конкретного теста / уровня модели", value=DELETE_LEVEL),
+            Choice(title="⚠️ Сбросить ВСЕ результаты бенчмарка (очистка всей базы)", value=DELETE_ALL),
+            Choice(title="« Назад в главное меню", value=BACK),
+        ]
+
+        action = questionary.select("Управление результатами:", choices=choices).ask()
+
+        if action in (None, BACK):
+            return
+
+        if action == DELETE_MODEL:
+            model_choices = [Choice(title=m, value=m) for m in all_models]
+            model_choices.append(Choice(title="« Назад", value=BACK))
+            selected_model = questionary.select("Выберите модель для удаления всех её результатов:", choices=model_choices).ask()
+
+            if selected_model in (None, BACK):
+                continue
+
+            confirm = questionary.confirm(
+                f"Вы уверены, что хотите полностью удалить все результаты и замеры скорости для '{selected_model}'?",
+                default=False,
+            ).ask()
+
+            if confirm:
+                count_res = store.clear_model(selected_model, REGISTRY)
+                count_speed = speed_store.clear_model(selected_model)
+                console.print(
+                    f"[green]Удалено {count_res} файлов ответов/результатов и {count_speed} замеров скорости для '{selected_model}'.[/green]"
+                )
+
+        elif action == DELETE_LEVEL:
+            model_choices = [Choice(title=m, value=m) for m in all_models]
+            model_choices.append(Choice(title="« Назад", value=BACK))
+            selected_model = questionary.select("Выберите модель:", choices=model_choices).ask()
+
+            if selected_model in (None, BACK):
+                continue
+
+            level_choices = []
+            for b in REGISTRY:
+                for l_id in b.level_order:
+                    res = store.load(b, selected_model, l_id)
+                    status = f"{res.format()} ({res.tested_at})" if res else "не тестировался"
+                    level_choices.append(
+                        Choice(
+                            title=f"[{b.short}] {b.name} — {b.level_by_id(l_id).name}: {status}",
+                            value=(b, l_id),
+                        )
+                    )
+            level_choices.append(Choice(title="« Назад", value=BACK))
+
+            selected_level = questionary.select("Выберите уровень для удаления:", choices=level_choices).ask()
+
+            if selected_level in (None, BACK):
+                continue
+
+            b, l_id = selected_level
+            confirm = questionary.confirm(
+                f"Удалить результат [{b.short} - {l_id}] для модели '{selected_model}'?",
+                default=False,
+            ).ask()
+
+            if confirm:
+                count_res = store.clear(b, selected_model, l_id)
+                count_speed = speed_store.clear_level(selected_model, b.id, l_id)
+                console.print(
+                    f"[green]Удален результат теста [{b.short} - {l_id}] (файлов: {count_res}, замер скорости: {count_speed}).[/green]"
+                )
+
+        elif action == DELETE_ALL:
+            confirm = questionary.confirm(
+                "ВНИМАНИЕ: Это полностью удалит ВСЕ сохранённые результаты и замеры скорости ВСЕХ моделей! Продолжить?",
+                default=False,
+            ).ask()
+
+            if confirm:
+                double_confirm = questionary.confirm("Вы ТОЧНО уверены?", default=False).ask()
+                if double_confirm:
+                    count_res = store.clear_all(REGISTRY)
+                    count_speed = speed_store.clear_all()
+                    console.print(
+                        f"[bold red]База очищена: удалено {count_res} файлов результатов и {count_speed} замеров скорости.[/bold red]"
+                    )
+
+
 def main():
     store.ensure_dirs(REGISTRY)
+    speed_store.ensure_dir()
 
     console.print(Panel("[bold]Добро пожаловать в бенчмарк локальных моделей![/bold]", border_style="green"))
 
+    ALL_TESTS = "__all_tests__"
     LEADERBOARD = "__leaderboard__"
+    SPEEDBOARD = "__speedboard__"
+    HOSTS = "__hosts__"
+    DELETE_MENU = "__delete_menu__"
     EXIT = "__exit__"
 
     while True:
         choices = [Choice(title=benchmark.name, value=benchmark.id) for benchmark in REGISTRY]
+        choices.append(Choice(title="▶ Прогнать все тесты", value=ALL_TESTS))
         choices.append(Choice(title="📊 Общий рейтинг моделей", value=LEADERBOARD))
+        choices.append(Choice(title="⚡ Рейтинг скорости по конфигурации ПК", value=SPEEDBOARD))
+        choices.append(Choice(title="🖥️ Конфигурации ПК", value=HOSTS))
+        choices.append(Choice(title="🗑️ Удалить результаты моделей", value=DELETE_MENU))
         choices.append(Choice(title="Выход", value=EXIT))
 
         choice = questionary.select("Выберите тест:", choices=choices).ask()
@@ -350,6 +703,22 @@ def main():
 
         if choice == LEADERBOARD:
             show_leaderboard()
+            continue
+
+        if choice == ALL_TESTS:
+            run_all_tests()
+            continue
+
+        if choice == SPEEDBOARD:
+            show_speed_leaderboard()
+            continue
+
+        if choice == HOSTS:
+            choose_host_config()
+            continue
+
+        if choice == DELETE_MENU:
+            manage_deletion_menu()
             continue
 
         choose_model(BY_ID[choice])

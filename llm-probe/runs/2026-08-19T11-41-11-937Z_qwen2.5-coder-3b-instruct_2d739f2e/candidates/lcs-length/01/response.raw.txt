@@ -1,0 +1,25 @@
+```javascript
+export function solve(input) {
+    const [a, b] = input.a.split('');
+    const n = a.length;
+    const m = b.length;
+    
+    // Create a DP table to store lengths of longest common suffixes
+    const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+    
+    let maxLength = 0;
+    
+    for (let i = 1; i <= n; i++) {
+        for (let j = 1; j <= m; j++) {
+            if (a[i - 1] === b[j - 1]) {
+                dp[j][i] = dp[j - 1][i - 1] + 1;
+                maxLength = Math.max(maxLength, dp[j][i]);
+            } else {
+                dp[j][i] = 0;
+            }
+        }
+    }
+    
+    return maxLength;
+}
+```

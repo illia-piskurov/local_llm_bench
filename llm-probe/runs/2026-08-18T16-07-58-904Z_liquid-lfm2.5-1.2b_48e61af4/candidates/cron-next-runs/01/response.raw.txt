@@ -1,0 +1,68 @@
+```javascript
+export function solve(input) {
+  const { cron, from, count } = input;
+  const fromUtc = new Date(from);
+  const now = new Date();
+  const result = [];
+
+  const parseCron = (cronStr) => {
+    const regex = /^(\*|[0-9]+)\s*(minute|hour|day-of-month|month|day-of-week))/;
+    let match;
+    while ((match = regex.exec(cronStr)) !== null) {
+      const [pattern, value] = match;
+      switch (pattern) {
+        case 'minute':
+          const min = parseInt(value, 10);
+          if (min >= 0 && min <= 59) now.setSeconds(now.getSeconds() + (min * 60));
+          break;
+        case 'hour':
+          const hr = parseInt(value, 10);
+          if (hr >= 0 && hr <= 23) now.setHours(now.getHours() + (hr * 60));
+          break;
+        case 'day-of-month':
+          const dm = parseInt(value, 10);
+          if (dm >= 1 && dm <= 31) now.setMonth(now.getMonth() + 1, now.getDate());
+          break;
+        case 'month':
+          const m = parseInt(value, 10);
+          if (m >= 1 && m <= 12) now.setFullYear(now.getFullYear(), now.getMonth() + 1, dm);
+          break;
+        case 'day-of-week':
+          const wd = parseInt(value, 10);
+          if (wd !== '*' && wd >= 0 && wd <= 6) now.setUTCHours(now.getUTCHours() + (wd - 1));
+          break;
+        default:
+          throw new Error(`Unknown pattern: ${pattern}`);
+      }
+    }
+  };
+
+  parseCron(cron);
+
+  const nextTimes = [];
+  let currentTime = now;
+  while (currentTime <= fromUtc) {
+    if (!nextTimes.includes(currentTime)) {
+      nextTimes.push(currentTime.toISOString().replace(/T/,'00') + 'Z');
+    }
+    currentTime.setSeconds(currentTime.getSeconds() + 1);
+  }
+
+  for (let t of nextTimes) {
+    const diff = currentTime - new Date(t);
+    if (diff > 0 && diff < 60 * 1000) continue; // skip within minute
+    if (diff >= 0 && diff <= 59 * 1000) {
+      const hours = Math.floor(diff / 3600);
+      const minutes = Math.floor((diff % 3600) / 60);
+      const day = new Date(t).getDate();
+      const month = new Date(t).getMonth() + 1;
+      const dayOfWeek = new Date(t).getUTCHours() % 7;
+      if (day === 1 || (day === 15 && dayOfWeek === 0)) { // adjust for 1-based week
+        result.push(t);
+      }
+    }
+  }
+
+  return result;
+}
+```

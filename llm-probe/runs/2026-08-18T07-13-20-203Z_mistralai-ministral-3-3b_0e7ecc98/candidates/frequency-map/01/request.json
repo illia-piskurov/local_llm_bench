@@ -1,0 +1,16 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Return an object mapping each element of input.items (strings or numbers) to its count. Preserve the type of the key as a string in the object key.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"items\":[\"a\",\"b\",\"a\",\"c\",\"b\",\"a\"]}\noutput: {\"a\":3,\"b\":2,\"c\":1}"
+    }
+  ],
+  "temperature": 0.2,
+  "max_tokens": 2048,
+  "stream": false
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-xdd4uhwitdq3ipi93z7u",
+  "object": "chat.completion",
+  "created": 1787127691,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { locales, lang, key, params } = input;\n  \n  // Get the locale string for the given language and key\n  let localeString = locales[lang]?.[key];\n  \n  // Fallback to English if language not found\n  if (!localeString) {\n    localeString = locales['en'][key];\n  }\n  \n  // Fallback to key itself if key not found\n  if (!localeString) {\n    return key;\n  }\n  \n  // Handle plural forms\n  if (typeof localeString === 'object') {\n    const count = params.count || 0;\n    \n    let selected = 'other';\n    \n    if (count === 0 && localeString.zero) {\n      selected = 'zero';\n    } else if (count === 1 && localeString.one) {\n      selected = 'one';\n    } else {\n      selected = 'other';\n    }\n    \n    const result = localeString[selected] || localeString.other;\n    \n    // Replace {var} with params[var] and # with count\n    return result\n      .replace(/\\{(\\w+)\\}/g, (match) => params[match.slice(1, -1)] || match)\n      .replace(/#/g, count.toString());\n  } else {\n    // Plain string with placeholders\n    return localeString\n      .replace(/\\{(\\w+)\\}/g, (match) => params[match.slice(1, -1)] || match)\n      .replace(/#/g, params.count?.toString() || '');\n  }\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 327,
+    "completion_tokens": 330,
+    "total_tokens": 657,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

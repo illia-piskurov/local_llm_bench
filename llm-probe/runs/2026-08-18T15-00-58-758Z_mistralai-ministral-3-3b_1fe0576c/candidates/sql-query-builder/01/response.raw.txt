@@ -1,0 +1,77 @@
+```javascript
+export function solve(input) {
+    const { query } = input;
+    const table = query.table;
+    const selectColumns = query.select.map(col => col.as ? `${col.expr} AS ${col.as}` : col).join(', ');
+    let whereClause = '';
+    const params = [];
+    const paramCounter = 1;
+
+    function buildWhere(condition) {
+        if (typeof condition === 'string') return condition;
+        if (!condition) return '';
+
+        if (Array.isArray(condition)) {
+            const clauses = condition.map(subCondition => {
+                if (subCondition.OR || subCondition.AND) {
+                    const subWhere = buildWhere(subCondition);
+                    return `(${subWhere})`;
+                }
+                return buildCondition(subCondition);
+            });
+            return clauses.join(` ${condition.AND ? 'AND' : 'OR'} `);
+        }
+
+        return buildCondition(condition);
+    }
+
+    function buildCondition({ field, op, value }) {
+        let clause;
+        if (op === 'IS NULL') clause = `${field} IS NULL`;
+        else if (op === 'IS NOT NULL') clause = `${field} IS NOT NULL`;
+        else if (op === 'LIKE') clause = `${field} LIKE $${paramCounter++}`;
+        else if (op === 'IN') {
+            const values = Array.isArray(value) ? value : [value];
+            const placeholders = values.map(() => `$${paramCounter++}`).join(', ');
+            clause = `${field} IN (${placeholders})`;
+        } else {
+            clause = `${field} ${op}`;
+            if (!isNullish(value)) params.push(value);
+        }
+
+        return clause;
+    }
+
+    const where = buildWhere(query.where || {});
+    whereClause = where ? `WHERE ${where}` : '';
+
+    let joinsClause = '';
+    if (query.joins) {
+        query.joins.forEach(join => {
+            const joinType = join.type || 'INNER';
+            const onClause = Object.entries(join.on)
+                .map(([leftCol, rightCol]) => `${leftCol} = ${rightCol}`)
+                .join(' AND ');
+            joinsClause += ` ${joinType} JOIN ${join.table} ON ${onClause}`;
+        });
+    }
+
+    let groupByClause = '';
+    if (query.groupBy) {
+        groupByClause = `GROUP BY ${query.groupBy.join(', ')}`;
+    }
+
+    let orderByClause = '';
+    if (query.orderBy) {
+        orderByClause = `ORDER BY ${query.orderBy.map(({ field, dir }) => `${field} ${dir || 'ASC'}`).join(', ')}`;
+    }
+
+    const limitClause = query.limit ? `LIMIT ${query.limit}` : '';
+    const offsetClause = query.offset ? `OFFSET ${query.offset}` : '';
+
+    return {
+        sql: `SELECT ${selectColumns} FROM ${table}${joinsClause}${whereClause}${groupByClause}${orderByClause}${limitClause}${offsetClause}`,
+        params
+    };
+}
+```

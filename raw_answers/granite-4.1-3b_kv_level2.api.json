@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nclass KeyValueStore:\n    def __init__(self):\n        self.data = {}\n        self.transactions = []\n        self.watchers = {}\n\n    def _commit(self):\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n            return\n\n        top_tx = self.transactions.pop()\n        for key, value in top_tx.items():\n            self. data[key] = value\n        print(\"COMMIT\")\n\n    def _rollback(self):\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n            return\n\n        self.transactions.pop()\n        for key, value in self.transactions[-1].items():\n            del self.data[key]\n\n    def execute_command(self, command):\n        parts = command.split()\n        if not parts:\n            return\n\n        op = parts[0]\n        if op == \"SET\":\n            if len(parts) != 3:\n                return\n            key, value = parts[1], parts[2]\n            self.data[key] = value\n            if key in self.watchers:\n                old_value = self.data.get(key, \"NULL\")\n                print(f\"WATCH {key} {old_value} -> {value}\")\n        elif op == \"GET\":\n            if len(parts) != 2:\n                return\n            key = parts[1]\n            print(self.data.get(key, \"NULL\"))\n        elif op == \"DELETE\":\n            if len(parts) != 2:\n                return\n            key = parts[1]\n            if key in self.data:\n                del self.data[key]\n        elif op == \"BEGIN\":\n            self.transactions.append({})\n        elif op == \"COMMIT\":\n            self._commit()\n        elif op == \"ROLLBACK\":\n            self._rollback()\n        elif op == \"COUNT\":\n            if len(parts) != 2:\n                return\n            value = parts[1]\n            count = sum(1 for v in (self.data.get(k, \"NULL\") for k in self.data) if v == value)\n            print(count)\n        elif op == \"WATCH\":\n            if len(parts) != 2:\n                return\n            key = parts[1]\n            self.watchers[key] = True\n\ndef run(program: str) -> list[str]:\n    store = KeyValueStore()\n    output = []\n    for line in program.splitlines():\n        if not line.strip():\n            continue\n        store.execute_command(line)\n        if 'COMMIT' in line or 'ROLLBACK' in line:\n            output.append(line)\n    return output\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 1406,
+    "total_output_tokens": 512,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 26.609846329176897,
+    "time_to_first_token_seconds": 2.386091
+  },
+  "response_id": "resp_c940c0413573131dba2dee28130b333cb1c22d18914d87e2"
+}

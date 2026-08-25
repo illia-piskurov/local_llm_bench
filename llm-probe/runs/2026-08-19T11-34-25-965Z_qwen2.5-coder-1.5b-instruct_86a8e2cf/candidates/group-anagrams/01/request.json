@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Group anagrams from input.words. Sort words inside each group alphabetically. Sort groups by their first word alphabetically.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"words\":[\"eat\",\"tea\",\"tan\",\"ate\",\"nat\",\"bat\"]}\noutput: [[\"ate\",\"eat\",\"tea\"],[\"bat\"],[\"nat\",\"tan\"]]"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

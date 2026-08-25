@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-80606pqz6iqn3zsnllyyqs",
+  "object": "chat.completion",
+  "created": 1787082012,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const words = input.words;\n    if (!words || words.length === 0) {\n        return [];\n    }\n\n    /**\n     * Generates a canonical key for any word by sorting its characters.\n     * @param {string} word\n     * @returns {string} The sorted string representation of the characters.\n     */\n    const getKey = (word) => {\n        return [...word].sort().join('');\n    };\n\n    // Step 1 & 2: Grouping anagrams using a Map where key is the sorted form, value is an array of words.\n    const groupsMap = new Map();\n\n    for (const word of words) {\n        const key = getKey(word);\n        if (!groupsMap.has(key)) {\n            groupsMap.set(key, []);\n        }\n        // Ensure we do not mutate the input array or accidentally overwrite data structures based on keys\n        groupsMap.get(key).push(word);\n    }\n\n    // Step 3: Extract values (the groups) into an array.\n    let resultGroups = Array.from(groupsMap.values());\n\n    // Step 4: Sort words inside each group alphabetically (Inner Sort).\n    for (let i = 0; i < resultGroups.length; i++) {\n        resultGroups[i].sort();\n    }\n\n    // Step 5: Sort the groups themselves based on their first word alphabetically (Outer Sort).\n    // Since we sorted the inner arrays in Step 4, the first element (index 0) is always the lexicographically smallest word for that group.\n    resultGroups.sort((groupA, groupB) => {\n        const comparisonWordA = groupA[0];\n        const comparisonWordB = groupB[0];\n        return comparisonWordA.localeCompare(comparisonWordB);\n    });\n\n    return resultGroups;\n}",
+        "reasoning_content": "Plan:\n1.  Understand the goal: Group anagrams from a list of words, sort words within each group alphabetically, and sort the groups themselves based on their first word alphabetically.\n2.  Input structure: `{\"words\": [\"word1\", \"word2\", ... ]}`.\n3.  Output structure: An array of arrays (groups).\n\nStep 1: Identify anagrams.\nAn anagram is defined by having the same character count, meaning when characters are sorted, they form a unique canonical key.\nExample: \"eat\" -> sort('e', 'a', 't') -> \"aet\". \"tea\" -> \"aet\". \"ate\" -> \"aet\".\n\nStep 2: Grouping (Mapping).\nUse a Map or an object to store groups. The key will be the sorted representation (the canonical key), and the value will be an array of words belonging to that group.\n\nStep 3: Processing the input list (`input.words`).\nIterate through `input.words`. For each word:\n    a. Calculate its canonical key (sort the characters).\n    b. Add the word to the corresponding entry in the map using this key.\n\nStep 4: Post-processing the groups.\nThe resulting groups need two levels of sorting:\n1. Words within a group must be sorted alphabetically.\n2. The groups themselves must be sorted based on their first element (which, after internal sorting, is the lexicographically smallest word in that group).\n\nStep 5: Implementation Details.\n\n*   Helper function to generate the key: `key(word)` -> sort characters of `word` and join them.\n*   Main logic:\n    1. Initialize Map/Object (`groups`).\n    2. Loop through words, populate `groups`.\n    3. Extract values from `groups` into an array (`result_groups`).\n    4. Sort each inner group (array) alphabetically.\n    5. Sort the outer array of groups: The comparison logic must compare the first element of two groups ($G_a[0]$ vs $G_b[0]$).\n\nLet's trace the sorting requirement for groups: \"Sort groups by their first word alphabetically.\"\n\nInput example: `[\"eat\", \"tea\", \"tan\", \"ate\", \"nat\", \"bat\"]`\nGroups identified (before inner sort):\nKey \"aet\": [\"eat\", \"tea\", \"ate\"]\nKey \"ant\": [\"tan\", \"nat\"]\nKey \"abt\": [\"bat\"]\n\nAfter Step 4 (Inner Sort):\nGroup A: `[\"ate\", \"eat\", \"tea\"]` (Sorted)\nGroup B: `[\"nat\", \"tan\"]` -> Wait, \"nan\" is key for [\"tan\", \"nat\"]. Let's recheck.\n\"tan\" sorted: 'a', 'n', 't' -> \"ant\".\n\"nat\" sorted: 'a', 'n', 't' -> \"ant\".\nSo, Key \"ant\": [\"tan\", \"nat\"]\n\nGroup A (key \"aet\"): `[\"ate\", \"eat\", \"tea\"]`\nGroup B (key \"abt\"): `[\"bat\"]`\nGroup C (key \"ant\"): `[\"nat\", \"tan\"]` (Sorted)\n\nGroups list: [[\"ate\", \"eat\", \"tea\"], [\"bat\"], [\"nat\", \"tan\"]]\n\nStep 5 (Outer Sort):\nSort by the first element of the group.\nG_A starts with \"ate\".\nG_B starts with \"bat\".\nG_C starts with \"nat\".\n\nSorting these starting words: \"ate\" < \"bat\" < \"nat\".\nThe required order is [G_A, G_B, G_C].\n\nResult should be: `[[\"ate\", \"eat\", \"tea\"], [\"bat\"], [\"nat\", \"tan\"]]`. This matches the example output.\n\nImplementation check: Using ES2023 synchronous JS features (Map, array methods, etc.).\n\nConstraint Checklist:\n1. Export function solve(input): Yes.\n2. Return JSON-compatible value: Array of arrays.\n3. Synchronous JS ES2023 only: Yes.\n4. No imports/requires/async/timers: Yes.\n5. Do not mutate input: Must use copies or derive data structures entirely new ones.\n\nLet's structure the code within `solve(input)`.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 155,
+    "completion_tokens": 1372,
+    "total_tokens": 1527,
+    "completion_tokens_details": {
+      "reasoning_tokens": 942
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

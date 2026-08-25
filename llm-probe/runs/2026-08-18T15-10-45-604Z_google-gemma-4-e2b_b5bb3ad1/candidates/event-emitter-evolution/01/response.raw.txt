@@ -1,0 +1,108 @@
+export function solve(input) {
+    const listeners = [];
+    const log = [];
+
+    /**
+     * Helper to register a listener definition.
+     * @param {string} listenerId
+     * @param {string} eventPattern The event or wildcard pattern registered (e.g., "ping", "*", "user.*").
+     * @param {'on' | 'once'} type
+     * @param {any} payload Optional data passed during registration.
+     */
+    const registerListener = (listenerId, eventPattern, type, payload) => {
+        listeners.push({ id: listenerId, pattern: eventPattern, type: type, payload: payload });
+    };
+
+    /**
+     * Helper to remove a listener based on ID.
+     * @param {string} listenerId
+     */
+    const unregisterListener = (listenerId) => {
+        const initialLength = listeners.length;
+        // Filter out the listener to be removed
+        const filteredListeners = listeners.filter(l => l.id !== listenerId);
+        if (filteredListeners.length < initialLength) {
+            listeners.length = 0; // Clear the array
+            listeners.push(...filteredListeners); // Rebuild the array
+        }
+    };
+
+    /**
+     * Helper to process emission and delivery.
+     * @param {string} event The event being emitted.
+     * @param {any} payload The data to deliver.
+     */
+    const emitEvent = (event, payload) => {
+        const deliveredLogs = [];
+
+        for (const listener of listeners) {
+            let matches = false;
+
+            // 1. Check for exact match or wildcard '*'
+            if (listener.pattern === event || listener.pattern === "*") {
+                matches = true;
+            } else if (listener.pattern.endsWith(".*")) {
+                const prefix = listener.pattern.substring(0, listener.pattern.length - 2);
+                // Check if the emitted event starts with the registered prefix pattern
+                if (event.startsWith(prefix)) {
+                    matches = true;
+                }
+            }
+
+            if (matches) {
+                let shouldDeliver = true;
+
+                // 2. Check for 'once' constraint
+                if (listener.type === 'once') {
+                    // Since we don't store a separate state for once, we must rely on the payload being null/undefined if already fired.
+                    // For this implementation, we will track usage by mutating the listener object during emission flow.
+                    // To maintain functional purity relative to the input structure, we need an internal mechanism that tracks fired status tied to the registration order.
+
+                    // Re-evaluating state management for 'once': We must modify listeners in place (or clone them) and rely on insertion order for matching.
+
+                    // Since `listeners` is mutable here, we check if the listener has already been consumed during this emission cycle.
+                    if (listener.payload === undefined) {
+                        shouldDeliver = false; // Already fired
+                    }
+                }
+
+
+                if (shouldDeliver) {
+                    deliveredLogs.push({
+                        listenerId: listener.id,
+                        event: event,
+                        payload: payload
+                    });
+
+                    // Mark as 'fired' if it was a 'once' listener
+                    if (listener.type === 'once') {
+                        listener.payload = true; // Use true as a flag that it has been delivered
+                    }
+                }
+            }
+        }
+        return deliveredLogs;
+    };
+
+    // Process operations sequentially
+    for (const op of input.operations) {
+        switch (op.op) {
+            case "on":
+                registerListener(op.listenerId, op.event, "on", null);
+                break;
+            case "once":
+                registerListener(op.listenerId, op.event, "once", null);
+                break;
+            case "off":
+                unregisterListener(op.listenerId);
+                break;
+            case "emit":
+                const emittedPayload = op.payload || {};
+                const deliveryLogs = emitEvent(op.event, emittedPayload);
+                log.push(...deliveryLogs);
+                break;
+        }
+    }
+
+    return { log: log };
+}

@@ -1,0 +1,11 @@
+{
+  "model": "essentialai/rnj-1",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-08-04 21:44:10",
+  "passed": 24,
+  "total": 25,
+  "failures": [
+    "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']"
+  ]
+}

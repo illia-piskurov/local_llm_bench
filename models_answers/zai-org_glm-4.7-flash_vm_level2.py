@@ -1,0 +1,120 @@
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    labels = {}
+    stack = []
+    output = []
+    pc = 0
+
+    # First pass: collect labels
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith('#'):
+            continue
+        parts = stripped.split()
+        if parts[0] == "LABEL":
+            if len(parts) != 2:
+                raise ValueError(f"Invalid LABEL syntax at line {i}")
+            labels[parts[1]] = i
+
+    # Second pass: execute
+    while pc < len(lines):
+        line = lines[pc]
+        stripped = line.strip()
+        pc += 1 # Default increment to next line
+
+        if not stripped or stripped.startswith('#'):
+            continue
+
+        parts = stripped.split()
+        cmd = parts[0]
+
+        try:
+            if cmd == "PUSH":
+                if len(parts) != 2:
+                    raise ValueError(f"Invalid arguments for PUSH at line {pc}")
+                stack.append(int(parts[1]))
+
+            elif cmd == "POP":
+                if not stack:
+                    raise ValueError(f"Stack underflow at line {pc}")
+                stack.pop()
+
+            elif cmd == "ADD":
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {pc}")
+                stack.append(stack.pop() + stack.pop())
+
+            elif cmd == "SUB":
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {pc}")
+                stack.append(stack.pop() - stack.pop())
+
+            elif cmd == "MUL":
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {pc}")
+                stack.append(stack.pop() * stack.pop())
+
+            elif cmd == "DIV":
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {pc}")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise ZeroDivisionError(f"Division by zero at line {pc}")
+                stack.append(a // b)
+
+            elif cmd == "DUP":
+                if not stack:
+                    raise ValueError(f"Stack underflow at line {pc}")
+                stack.append(stack[-1])
+
+            elif cmd == "SWAP":
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {pc}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(b)
+                stack.append(a)
+
+            elif cmd == "PRINT":
+                if not stack:
+                    raise ValueError(f"Stack underflow at line {pc}")
+                output.append(str(stack[-1]))
+
+            elif cmd == "LABEL":
+                pc -= 1 # Don't skip the next line
+                continue
+
+            elif cmd == "JMP":
+                if parts[1] not in labels:
+                    raise ValueError(f"Undefined label '{parts[1]}' at line {pc}")
+                pc = labels[parts[1]] - 1
+                continue
+
+            elif cmd == "JZ":
+                if len(stack) < 1:
+                    raise ValueError(f"Stack underflow at line {pc}")
+                val = stack.pop()
+                if parts[1] not in labels:
+                    raise ValueError(f"Undefined label '{parts[1]}' at line {pc}")
+                if val == 0:
+                    pc = labels[parts[1]] - 1
+                    continue
+
+            elif cmd == "JNZ":
+                if len(stack) < 1:
+                    raise ValueError(f"Stack underflow at line {pc}")
+                val = stack.pop()
+                if parts[1] not in labels:
+                    raise ValueError(f"Undefined label '{parts[1]}' at line {pc}")
+                if val != 0:
+                    pc = labels[parts[1]] - 1
+                    continue
+
+            else:
+                raise ValueError(f"Unknown command '{cmd}' at line {pc}")
+
+        except (ValueError, ZeroDivisionError):
+            raise
+
+    return output

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-hh4a0z4ggtm1bw5qbrmnjh",
+  "object": "chat.completion",
+  "created": 1787075640,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const program = input.program.trim().split('\\n');\n  const stack = [];\n  const output = [];\n  const error = null;\n  let lineNum = 1;\n\n  for (let i = 0; i < program.length; i++) {\n    const line = program[i].trim();\n    if (!line || line.startsWith('#')) {\n      continue;\n    }\n\n    if (stack.length === 0) {\n      error = \"Stack underflow at line \" + lineNum;\n      break;\n    }\n\n    const parts = line.split(' ');\n    const instruction = parts[0];\n\n    switch (instruction) {\n      case 'PUSH':\n        if (parts.length < 2 || !/^\\d+$/.test(parts[1])) {\n          error = \"Stack underflow at line \" + lineNum;\n          break;\n        }\n        stack.push(parseInt(parts[1]));\n        lineNum++;\n        continue;\n\n      case 'POP':\n        if (stack.length === 0) {\n          error = \"Stack underflow at line \" + lineNum;\n          break;\n        }\n        stack.pop();\n        lineNum++;\n\n      case 'ADD':\n        if (stack.length < 2) {\n          error = \"Stack underflow at line \" + lineNum;\n          break;\n        }\n        const b = stack.pop();\n        const a = stack.pop();\n        stack.push(a + b);\n        lineNum++;\n\n      case 'SUB':\n        if (stack.length < 2) {\n          error = \"Stack underflow at line \" + lineNum;\n          break;\n        }\n        const b = stack.pop();\n        const a = stack.pop();\n        stack.push(a - b);\n        lineNum++;\n\n      case 'MUL':\n        if (stack.length < 2) {\n          error = \"Stack underflow at line \" + lineNum;\n          break;\n        }\n        const b = stack.pop();\n        const a = stack.pop();\n        stack.push(a * b);\n        lineNum++;\n\n      case 'DIV':\n        if (stack.length < 2) {\n          error = \"Stack underflow at line \" + lineNum;\n          break;\n        }\n        const b = stack.pop();\n        const a = stack.pop();\n        if (b === 0) {\n          error = `Division by zero at line ${lineNum}`;\n          break;\n        }\n        stack.push(Math.trunc(a / b));\n        lineNum++;\n\n      case 'DUP':\n        if (stack.length === 0) {\n          error = \"Stack underflow at line \" + lineNum;\n          break;\n        }\n        const val = stack.pop();\n        stack.push(val);\n        lineNum++;\n\n      case 'SWAP':\n        if (stack.length < 2) {\n          error = \"Stack underflow at line \" + lineNum;\n          break;\n        }\n        [stack.pop(), stack.pop()] = [stack.pop(), stack.pop()];\n        lineNum++;\n\n      case 'PRINT':\n        if (stack.length === 0) {\n          error = \"Stack underflow at line \" + lineNum;\n          break;\n        }\n        output.push(stack[stack.length - 1].toString());\n        lineNum++;\n\n      case 'LABEL':\n        if (parts.length < 2) {\n          error = \"Unknown instruction '\" + parts[1] + \"' at line \" + lineNum;\n          break;\n        }\n        const name = parts[1];\n        // No-op during execution\n        lineNum++;\n\n      case 'JMP':\n        if (parts.length < 2) {\n          error = \"Unknown instruction '\" + parts[1] + \"' at line \" + lineNum;\n          break;\n        }\n        const name = parts[1];\n        // No-op during execution\n        lineNum++;\n\n      case 'JZ':\n        if (parts.length < 2) {\n          error = \"Unknown instruction '\" + parts[1] + \"' at line \" + lineNum;\n          break;\n        }\n        const name = parts[1];\n        if (stack.pop() === 0) {\n          // Pop value and proceed to label\n          stack.pop();\n          lineNum++;\n          continue;\n        }\n        // Continue execution\n        lineNum++;\n\n      case 'JNZ':\n        if (parts.length < 2) {\n          error = \"Unknown instruction '\" + parts[1] + \"' at line \" + lineNum;\n          break;\n        }\n        const name = parts[1];\n        if (stack.pop() !== 0) {\n          // Continue execution\n          lineNum++;\n          continue;\n        }\n        // Pop value and proceed to label\n        stack.pop();\n        lineNum++;\n\n      default:\n        error = \"Unknown instruction '\" + instruction + \"' at line \" + lineNum;\n        break;\n    }\n\n    if (error) {\n      return { output, error };\n    }\n\n    if (i + 1 >= program.length || i + 1 > 1000) {\n      return { output, error: \"Execution step limit exceeded\" };\n    }\n  }\n\n  return { output };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 555,
+    "completion_tokens": 1059,
+    "total_tokens": 1614,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

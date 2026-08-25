@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-uaey9jg1tfpqoqvh6dmdr",
+  "object": "chat.completion",
+  "created": 1787065595,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    if (!input?.root) return [];\n    const queue = [input.root];\n    const result = [];\n\n    while (queue.length > 0) {\n        const node = queue.shift();\n        result.push(node.value);\n        if (node.left) queue.push(node.left);\n        if (node.right) queue.push(node.right);\n    }\n\n    return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 174,
+    "completion_tokens": 85,
+    "total_tokens": 259,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

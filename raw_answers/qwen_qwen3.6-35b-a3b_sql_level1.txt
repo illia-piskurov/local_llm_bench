@@ -1,0 +1,107 @@
+```python
+def compile_query(query: dict) -> dict:
+    params = []
+    counter = [1]
+
+    def next_placeholder():
+        ph = f"${counter[0]}"
+        counter[0] += 1
+        return ph
+
+    def process_condition(node):
+        if node is None:
+            return None
+
+        # Leaf condition
+        if 'field' in node and 'op' in node and 'value' in node:
+            field = node['field']
+            op = node['op']
+            value = node['value']
+            ph = next_placeholder()
+            params.append(value)
+            return f"{field} {op} {ph}"
+
+        # AND group
+        if 'AND' in node:
+            conds = node['AND']
+            if not conds:
+                return None
+            if len(conds) == 1:
+                return process_condition(conds[0])
+            parts = []
+            for c in conds:
+                part = process_condition(c)
+                if part:
+                    parts.append(part)
+            if not parts:
+                return None
+            return f"({' AND '.join(parts)})"
+
+        # OR group
+        if 'OR' in node:
+            conds = node['OR']
+            if not conds:
+                return None
+            if len(conds) == 1:
+                return process_condition(conds[0])
+            parts = []
+            for c in conds:
+                part = process_condition(c)
+                if part:
+                    parts.append(part)
+            if not parts:
+                return None
+            return f"({' OR '.join(parts)})"
+
+        return None
+
+    # WHERE clause
+    where_sql = ""
+    if 'where' in query and query['where'] is not None:
+        w = process_condition(query['where'])
+        if w:
+            where_sql = f"WHERE {w}"
+
+    # SELECT clause
+    select_cols = query.get('select', ['*'])
+    select_str = ", ".join(select_cols)
+
+    # FROM clause
+    table = query.get('table', '')
+    from_str = f"FROM {table}"
+
+    # ORDER BY clause
+    order_by_str = ""
+    if 'orderBy' in query and query['orderBy']:
+        order_parts = []
+        for item in query['orderBy']:
+            field = item['field']
+            direction = item.get('dir', 'ASC').upper()
+            order_parts.append(f"{field} {direction}")
+        order_by_str = f"ORDER BY {', '.join(order_parts)}"
+
+    # LIMIT clause
+    limit_str = ""
+    if 'limit' in query and query['limit'] is not None:
+        limit_str = f"LIMIT {query['limit']}"
+
+    # OFFSET clause
+    offset_str = ""
+    if 'offset' in query and query['offset'] is not None:
+        offset_str = f"OFFSET {query['offset']}"
+
+    # Assemble final SQL
+    parts = [f"SELECT {select_str} {from_str}"]
+    if where_sql:
+        parts.append(where_sql)
+    if order_by_str:
+        parts.append(order_by_str)
+    if limit_str:
+        parts.append(limit_str)
+    if offset_str:
+        parts.append(offset_str)
+
+    sql = " ".join(parts)
+
+    return {"sql": sql, "params": params}
+```

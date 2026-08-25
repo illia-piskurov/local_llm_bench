@@ -1,0 +1,97 @@
+```javascript
+export function solve(input) {
+    const { definitions, schema, data } = input;
+    const resolvedSchema = resolveRefs(definitions, schema);
+    const errors = validate(resolvedSchema, data, "");
+    return { valid: errors.length === 0, errors };
+}
+
+function resolveRefs(definitions, refPath) {
+    if (typeof refPath !== "string" || !refPath.startsWith("#/definitions/")) {
+        return refPath;
+    }
+    const parts = refPath.split("/");
+    let current = definitions;
+    for (let i = 1; i < parts.length - 1; i++) {
+        const key = parts[i];
+        if (!current[key]) throw new Error(`Missing definition path: ${refPath}`);
+        current = current[key];
+    }
+    return current[parts.slice(-1)[0]];
+}
+
+function validate(schema, data, path) {
+    const errors = [];
+    const type = schema.type;
+    const isObject = type === "object";
+    const isArray = type === "array";
+
+    if (isObject && typeof data !== "object" || !data || Array.isArray(data)) {
+        return [{ path: `${path}`, message: `Expected type object` }];
+    }
+
+    if (isArray && !(Array.isArray(data))) {
+        return [{ path: `${path}`, message: `Expected type array` }];
+    }
+
+    if (!isObject && !isArray) {
+        const expectedType = schema.type;
+        const actualType = typeof data;
+        if (expectedType !== actualType) {
+            errors.push({ path: `${path}`, message: `Expected type ${expectedType}` });
+        }
+        return validateEnum(data, schema.enum || [], `${path}`);
+    }
+
+    if (!isArray && schema.properties) {
+        const properties = schema.properties;
+        for (const prop in data) {
+            const propPath = `${path}/${prop}`;
+            if (!properties[prop]) {
+                errors.push({ path: propPath, message: `Property not defined` });
+            } else {
+                const propSchema = resolveRefs(definitions || {}, properties[prop]);
+                validate(propSchema, data[prop], propPath);
+            }
+        }
+
+        if (schema.required && schema.required.length > 0) {
+            for (const requiredProp of schema.required) {
+                const propPath = `${path}/${requiredProp}`;
+                if (!(requiredProp in data)) {
+                    errors.push({ path: propPath, message: `Required property ${requiredProp}` });
+                }
+            }
+        }
+
+        if (schema.additionalProperties === false && Object.keys(data).length > 0) {
+            for (const prop in data) {
+                const propPath = `${path}/${prop}`;
+                if (!properties[prop]) {
+                    errors.push({ path: propPath, message: `Unexpected property ${prop}` });
+                }
+            }
+        }
+    }
+
+    if (isArray && schema.items) {
+        const itemsSchema = resolveRefs(definitions || {}, schema.items);
+        for (let i = 0; i < data.length; i++) {
+            validate(itemsSchema, data[i], `${path}/items/${i}`);
+        }
+        if (schema.minItems !== undefined && data.length < schema.minItems) {
+            errors.push({ path: `${path}`, message: `Minimum ${schema.minItems} items required` });
+        }
+    }
+
+    return errors;
+}
+
+function validateEnum(value, allowedValues, path) {
+    const isValid = allowedValues.includes(value);
+    if (!isValid) {
+        return [{ path: path, message: `Value not in enum` }];
+    }
+    return [];
+}
+```

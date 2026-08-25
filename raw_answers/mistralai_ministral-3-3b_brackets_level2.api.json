@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "mistralai/ministral-3-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    stack = []\n    mapping = {')': '(', ']': '[', '}': '{'}\n    for char in s:\n        if char in mapping.values():\n            stack.append(char)\n        elif char in mapping.keys():\n            if not stack or stack.pop() != mapping[char]:\n                return False\n    return len(stack) == 0\n\ndef max_depth(s: str) -> int:\n    stack = []\n    current_depth = 0\n    for char in s:\n        if char in {'(', '[', '{'}:\n            stack.append(char)\n            current_depth += 1\n        elif char in {')', ']', '}'}:\n            if stack and stack[-1] == mapping[char]:\n                stack.pop()\n                current_depth -= 1\n    return max(current_depth, 0)\n\ndef find_unmatched(s: str) -> list[int]:\n    stack = []\n    unmatched_indices = set()\n    mapping = {')': '(', ']': '[', '}': '{'}\n\n    for idx, char in enumerate(s):\n        if char in mapping.values():\n            stack.append((char, idx))\n        elif char in mapping.keys():\n            if not stack or stack[-1][0] != mapping[char]:\n                unmatched_indices.add(idx)\n            else:\n                stack.pop()\n\n    for (char, idx) in stack:\n        unmatched_indices.add(idx)\n\n    return sorted(unmatched_indices)\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 1156,
+    "total_output_tokens": 313,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 26.3443753580268,
+    "time_to_first_token_seconds": 1.529163
+  },
+  "response_id": "resp_37d2da6e6419371fa46270a8628d26476bbc54b251b75a43"
+}

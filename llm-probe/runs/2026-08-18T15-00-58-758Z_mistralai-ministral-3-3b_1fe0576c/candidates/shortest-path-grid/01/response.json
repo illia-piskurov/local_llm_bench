@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-l7v75oz9nqncm3x2svu7vr",
+  "object": "chat.completion",
+  "created": 1787065600,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { grid, start, end } = input;\n    const rows = grid.length;\n    if (rows === 0) return -1;\n    const cols = grid[0].length;\n\n    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];\n    const visited = Array(rows).fill().map(() => Array(cols).fill(false));\n    const queue = [{ x: start[0], y: start[1], steps: 0 }];\n    const target = { x: end[0], y: end[1] };\n\n    while (queue.length > 0) {\n        const current = queue.shift();\n        if (current.x === target.x && current.y === target.y) return current.steps;\n\n        for (const [dx, dy] of directions) {\n            const nx = current.x + dx;\n            const ny = current.y + dy;\n            if (nx >= 0 && nx < rows && ny >= 0 && ny < cols &&\n                grid[nx][ny] === 0 && !visited[nx][ny]) {\n                visited[nx][ny] = true;\n                queue.push({ x: nx, y: ny, steps: current.steps + 1 });\n            }\n        }\n    }\n\n    return -1;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 154,
+    "completion_tokens": 291,
+    "total_tokens": 445,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

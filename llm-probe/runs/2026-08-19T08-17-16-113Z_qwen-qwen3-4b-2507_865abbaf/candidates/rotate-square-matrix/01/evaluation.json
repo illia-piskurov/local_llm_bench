@@ -1,0 +1,17 @@
+{
+  "status": "runtime_error",
+  "passed": 2,
+  "total": 4,
+  "tests": [
+    {
+      "id": "three",
+      "passed": true
+    },
+    {
+      "id": "one",
+      "passed": true
+    }
+  ],
+  "durationMs": 27,
+  "error": "cannot read property 'length' of undefined"
+}

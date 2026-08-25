@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "google/gemma-3-4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    \"\"\"\n    Проверяет сбалансированность скобок в строке.\n    \"\"\"\n    stack = []\n    mapping = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}\n\n    for char in s:\n        if char in mapping:\n            top_element = stack.pop() if stack else '#'  # Используем '#' для обозначения пустого стека\n            if mapping[char] != top_element:\n                return False\n        elif char in \"([{\":\n            stack.append(char)\n\n    return not stack\n\n\ndef max_depth(s: str) -> int:\n    \"\"\"\n    Верни максимальную глубину вложенности скобок при сканировании строки слева направо.\n    \"\"\"\n    max_so_far = 0\n    current_depth = 0\n    for char in s:\n        if char in \"([{\":\n            current_depth += 1\n            max_so_far = max(max_so_far, current_depth)\n        elif char in \")]}\":\n            if current_depth > 0:\n                current_depth -= 1\n    return max_so_far\n\n\ndef find_unmatched(s: str) -> list[int]:\n    \"\"\"\n    Верни отсортированный по возрастанию список индексов (0-based) всех \"несовпавших\"\n    скобок в строке.\n    \"\"\"\n    stack = []\n    unmatched = []\n    for i, char in enumerate(s):\n        if char in \"([{\":\n            stack.append((char, i))\n        elif char in \")]}\":\n            if stack and stack[-1][0] == matching_open(char):\n                stack.pop()\n            else:\n                unmatched.append(i)\n\n    unmatched.extend(stack)\n    return sorted(unmatched, key=lambda i: s[i])\n\n\ndef matching_open(closing_bracket):\n    if closing_bracket == ')':\n        return '('\n    elif closing_bracket == ']':\n        return '['\n    elif closing_bracket == '}':\n        return '{'\n    else:\n        return None\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 630,
+    "total_output_tokens": 505,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 6.805249944432775,
+    "time_to_first_token_seconds": 14.382311,
+    "model_load_time_seconds": 20.593
+  },
+  "response_id": "resp_d87b2dead4b25090d984c2eeb4e6d3a100072c5e4f1ca0d9"
+}

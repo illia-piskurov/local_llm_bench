@@ -1,0 +1,22 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-08-19 14:01:43",
+  "passed": 25,
+  "total": 37,
+  "failures": [
+    "unconditional_jump_skips_code: неожиданное исключение: name 'labels' is not defined",
+    "jz_taken_when_zero: неожиданное исключение: name 'labels' is not defined",
+    "jz_not_taken_when_nonzero: неожиданное исключение: name 'labels' is not defined",
+    "jnz_taken_when_nonzero: неожиданное исключение: name 'labels' is not defined",
+    "jnz_not_taken_when_zero: неожиданное исключение: name 'labels' is not defined",
+    "countdown_loop: неожиданное исключение: name 'labels' is not defined",
+    "count_up_loop: неожиданное исключение: name 'labels' is not defined",
+    "label_does_nothing_on_its_own: неожиданное исключение: name 'labels' is not defined",
+    "call_ret_basic: неожиданное исключение: name 'labels' is not defined",
+    "call_ret_nested: неожиданное исключение: cannot access local variable 'jmp_target' where it is not associated with a value",
+    "recursive_factorial: неожиданное исключение: name 'labels' is not defined",
+    "recursive_fibonacci: неожиданное исключение: name 'labels' is not defined"
+  ]
+}

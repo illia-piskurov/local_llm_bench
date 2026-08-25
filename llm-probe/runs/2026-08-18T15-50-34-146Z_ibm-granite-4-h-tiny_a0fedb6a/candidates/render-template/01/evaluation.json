@@ -1,0 +1,25 @@
+{
+  "status": "failed",
+  "passed": 3,
+  "total": 4,
+  "tests": [
+    {
+      "id": "nested-and-arrays",
+      "passed": true
+    },
+    {
+      "id": "missing-and-whitespace",
+      "passed": false,
+      "error": "Expected \"Name: [Bob], Missing: [], Nullable: []\", got \"Name: [], Missing: [], Nullable: []\""
+    },
+    {
+      "id": "no-placeholders",
+      "passed": true
+    },
+    {
+      "id": "empty-template",
+      "passed": true
+    }
+  ],
+  "durationMs": 25
+}

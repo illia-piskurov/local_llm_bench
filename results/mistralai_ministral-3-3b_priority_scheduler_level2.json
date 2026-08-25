@@ -1,0 +1,15 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-17 19:46:31",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: ожидалось order=['a'], ms=5, cp=5; получено order=['a'], ms=None, cp=5",
+    "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=None, cp=3",
+    "dependencies_and_workers: неожиданное исключение: name 'visited' is not defined",
+    "critical_path_longer_than_worker_parallelism: ожидалось order=['a', 'b', 'c', 'd'], ms=16, cp=4; получено order=['a', 'b', 'c', 'd'], ms=None, cp=4",
+    "wide_graph_with_unlocks: неожиданное исключение: name 'visited' is not defined"
+  ]
+}

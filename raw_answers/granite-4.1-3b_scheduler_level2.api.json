@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef critical_path( tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    from collections import defaultdict\n\n    # Получаем топологическую сортировку задач\n    order = topo_sort(tasks)\n    if not order:\n        return None\n\n    # Инициализация временных массивов для расчета длительности пути\n    duration_at_task = {task: 0 for task in tasks}\n    max_duration_at_task = {task: 0 for task in tasks}\n\n    # Расчёт длительности каждой задачи по топологическому порядку\n    for task in order:\n        duration, dependencies = tasks[task]\n        if all(duration_at_task[dep] != 0 for dep in dependencies):\n            duration_at_task[task] = sum(duration_at_task[dep] + durations[dep] \n                                         for dep in dependencies)\n        else:\n            duration_at_task[task] = duration\n\n        # Обновление максимальной длительности до текущей задачи\n        max_duration_at_task[task] = max(max_duration_at_task[task],\n                                         duration_at_task[task])\n\n    return max(max_duration_at_task.values()) if max_duration_at_task else None\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 950,
+    "total_output_tokens": 284,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 28.124063562760334,
+    "time_to_first_token_seconds": 2.596711
+  },
+  "response_id": "resp_81877a24a22636bdb8a7fcff7a0111627f5cfda743decf8c"
+}

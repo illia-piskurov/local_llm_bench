@@ -1,240 +1,174 @@
 ```python
 import copy
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
-class KeyValueStore:
+class TransactionalKVStore:
     """
-    In-memory key-value store supporting nested transactions.
+    In-memory key-value store supporting nested transactions (ACID properties simulated).
+    Uses a stack of dictionaries to manage isolated transaction scopes.
     """
     def __init__(self):
-        # The global, committed state of the store
-        self.store: Dict[str, Any] = {}
-        
-        # Stack to manage transaction contexts. 
-        # Each context stores changes relative to its parent/global scope.
-        # Structure: [{'changes': {key: value}, 'is_root': bool}]
-        self.transaction_stack: List[Dict[str, Any]] = []
+        # The root state is implicitly the first element on the stack.
+        # We initialize it with an empty dictionary, representing the global scope.
+        self.transaction_stack: List[Dict[str, Any]] = [dict()]
 
-    def _get_current_effective_state(self) -> Dict[str, Any]:
-        """
-        Calculates the effective state by applying all changes from 
-        the global store through the transaction stack in order.
-        Returns a deep copy of the resulting dictionary.
-        """
-        # Start with a copy of the committed base store
-        effective_state = self.store.copy()
+    def _get_current_state(self) -> Dict[str, Any]:
+        """Returns a reference to the current working copy (top of the stack)."""
+        return self.transaction_stack[-1]
 
-        # Apply changes from transactions, from oldest to newest (bottom to top)
-        for tx in self.transaction_stack:
-            changes = tx['changes']
-            
-            # Apply updates and deletions
-            for key, value in changes.items():
-                if value is None:
-                    # Deletion marker
-                    effective_state[key] = None # Mark for deletion/overwriting
-                else:
-                    effective_state[key] = value
-        
-        return effective_state
+    def set(self, key: str, value: Any):
+        """Sets a key-value pair in the current transaction scope."""
+        self._get_current_state()[key] = value
 
-    def _get_current_transaction_context(self) -> Dict[str, Any]:
-        """Returns the changes dictionary of the topmost transaction."""
-        if not self.transaction_stack:
-            raise IndexError("No active transactions.")
-        return self.transaction_stack[-1]['changes']
+    def get(self, key: str) -> str:
+        """Retrieves the value of a key from the current transaction scope."""
+        if key not in self._get_current_state():
+            return "NULL"
+        # We must ensure that all values are returned as strings for consistency with the prompt's output requirement.
+        return str(self._get_current_state()[key])
 
-    def set_key(self, key: str, value: Any):
-        """Sets a key-value pair in the current scope (global or transaction)."""
-        if not self.transaction_stack:
-            # Direct write to global store if no transactions are active
-            self.store[key] = value
-            return
+    def delete(self, key: str):
+        """Deletes a key from the current transaction scope."""
+        if key in self._get_current_state():
+            del self._get_current_state()[key]
 
-        changes = self._get_current_transaction_context()
-        changes[key] = value
-
-    def get_key(self, key: str) -> Optional[Any]:
-        """Retrieves the current effective value of a key."""
-        effective_state = self._get_current_effective_state()
-        
-        # Check if the key exists and is not marked for deletion (None)
-        if key in effective_state and effective_state[key] is not None:
-            return effective_state[key]
-        else:
-            return None
-
-    def delete_key(self, key: str):
-        """Marks a key for deletion in the current scope."""
-        # Deletion always targets the topmost transaction context
-        if not self.transaction_stack:
-            # If no transactions are open, we cannot 'delete' it safely 
-            # without affecting other potential scopes, so we treat this as a no-op 
-            # for simplicity in the global scope (or require BEGIN first).
-            return
-
-        changes = self._get_current_transaction_context()
-        # Use None as a marker to signify deletion within the transaction context
-        if key not in changes:
-             changes[key] = None
-
-
-    def begin(self):
-        """Starts a new (potentially nested) transaction."""
-        # Initialize a new empty change set for this scope
-        new_context = {'changes': {}}
-        self.transaction_stack.append(new_context)
+    def begin(self) -> None:
+        """Starts a new (potentially nested) transaction by pushing a snapshot of the current state."""
+        # Create a deep copy of the current effective state to ensure isolation.
+        snapshot = copy.deepcopy(self._get_current_state())
+        self.transaction_stack.append(snapshot)
 
     def commit(self) -> str:
         """Commits the innermost transaction, merging changes into the parent scope."""
-        if not self.transaction_stack:
+        if len(self.transaction_stack) <= 1:
             return "NO TRANSACTION"
 
-        # 1. Get the context to be committed (T_inner)
-        committed_context = self.transaction_stack[-1]
-        changes_to_commit = committed_context['changes']
-        self.transaction_stack.pop() # Remove T_inner
+        # The current state (top of stack) is committed to the parent state (second to top).
+        inner_state = self.transaction_stack.pop()
+        parent_state = self._get_current_state()
 
-        if not changes_to_commit:
-            # Nothing changed, just pop and return success (or nothing)
-            return "" 
+        # Merge changes from inner_state into parent_state.
+        # This simulates merging the transaction results up the stack.
+        for key, value in inner_state.items():
+            parent_state[key] = value
 
-        # 2. Determine the parent scope's change set
-        parent_context = None
-        if self.transaction_stack:
-            parent_context = self._get_current_transaction_context()
-        else:
-            # If stack is empty, we commit directly to the global store (self.store)
-            pass 
-
-        # 3. Apply changes from T_inner to the parent/global scope
-        if parent_context:
-            parent_changes = parent_context['changes']
-            for key, value in changes_to_commit.items():
-                if value is None:
-                    # Mark for deletion in the parent's context
-                    parent_changes[key] = None 
-                else:
-                    # Update/set in the parent's context
-                    parent_changes[key] = value
-        else:
-            # Commit to global store (self.store)
-            for key, value in changes_to_commit.items():
-                if value is None:
-                    # Deletion marker for global scope
-                    if key in self.store and self.store[key] is not None:
-                         del self.store[key]
-                else:
-                    self.store[key] = value
-
-        return "" # Successful commit produces no output string
+        return "" # Successful commit produces no output line
 
     def rollback(self) -> str:
-        """Rolls back the innermost transaction, discarding its changes."""
-        if not self.transaction_stack:
+        """Rolls back the innermost transaction by discarding the top snapshot."""
+        if len(self.transaction_stack) <= 1:
             return "NO TRANSACTION"
 
-        # Simply pop and discard the context's changes
+        # Simply pop the top level, effectively discarding all changes made since BEGIN.
         self.transaction_stack.pop()
-        return "" # Successful rollback produces no output string
-
+        return "" # Successful rollback produces no output line
 
     def run(self, program: str) -> List[str]:
         """
-        Executes a sequence of commands and captures required output.
-        Returns a list of strings representing the output for GET or NO TRANSACTION.
+        Processes a string of commands and returns a list of output lines 
+        (only for GET or NO TRANSACTION).
         """
-        lines = [line.strip() for line in program.split('\n') if line.strip()]
-        output: List[str] = []
+        output = []
+        lines = [line.strip() for line in program.split('\n')]
 
         for line in lines:
-            parts = line.split()
-            if not parts:
+            if not line:
                 continue
 
+            parts = line.split()
             command = parts[0].upper()
-            args = parts[1:]
 
             try:
-                if command == "SET":
-                    if len(args) < 2: continue
-                    key, value_str = args[0], args[1]
-                    # Attempt to convert simple types (assuming strings or basic literals)
+                if command == "SET" and len(parts) == 3:
+                    key, value_str = parts[1], parts[2]
+                    # Attempt to convert simple numeric strings back to numbers if possible, 
+                    # otherwise treat them as strings. For simplicity in this simulation, we keep everything as string/object.
                     try:
                         value = int(value_str)
                     except ValueError:
-                        try:
-                            value = float(value_str)
-                        except ValueError:
-                            value = value_str # Default to string
+                        value = value_str
+                    self.set(key, value)
 
-                    self.set_key(key, value)
-                
-                elif command == "GET":
-                    if not args: continue
-                    key = args[0]
-                    result = self.get_key(key)
-                    output.append(str(result) if result is not None else "NULL")
+                elif command == "GET" and len(parts) == 2:
+                    key = parts[1]
+                    output.append(self.get(key))
 
-                elif command == "DELETE":
-                    if not args: continue
-                    key = args[0]
-                    self.delete_key(key)
+                elif command == "DELETE" and len(parts) == 2:
+                    key = parts[1]
+                    self.delete(key)
 
                 elif command == "BEGIN":
                     self.begin()
 
                 elif command == "COMMIT":
                     result = self.commit()
-                    # Commit success produces no output, only NO TRANSACTION is required
-                    if result: 
+                    if result:
                         output.append(result)
 
                 elif command == "ROLLBACK":
                     result = self.rollback()
                     if result:
                         output.append(result)
-            except Exception as e:
-                # In a real system, we would log this error. Here, we just skip the line.
-                pass 
+            except IndexError:
+                # Handle malformed commands gracefully if needed, but based on prompt constraints, 
+                # we assume input structure is correct for the defined commands.
+                pass
 
         return output
 
-# Example Usage (Not part of the final returned code block, but for testing):
-# store = KeyValueStore()
-# program1 = """
-# SET user_id 100
-# GET user_id
-# BEGIN
-# SET name "Alice"
-# GET name
-# COMMIT
-# GET name
-# DELETE user_id
-# GET user_id
-# ROLLBACK
-# GET user_id
-# """
-# print("--- Test 1 ---")
-# results = store.run(program1)
-# for r in results: print(r) # Expected output: 100, Alice, NULL
 
-# program2 = """
-# BEGIN
-# SET a 1
-# BEGIN
-# SET b 2
-# GET b
-# COMMIT
-# GET b
-# ROLLBACK
-# GET b
-# COMMIT
-# GET a
-# """
-# print("\n--- Test 2 ---")
-# store_nested = KeyValueStore()
-# results = store_nested.run(program2)
-# for r in results: print(r) # Expected output: 2, NULL (b is rolled back), 1
+# Example Usage (for testing purposes, not part of the final class definition):
+if __name__ == '__main__':
+    store = TransactionalKVStore()
+    program1 = """
+SET a 10
+GET a
+BEGIN
+SET b 20
+GET b
+COMMIT
+GET a
+ROLLBACK
+GET b
+"""
+    print("--- Test Case 1 ---")
+    results1 = store.run(program1)
+    for r in results1:
+        print(r)
+    # Expected output: 10, 20, 10 (b is rolled back)
+
+    store = TransactionalKVStore()
+    program2 = """
+SET x initial
+BEGIN
+SET y inner_set
+GET y
+BEGIN
+SET z nested_set
+GET z
+COMMIT
+GET y
+ROLLBACK
+GET z
+COMMIT
+"""
+    print("\n--- Test Case 2 (Nested) ---")
+    results2 = store.run(program2)
+    for r in results2:
+        print(r)
+    # Expected output: inner_set, nested_set, inner_set (z is rolled back), NULL (commit of z fails to change y/x because it was rolled back)
+
+    store = TransactionalKVStore()
+    program3 = """
+BEGIN
+ROLLBACK
+GET a
+COMMIT
+"""
+    print("\n--- Test Case 3 (No Transaction) ---")
+    results3 = store.run(program3)
+    for r in results3:
+        print(r)
+    # Expected output: NO TRANSACTION, NO TRANSACTION
 
 ```

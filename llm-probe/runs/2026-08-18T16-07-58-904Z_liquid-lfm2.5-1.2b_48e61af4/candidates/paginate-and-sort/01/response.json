@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-0po03cubehjt2wsbbonr4d",
+  "object": "chat.completion",
+  "created": 1787069282,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { items, filter, sort, page, pageSize } = input;\n\n  // Filtering\n  let filteredItems = items.filter(item => {\n    const value = filter ? filter.field === filter.value ? item[filter.field].toLowerCase() : item[filter.field];\n    switch (filter.op) {\n      case 'eq': return value === value;\n      case 'neq': return value !== value;\n      case 'gt': return item[filter.field] > value;\n      case 'gte': return item[filter.field] >= value;\n      case 'lte': return item[filter.field] <= value;\n      case 'contains': return item[filter.field].toLowerCase().includes(value.toLowerCase());\n      default: return false;\n    }\n  });\n\n  // Sorting\n  let sortedItems = filteredItems.sort((a, b) => {\n    const comparator = sort.field === 'id' ? a.id - b.id : a[sort.field].localeCompare(b[sort.field]);\n    if (comparator !== 0) return sort.dir === 'asc' ? comparator : -comparator;\n    return 0;\n  });\n\n  // Pagination\n  const totalItems = sortedItems.length;\n  const startIndex = (page - 1) * pageSize;\n  const endIndex = startIndex + pageSize;\n  const paginatedItems = sortedItems.slice(startIndex, endIndex);\n\n  const totalPages = Math.ceil(totalItems / pageSize);\n  return {\n    items: paginatedItems,\n    total: totalItems,\n    page: page,\n    totalPages: totalPages\n  };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 428,
+    "completion_tokens": 363,
+    "total_tokens": 791,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

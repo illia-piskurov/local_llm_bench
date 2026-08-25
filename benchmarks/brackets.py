@@ -61,16 +61,16 @@ class BracketsBenchmark(Benchmark):
     def run_tests(self, level_id: str, answer_path: Path) -> TestResult:
         if level_id == "level1":
             try:
-                fn = bracket_bench.load_function(str(answer_path), "is_balanced")
+                bracket_bench.load_function(str(answer_path), "is_balanced")
             except Exception as e:
                 return TestResult(0, len(bracket_bench.LEVEL1_TESTS), [f"не удалось загрузить решение: {e}"])
-            passed, total, failures = bracket_bench.run_level1_suite(fn)
+            passed, total, failures = bracket_bench.run_level1_suite(str(answer_path))
         else:
             total = len(bracket_bench.MAX_DEPTH_TESTS) + len(bracket_bench.UNMATCHED_TESTS)
             try:
-                max_depth_fn = bracket_bench.load_function(str(answer_path), "max_depth")
-                find_unmatched_fn = bracket_bench.load_function(str(answer_path), "find_unmatched")
+                bracket_bench.load_function(str(answer_path), "max_depth")
+                bracket_bench.load_function(str(answer_path), "find_unmatched")
             except Exception as e:
                 return TestResult(0, total, [f"не удалось загрузить решение: {e}"])
-            passed, total, failures = bracket_bench.run_level2_suite(max_depth_fn, find_unmatched_fn)
+            passed, total, failures = bracket_bench.run_level2_suite(str(answer_path))
         return TestResult(passed, total, failures)

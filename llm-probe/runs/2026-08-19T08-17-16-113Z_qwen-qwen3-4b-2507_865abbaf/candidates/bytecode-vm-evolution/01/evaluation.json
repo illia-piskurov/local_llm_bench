@@ -1,0 +1,21 @@
+{
+  "status": "runtime_error",
+  "passed": 3,
+  "total": 6,
+  "tests": [
+    {
+      "id": "simple-arithmetic",
+      "passed": true
+    },
+    {
+      "id": "comments-and-empty-lines",
+      "passed": true
+    },
+    {
+      "id": "conditional-jumps",
+      "passed": true
+    }
+  ],
+  "durationMs": 21,
+  "error": "Division by zero at line 3"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-l97k90q607x6p4c0mvew",
+  "object": "chat.completion",
+  "created": 1787068282,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const query = input.query.replace(/^(\\?|#|&)/, '');\n  if (!query) return {};\n  \n  const result = {};\n  for (const pair of query.split('&')) {\n    let [key, value] = pair.split('=');\n    \n    if (value === undefined) {\n      value = true;\n    } else {\n      try { \n        value = Number(value);\n        if (Number.isFinite(value)) continue;\n      } catch (_) {}\n      \n      value = value.toLowerCase() === 'true' ? true :\n              value.toLowerCase() === 'false' ? false : value;\n    }\n    \n    key = decodeURIComponent(key);\n    \n    while (key.includes('[') && key.includes(']')) {\n      const parts = key.slice(1, -1).split(/(?<!\\\\)\\]/);\n      key = parts[0];\n      \n      if (!result[key]) result[key] = {};\n      if (!Array.isArray(result[key])) result[key] = [result[key]];\n      result = result[key];\n      key = parts.pop();\n    }\n    \n    const keys = key.split(/\\]\\[/).map(part => part.replace(/[\\[\\]]/g, ''));\n    let current = result;\n    \n    for (let i = 0; i < keys.length - 1; i++) {\n      if (!current[keys[i]]) current[keys[i]] = {};\n      current = current[keys[i]];\n    }\n    \n    const lastKey = keys[keys.length - 1];\n    \n    if (Array.isArray(current[lastKey])) {\n      current[lastKey].push(value);\n    } else {\n      current[lastKey] = value;\n    }\n  }\n  \n  return result;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 331,
+    "completion_tokens": 352,
+    "total_tokens": 683,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

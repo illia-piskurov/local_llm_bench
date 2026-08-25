@@ -1,0 +1,43 @@
+{
+  "status": "failed",
+  "passed": 5,
+  "total": 8,
+  "tests": [
+    {
+      "id": "primitives-eq",
+      "passed": false,
+      "error": "Expected true, got false"
+    },
+    {
+      "id": "primitives-neq",
+      "passed": true
+    },
+    {
+      "id": "null",
+      "passed": false,
+      "error": "Expected true, got false"
+    },
+    {
+      "id": "null-vs-obj",
+      "passed": true
+    },
+    {
+      "id": "arrays",
+      "passed": false,
+      "error": "Expected true, got false"
+    },
+    {
+      "id": "array-length",
+      "passed": true
+    },
+    {
+      "id": "nested",
+      "passed": true
+    },
+    {
+      "id": "key-count",
+      "passed": true
+    }
+  ],
+  "durationMs": 34
+}

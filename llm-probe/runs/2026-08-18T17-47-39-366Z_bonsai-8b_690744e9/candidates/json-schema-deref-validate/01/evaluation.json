@@ -1,0 +1,23 @@
+{
+  "status": "failed",
+  "passed": 0,
+  "total": 3,
+  "tests": [
+    {
+      "id": "all-valid-resolved",
+      "passed": false,
+      "error": "Expected {\"valid\":true,\"errors\":[]}, got {\"valid\":false}"
+    },
+    {
+      "id": "additional-properties-false",
+      "passed": false,
+      "error": "Expected {\"valid\":false,\"errors\":[{\"path\":\"#/extra\",\"message\":\"Additional property not allowed\"}]}, got {\"valid\":false}"
+    },
+    {
+      "id": "missing-required",
+      "passed": false,
+      "error": "Expected {\"valid\":false,\"errors\":[{\"path\":\"#/age\",\"message\":\"Required property missing\"}]}, got {\"valid\":false}"
+    }
+  ],
+  "durationMs": 26
+}

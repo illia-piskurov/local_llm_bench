@@ -1,0 +1,15 @@
+{
+  "model": "liquid/lfm2.5-1.2b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-17 22:33:11",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: 'tuple' object has no attribute 'items'",
+    "simple_chain: неожиданное исключение: 'tuple' object has no attribute 'items'",
+    "diamond_pick_longer_branch: неожиданное исключение: 'tuple' object has no attribute 'items'",
+    "independent_tasks: неожиданное исключение: 'tuple' object has no attribute 'items'",
+    "wide_graph: неожиданное исключение: 'tuple' object has no attribute 'items'"
+  ]
+}

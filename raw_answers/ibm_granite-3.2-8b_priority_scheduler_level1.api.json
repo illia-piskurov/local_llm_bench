@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "ibm/granite-3.2-8b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nfrom collections import defaultdict, deque\nfrom typing import Dict, List, Tuple\n\ndef plan_order(tasks: Dict[str, Tuple[int, List[str], int]], workers: int) -> List[str] | None:\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n    \n    # Build the dependency graph\n    for task, (_, deps, _) in tasks.items():\n        for dep in deps:\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    # Check for cycles\n    if any(deg > workers for deg in in_degree.values()):\n        return None\n\n    # Initialize queues and result list\n    ready_queue = deque([task for task in tasks if not in_degree[task]])\n    finished_tasks = []\n    result = []\n\n    while ready_queue:\n        # Select the next task based on priority, duration, and name\n        next_tasks = sorted(ready_queue, key=lambda t: (-tasks[t][2], tasks[t][0], t), reverse=True)\n\n        for task in next_tasks[:workers]:\n            ready_queue.remove(task)\n\n            # Decrease in-degree of dependent tasks\n            for dep in graph[task]:\n                in_degree[dep] -= 1\n                if in_degree[dep] == 0:\n                    ready_queue.append(dep)\n\n            finished_tasks.append(task)\n            result.append(task)\n\n    # If all tasks are finished, return the order\n    if len(result) == len(tasks):\n        return result\n    else:\n        return None\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 451,
+    "total_output_tokens": 354,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.092571060669124,
+    "time_to_first_token_seconds": 5.946689
+  },
+  "response_id": "resp_e17f3157c8670ceb879e9ce2ef1d130fe743c6f40fb53f5e"
+}

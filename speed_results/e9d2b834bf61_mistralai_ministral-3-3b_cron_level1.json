@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "cron",
+  "level": "level1",
+  "tested_at": "2026-08-19 14:17:28",
+  "stats": {
+    "input_tokens": 1037,
+    "total_output_tokens": 696,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 17.68616974306493,
+    "time_to_first_token_seconds": 12.952072,
+    "model_load_time_seconds": null
+  }
+}

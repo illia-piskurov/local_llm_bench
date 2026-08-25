@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-gtddup18bb5zj96mu6g0d",
+  "object": "chat.completion",
+  "created": 1787139488,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const frequencyMap = {};\n    for (const num of input.numbers) {\n        if (frequencyMap[num]) {\n            frequencyMap[num]++;\n        } else {\n            frequencyMap[num] = 1;\n        }\n    }\n\n    const sortedFrequencyPairs = Object.entries(frequencyMap).sort((a, b) => b[1] - a[1]);\n    return sortedFrequencyPairs.slice(0, input.k).map(pair => pair[0]);\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 137,
+    "completion_tokens": 102,
+    "total_tokens": 239,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

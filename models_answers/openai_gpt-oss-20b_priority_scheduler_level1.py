@@ -1,0 +1,56 @@
+import heapq
+from collections import defaultdict
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    # Build dependency graph and indegree counts
+    indeg = {name: 0 for name in tasks}
+    dependents = defaultdict(list)
+    for name, (_, deps, _) in tasks.items():
+        for d in deps:
+            if d not in tasks:
+                return None  # unknown dependency treated as cycle
+            dependents[d].append(name)
+            indeg[name] += 1
+
+    # Priority queue for ready tasks: (-priority, duration, name)
+    ready = []
+    for name, (dur, _, pri) in tasks.items():
+        if indeg[name] == 0:
+            heapq.heappush(ready, (-pri, dur, name))
+
+    time = 0
+    running = []  # min-heap of (finish_time, name)
+    result = []
+
+    while ready or running:
+        # Start as many tasks as possible at current time
+        while workers > 0 and ready:
+            pri_neg, dur, name = heapq.heappop(ready)
+            finish = time + dur
+            heapq.heappush(running, (finish, name))
+            result.append(name)
+            workers -= 1
+
+        if not running:
+            # No tasks running but some ready? already handled above.
+            # If no running and no ready -> cycle or finished
+            break
+
+        # Advance to next finish time
+        next_finish, _ = running[0]
+        time = next_finish
+
+        # Free all tasks that finish now
+        while running and running[0][0] == time:
+            _, finished_name = heapq.heappop(running)
+            workers += 1
+            for dep in dependents[finished_name]:
+                indeg[dep] -= 1
+                if indeg[dep] == 0:
+                    dur, _, pri = tasks[dep]
+                    heapq.heappush(ready, (-pri, dur, dep))
+
+    # Check if all tasks scheduled
+    if len(result) != len(tasks):
+        return None
+    return result

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-sbzp3qfokdgv5xw3etu0z8",
+  "object": "chat.completion",
+  "created": 1787578119,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const round = (x) => Math.round(x * 100) / 100;\n  // Subtotal\n  let subtotal = 0;\n  for (const item of input.items || []) {\n    subtotal += item.price * item.qty;\n  }\n  subtotal = round(subtotal);\n\n  // Discount\n  let discount = 0;\n  const coupon = input.coupon;\n  if (coupon && typeof coupon === 'object') {\n    switch (coupon.type) {\n      case 'percent':\n        discount = subtotal * (coupon.value / 100);\n        break;\n      case 'fixed':\n        discount = coupon.value;\n        break;\n      case 'category_percent':\n        if (coupon.category) {\n          let catTotal = 0;\n          for (const item of input.items || []) {\n            if (item.category === coupon.category) {\n              catTotal += item.price * item.qty;\n            }\n          }\n          discount = catTotal * (coupon.value / 100);\n        }\n        break;\n      default:\n        discount = 0;\n    }\n  }\n  // Cap at subtotal\n  if (discount > subtotal) discount = subtotal;\n  discount = round(discount);\n\n  // Tax\n  let tax = 0;\n  if ('taxRate' in input && typeof input.taxRate === 'number') {\n    const taxable = subtotal - discount;\n    tax = Math.round(taxable * input.taxRate * 100) / 100;\n  }\n\n  // Total\n  const total = round(subtotal - discount + tax);\n\n  return { subtotal, discount, tax, total };\n}",
+        "reasoning": "Need to compute. Ensure rounding steps. For category_percent discount sum only that items. Discount capped at subtotal. Implement. Return numbers rounded. Let's code.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 473,
+    "completion_tokens": 377,
+    "total_tokens": 850,
+    "completion_tokens_details": {
+      "reasoning_tokens": 31
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

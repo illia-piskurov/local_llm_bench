@@ -1,0 +1,9 @@
+{
+  "model": "google/gemma-4-26b-a4b",
+  "benchmark": "cron",
+  "level": "level3",
+  "tested_at": "2026-08-24 22:11:15",
+  "passed": 19,
+  "total": 19,
+  "failures": []
+}

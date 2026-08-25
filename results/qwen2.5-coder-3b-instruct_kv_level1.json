@@ -1,0 +1,17 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-08-17 16:54:22",
+  "passed": 8,
+  "total": 15,
+  "failures": [
+    "commit_no_transaction: ожидалось ['NO TRANSACTION'], получено []",
+    "rollback_no_transaction: ожидалось ['NO TRANSACTION'], получено []",
+    "simple_transaction_rollback: ожидалось ['5'], получено ['10']",
+    "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+    "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', '20', '20']",
+    "rollback_after_commit_is_no_transaction: ожидалось ['NO TRANSACTION'], получено []",
+    "multiple_keys_independent: ожидалось ['2', '1', '2'], получено ['2', '99', '2']"
+  ]
+}

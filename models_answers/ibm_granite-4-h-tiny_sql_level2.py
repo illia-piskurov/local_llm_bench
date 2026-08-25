@@ -1,0 +1,79 @@
+def compile_query(query: dict) -> dict:
+    def build_condition(condition):
+        if isinstance(condition, dict):
+            op = list(condition.keys())[0]
+            value = condition[op]
+            params.clear()
+            if op == 'IS NULL':
+                return f"{value} IS NULL"
+            elif op == 'IS NOT NULL':
+                return f"{value} IS NOT NULL"
+            elif op == 'IN':
+                placeholders = ', '.join(f"${{i}}" for i in range(1, len(value) + 1))
+                sql_parts.append(f"({placeholders})")
+                params.extend(value)
+                return f"{value[0]} {op.upper()} ({placeholders})"
+            else:
+                field, val = list(condition.items())[0]
+                if isinstance(val, list):
+                    placeholders = ', '.join(f"${{i}}" for i in range(1, len(val) + 1))
+                    sql_parts.append(f"({placeholders})")
+                    params.extend(val)
+                    return f"{field} {op.upper()} ({placeholders})"
+                else:
+                    params.append(value)
+                    return f"{field} = ${{len(params)}}"
+        elif isinstance(condition, list):
+            return ' AND '.join(build_condition(c) for c in condition)
+        else:
+            raise ValueError("Unsupported condition type")
+
+    def build_select(columns):
+        if not columns:
+            return "*"
+        return ", ".join(columns)
+
+    def build_join(join_clause):
+        join_type = join_clause.get('type', 'INNER')
+        table = join_clause['table']
+        on_conditions = join_clause.get('on', {})
+        on_sql = " AND ".join(f"{left} = {right}" for left, right in on_conditions.items())
+        return f" {join_type.upper()} JOIN {table} ON ({on_sql})"
+
+    def build_group_by(group_by):
+        if not group_by:
+            return ""
+        return " GROUP BY " + ", ".join(group_by)
+
+    def build_order_by(order_by):
+        if not order_by:
+            return ""
+        return " ORDER BY " + ", ".join(f"{field} {'ASC' if 'dir' not in o else o['dir']}" for field, o in order_by)
+
+    def build_limit_offset(limit, offset):
+        limit_clause = f" LIMIT {limit}" if limit is not None else ""
+        offset_clause = f" OFFSET {offset}" if offset is not None else ""
+        return limit_clause + offset_clause
+
+    params = []
+    sql_parts = []
+
+    table = query.get('table')
+    select = query.get('select', ['*'])
+    joins = query.get('joins', [])
+    where = query.get('where')
+    groupBy = query.get('groupBy', [])
+    order_by = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    sql_parts.append(f"SELECT {build_select(select)} FROM {table}")
+    for join in joins:
+        sql_parts.append(build_join(join))
+    if where:
+        sql_parts.append("WHERE " + build_condition(where))
+    sql_parts.extend(build_group_by(groupBy))
+    sql_parts.extend(build_order_by(order_by))
+    sql_parts.append(build_limit_offset(limit, offset))
+
+    return {"sql": ' '.join(sql_parts), "params": params}

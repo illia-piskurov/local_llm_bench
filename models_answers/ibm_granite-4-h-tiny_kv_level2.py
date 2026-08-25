@@ -1,0 +1,68 @@
+class InMemoryKVStore:
+    def __init__(self):
+        self.store = {}
+        self.transactions = []
+        self.watchers = {}
+
+    def run(self, program: str) -> list[str]:
+        output = []
+        for line in program.splitlines():
+            if not line.strip():
+                continue
+
+            parts = line.split()
+            command = parts[0]
+
+            try:
+                if command == "SET":
+                    key, value = parts[1], parts[2]
+                    old_value = self.store.get(key)
+                    self.store[key] = value
+                    if old_value != value:
+                        watcher = self.watchers.get(key)
+                        if watcher:
+                            output.append(f"WATCH {key} {old_value} -> {value}")
+                elif command == "GET":
+                    key = parts[1]
+                    output.append(self.store.get(key, "NULL"))
+                elif command == "DELETE":
+                    key = parts[1]
+                    old_value = self.store.pop(key, None)
+                    if old_value is not None:
+                        watcher = self.watchers.get(key)
+                        if watcher and old_value != self.store.get(key):
+                            output.append(f"WATCH {key} {old_value} -> NULL")
+                elif command == "BEGIN":
+                    self.transactions.append(dict(self.store))
+                elif command == "COMMIT":
+                    if not self.transactions:
+                        output.append("NO TRANSACTION")
+                    else:
+                        self.store.update(self.transactions.pop())
+                elif command == "ROLLBACK":
+                    if not self.transactions:
+                        output.append("NO TRANSACTION")
+                    else:
+                        for key, value in self.transactions[-1].items():
+                            self.store[key] = value
+                        self.transactions.pop()
+                elif command == "COUNT":
+                    value = parts[1]
+                    count = sum(1 for v in self.store.values() if v == value)
+                    output.append(str(count))
+                elif command == "WATCH":
+                    key = parts[1]
+                    watcher = self.watchers.get(key)
+                    if not watcher:
+                        self.watchers[key] = None
+                else:
+                    raise ValueError(f"Unknown command: {command}")
+            except IndexError:
+                pass
+
+        return output
+
+
+def run(program: str) -> list[str]:
+    store = InMemoryKVStore()
+    return store.run(program)

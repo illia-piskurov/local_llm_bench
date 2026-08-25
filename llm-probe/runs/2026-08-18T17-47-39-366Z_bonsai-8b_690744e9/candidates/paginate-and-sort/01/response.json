@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-s8a4u7jk0o8ryho7eoshb",
+  "object": "chat.completion",
+  "created": 1787075266,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const { items, filter, sort, page, pageSize } = input;\n\n  // Filter logic\n  let filteredItems = [...items];\n  if (filter && filter.field && filter.op && filter.value) {\n    const field = filter.field;\n    const op = filter.op;\n    const value = filter.value;\n    if (op === 'eq') {\n      filteredItems = items.filter(item => item[field] === value);\n    } else if (op === 'neq') {\n      filteredItems = items.filter(item => item[field] !== value);\n    } else if (op === 'gt' || op === 'gte') {\n      filteredItems = items.filter(item => \n        op === 'gt' ? item[field] > value : \n        op === 'gte' ? item[field] >= value : false\n      );\n    } else if (op === 'lt' || op === 'lte') {\n      filteredItems = items.filter(item => \n        op === 'lt' ? item[field] < value : \n        op === 'lte' ? item[field] <= value : false\n      );\n    } else if (op === 'contains') {\n      const lowerValue = value.toLowerCase();\n      filteredItems = items.filter(item => \n        item[field].toLowerCase().includes(lowerValue)\n      );\n    }\n  }\n\n  // Sort logic\n  let sortedItems = [...filteredItems];\n  if (sort && sort.field && sort.dir) {\n    const field = sort.field;\n    const dir = sort.dir;\n    sortedItems.sort((a, b) => {\n      const valueA = a[field];\n      const valueB = b[field];\n      if (typeof valueA === 'string' && typeof valueB === 'string') {\n        return dir === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);\n      }\n      return dir === 'asc' ? valueA - valueB : valueB - valueA;\n    });\n  }\n\n  // Pagination logic\n  const start = (page - 1) * pageSize;\n  const end = start + pageSize;\n  const paginatedItems = sortedItems.slice(start, end);\n\n  return {\n    items: paginatedItems,\n    total: sortedItems.length,\n    page,\n    totalPages: Math.ceil(sortedItems.length / pageSize)\n  };\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 381,
+    "completion_tokens": 487,
+    "total_tokens": 868,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

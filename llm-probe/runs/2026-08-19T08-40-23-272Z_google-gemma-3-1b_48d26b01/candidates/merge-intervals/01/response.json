@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-j6j7ul6d5e12br5mc6ao",
+  "object": "chat.completion",
+  "created": 1787128903,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  let result = [];\n  let currentInterval = null;\n\n  for (let i = 0; i < input.intervals.length; i++) {\n    const interval = input.intervals[i];\n    if (currentInterval === null || interval[0] > currentInterval[1]) {\n      currentInterval = interval;\n    }\n    result.push(currentInterval);\n  }\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 166,
+    "completion_tokens": 108,
+    "total_tokens": 274,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

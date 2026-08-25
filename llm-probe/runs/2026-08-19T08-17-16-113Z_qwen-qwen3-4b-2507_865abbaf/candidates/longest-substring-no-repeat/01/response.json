@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-rezf3iwrdb83r3w11kicnc",
+  "object": "chat.completion",
+  "created": 1787127969,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    if (!input || input.length === 0) {\n        return 0;\n    }\n    \n    let maxLength = 0;\n    let left = 0;\n    let charIndexMap = {};\n    \n    for (let right = 0; right < input.length; right++) {\n        const char = input[right];\n        \n        if (charIndexMap[char] !== undefined && charIndexMap[char] >= left) {\n            left = charIndexMap[char] + 1;\n        }\n        \n        charIndexMap[char] = right;\n        \n        maxLength = Math.max(maxLength, right - left + 1);\n    }\n    \n    return maxLength;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 116,
+    "completion_tokens": 146,
+    "total_tokens": 262,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

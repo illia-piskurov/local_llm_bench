@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-mq7ah6hxojdfqgr26obf6n",
+  "object": "chat.completion",
+  "created": 1787578832,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const nums = input.numbers;\n  const k = input.k;\n\n  // Count frequencies\n  const freqMap = new Map();\n  for (const n of nums) {\n    freqMap.set(n, (freqMap.get(n) || 0) + 1);\n  }\n\n  // Convert to array and sort by descending frequency, then ascending number\n  const sorted = Array.from(freqMap.entries()).sort((a, b) => {\n    if (b[1] !== a[1]) return b[1] - a[1]; // higher freq first\n    return a[0] - b[0]; // lower number first\n  });\n\n  // Take top k numbers\n  const result = sorted.slice(0, k).map(entry => entry[0]);\n\n  return result;\n}\n",
+        "reasoning": "We need to write function that returns array of k most frequent numbers sorted by freq desc then number asc. Should not modify input. Return JSON-compatible value (array). Use Map for counts. Then create array of [num, count], sort with comparator. Take first k numbers. Return array of numbers.\n\nEdge cases: if k > unique count? Probably return all. Just slice. Ensure not mutate input.numbers. So copy or use iteration without modifying. Let's implement.\n\nReturn as array of numbers.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 199,
+    "completion_tokens": 284,
+    "total_tokens": 483,
+    "completion_tokens_details": {
+      "reasoning_tokens": 101
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

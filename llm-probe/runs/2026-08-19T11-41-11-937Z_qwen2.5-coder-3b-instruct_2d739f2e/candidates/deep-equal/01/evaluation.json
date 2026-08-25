@@ -1,0 +1,18 @@
+{
+  "status": "runtime_error",
+  "passed": 1,
+  "total": 8,
+  "tests": [
+    {
+      "id": "primitives-eq",
+      "passed": false,
+      "error": "Expected true, got false"
+    },
+    {
+      "id": "primitives-neq",
+      "passed": true
+    }
+  ],
+  "durationMs": 30,
+  "error": "cannot convert to object"
+}

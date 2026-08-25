@@ -1,0 +1,38 @@
+{
+  "status": "failed",
+  "passed": 0,
+  "total": 6,
+  "tests": [
+    {
+      "id": "simple-arithmetic",
+      "passed": false,
+      "error": "Expected {\"output\":[\"22\"]}, got null"
+    },
+    {
+      "id": "comments-and-empty-lines",
+      "passed": false,
+      "error": "Expected {\"output\":[\"14\"]}, got null"
+    },
+    {
+      "id": "conditional-jumps",
+      "passed": false,
+      "error": "Expected {\"output\":[\"42\"]}, got null"
+    },
+    {
+      "id": "division-by-zero-error",
+      "passed": false,
+      "error": "Expected {\"output\":[],\"error\":\"Division by zero at line 3\"}, got null"
+    },
+    {
+      "id": "stack-underflow-error",
+      "passed": false,
+      "error": "Expected {\"output\":[],\"error\":\"Stack underflow at line 2\"}, got null"
+    },
+    {
+      "id": "step-limit-exceeded",
+      "passed": false,
+      "error": "Expected {\"output\":[],\"error\":\"Execution step limit exceeded\"}, got null"
+    }
+  ],
+  "durationMs": 31
+}

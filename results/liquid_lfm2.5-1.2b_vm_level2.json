@@ -1,0 +1,11 @@
+{
+  "model": "liquid/lfm2.5-1.2b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-08-17 22:31:57",
+  "passed": 0,
+  "total": 27,
+  "failures": [
+    "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+  ]
+}

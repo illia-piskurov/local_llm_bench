@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-63p1ubhk368iryapwxy66n",
+  "object": "chat.completion",
+  "created": 1787065433,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { roles, users, requests } = input;\n    const results = [];\n\n    for (const request of requests) {\n        const { user, permission } = request;\n\n        if (!user || !users[user]) return [...results, false];\n\n        const userData = users[user];\n        const denies = userData.denies || [];\n        const allows = userData.allows || [];\n\n        // Check for explicit deny\n        if (denies.some(deny => matchesPermission(permission, deny))) {\n            results.push(false);\n            continue;\n        }\n\n        // Check role permissions or direct allow\n        let granted = false;\n\n        // Check 'allows' first\n        if (allows.includes(permission)) {\n            granted = true;\n        }\n        // Then check roles\n        else if (roles[userData.roles?.[0]]) {\n            const rolePermissions = roles[userData.roles[0]];\n            for (const perm of rolePermissions) {\n                if (matchesPermission(permission, perm)) {\n                    granted = true;\n                    break;\n                }\n            }\n        }\n\n        results.push(granted);\n    }\n\n    return results;\n}\n\nfunction matchesPermission(target, rule) {\n    const [namespace, action] = target.split(':');\n    const [ruleNamespace, ruleAction] = rule.split(':');\n\n    if (target === rule) return true;\n\n    if (ruleNamespace === '*') return true;\n\n    if (ruleNamespace === '*' && ruleAction === '*') return true;\n\n    if (namespace === ruleNamespace || namespace.startsWith(`${ruleNamespace}:`)) {\n        const targetSuffix = target.split(':')[2];\n        const ruleSuffix = rule.split(':')[2];\n\n        if (!ruleSuffix) return true;\n        if (targetSuffix === ruleSuffix) return true;\n        if (ruleSuffix === '*') return true;\n\n        return false;\n    }\n\n    return false;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 396,
+    "completion_tokens": 408,
+    "total_tokens": 804,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

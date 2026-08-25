@@ -1,0 +1,16 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Return a new matrix that is input.matrix rotated 90 degrees clockwise. Do not mutate input.matrix.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"matrix\":[[1,2],[3,4]]}\noutput: [[3,1],[4,2]]"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

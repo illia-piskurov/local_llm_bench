@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "passed": 6,
+  "total": 6,
+  "tests": [
+    {
+      "id": "simple-arithmetic",
+      "passed": true
+    },
+    {
+      "id": "comments-and-empty-lines",
+      "passed": true
+    },
+    {
+      "id": "conditional-jumps",
+      "passed": true
+    },
+    {
+      "id": "division-by-zero-error",
+      "passed": true
+    },
+    {
+      "id": "stack-underflow-error",
+      "passed": true
+    },
+    {
+      "id": "step-limit-exceeded",
+      "passed": true
+    }
+  ],
+  "durationMs": 26
+}

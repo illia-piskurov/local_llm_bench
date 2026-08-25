@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Snake Game</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .game-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            border: 2px solid #000;
+            background-color: #fff;
+        }
+        .snake, .food {
+            position: absolute;
+            display: block;
+            width: 10px;
+            height: 10px;
+            background-color: #333;
+            border-radius: 50%;
+        }
+        .score {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div id="snake"></div>
+    <div id="food"></div>
+    <div class="score">Score: 0</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const gameContainer = document.querySelector('.game-container');
+    const snakeElement = document.getElementById('snake');
+    const foodElement = document.getElementById('food');
+    const scoreElement = document.querySelector('.score');
+
+    let snake = [{ x: 10, y: 10 }];
+    let food = { x: 15, y: 15 };
+    let direction = 'right';
+    let gameInterval;
+    let score = 0;
+
+    function drawSnake() {
+        snake.forEach(segment => {
+            const segmentElement = document.createElement('div');
+            segmentElement.className = 'snake';
+            segmentElement.style.left = `${segment.x * 10}px`;
+            segmentElement.style.top = `${segment.y * 10}px`;
+            gameContainer.appendChild(segmentElement);
+        });
+    }
+
+    function drawFood() {
+        foodElement.style.left = `${food.x * 10}px`;
+        foodElement.style.top = `${food.y * 10}px`;
+    }
+
+    function moveSnake() {
+        const head = { ...snake[0] };
+        switch (direction) {
+            case 'up':
+                head.y -= 1;
+                break;
+            case 'down':
+                head.y += 1;
+                break;
+            case 'left':
+                head.x -= 1;
+                break;
+            case 'right':
+                head.x += 1;
+                break;
+        }
+        snake.unshift(head);
+        if (head.x === food.x && head.y === food.y) {
+            score++;
+            scoreElement.textContent = `Score: ${score}`;
+            generateFood();
+        } else {
+            snake.pop();
+        }
+    }
+
+    function checkCollision() {
+        const head = snake[0];
+        return (
+            head.x < 0 ||
+            head.x >= 40 ||
+            head.y < 0 ||
+            head.y >= 40 ||
+            snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
+        );
+    }
+
+    function generateFood() {
+        food = { x: Math.floor(Math.random() * 40), y: Math.floor(Math.random() * 40) };
+    }
+
+    function gameLoop() {
+        if (checkCollision()) {
+            clearInterval(gameInterval);
+            alert('Game Over!');
+            resetGame();
+            return;
+        }
+        clearBoard();
+        moveSnake();
+        drawSnake();
+        drawFood();
+    }
+
+    function clearBoard() {
+        while (gameContainer.firstChild) {
+            gameContainer.removeChild(gameContainer.firstChild);
+        }
+    }
+
+    function resetGame() {
+        snake = [{ x: 10, y: 10 }];
+        food = { x: 15, y: 15 };
+        direction = 'right';
+        score = 0;
+        scoreElement.textContent = `Score: ${score}`;
+        gameInterval = setInterval(gameLoop, 100);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        switch (e.key) {
+            case 'ArrowUp':
+                if (direction !== 'down') direction = 'up';
+                break;
+            case 'ArrowDown':
+                if (direction !== 'up') direction = 'down';
+                break;
+            case 'ArrowLeft

@@ -1,0 +1,94 @@
+export function solve(input) {
+  const cron = input.cron.trim().split(' ');
+  const from = new Date(input.from);
+  const count = input.count;
+  
+  // Parse cron expression into fields
+  let [min, hour, dayOfMonth, month, dayOfWeek] = cron;
+  
+  // Convert to numerical values for matching
+  const minNum = parseInt(min, 10) || 0;
+  const hourNum = parseInt(hour, 10) || 0;
+  const dayOfMonthNum = parseInt(dayOfMonth, 10) || 0;
+  const monthNum = parseInt(month, 10) || 0;
+  const dayOfWeekNum = parseInt(dayOfWeek, 10) || 0;
+
+  // Parse from ISO string to Date object
+  from.setUTCFullYear(from.getFullYear() + 1970, from.getMonth(), from.getDate());
+
+  const result = [];
+
+  for (let i = 0; i < count; i++) {
+    let current = from;
+    let next = from;
+    
+    while (true) {
+      // Check if current matches the cron expression
+      function matches(cronField, value) {
+        if (cronField === '*') return true;
+        
+        const parts = cronField.split('-');
+        if (parts.length === 2) {
+          const [start, end] = parts;
+          startNum = parseInt(start, 10);
+          endNum = parseInt(end, 10);
+          return value >= startNum && value <= endNum;
+        } else if (parts.length === 1) {
+          const step = parts[0];
+          if (/^(?:[1-9]|[12][0-9]|3[01])$/i.test(step)) {
+            // Handle ranges like 9-17
+            return value >= parseInt(step.split('-')[0], 10) && value <= parseInt(step.split('-')[1], 10);
+          } else if (step.includes('*/')) {
+            // Handle steps like 1/15 or 1-5/2
+            const stepParts = step.split('/');
+            const stepNum = parseInt(stepParts[0], 10);
+            const stepInterval = parseInt(stepParts[1], 10) || 1;
+            return current.getTime() + (stepNum * stepInterval) < next.getTime();
+          } else {
+            // Handle single values like 9 or 15
+            return value === parseInt(step, 10);
+          }
+        }
+        
+        return false;
+      }
+
+      if (matches(min, current.getMinute())) {
+        if (matches(hour, current.getHours())) {
+          if (matches(dayOfMonth, current.getDate())) {
+            if (matches(month, current.getMonth() + 1)) {
+              if (matches(dayOfWeek, current.getDay())) {
+                result.push(current.toISOString());
+                next = current;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      // If all fields match, move to next possible time
+      if (current.getTime() < from.getTime()) {
+        current.setFullYear(from.getFullYear() + 1970);
+        current.setMonth(from.getMonth() + 1);
+        current.setDate(1);
+        current.setHours(0);
+        current.setMinutes(0);
+      } else {
+        next = current;
+        break;
+      }
+
+      // Skip to next possible time
+      if (next.getTime() < from.getTime()) {
+        next.setFullYear(from.getFullYear() + 1970);
+        next.setMonth(from.getMonth() + 1);
+        next.setDate(1);
+        next.setHours(0);
+        next.setMinutes(0);
+      }
+    }
+  }
+
+  return result;
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-tscrz45z1afdygujnulk9s",
+  "object": "chat.completion",
+  "created": 1787069415,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const isDeepEqual = (a, b) => {\n    if (typeof a !== 'object' || typeof b !== 'object') {\n      return a === b;\n    }\n    if (a === null || b === null) return false;\n    if (Array.isArray(a) && Array.isArray(b)) {\n      if (a.length !== b.length) return false;\n      for (let i = 0; i < a.length; i++) {\n        if (!isDeepEqual(a[i], b[i])) return false;\n      }\n      return true;\n    }\n    if (Object.keys(a).length !== Object.keys(b).length) return false;\n    const keysA = Object.keys(a);\n    const keysB = Object.keys(b);\n    for (const key of keysA) {\n      if (!keysB.includes(key) || !isDeepEqual(a[key], b[key])) return false;\n    }\n    return true;\n  };\n\n  return isDeepEqual(input.a, input.b);\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 168,
+    "completion_tokens": 223,
+    "total_tokens": 391,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-fs1bfzvea4bjgwonamvsz",
+  "object": "chat.completion",
+  "created": 1787128874,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const locales = input.locales;\n  const lang = input.lang;\n  const key = input.key;\n  const params = input.params;\n\n  if (!locales[lang]) {\n    return key;\n  }\n\n  let result = \"\";\n\n  if (params.count === 0 && 'zero' in params) {\n    result += params['zero'];\n  } else if (params.count === 1 && 'one' in params) {\n    result += params['one'];\n  } else {\n    result = params[key];\n  }\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 350,
+    "completion_tokens": 151,
+    "total_tokens": 501,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

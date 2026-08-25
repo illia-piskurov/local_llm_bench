@@ -1,0 +1,46 @@
+```javascript
+export function solve(input) {
+  const { schema, data } = input;
+  const definitions = input.definitions;
+  const errors = [];
+  const path = "#/";
+
+  function validateRef(path, refName) {
+    if (refName === "") return true;
+    const refSchema = schema.properties[refName];
+    if (!refSchema) return false;
+
+    const refType = refSchema.type;
+    const refPath = refSchema.path;
+
+    if (refType === 'object' && refSchema.properties) {
+      const obj = definitions[refName];
+      if (Object.keys(obj.properties).length === 0) return false;
+      for (const prop in obj.properties) {
+        const propPath = path + "/" + prop;
+        if (!validateRef(propPath, prop)) return false;
+      }
+    } else if (refType === 'array' && refSchema.items) {
+      const itemsSchema = schema.properties.items;
+      if (Array.isArray(data[refPath]) && data[refPath].length < itemsSchema.minItems) {
+        errors.push({ path: path + "/" + refPath, message: "minItems required" });
+      }
+    } else if (refType === 'string' || refType === 'number') {
+      const value = data[refPath];
+      if (typeof value !== refSchema.type) {
+        errors.push({ path: path + "/" + refPath, message: `Expected ${refSchema.type}, got ${value}` });
+      }
+    } else if (refType === 'enum') {
+      const allowedValues = refSchema.enum;
+      if (!allowedValues.includes(value)) {
+        errors.push({ path: path + "/" + refPath, message: `Value not in enum` });
+      }
+    }
+  }
+
+  validateRef(path, definitions["User"]);
+  validateRef(path, definitions["Role"]);
+
+  return { valid: errors.length === 0, errors };
+}
+```

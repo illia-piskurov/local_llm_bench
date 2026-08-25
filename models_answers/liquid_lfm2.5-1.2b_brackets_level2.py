@@ -1,0 +1,39 @@
+def is_balanced(s: str) -> bool:
+    stack = []
+    opening = {'(': ')', '{': '}', '[': ']'}
+    closing = {')': '(', '}': '{', ']': '['}
+    
+    for char in s:
+        if char in opening:
+            stack.append(char)
+        elif char in closing:
+            if not stack or opening[stack.pop()] != char:
+                return False
+    return not stack
+
+def max_depth(s: str) -> int:
+    stack = []
+    max_depth = 0
+    for i, char in enumerate(s):
+        if char in opening:
+            stack.append(i)
+        else:
+            if not stack or (char in closing and opening[stack[-1]] != char):
+                return -1
+            stack.pop()
+            if stack:
+                max_depth = max(max_depth, len(stack) + 1)
+    return max_depth
+
+def find_unmatched(s: str) -> list[int]:
+    stack = []
+    unmatched_indices = []
+    for i, char in enumerate(s):
+        if char in opening:
+            stack.append(i)
+        elif char in closing:
+            if not stack or (char == ')' and opening.get(stack[-1], None) != '(') or \
+               (char == '}' and opening.get(stack[-1], None) != '{') or \
+               (char == ']' and opening.get(stack[-1], None) != '['):
+                unmatched_indices.append(i)
+    return sorted(unmatched_indices)

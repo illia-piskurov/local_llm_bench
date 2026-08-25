@@ -1,0 +1,13 @@
+{
+  "status": "runtime_error",
+  "passed": 1,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    }
+  ],
+  "durationMs": 29,
+  "error": "'items' is read-only"
+}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Змейка</title>
+<style>
+  body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #000; }
+  canvas { border: 1px solid #fff; }
+  .score { font-family: monospace; font-size: 24px; color: #fff; margin-top: 10px; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+<div class="score">Счет: 0</div>
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let score = 0;
+  const food = { x: 200, y: 200 };
+  let directionX = 1, directionY = 0;
+
+  function drawSnake(snake) {
+    snake.forEach(segment => {
+      ctx.fillStyle = segment.color || '#fff';
+      ctx.fillRect(segment.x * 20, segment.y * 20, 20, 20);
+    });
+  }
+
+  function moveSnake() {
+    const headX = snake[0].x + directionX;
+    const headY = snake[0].y + directionY;
+
+    if (headX < 0 || headX >= canvas.width / 20 ||
+        headY < 0 || headY >= canvas.height / 20 ||
+        snake.some(s => s.x === headX && s.y === headY)) {
+      return 'gameOver';
+    }
+
+    snake.unshift({ x: headX, y: headY });
+
+    if (headX === food.x && headY === food.y) {
+      score++;
+      generateFood();
+    } else {
+      snake.pop();
+    }
+
+    return null;
+  }
+
+  function drawFood() {
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(food.x * 20, food.y * 20, 20, 20);
+  }
+
+  function generateFood() {
+    food.x = Math.floor(Math.random() * (canvas.width / 20));
+    food.y = Math.floor(Math.random() * (canvas.height / 20));
+  }
+
+  let snake = [{ x: 10, y: 10 }];
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowUp' && directionY !== 1) { directionX = 0; directionY = -1; }
+    else if (e.key === 'ArrowDown' && directionY !== -1) { directionX = 0; directionY = 1; }
+    else if (e.key === 'ArrowLeft' && directionX !== 1) { directionX = -1; directionY = 0; }
+    else if (e.key === 'ArrowRight' && directionX !== -1) { directionX = 1; directionY = 0; }
+    else if (e.key === 'w') { directionX = 0; directionY = -1; }
+    else if (e.key === 's') { directionX = 0; directionY = 1; }
+    else if (e.key === 'a') { directionX = -1; directionY = 0; }
+    else if (e.key === 'd') { directionX = 1; directionY = 0; }
+  });
+
+  function gameLoop() {
+    const result = moveSnake();
+    if (result === 'gameOver') {
+      alert('Game Over! Счет: ' + score);
+      location.reload();
+      return;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawFood();
+    drawSnake(snake);
+    document.querySelector('.score').textContent = `Счет: ${score}`;
+    requestAnimationFrame(gameLoop);
+  }
+
+  generateFood();
+  gameLoop();
+</script>
+</body>
+</html>

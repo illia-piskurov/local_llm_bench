@@ -1,0 +1,14 @@
+{
+  "status": "runtime_error",
+  "passed": 0,
+  "total": 3,
+  "tests": [
+    {
+      "id": "hourly-run",
+      "passed": false,
+      "error": "Expected [\"2026-08-18T11:00:00.000Z\",\"2026-08-18T12:00:00.000Z\"], got [\"2026-08-18T11:00:00.000Z\",\"2026-08-18T11:00:01.000Z\"]"
+    }
+  ],
+  "durationMs": 82,
+  "error": "Failed to find next valid time after from"
+}

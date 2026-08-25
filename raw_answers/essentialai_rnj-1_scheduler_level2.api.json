@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    from collections import defaultdict\n\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n    duration = {task: time for task, (time, _) in tasks.items()}\n\n    # Build the graph and calculate in-degrees\n    for task, (_, deps) in tasks.items():\n        for dep in deps:\n            if dep not in in_degree:\n                return None  # Invalid dependency\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    queue = [task for task, degree in in_degree.items() if degree == 0]\n    result = []\n\n    while queue:\n        current = queue.pop(0)\n        result.append(current)\n\n        for neighbor in graph[current]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    if len(result) != len(tasks):\n        return None\n\n    # Calculate the longest path\n    topo_order = result\n    earliest_start_time = {task: 0 for task in tasks}\n    latest_finish_time = {task: float('-inf') for task in tasks}\n\n    for task in topo_order:\n        if graph[task]:\n            earliest_start_time[task] = max(\n                earliest_start_time[dep] + duration[dep]\n                for dep in graph[task]\n            )\n\n    # Calculate the latest finish time\n    longest_path_duration = 0\n    for task in reversed(topo_order):\n        if not graph[task]:\n            latest_finish_time[task] = earliest_start_time[task] + duration[task]\n            longest_path_duration = max(longest_path_duration, latest_finish_time[task])\n        else:\n            latest_finish_time[task] = min(\n                latest_finish_time[neighbor] - duration[task]\n                for neighbor in graph[task]\n            )\n\n    return longest_path_duration\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 627,
+    "total_output_tokens": 420,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 12.864700868903338,
+    "time_to_first_token_seconds": 3.9877260000000003
+  },
+  "response_id": "resp_0e341d167c09b1646ba454ef303d2bf6d808dc3b65fecc36"
+}

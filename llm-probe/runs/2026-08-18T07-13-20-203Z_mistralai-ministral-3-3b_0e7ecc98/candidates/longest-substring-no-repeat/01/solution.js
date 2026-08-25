@@ -1,0 +1,17 @@
+export function solve(input) {
+    const { text } = input;
+    let maxLength = 0;
+    const charSet = new Set();
+    let left = 0;
+
+    for (let right = 0; right < text.length; right++) {
+        while (charSet.has(text[right])) {
+            charSet.delete(text[left]);
+            left++;
+        }
+        charSet.add(text[right]);
+        maxLength = Math.max(maxLength, right - left + 1);
+    }
+
+    return maxLength;
+}

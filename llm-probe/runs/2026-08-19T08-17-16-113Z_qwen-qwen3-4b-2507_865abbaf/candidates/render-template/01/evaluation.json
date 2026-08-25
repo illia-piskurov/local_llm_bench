@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "passed": 4,
+  "total": 4,
+  "tests": [
+    {
+      "id": "nested-and-arrays",
+      "passed": true
+    },
+    {
+      "id": "missing-and-whitespace",
+      "passed": true
+    },
+    {
+      "id": "no-placeholders",
+      "passed": true
+    },
+    {
+      "id": "empty-template",
+      "passed": true
+    }
+  ],
+  "durationMs": 34
+}

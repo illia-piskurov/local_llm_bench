@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-4v20m2tk5rdrvv9s5i9s2",
+  "object": "chat.completion",
+  "created": 1787140011,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  if (typeof input !== 'object' || input === null) {\n    return input === input.b; // Handle primitives and nulls directly\n  }\n\n  const keysA = Object.keys(input);\n  const keysB = Object.keys(input.b);\n\n  if (keysA.length !== keysB.length) {\n    return false;\n  }\n\n  for (const key of keysA) {\n    if (!solve({ a: input[key], b: input.b[key] })) {\n      return false;\n    }\n  }\n\n  return true;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 152,
+    "completion_tokens": 121,
+    "total_tokens": 273,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

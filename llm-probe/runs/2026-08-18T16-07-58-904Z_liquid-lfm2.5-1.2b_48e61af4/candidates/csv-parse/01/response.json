@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-0gso43aa4r6jb4ydc3jt9qo",
+  "object": "chat.completion",
+  "created": 1787069292,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  if (!input || input.trim() === \"\") return [];\n  const lines = input.trim().split(/\\r?\\n/g);\n  const headers = lines[0].split(\",\");\n  const result = [];\n  for (let i = 1; i < lines.length; i++) {\n    const values = lines[i].split(/\\r?\\n/);\n    const obj = {};\n    headers.forEach((h, idx) => {\n      const val = values[idx];\n      if (val.trim() === \"\") continue;\n      let processed;\n      if (val.startsWith(\"\\\"\") && val.endsWith(\"\\\"\")) {\n        processed = val.slice(1, -2);\n      } else if (val.startsWith('\"') && val.endsWith('\"')) {\n        processed = val.slice(1, -1);\n      } else processed = val;\n      obj[headers[idx]] = processed.trim();\n    });\n    result.push(obj);\n  }\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 285,
+    "completion_tokens": 229,
+    "total_tokens": 514,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

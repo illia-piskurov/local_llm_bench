@@ -1,0 +1,15 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-17 16:25:50",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: maximum recursion depth exceeded",
+    "parallel_tasks_reduce_makespan: неожиданное исключение: maximum recursion depth exceeded",
+    "dependencies_and_workers: неожиданное исключение: maximum recursion depth exceeded",
+    "critical_path_longer_than_worker_parallelism: неожиданное исключение: maximum recursion depth exceeded",
+    "wide_graph_with_unlocks: неожиданное исключение: maximum recursion depth exceeded"
+  ]
+}

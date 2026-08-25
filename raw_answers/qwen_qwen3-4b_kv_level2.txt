@@ -1,0 +1,133 @@
+
+
+```python
+def run(program: str) -> list[str]:
+    class Transaction:
+        def __init__(self):
+            self.data = {}
+        
+        def commit(self, parent):
+            if not parent:
+                return
+            for key, value in self.data.items():
+                parent.data[key] = value
+        
+        def rollback(self, parent):
+            if not parent:
+                return
+            self.data.clear()
+    
+    # Инициализация глобального хранилища и стека транзакций
+    global_store = {}
+    transactions = []
+    current_transaction = None
+    
+    output = []
+    
+    watchers = {}  # Словарь для наблюдения за ключами
+    current_values = {}  # Текущее значение ключей, учитывая открытые транзакции
+    
+    for line in program.strip().split('\n'):
+        if not line:
+            continue
+        
+        parts = line.split()
+        if not parts:
+            continue
+        
+        if parts[0] == 'SET':
+            key, value = parts[1], parts[2]
+            if current_transaction:
+                # Обновляем текущую транзакцию
+                current_transaction.data[key] = value
+                # Обновляем current_values
+                current_values[key] = value
+            else:
+                # Обновляем глобальное хранилище и current_values
+                global_store[key] = value
+                current_values[key] = value
+            
+            # Проверяем, если есть наблюдение за этим ключом
+            old_value = current_values.get(key, "NULL")
+            new_value = value
+            if old_value != new_value:
+                for watcher_key in watchers:
+                    if watcher_key == key:
+                        output.append(f"WATCH {key} {old_value} -> {new_value}")
+        elif parts[0] == 'GET':
+            key = parts[1]
+            if current_transaction:
+                if key in current_values:
+                    output.append(current_values[key])
+                else:
+                    output.append("NULL")
+            else:
+                output.append(global_store.get(key, "NULL"))
+        elif parts[0] == 'DELETE':
+            key = parts[1]
+            if current_transaction:
+                # Удаляем из текущей транзакции
+                if key in current_transaction.data:
+                    del current_transaction.data[key]
+                    # Обновляем current_values
+                    del current_values[key]
+                else:
+                    pass
+            else:
+                # Удаляем из глобального хранилища и current_values
+                if key in global_store:
+                    del global_store[key]
+                    del current_values[key]
+            
+            # Проверяем, если есть наблюдение за этим ключом
+            old_value = current_values.get(key, "NULL")
+            new_value = "NULL"
+            if old_value != new_value:
+                for watcher_key in watchers:
+                    if watcher_key == key:
+                        output.append(f"WATCH {key} {old_value} -> NULL")
+        elif parts[0] == 'BEGIN':
+            new_tx = Transaction()
+            transactions.append(new_tx)
+            current_transaction = new_tx
+        elif parts[0] == 'COMMIT':
+            if not transactions:
+                output.append("NO TRANSACTION")
+            else:
+                tx = transactions[-1]
+                parent = transactions[-2] if len(transactions) > 1 else None
+                tx.commit(parent)
+                # Обновляем current_values из транзакции
+                for key, value in tx.data.items():
+                    current_values[key] = value
+                transactions.pop()
+                current_transaction = transactions[-1] if transactions else None
+                output.append("COMMIT")
+        elif parts[0] == 'ROLLBACK':
+            if not transactions:
+                output.append("NO TRANSACTION")
+            else:
+                tx = transactions[-1]
+                parent = transactions[-2] if len(transactions) > 1 else None
+                tx.rollback(parent)
+                # Откатываем изменения в current_values
+                for key in tx.data:
+                    del current_values[key]
+                transactions.pop()
+                current_transaction = transactions[-1] if transactions else None
+                output.append("ROLLBACK")
+        elif parts[0] == 'COUNT':
+            value = parts[1]
+            count = 0
+            for key, val in current_values.items():
+                if val == value:
+                    count += 1
+            output.append(str(count))
+        elif parts[0] == 'WATCH':
+            key = parts[1]
+            # Добавляем наблюдение за этим ключом
+            if key not in watchers:
+                watchers[key] = current_values.get(key, "NULL")
+    
+    return output
+```

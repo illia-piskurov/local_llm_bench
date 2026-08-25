@@ -1,0 +1,45 @@
+```javascript
+export function solve(input) {
+  const { locales, lang, key, params } = input;
+  
+  // Get the locale string for the given language and key
+  let localeString = locales[lang]?.[key];
+  
+  // Fallback to English if language not found
+  if (!localeString) {
+    localeString = locales['en'][key];
+  }
+  
+  // Fallback to key itself if key not found
+  if (!localeString) {
+    return key;
+  }
+  
+  // Handle plural forms
+  if (typeof localeString === 'object') {
+    const count = params.count || 0;
+    
+    let selected = 'other';
+    
+    if (count === 0 && localeString.zero) {
+      selected = 'zero';
+    } else if (count === 1 && localeString.one) {
+      selected = 'one';
+    } else {
+      selected = 'other';
+    }
+    
+    const result = localeString[selected] || localeString.other;
+    
+    // Replace {var} with params[var] and # with count
+    return result
+      .replace(/\{(\w+)\}/g, (match) => params[match.slice(1, -1)] || match)
+      .replace(/#/g, count.toString());
+  } else {
+    // Plain string with placeholders
+    return localeString
+      .replace(/\{(\w+)\}/g, (match) => params[match.slice(1, -1)] || match)
+      .replace(/#/g, params.count?.toString() || '');
+  }
+}
+```

@@ -1,0 +1,19 @@
+{
+  "model": "zai-org/glm-4.7-flash",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-08-25 16:11:40",
+  "passed": 6,
+  "total": 15,
+  "failures": [
+    "simple_where_equality: SQL: ожидали 'SELECT * FROM users WHERE status = $1', получили 'SELECT * FROM users WHERE status = $0'",
+    "where_and_or_nested: SQL: ожидали 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', получили 'SELECT id, email FROM users WHERE (status = $0 AND (role = $1 OR age >= $2))'",
+    "multiple_and_conditions: SQL: ожидали 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', получили 'SELECT * FROM logs WHERE (level = $0 AND code != $1 AND timestamp > $2)'",
+    "where_in_operator: SQL: ожидали 'SELECT * FROM users WHERE id IN ($1, $2, $3)', получили 'SELECT * FROM users WHERE id IN ($0, $1, $2)'",
+    "where_is_null_and_like: исключение/таймаут: 'value'",
+    "where_is_not_null: исключение/таймаут: 'value'",
+    "having_clause: SQL: ожидали 'SELECT sales.category, SUM(sales.amount) AS total_sales FROM sales GROUP BY sales.category HAVING SUM(sales.amount) > $1', получили 'SELECT sales.category, SUM(sales.amount) AS total_sales FROM sales GROUP BY sales.category HAVING SUM(sales.amount) > $0'",
+    "where_subquery_in: исключение/таймаут: 'value'",
+    "subquery_with_parent_params_order: исключение/таймаут: 'value'"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-rhbcoz27nd47t22hrqv02",
+  "object": "chat.completion",
+  "created": 1787075554,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const intervals = input.intervals;\n  if (intervals.length === 0) return [];\n  \n  // Sort the intervals based on their start values\n  intervals.sort((a, b) => a[0] - b[0]);\n  \n  // Merge overlapping or touching intervals\n  let merged = [intervals[0]];\n  \n  for (let i = 1; i < intervals.length; i++) {\n    const prev = merged[merged.length - 1];\n    const current = intervals[i];\n    \n    if (current[0] <= prev[1]) {\n      // Overlapping or touching, merge them\n      merged[merged.length - 1][1] = Math.max(prev[1], current[1]);\n    } else {\n      // No overlap, add as a new interval\n      merged.push(current);\n    }\n  }\n  \n  return merged;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 167,
+    "completion_tokens": 189,
+    "total_tokens": 356,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

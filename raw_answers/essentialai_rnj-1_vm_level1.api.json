@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef run(program: str) -> list[str]:\n    lines = program.strip().split('\\n')\n    stack = []\n    output = []\n\n    for i, line in enumerate(lines):\n        if not line or line.startswith('#'):\n            continue\n\n        parts = line.split()\n        cmd = parts[0]\n\n        try:\n            if cmd == 'PUSH':\n                n = int(parts[1])\n                stack.append(n)\n            elif cmd == 'POP':\n                if len(stack) < 1:\n                    raise ValueError(f\"Stack underflow at line {i + 1}\")\n                stack.pop()\n            elif cmd in ('ADD', 'SUB', 'MUL', 'DIV'):\n                if len(stack) < 2:\n                    raise ValueError(f\"Stack underflow at line {i + 1}\")\n                b = stack.pop()\n                a = stack.pop()\n                if cmd == 'ADD':\n                    res = a + b\n                elif cmd == 'SUB':\n                    res = a - b\n                elif cmd == 'MUL':\n                    res = a * b\n                elif cmd == 'DIV':\n                    if b == 0:\n                        raise ZeroDivisionError(f\"Division by zero at line {i + 1}\")\n                    res = a // b\n                stack.append(res)\n            elif cmd == 'DUP':\n                if len(stack) < 1:\n                    raise ValueError(f\"Stack underflow at line {i + 1}\")\n                stack.append(stack[-1])\n            elif cmd == 'SWAP':\n                if len(stack) < 2:\n                    raise ValueError(f\"Stack underflow at line {i + 1}\")\n                a = stack.pop()\n                b = stack.pop()\n                stack.append(a)\n                stack.append(b)\n            elif cmd == 'PRINT':\n                if len(stack) < 1:\n                    raise ValueError(f\"Stack underflow at line {i + 1}\")\n                output.append(str(stack[-1]))\n        except Exception as e:\n            print(f\"Error: {e}\")\n\n    return output\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 381,
+    "total_output_tokens": 422,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 12.951919161363845,
+    "time_to_first_token_seconds": 4.047404
+  },
+  "response_id": "resp_95af144d33eda2cca612fc71da2fbe3c0ac38e874b81be94"
+}

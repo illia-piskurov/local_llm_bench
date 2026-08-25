@@ -1,0 +1,21 @@
+export function solve(input) {
+  let maxLength = 0;
+  let n = input.length;
+  let charIndexMap = new Map();
+  let left = 0;
+  let uniqueChars = 0;
+
+  for (let right = 0; right < n; right++) {
+    const char = input[right];
+    if (charIndexMap.has(char)) {
+      left = Math.max(left, charIndexMap.get(char) + 1);
+    }
+    charIndexMap.set(char, right);
+
+    uniqueChars = Math.max(uniqueChars, right - left + 1);
+
+    maxLength = Math.max(maxLength, right - left + 1);
+  }
+
+  return maxLength;
+}

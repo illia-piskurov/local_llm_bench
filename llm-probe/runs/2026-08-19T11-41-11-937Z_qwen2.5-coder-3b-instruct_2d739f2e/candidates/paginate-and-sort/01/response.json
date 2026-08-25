@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-j6dq79unv7is61vcorqa",
+  "object": "chat.completion",
+  "created": 1787139681,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { items, filter, sort, page = 1, pageSize = 10 } = input;\n  let filteredItems = items;\n\n  // Filter the items if a filter is provided\n  if (filter) {\n    const { field, op, value } = filter;\n    filteredItems = filteredItems.filter(item => {\n      switch (op) {\n        case 'eq':\n          return item[field] === value;\n        case 'neq':\n          return item[field] !== value;\n        case 'gt':\n          return item[field] > value;\n        case 'gte':\n          return item[field] >= value;\n        case 'lt':\n          return item[field] < value;\n        case 'lte':\n          return item[field] <= value;\n        case 'contains':\n          return String(item[field]).toLowerCase().includes(String(value).toLowerCase());\n        default:\n          throw new Error(`Invalid operator ${op}`);\n      }\n    });\n  }\n\n  // Sort the items if a sort is provided\n  if (sort) {\n    filteredItems.sort((a, b) => {\n      const { field, dir } = sort;\n      let comparison = 0;\n\n      if (a[field] < b[field]) {\n        comparison = -1;\n      } else if (a[field] > b[field]) {\n        comparison = 1;\n      }\n\n      return dir === 'desc' ? -comparison : comparison;\n    });\n  }\n\n  // Calculate pagination\n  const totalItems = filteredItems.length;\n  const totalPages = Math.ceil(totalItems / pageSize);\n  const startIndex = (page - 1) * pageSize;\n  const endIndex = Math.min(startIndex + pageSize, totalItems);\n\n  return {\n    items: filteredItems.slice(startIndex, endIndex),\n    total: totalItems,\n    page,\n    totalPages\n  };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 377,
+    "completion_tokens": 384,
+    "total_tokens": 761,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

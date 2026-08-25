@@ -1,0 +1,183 @@
+export function solve(input) {
+    const { cron, from, count } = input;
+    
+    // Parse from timestamp
+    const fromDate = new Date(from);
+    if (isNaN(fromDate.getTime())) {
+        throw new Error("Invalid from timestamp");
+    }
+    
+    // Parse cron expression
+    const fields = cron.split(' ').map(field => parseField(field));
+    
+    // Validate field counts
+    if (fields.length !== 5) {
+        throw new Error("Invalid cron expression format");
+    }
+    
+    const [minField, hourField, dayOfMonthField, monthField, dayOfWeekField] = fields;
+    
+    // Convert from UTC timestamp to milliseconds
+    let current = fromDate.getTime();
+    
+    // Helper to create a new date with specified time
+    function createDate(year, month, day, hour, minute, second) {
+        return new Date(year, month, day, hour, minute, second, 0);
+    }
+    
+    // Helper to get the next valid time based on cron rules
+    function getNextTime(currentTime) {
+        let currentDay = new Date(currentTime).getUTCDate();
+        let currentMonth = new Date(currentTime).getUTCMonth();
+        let currentHour = new Date(currentTime).getUTCHours();
+        let currentMinute = new Date(currentTime).getUTCMinutes();
+        
+        // Increment time by one minute and check if it matches cron
+        let nextTime = new Date(currentTime);
+        nextTime.setUTCSeconds(0);
+        nextTime.setUTCMilliseconds(0);
+        
+        // Try to find the next valid time
+        let found = false;
+        let attempts = 0;
+        const maxAttempts = 10000; // Safety limit
+        
+        while (!found && attempts < maxAttempts) {
+            attempts++;
+            
+            // Increment by one minute
+            nextTime.setUTCSeconds(nextTime.getUTCSeconds() + 1);
+            if (nextTime.getUTCSeconds() >= 60) {
+                nextTime.setUTCSeconds(0);
+                nextTime.setUTCMinutes(nextTime.getUTCMinutes() + 1);
+                if (nextTime.getUTCMinutes() >= 60) {
+                    nextTime.setUTCMinutes(0);
+                    nextTime.setUTCHours(nextTime.getUTCHours() + 1);
+                    if (nextTime.getUTCHours() >= 24) {
+                        nextTime.setUTCHours(0);
+                        nextTime.setUTCDate(nextTime.getUTCDate() + 1);
+                    }
+                }
+            }
+            
+            // Check if current time matches cron rules
+            const time = nextTime;
+            const timeMinute = time.getUTCMinutes();
+            const timeHour = time.getUTCHours();
+            const timeDayOfMonth = time.getUTCDate();
+            const timeMonth = time.getUTCMonth();
+            const timeDayOfWeek = time.getUTCDay();
+            
+            // Check if matches minute field
+            if (!matches(minField, timeMinute)) {
+                continue;
+            }
+            
+            // Check if matches hour field
+            if (!matches(hourField, timeHour)) {
+                continue;
+            }
+            
+            // Check day of month and day of week
+            let dayOfMonthMatches = false;
+            let dayOfWeekMatches = false;
+            
+            if (dayOfMonthField !== '*') {
+                dayOfMonthMatches = matches(dayOfMonthField, timeDayOfMonth);
+            }
+            
+            if (dayOfWeekField !== '*') {
+                dayOfWeekMatches = matches(dayOfWeekField, timeDayOfWeek);
+            }
+            
+            // If both are not *, then both must match (OR rule)
+            if (dayOfMonthField !== '*' && dayOfWeekField !== '*') {
+                if (!dayOfMonthMatches || !dayOfWeekMatches) {
+                    continue;
+                }
+            } else if (dayOfMonthField === '*') {
+                // Only day of week must match
+                if (dayOfWeekField !== '*') {
+                    if (!dayOfWeekMatches) {
+                        continue;
+                    }
+                }
+            } else if (dayOfWeekField === '*') {
+                // Only day of month must match
+                if (dayOfMonthField !== '*') {
+                    if (!dayOfMonthMatches) {
+                        continue;
+                    }
+                }
+            }
+            
+            found = true;
+            return nextTime;
+        }
+        
+        throw new Error("Failed to find next valid time after from");
+    }
+    
+    // Helper to parse field with * or ranges or lists or step
+    function parseField(field) {
+        if (field === '*') {
+            return '*';
+        }
+        
+        if (field.includes('-')) {
+            const [start, end] = field.split('-').map(Number);
+            return { type: 'range', start, end };
+        } else if (field.includes(',')) {
+            return { type: 'list', values: field.split(',').map(Number) };
+        } else if (field.includes('/')) {
+            const [base, step] = field.split('/').map(Number);
+            return { type: 'step', base, step };
+        } else {
+            return { type: 'value', value: Number(field) };
+        }
+    }
+    
+    // Helper to check if value matches field
+    function matches(field, value) {
+        if (field === '*') {
+            return true;
+        }
+        
+        if (typeof field === 'object') {
+            if (field.type === 'range') {
+                return value >= field.start && value <= field.end;
+            } else if (field.type === 'list') {
+                return field.values.includes(value);
+            } else if (field.type === 'step') {
+                return (value - field.base) % field.step === 0 && value >= field.base;
+            } else if (field.type === 'value') {
+                return value === field.value;
+            }
+        }
+        
+        return false;
+    }
+    
+    // Generate count times
+    const results = [];
+    let currentTime = new Date(fromDate);
+    currentTime.setUTCSeconds(0);
+    currentTime.setUTCMilliseconds(0);
+    
+    // Start from just after from
+    const initial = new Date(currentTime);
+    initial.setUTCSeconds(0);
+    initial.setUTCMilliseconds(0);
+    
+    let currentResult = initial;
+    
+    for (let i = 0; i < count; i++) {
+        // Find next valid time
+        currentResult = getNextTime(currentResult.getTime());
+        
+        // Convert to ISO UTC string with 00:00.000Z
+        results.push(currentResult.toISOString().replace('Z', 'Z'));
+    }
+    
+    return results;
+}

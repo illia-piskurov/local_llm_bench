@@ -1,0 +1,12 @@
+{
+  "model": "google/gemma-4-12b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-07-12 15:39:36",
+  "passed": 4,
+  "total": 6,
+  "failures": [
+    "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=2, cp=3",
+    "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=8, cp=8"
+  ]
+}

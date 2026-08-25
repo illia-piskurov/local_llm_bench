@@ -1,0 +1,15 @@
+{
+  "model": "zai-org/glm-4.6v-flash",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-07-13 11:05:30",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: неожиданное исключение: превышен таймаут 5с",
+    "dependency_unlocks_later: неожиданное исключение: превышен таймаут 5с",
+    "single_worker_duration_tiebreak: неожиданное исключение: превышен таймаут 5с",
+    "resource_limit_and_priority: неожиданное исключение: превышен таймаут 5с",
+    "simultaneous_unlocks: неожиданное исключение: превышен таймаут 5с"
+  ]
+}

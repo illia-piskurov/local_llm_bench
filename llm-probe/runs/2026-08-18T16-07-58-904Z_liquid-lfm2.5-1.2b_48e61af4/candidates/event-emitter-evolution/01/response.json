@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-c9tluvrtwdez4m1v5lv00e",
+  "object": "chat.completion",
+  "created": 1787069438,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const events = input.operations.map(op => op.op === \"on\" ? \n    { event: op.event, listenerId: op.listenerId } : null);\n  const listeners = new Map();\n\n  // Store listeners per event\n  for (const { event, listenerId } of events) {\n    if (!listeners.has(event)) listeners.set(event, []);\n    listeners.get(event).push({ listenerId, payload: null });\n  }\n\n  const logEntries = [];\n  const wildcardPrefix = \"*\";\n\n  function matchEvent(evt) {\n    if (evt.startsWith(wildcardPrefix)) return true;\n    for (const [event, listeners] of listeners.entries()) {\n      if (event === evt) return true;\n      if (event.startsWith(`${listeners[event].some(l => l.listenerId === listenerId)}`)) {\n        return true;\n      }\n    }\n    return false;\n  }\n\n  function emit(event, payload) {\n    const matchedListeners = listeners.get(event);\n    if (!matchedListeners || !matchEvent(event)) return;\n\n    for (const { listenerId, payload } of matchedListeners) {\n      listeners.get(event)!.forEach(({ listenerId: lid, payload: p }) => {\n        logEntries.push({ listenerId: lid, event: event, payload });\n        if (p !== null) payload = p;\n      });\n    }\n  }\n\n  input.operations.forEach(op => {\n    switch (op.op) {\n      case \"on\":\n        listeners.set(op.event, [...listeners.get(op.event) || []]);\n        break;\n      case \"once\":\n        const listener = listeners.get(op.event);\n        if (listener) listener.listenerId = op.listenerId;\n        listeners.get(op.event)!.push({ listenerId: op.listenerId, payload: null });\n        break;\n      case \"off\":\n        listeners.delete(op.event);\n        break;\n      case \"emit\":\n        emit(op.event, op.payload);\n        break;\n    }\n  });\n\n  return { log: logEntries };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 449,
+    "completion_tokens": 478,
+    "total_tokens": 927,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

@@ -1,0 +1,60 @@
+```javascript
+export function solve(input) {
+  const events = input.operations.map(op => op.op === "on" ? 
+    { event: op.event, listenerId: op.listenerId } : null);
+  const listeners = new Map();
+
+  // Store listeners per event
+  for (const { event, listenerId } of events) {
+    if (!listeners.has(event)) listeners.set(event, []);
+    listeners.get(event).push({ listenerId, payload: null });
+  }
+
+  const logEntries = [];
+  const wildcardPrefix = "*";
+
+  function matchEvent(evt) {
+    if (evt.startsWith(wildcardPrefix)) return true;
+    for (const [event, listeners] of listeners.entries()) {
+      if (event === evt) return true;
+      if (event.startsWith(`${listeners[event].some(l => l.listenerId === listenerId)}`)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function emit(event, payload) {
+    const matchedListeners = listeners.get(event);
+    if (!matchedListeners || !matchEvent(event)) return;
+
+    for (const { listenerId, payload } of matchedListeners) {
+      listeners.get(event)!.forEach(({ listenerId: lid, payload: p }) => {
+        logEntries.push({ listenerId: lid, event: event, payload });
+        if (p !== null) payload = p;
+      });
+    }
+  }
+
+  input.operations.forEach(op => {
+    switch (op.op) {
+      case "on":
+        listeners.set(op.event, [...listeners.get(op.event) || []]);
+        break;
+      case "once":
+        const listener = listeners.get(op.event);
+        if (listener) listener.listenerId = op.listenerId;
+        listeners.get(op.event)!.push({ listenerId: op.listenerId, payload: null });
+        break;
+      case "off":
+        listeners.delete(op.event);
+        break;
+      case "emit":
+        emit(op.event, op.payload);
+        break;
+    }
+  });
+
+  return { log: logEntries };
+}
+```

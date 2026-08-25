@@ -1,0 +1,9 @@
+{
+  "model": "google/gemma-4-12b-qat",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-08-15 23:34:42",
+  "passed": 15,
+  "total": 15,
+  "failures": []
+}

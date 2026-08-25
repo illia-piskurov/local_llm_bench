@@ -1,0 +1,13 @@
+{
+  "model": "qwen/qwen3-4b-2507",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-17 15:46:29",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "simple_chain: ожидалось 9, получено 4",
+    "diamond_pick_longer_branch: ожидалось 12, получено 10",
+    "wide_graph: ожидалось 19, получено 10"
+  ]
+}

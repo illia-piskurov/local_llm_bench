@@ -1,0 +1,85 @@
+```python
+import heapq
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    # in_degree: number of dependencies for each task
+    # adj: adjacency list for dependencies
+    in_degree = {name: 0 for name in tasks}
+    adj = {name: [] for name in tasks}
+    
+    for name, (duration, deps, priority) in tasks.items():
+        in_degree[name] = len(deps)
+        for dep in deps:
+            # If a dependency is not in the tasks dict, it's an external dependency
+            # but the problem implies all tasks are in the dict.
+            if dep in adj:
+                adj[dep].append(name)
+            else:
+                # This case shouldn't happen based on the problem description
+                pass
+
+    # ready_queue: tasks whose dependencies are met, ordered by:
+    # 1. Priority (descending) -> -priority
+    # 2. Duration (ascending)
+    # 3. Name (ascending)
+    ready_queue = []
+    for name in tasks:
+        if in_degree[name] == 0:
+            duration, _, priority = tasks[name]
+            heapq.heappush(ready_queue, (-priority, duration, name))
+            
+    running = []  # List of (end_time, name)
+    result = []
+    completed_count = 0
+    current_time = 0
+    
+    while completed_count < len(tasks):
+        # 1. Finish all tasks that end at or before current_time
+        # Since we jump to the next completion time, we only need to check <= current_time
+        # but specifically we process everything that finishes at the current_time.
+        # We use a list to store tasks to be removed to avoid mutation issues.
+        finished_this_step = []
+        # Sort running by end_time to ensure we process them in order if needed,
+        # though for completion it doesn't strictly matter.
+        running.sort()
+        
+        i = 0
+        while i < len(running):
+            end_time, name = running[i]
+            if end_time <= current_time:
+                finished_this_step.append(name)
+                running.pop(i)
+            else:
+                i += 1
+        
+        for name in finished_this_step:
+            completed_count += 1
+            for neighbor in adj[name]:
+                in_degree[neighbor] -= 1
+                if in_degree[neighbor] == 0:
+                    duration, _, priority = tasks[neighbor]
+                    heapq.heappush(ready_queue, (-priority, duration, neighbor))
+        
+        # 2. Start as many tasks as possible from the ready_queue
+        while len(running) < workers and ready_queue:
+            neg_prio, dur, name = heapq.heappop(ready_queue)
+            # Task starts at current_time
+            running.append((current_time + tasks[name][0], name))
+            result.append(name)
+            
+        # 3. Advance time
+        if running:
+            # Jump to the next earliest completion time
+            next_time = min(r[0] for r in running)
+            # If multiple tasks finish at the same time, they will all be handled 
+            # in the next iteration's "Finish tasks" block.
+            current_time = next_time
+        else:
+            # If no tasks are running and we haven't finished all tasks, 
+            # but the ready_queue is empty, there's a cycle.
+            if completed_count < len(tasks):
+                return None
+            break
+            
+    return result
+```

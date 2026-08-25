@@ -1,0 +1,15 @@
+{
+  "model": "prism-ml/bonsai-27b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-03 21:53:40",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: ожидалось order=['a'], ms=5, cp=5; получено order=['a'], ms=0, cp=5",
+    "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=0, cp=3",
+    "dependencies_and_workers: ожидалось order=['a', 'c', 'b', 'd'], ms=11, cp=11; получено order=['a', 'c', 'b', 'd'], ms=0, cp=11",
+    "critical_path_longer_than_worker_parallelism: ожидалось order=['a', 'b', 'c', 'd'], ms=16, cp=4; получено order=['a', 'b', 'c', 'd'], ms=0, cp=4",
+    "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=0, cp=8"
+  ]
+}

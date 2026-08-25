@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-p2oimdfp7p7nerggdl5c0a",
+  "object": "chat.completion",
+  "created": 1787075284,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  if (!input || input.objects.length === 0) return {};\n\n  const result = { ...input.objects[0] };\n\n  for (let i = 1; i < input.objects.length; i++) {\n    const obj = input.objects[i];\n    for (const key in obj) {\n      if (obj.hasOwnProperty(key)) {\n        if (typeof result[key] === 'object' && !Array.isArray(result[key])) {\n          // Recursive merge\n          if (result[key] && typeof result[key] === 'object') {\n            result[key] = { ...result[key], ...obj[key] };\n          }\n        } else {\n          // Replace with later value\n          result[key] = obj[key];\n        }\n      }\n    }\n  }\n\n  return result;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 223,
+    "completion_tokens": 165,
+    "total_tokens": 388,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

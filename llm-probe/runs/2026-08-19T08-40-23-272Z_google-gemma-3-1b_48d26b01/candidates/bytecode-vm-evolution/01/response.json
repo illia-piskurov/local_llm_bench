@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-c3uznn74gma5yysgd6jzx4",
+  "object": "chat.completion",
+  "created": 1787128941,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const output = [];\n  let currentInput = input;\n\n  while (currentInput.length < 2) {\n    const line = currentInput.trim();\n    if (line === \"#\") {\n      continue;\n    }\n\n    if (line.startsWith(\"PUSH\")) {\n      const num = parseInt(line.substring(2));\n      currentInput += \"PUSH \" + num;\n    } else if (line.startsWith(\"LABEL\")) {\n      output.push({\"label\": line.substring(3)})\n    } else if (line.startsWith(\"DUP\")) {\n      output.push({\"label\": line.substring(3)})\n    } else if (line.startsWith(\"SWAP\")) {\n      output.push({\"label\": line.substring(3)})\n    } else if (line.startsWith(\"PRINT\")) {\n      output.push({\"label\": \"PRINT\"});\n    } else if (line.startsWith(\"JMP\")) {\n      output.push({\"label\": line.substring(3)})\n    } else if (line.startsWith(\"JNZ\")) {\n      output.push({\"label\": line.substring(3)})\n    } else {\n      console.error(\"Unknown instruction '<name>' at line <lineNum>\");\n      return null;\n    }\n\n    currentInput = currentInput.substring(0, line.length);\n  }\n\n  if (currentInput.length === 2) {\n    const program = currentInput.substring(0, currentInput.length - 1);\n    const instructionCount = program.split(\"\\n\").length;\n    if (instructionCount !== 2) {\n      console.error(\"Stack underflow at line <lineNum>\");\n      return null;\n    }\n\n    let outputArray = [];\n    let i = 0;\n\n    while(i<2){\n        const instruction = program[i];\n\n        if (instruction === \"PUSH\") {\n            const num = parseInt(instruction);\n            if(num < 1 || num > 100) return null;\n            outputArray.push({\"value\": num});\n            i++;\n        } else if(instruction === \"POP\"){\n            if (outputArray.length >= 2){\n                outputArray.pop();\n            }\n        } else if(instruction === \"ADD\") {\n            const b = parseInt(instruction);\n            const a = outputArray[0];\n            outputArray[0] += b;\n            outputArray.push(a + b);\n        } else if (instruction === \"SUB\"){\n            const b = parseInt(instruction);\n            const a = outputArray[0];\n            outputArray[0] -= b;\n            outputArray.push(a - b);\n\n        } else if (instruction === \"MUL\") {\n             const b = parseInt(instruction);\n             const a = outputArray[0];\n              outputArray[0] *= b;\n              outputArray.push(outputArray[0]);\n           } else if (instruction === \"DIV\"){\n               if(outputArray.length >= 2){\n                   outputArray.pop();\n               }\n               const b = parseInt(instruction);\n               if(b == 0) return null;\n               outputArray[0] /= b;\n               outputArray.push(outputArray[0]);\n           } else if (instruction === \"DUP\"){\n              outputArray.push(outputArray[0]);\n           } else {\n             console.error(\"Unknown instruction '<name>' at line <lineNum>\");\n             return null;\n           }\n\n        i++;\n    }\n\n     if (outputArray.length > 1) {\n       return {\"output\": outputArray};\n     }\n  }\n\n  return null;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 581,
+    "completion_tokens": 841,
+    "total_tokens": 1422,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

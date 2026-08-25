@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "passed": 5,
+  "total": 5,
+  "tests": [
+    {
+      "id": "duplicates",
+      "passed": true
+    },
+    {
+      "id": "multiple",
+      "passed": true
+    },
+    {
+      "id": "none",
+      "passed": true
+    },
+    {
+      "id": "negative",
+      "passed": true
+    },
+    {
+      "id": "zeros",
+      "passed": true
+    }
+  ],
+  "durationMs": 21
+}

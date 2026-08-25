@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-waz23ole9klxp2iaoo6e3",
+  "object": "chat.completion",
+  "created": 1787075422,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {  \n  const { table, select, where, orderBy, limit, offset } = input.query;  \n\n  let sql = `SELECT ${select.join(', ')} FROM ${table}`;  \n\n  if (where && where.length > 0) {  \n    let conditions = [];  \n    let conditionStr = '';  \n\n    for (const condition of where) {  \n      if (condition.type === 'AND') {  \n        conditions.push(condition);  \n        conditionStr += ` AND `;  \n      } else if (condition.type === 'OR') {  \n        conditions.push(condition);  \n        conditionStr += ` OR `;  \n      } else {  \n        const [field, op, value] = Object.entries(condition);  \n        conditionStr += `${field} ${op} ${value ? '' : 'IS NULL'}`;  \n      }  \n\n      conditions[conditions.length - 1].value = value ? value : '';  \n    }  \n\n    sql += ` WHERE ${conditionStr}`;  \n  }  \n\n  if (orderBy) {  \n    const orderConditions = [];  \n    let conditionStr = '';  \n\n    for (const condition of orderBy) {  \n      const [field, dir] = Object.entries(condition);  \n      orderConditions.push(`${field} ${dir}`);  \n      conditionStr += ` ORDER BY ${conditionStr ? ' AND ' : ''}${field}`;  \n    }  \n\n    sql += ` ORDER BY ${conditionStr}`;  \n  }  \n\n  if (limit) {  \n    sql += ` LIMIT ${limit}`;  \n  }  \n\n  if (offset) {  \n    sql += ` OFFSET ${offset}`;  \n  }  \n\n  let params = [];  \n\n  select.forEach((col, index) => {  \n    if (typeof col === 'object' && col.as !== undefined) {  \n      params.push(col.as);  \n    } else {  \n      params.push(col);  \n    }  \n  });  \n\n  // Handle IN condition  \n  where?.forEach(condition => {  \n    if (condition.type === 'IN') {  \n      const [field, value] = Object.entries(condition);  \n      const array = value ? JSON.stringify(value) : '';  \n      sql += `${field} IN (${array})`;  \n    }  \n  });  \n\n  return { sql, params };  \n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 500,
+    "completion_tokens": 486,
+    "total_tokens": 986,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

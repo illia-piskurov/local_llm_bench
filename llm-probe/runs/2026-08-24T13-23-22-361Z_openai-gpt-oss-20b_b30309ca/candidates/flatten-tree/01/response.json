@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-rqt0w92mcgiwb9ydy02v1",
+  "object": "chat.completion",
+  "created": 1787578893,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const result = [];\n  if (!input || !input.root) return result;\n  const queue = [input.root];\n  while (queue.length) {\n    const node = queue.shift();\n    if (!node) continue;\n    result.push(node.value);\n    if (node.left) queue.push(node.left);\n    if (node.right) queue.push(node.right);\n  }\n  return result;\n}",
+        "reasoning": "We need to implement BFS traversal. Return array of values. Ensure not mutate input; use queue. Handle null root. Provide ESM module with export function solve. No extra output.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 236,
+    "completion_tokens": 134,
+    "total_tokens": 370,
+    "completion_tokens_details": {
+      "reasoning_tokens": 37
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

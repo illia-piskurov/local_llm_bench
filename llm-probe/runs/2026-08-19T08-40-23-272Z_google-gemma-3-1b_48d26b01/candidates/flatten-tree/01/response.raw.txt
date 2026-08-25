@@ -1,0 +1,26 @@
+```javascript
+export function solve(input) {
+  if (!input.root) {
+    return [];
+  }
+
+  const result = [];
+
+  function preorderTraversal(node) {
+    if (node === null) {
+      return;
+    }
+
+    result.push(node.value);
+    if (node.left) {
+      preorderTraversal(node.left);
+    }
+    if (node.right) {
+      preorderTraversal(node.right);
+    }
+  }
+
+  preorderTraversal(input.root);
+  return result;
+}
+```

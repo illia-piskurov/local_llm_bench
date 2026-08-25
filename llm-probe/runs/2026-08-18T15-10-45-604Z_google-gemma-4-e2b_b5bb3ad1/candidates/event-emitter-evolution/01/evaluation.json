@@ -1,0 +1,21 @@
+{
+  "status": "failed",
+  "passed": 2,
+  "total": 3,
+  "tests": [
+    {
+      "id": "once-and-off",
+      "passed": false,
+      "error": "Expected {\"log\":[{\"listenerId\":\"btn-once\",\"event\":\"click\",\"payload\":1},{\"listenerId\":\"btn-perm\",\"event\":\"click\",\"payload\":1},{\"listenerId\":\"btn-perm\",\"event\":\"click\",\"payload\":2}]}, got {\"log\":[{\"listenerId\":\"btn-once\",\"event\":\"click\",\"payload\":1},{\"listenerId\":\"btn-perm\",\"event\":\"click\",\"payload\":1},{\"listenerId\":\"btn-once\",\"event\":\"click\",\"payload\":2},{\"listenerId\":\"btn-perm\",\"event\":\"click\",\"payload\":2},{\"listenerId\":\"btn-once\",\"event\":\"click\",\"payload\":3}]}"
+    },
+    {
+      "id": "wildcard-matching",
+      "passed": true
+    },
+    {
+      "id": "duplicate-listener-ordering",
+      "passed": true
+    }
+  ],
+  "durationMs": 32
+}

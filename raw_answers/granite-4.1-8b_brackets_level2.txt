@@ -1,0 +1,41 @@
+```python
+def max_depth(s: str) -> int:
+    stack = []
+    depth = 0
+    max_d = 0
+    
+    for i, char in enumerate(s):
+        if char in "([{":
+            stack.append(char)
+            depth += 1
+            max_d = max(max_d, depth)
+        elif char in ")]}":
+            if stack and ((char == ")" and stack[-1] == "(") or 
+                          (char == "]" and stack[-1] == "[") or 
+                          (char == "}" and stack[-1] == "{")):
+                stack.pop()
+                depth -= 1
+    
+    return max_d
+
+def find_unmatched(s: str) -> list[int]:
+    stack = []
+    unmatched_closing = []
+    unmatched_opening = []
+
+    matching_bracket = {')': '(', ']': '[', '}': '{'}
+    
+    for i, char in enumerate(s):
+        if char in "([{":
+            stack.append((char, i))
+        elif char in ")]}":
+            if not stack or stack[-1][0] != matching_bracket[char]:
+                unmatched_closing.append(i)
+            else:
+                stack.pop()
+    
+    for opening_char, index in stack:
+        unmatched_opening.append(index)
+
+    return sorted(unmatched_closing + unmatched_opening)
+```

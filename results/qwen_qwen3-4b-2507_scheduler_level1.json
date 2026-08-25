@@ -1,0 +1,14 @@
+{
+  "model": "qwen/qwen3-4b-2507",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-17 15:44:40",
+  "passed": 6,
+  "total": 10,
+  "failures": [
+    "simple_chain: невалидный топологический порядок: ['c', 'b', 'a']",
+    "diamond: невалидный топологический порядок: ['d', 'b', 'c', 'a']",
+    "multiple_roots: невалидный топологический порядок: ['d', 'c', 'a', 'b']",
+    "wide_graph: невалидный топологический порядок: ['deploy', 'package', 'test', 'lint', 'compile']"
+  ]
+}

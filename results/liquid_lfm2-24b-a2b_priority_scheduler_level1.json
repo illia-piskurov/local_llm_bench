@@ -1,0 +1,14 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-07-12 00:14:52",
+  "passed": 2,
+  "total": 6,
+  "failures": [
+    "dependency_unlocks_later: ожидалось ['a', 'b', 'c'], получено ['b', 'a', 'c']",
+    "single_worker_duration_tiebreak: неожиданное исключение: превышен таймаут 5с",
+    "resource_limit_and_priority: ожидалось ['compile', 'lint', 'test', 'package', 'deploy'], получено None",
+    "simultaneous_unlocks: неожиданное исключение: превышен таймаут 5с"
+  ]
+}

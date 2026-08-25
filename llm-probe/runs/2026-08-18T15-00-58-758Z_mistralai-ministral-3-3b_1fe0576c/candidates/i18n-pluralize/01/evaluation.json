@@ -1,0 +1,21 @@
+{
+  "status": "failed",
+  "passed": 2,
+  "total": 3,
+  "tests": [
+    {
+      "id": "plural-forms",
+      "passed": true
+    },
+    {
+      "id": "fallback-to-en",
+      "passed": false,
+      "error": "Expected \"Welcome, Jean!\", got \"welcome\""
+    },
+    {
+      "id": "missing-key-returns-key",
+      "passed": true
+    }
+  ],
+  "durationMs": 24
+}

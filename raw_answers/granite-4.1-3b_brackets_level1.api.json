@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    stack = []\n    matching_bracket = {')': '(', ']': '[', '}': '{'}\n    \n    for char in s:\n        if char in matching_bracket.values():\n            stack.append(char)\n        elif char in matching_bracket.keys():\n            if not stack or stack.pop() != matching_bracket[char]:\n                return False\n    return not stack\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 286,
+    "total_output_tokens": 91,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 29.683850680445197,
+    "time_to_first_token_seconds": 0.853054
+  },
+  "response_id": "resp_02af264f3f7376f26ec7f2df8c52215b5deebe262de92d1d"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-er6p053siojcptyfuyufz6",
+  "object": "chat.completion",
+  "created": 1787128095,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    function deepEqual(a, b) {\n        // Handle nulls\n        if (a === null && b === null) return true;\n        if (a === null || b === null) return false;\n        \n        // Handle primitives\n        if (typeof a !== typeof b) return false;\n        if (typeof a !== 'object') return a === b;\n        \n        // Handle objects and arrays\n        const aType = Array.isArray(a) ? 'array' : 'object';\n        const bType = Array.isArray(b) ? 'array' : 'object';\n        \n        if (aType !== bType) return false;\n        \n        if (aType === 'array') {\n            if (a.length !== b.length) return false;\n            for (let i = 0; i < a.length; i++) {\n                if (!deepEqual(a[i], b[i])) return false;\n            }\n            return true;\n        } else {\n            // Objects\n            const keysA = Object.keys(a);\n            const keysB = Object.keys(b);\n            \n            if (keysA.length !== keysB.length) return false;\n            \n            for (const key of keysA) {\n                if (!keysB.includes(key)) return false;\n                if (!deepEqual(a[key], b[key])) return false;\n            }\n            \n            return true;\n        }\n    }\n    \n    return deepEqual(input.a, input.b);\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 152,
+    "completion_tokens": 301,
+    "total_tokens": 453,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

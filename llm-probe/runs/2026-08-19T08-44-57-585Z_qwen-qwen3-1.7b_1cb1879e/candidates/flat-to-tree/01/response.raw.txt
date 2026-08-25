@@ -1,0 +1,21 @@
+```javascript
+export function solve(input) {
+    const idToNode = input.nodes.map(node => ({ ...node }));
+    const roots = [];
+    const tree = {};
+
+    for (const node of input.nodes) {
+        if (node.parentId === null) {
+            roots.push(node);
+            tree[node.id] = { ...node, children: [] };
+        } else {
+            const parent = idToNode.find(p => p.id === node.parentId);
+            if (!parent) throw new Error('Invalid input');
+            tree[node.id] = { ...node, children: [] };
+            tree[parent.id].children.push(node);
+        }
+    }
+
+    return roots;
+}
+```

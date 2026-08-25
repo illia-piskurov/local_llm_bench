@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "google/gemma-3n-e4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    \"\"\"\n    Проверяет сбалансированность скобок в строке.\n\n    Args:\n        s: Строка для проверки.\n\n    Returns:\n        True, если строка сбалансирована, False - в противном случае.\n    \"\"\"\n    stack = []\n    mapping = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}\n\n    for char in s:\n        if char in mapping:\n            top_element = stack.pop() if stack else '#'  # Use '#' as a placeholder for empty stack\n            if mapping[char] != top_element:\n                return False\n        elif char in \"([{\":\n            stack.append(char)\n\n    return not stack\n\ndef max_depth(s: str) -> int:\n    \"\"\"\n    Вычисляет максимальную глубину вложенности скобок.\n\n    Args:\n        s: Строка для анализа.\n\n    Returns:\n        Максимальная глубина вложенности.\n    \"\"\"\n    max_depth = 0\n    current_depth = 0\n    for char in s:\n        if char in \"([{\":\n            current_depth += 1\n            max_depth = max(max_depth, current_depth)\n        elif char in \")]}\":\n            if current_depth > 0:\n                current_depth -= 1\n    return max_depth\n\ndef find_unmatched(s: str) -> list[int]:\n    \"\"\"\n    Находит индексы несовпавших скобок.\n\n    Args:\n        s: Строка для анализа.\n\n    Returns:\n        Отсортированный по возрастанию список индексов несовпавших скобок.\n    \"\"\"\n    stack = []\n    unmatched = []\n    mapping = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}\n    for i, char in enumerate(s):\n        if char in \"([{\":\n            stack.append((char, i))\n        elif char in \")]}\":\n            if stack:\n                top_char, top_index = stack.pop()\n                if mapping[char] != top_char:\n                    unmatched.append(top_index)\n                    unmatched.append(i)\n            else:\n                unmatched.append(i)\n\n    for char, index in stack:\n        unmatched.append(index)\n\n    return sorted(list(set(unmatched)))\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 664,
+    "total_output_tokens": 557,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 4.70694115372874,
+    "time_to_first_token_seconds": 24.75555,
+    "model_load_time_seconds": 8.703
+  },
+  "response_id": "resp_f687730b372c657b94ac49976ed3d9d703078beb89030ec4"
+}

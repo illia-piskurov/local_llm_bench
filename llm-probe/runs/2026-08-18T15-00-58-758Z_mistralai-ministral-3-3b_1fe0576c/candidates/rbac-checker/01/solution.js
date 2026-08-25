@@ -1,0 +1,66 @@
+export function solve(input) {
+    const { roles, users, requests } = input;
+    const results = [];
+
+    for (const request of requests) {
+        const { user, permission } = request;
+
+        if (!user || !users[user]) return [...results, false];
+
+        const userData = users[user];
+        const denies = userData.denies || [];
+        const allows = userData.allows || [];
+
+        // Check for explicit deny
+        if (denies.some(deny => matchesPermission(permission, deny))) {
+            results.push(false);
+            continue;
+        }
+
+        // Check role permissions or direct allow
+        let granted = false;
+
+        // Check 'allows' first
+        if (allows.includes(permission)) {
+            granted = true;
+        }
+        // Then check roles
+        else if (roles[userData.roles?.[0]]) {
+            const rolePermissions = roles[userData.roles[0]];
+            for (const perm of rolePermissions) {
+                if (matchesPermission(permission, perm)) {
+                    granted = true;
+                    break;
+                }
+            }
+        }
+
+        results.push(granted);
+    }
+
+    return results;
+}
+
+function matchesPermission(target, rule) {
+    const [namespace, action] = target.split(':');
+    const [ruleNamespace, ruleAction] = rule.split(':');
+
+    if (target === rule) return true;
+
+    if (ruleNamespace === '*') return true;
+
+    if (ruleNamespace === '*' && ruleAction === '*') return true;
+
+    if (namespace === ruleNamespace || namespace.startsWith(`${ruleNamespace}:`)) {
+        const targetSuffix = target.split(':')[2];
+        const ruleSuffix = rule.split(':')[2];
+
+        if (!ruleSuffix) return true;
+        if (targetSuffix === ruleSuffix) return true;
+        if (ruleSuffix === '*') return true;
+
+        return false;
+    }
+
+    return false;
+}

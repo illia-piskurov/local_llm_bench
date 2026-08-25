@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-9s3vhdn437h0d44kybdgbpf",
+  "object": "chat.completion",
+  "created": 1787128928,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const [[a,b],[c,d]] = input;\n  const rotatedMatrix = [[d,c], [a, b]];\n  return rotatedMatrix;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 140,
+    "completion_tokens": 52,
+    "total_tokens": 192,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

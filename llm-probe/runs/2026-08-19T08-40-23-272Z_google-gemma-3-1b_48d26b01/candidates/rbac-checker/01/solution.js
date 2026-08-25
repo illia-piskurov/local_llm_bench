@@ -1,0 +1,31 @@
+export function solve(input) {
+  const results = [];
+
+  for (const request of input.requests) {
+    const user = request.user;
+    const permissions = request.permissions;
+
+    if (!permissions || !permissions.roles) {
+      results.push(false);
+      continue;
+    }
+
+    let grantOrDeny = false;
+
+    for (const roleName in permissions) {
+      if (permissions.hasOwnProperty(roleName)) {
+        if (permissions[roleName].includes('posts:read')) {
+          grantOrDeny = true;
+        } else if (permissions[roleName].toLowerCase().includes('*')) {
+          grantOrDeny = true;
+        } else if (permissions[roleName].toLowerCase() === 'users:delete') {
+          grantOrDeny = true;
+        }
+      }
+    }
+
+    results.push(grantOrDeny);
+  }
+
+  return results;
+}

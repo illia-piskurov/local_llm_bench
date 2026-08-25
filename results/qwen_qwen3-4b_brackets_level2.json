@@ -1,0 +1,13 @@
+{
+  "model": "qwen/qwen3-4b",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-07-12 20:41:28",
+  "passed": 12,
+  "total": 15,
+  "failures": [
+    "find_unmatched/single_stray_close: ожидалось [0], получено []",
+    "find_unmatched/stray_close_after_valid_pair: ожидалось [2], получено []",
+    "find_unmatched/mixed_with_text: неожиданное исключение: 'b'"
+  ]
+}

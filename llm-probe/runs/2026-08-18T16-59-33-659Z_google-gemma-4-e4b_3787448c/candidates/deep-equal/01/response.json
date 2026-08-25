@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-pkmmpdji4k74zwyvs9s8lq",
+  "object": "chat.completion",
+  "created": 1787074593,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    function isObject(item) {\n        return item && typeof item === 'object' && !Array.isArray(item);\n    }\n\n    function fromJSON(input) {\n        if (typeof input !== 'object' || input === null) {\n            return input === null ? { type: 'null', value: true } : { type: 'primitive', value: input };\n        } else if (Array.isArray(input)) {\n            return { type: 'array', elements: input.map(fromJSON) };\n        } else if (isObject(input)) {\n            const obj = {};\n            for (const key in input) {\n                if (Object.prototype.hasOwnProperty.call(input, key)) {\n                    obj[key] = fromJSON(input[key]);\n                }\n            }\n            return { type: 'object', data: obj };\n        }\n        return null; // Should not happen for valid JSON structures\n    }\n\n    function deepEquals(obj1, obj2) {\n        if (typeof obj1 !== typeof obj2) return false;\n\n        // Primitives and null check\n        if (typeof obj1 !== 'object' || obj1 === null) {\n            return obj1 === obj2;\n        }\n\n        const isArray1 = Array.isArray(obj1);\n        const isArray2 = Array.isArray(obj2);\n\n        // Type mismatch check (Array vs Object/Primitive)\n        if (isArray1 !== isArray2) return false;\n\n        // Case 1: Arrays\n        if (isArray1 && isArray2) {\n            if (obj1.length !== obj2.length) return false;\n            for (let i = 0; i < obj1.length; i++) {\n                if (!deepEquals(obj1[i], obj2[i])) {\n                    return false;\n                }\n            }\n            return true;\n        }\n\n        // Case 2: Plain Objects\n        if (isObject(obj1) && isObject(obj2)) {\n            const keys1 = Object.keys(obj1);\n            const keys2 = Object.keys(obj2);\n\n            if (keys1.length !== keys2.length) return false;\n\n            for (let i = 0; i < keys1.length; i++) {\n                const key = keys1[i];\n\n                // Check if the second object has the same key\n                if (!Object.prototype.hasOwnProperty.call(obj2, key)) return false;\n\n                if (!deepEquals(obj1[key], obj2[key])) {\n                    return false;\n                }\n            }\n            return true;\n        }\n\n        // Fallback for other types (e.g., functions, Dates if not handled above)\n        // Since we assume JSON-compatible input, this should handle objects correctly.\n        return obj1 === obj2;\n    }\n\n    return deepEquals(input.a, input.b);\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 165,
+    "completion_tokens": 671,
+    "total_tokens": 836,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

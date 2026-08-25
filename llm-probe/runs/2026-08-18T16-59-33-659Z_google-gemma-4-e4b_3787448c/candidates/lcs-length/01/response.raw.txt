@@ -1,0 +1,28 @@
+```javascript
+export function solve(input) {
+    const s1 = input.a;
+    const s2 = input.b;
+    const m = s1.length;
+    const n = s2.length;
+
+    // dp[i][j] will store the length of the LCS of s1[0...i-1] and s2[0...j-1]
+    // We use a 2D array of size (m+1) x (n+1)
+    const dp = Array(m + 1).fill(0).map(() => Array(n + 1).fill(0));
+
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            // If characters match, the LCS length increases by 1 based on previous result
+            if (s1[i - 1] === s2[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                // If characters do not match, take the maximum LCS length obtained by:
+                // 1. Excluding the last character of s1 (dp[i-1][j])
+                // 2. Excluding the last character of s2 (dp[i][j-1])
+                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+    }
+
+    return dp[m][n];
+}
+```

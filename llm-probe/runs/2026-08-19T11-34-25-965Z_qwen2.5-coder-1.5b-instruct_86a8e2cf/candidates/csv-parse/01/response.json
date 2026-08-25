@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-qq8lfo0nwoe6yxhnej568k",
+  "object": "chat.completion",
+  "created": 1787139288,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  if (!input || input === '') return [];\n\n  const lines = input.split('\\n');\n  if (lines.length < 2) return [];\n\n  const header = lines[0].split(',');\n\n  const data = lines.slice(1).map(line => {\n    const obj = {};\n    line.split(',').forEach((value, index) => {\n      if (value.includes('\"')) {\n        value = value.replace(/\"/g, '');\n      } else {\n        value = value.trim();\n      }\n      obj[header[index]] = value;\n    });\n    return obj;\n  });\n\n  return data;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 262,
+    "completion_tokens": 135,
+    "total_tokens": 397,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

@@ -1,205 +1,189 @@
 import sys
 
-class InMemKVStore:
+class InMemoryKVStore:
     """
-    Реализует in-memory key-value хранилище с вложенными транзакциями.
+    Реализует in-memory key-value хранилище с поддержкой вложенных транзакций.
     """
     def __init__(self):
-        # Глобальное, зафиксированное состояние (committed state)
-        self.store = {}
-        # Стек для управления транзакциями. Каждый элемент - это словарь, 
-        # представляющий изменения текущего уровня транзакции.
-        self.transaction_stack = []
+        # Глобальное хранилище (финальное состояние)
+        self._store = {}
+        # Стек для управления транзакциями. Каждая запись - это словарь изменений, 
+        # которые произошли с момента BEGIN.
+        # Структура: [(pending_changes_dict), ...]
+        self._transaction_stack = []
 
-    def _get_current_scope(self):
-        """Возвращает текущий рабочий контекст (самый верхний уровень)."""
-        return self.transaction_stack[-1] if self.transaction_stack else {}
-
-    def set_internal(self, key, value):
-        """Внутренняя функция для установки значения в текущем рабочем контексте."""
-        current_scope = self._get_current_scope()
-        current_scope[key] = value
-
-    def delete_internal(self, key):
-        """Внутренняя функция для удаления ключа в текущем рабочем контексте."""
-        current_scope = self._get_current_scope()
-        if key in current_scope:
-            del current_scope[key]
-
-    def get(self, key):
-        """Получает значение. Ищет его в текущем контексте, затем в родительских."""
-        # 1. Проверяем текущий рабочий контекст (для обеспечения видимости внутри транзакции)
-        current_scope = self._get_current_scope()
-        if key in current_scope:
-            return current_scope[key]
-
-        # 2. Если не найдено, ищем в родительских контекстах (вложенные транзакции)
-        for scope in reversed(self.transaction_stack):
-            if key in scope:
-                return scope[key]
-        
-        # 3. Ищем в глобальном хранилище
-        return self.store.get(key, "NULL")
-
-    def set(self, key, value):
-        """Устанавливает значение (влияет на текущий контекст)."""
-        if not self.transaction_stack:
-            # Если транзакций нет, устанавливаем напрямую в глобальное хранилище
-            self.store[key] = value
-        else:
-            # Иначе, устанавливаем в текущий рабочий контекст
-            self.set_internal(key, value)
-
-    def delete(self, key):
-        """Удаляет ключ (влияет на текущий контекст)."""
-        if not self.transaction_stack:
-            # Если транзакций нет, удаляем из глобального хранилища
-            if key in self.store:
-                del self.store[key]
-        else:
-            # Иначе, удаляем из текущего рабочего контекста
-            self.delete_internal(key)
-
-    def begin(self):
-        """Начинает новую транзакцию."""
-        self.transaction_stack.append({})
-
-    def commit(self):
-        """Фиксирует самую внутреннюю открытую транзакцию, сливая изменения в родительскую."""
-        if not self.transaction_stack:
-            print("NO TRANSACTION")
-            return
-
-        # Извлекаем изменения из самой внутренней транзакции
-        changes = self.transaction_stack.pop()
-        
-        # Сливаем изменения в родительский контекст (или глобальное хранилище)
-        if not self.transaction_stack:
-            # Если это была самая внутренняя транзакция, сливаем в глобальное хранилище
-            self.store.update(changes)
-        else:
-            # Иначе, сливаем в родительский контекст
-            parent_scope = self._get_current_scope()
-            parent_scope.update(changes)
-
-    def rollback(self):
-        """Отменяет все изменения самой внутренней транзакции."""
-        if not self.transaction_stack:
-            print("NO TRANSACTION")
-            return
-
-        # Отбрасываем изменения самой внутренней транзакции
-        self.transaction_stack.pop()
+    def _get_current_state(self):
+        """Возвращает текущее состояние хранилища (глобальное)."""
+        return self._store
 
     def run(self, program: str) -> list[str]:
         """
         Выполняет программу и возвращает список строк вывода.
         """
         lines = []
-        commands = program.strip().split('\n')
+        current_state = self._get_current_state()
 
-        for line in commands:
+        for line in program.split('\n'):
             line = line.strip()
             if not line:
                 continue
 
             parts = line.split()
             command = parts[0]
-            args = parts[1:]
 
             try:
                 if command == "SET":
-                    key, value = args[0], args[1]
-                    self.set(key, value)
+                    key = parts[1]
+                    value = parts[2]
+                    self._execute_set(key, value, lines)
                 elif command == "GET":
-                    key = args[0]
-                    result = self.get(key)
-                    lines.append(str(result))
+                    key = parts[1]
+                    result = self._execute_get(key, current_state, lines)
+                    lines.append(result)
                 elif command == "DELETE":
-                    key = args[0]
-                    self.delete(key)
+                    key = parts[1]
+                    self._execute_delete(key, lines)
                 elif command == "BEGIN":
-                    self.begin()
+                    self._execute_begin(lines)
                 elif command == "COMMIT":
-                    self.commit()
+                    self._execute_commit(lines)
                 elif command == "ROLLBACK":
-                    self.rollback()
-            except IndexError:
-                # Игнорируем некорректные команды без аргументов
-                pass
+                    self._execute_rollback(lines)
             except Exception as e:
                 # В реальной системе здесь должна быть более детальная обработка ошибок
-                # print(f"Error executing command: {line}. Error: {e}", file=sys.stderr)
                 pass
 
         return lines
 
-def execute_program(program: str) -> list[str]:
-    """Внешняя функция для запуска хранилища."""
-    store = InMemKVStore()
+    def _execute_set(self, key: str, value: str, lines: list[str]):
+        """Обработка SET."""
+        if not self._transaction_stack:
+            # Если нет активных транзакций, изменяем глобальное состояние
+            self._store[key] = value
+        else:
+            # Если есть транзакции, добавляем изменение в текущий контекст
+            current_changes = self._transaction_stack[-1][0]
+            current_changes[key] = value
+
+    def _execute_get(self, key: str, current_state: dict, lines: list[str]) -> str:
+        """Обработка GET."""
+        # 1. Проверяем текущее состояние транзакции (если есть открытая транзакция)
+        if self._transaction_stack:
+            # Получаем изменения из самой внутренней транзакции
+            pending = self._transaction_stack[-1][0]
+            value = pending.get(key, current_state.get(key))
+            return str(value)
+
+        # 2. Если транзакций нет, смотрим глобальное состояние
+        return str(current_state.get(key, "NULL"))
+
+    def _execute_delete(self, key: str, lines: list[str]):
+        """Обработка DELETE."""
+        if not self._transaction_stack:
+            # Удаляем из глобального хранилища
+            if key in self._store:
+                del self._store[key]
+        else:
+            # Удаляем из текущего контекста транзакции
+            current_changes = self._transaction_stack[-1][0]
+            if key in current_changes:
+                del current_changes[key]
+
+    def _execute_begin(self, lines: list[str]):
+        """Обработка BEGIN."""
+        # Начинаем новую вложенную транзакцию. 
+        # Сохраняем текущее состояние (или изменения) как новый контекст.
+        new_context = {}
+        if self._transaction_stack:
+            # Если есть родительская транзакция, начинаем с её состояния
+            parent_changes = self._transaction_stack[-1][0]
+            new_context = parent_changes.copy()
+        else:
+            # Если нет родительской транзакции, начинаем с глобального состояния
+            new_context = self._store.copy()
+
+        self._transaction_stack.append([new_context])
+
+
+    def _execute_commit(self, lines: list[str]):
+        """Обработка COMMIT."""
+        if not self._transaction_stack:
+            lines.append("NO TRANSACTION")
+            return
+
+        # Фиксируем изменения самой внутренней транзакции
+        current_changes = self._transaction_stack.pop()[0]
+
+        if self._transaction_stack:
+            # Если есть родительская транзакция, сливаем изменения в неё
+            parent_changes = self._transaction_stack[-1][0]
+            for k, v in current_changes.items():
+                parent_changes[k] = v
+        else:
+            # Если это самая внутренняя транзакция, применяем изменения к глобальному хранилищу
+            self._store.update(current_changes)
+
+    def _execute_rollback(self, lines: list[str]):
+        """Обработка ROLLBACK."""
+        if not self._transaction_stack:
+            lines.append("NO TRANSACTION")
+            return
+
+        # Отменяем изменения самой внутренней транзакции
+        current_changes = self._transaction_stack.pop()[0]
+
+        if self._transaction_stack:
+            # Если есть родительская транзакция, отменяем изменения в ней
+            parent_changes = self._transaction_stack[-1][0]
+            # Поскольку мы работали с копиями (или дельтами), просто удаляем ключи, 
+            # которые были изменены в этой транзакции.
+            for k in current_changes:
+                if k in parent_changes:
+                    del parent_changes[k]
+        else:
+            # Если это самая внутренняя транзакция, ничего не делаем (изменения отменяются)
+            pass
+
+# --- Основная логика выполнения ---
+
+def run_program(program: str) -> list[str]:
+    """
+    Запускает программу через хранилище.
+    """
+    store = InMemoryKVStore()
     return store.run(program)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Пример использования:
-    
-    print("--- Тест 1: Базовые операции ---")
-    program1 = """
+    # Запуск программы с тестовыми данными
+    test_program = """
 SET a 10
-GET a
-DELETE a
-GET a
-"""
-    results1 = execute_program(program1)
-    print("\nРезультаты (Тест 1):")
-    for res in results1:
-        print(res)
-
-    print("\n" + "="*30 + "\n")
-
-    print("--- Тест 2: Вложенные транзакции и Rollback ---")
-    program2 = """
-SET x 100
-BEGIN
-SET y 200
-GET x
-GET y
-COMMIT
-"""
-    results2 = execute_program(program2)
-    print("\nРезультаты (Тест 2):")
-    for res in results2:
-        print(res)
-
-    print("\n" + "="*30 + "\n")
-
-    print("--- Тест 3: Вложенные транзакции и Rollback ---")
-    program3 = """
-SET a 10
-BEGIN
 SET b 20
 BEGIN
 SET c 30
 GET a
-GET b
+COMMIT
+GET c
 ROLLBACK
 GET c
-COMMIT
 """
-    results3 = execute_program(program3)
-    print("\nРезультаты (Тест 3):")
-    for res in results3:
-        print(res)
 
-    print("\n" + "="*30 + "\n")
+    print("--- Тест 1 ---")
+    results = run_program(test_program)
+    for line in results:
+        print(line)
 
-    print("--- Тест 4: Rollback без изменений ---")
-    program4 = """
-SET a 10
+    print("\n--- Тест 2 (Вложенные транзакции) ---")
+    nested_test = """
+SET x 100
 BEGIN
+SET y 200
+GET x
+SET z 300
+COMMIT
 ROLLBACK
-GET a
+GET x
 """
-    results4 = execute_program(program4)
-    print("\nРезультаты (Тест 4):")
-    for res in results4:
-        print(res)
+    results_nested = run_program(nested_test)
+    for line in results_nested:
+        print(line)

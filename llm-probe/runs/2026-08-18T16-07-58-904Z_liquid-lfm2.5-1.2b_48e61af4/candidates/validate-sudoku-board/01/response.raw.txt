@@ -1,0 +1,34 @@
+```javascript
+export function solve(input) {
+  const board = input.board;
+  const n = 9;
+
+  const isValid = (row, col, num) => {
+    // Check row
+    const rowVal = new Set(board.map(r => r[col]));
+    if (rowVal.has(num)) return false;
+
+    // Check column
+    const colVal = new Set(board.map(r => r[row]));
+    if (colVal.has(num)) return false;
+
+    // Check 3x3 box
+    const boxRow = Math.floor(row / 3) * 3;
+    const boxCol = Math.floor(col / 3) * 3;
+    const boxVal = new Set(board[boxRow].map(r => r[boxCol]));
+    if (boxVal.has(num)) return false;
+
+    return true;
+  };
+
+  for (let row = 0; row < n; row++) {
+    for (let col = 0; col < n; col++) {
+      const num = board[row][col];
+      if (num === '.') continue;
+      if (!isValid(row, col, num)) return false;
+    }
+  }
+
+  return true;
+}
+```

@@ -1,0 +1,26 @@
+{
+  "status": "failed",
+  "passed": 2,
+  "total": 4,
+  "tests": [
+    {
+      "id": "all-valid",
+      "passed": true
+    },
+    {
+      "id": "required-missing",
+      "passed": false,
+      "error": "Expected {\"valid\":false,\"errors\":{\"name\":[\"Required\"]}}, got {\"valid\":false,\"errors\":{\"name\":[]}}"
+    },
+    {
+      "id": "type-mismatch",
+      "passed": true
+    },
+    {
+      "id": "array-rules",
+      "passed": false,
+      "error": "Expected {\"valid\":false,\"errors\":{\"list\":[\"Too few items\"]}}, got {\"valid\":false,\"errors\":{\"list\":[]}}"
+    }
+  ],
+  "durationMs": 38
+}

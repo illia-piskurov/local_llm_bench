@@ -1,0 +1,17 @@
+{
+  "status": "runtime_error",
+  "passed": 2,
+  "total": 6,
+  "tests": [
+    {
+      "id": "simple-arithmetic",
+      "passed": true
+    },
+    {
+      "id": "comments-and-empty-lines",
+      "passed": true
+    }
+  ],
+  "durationMs": 26,
+  "error": "Stack underflow at line 2"
+}

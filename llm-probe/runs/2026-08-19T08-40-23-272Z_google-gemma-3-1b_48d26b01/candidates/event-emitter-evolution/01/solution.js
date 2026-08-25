@@ -1,0 +1,14 @@
+export function solve(input) {
+  const result = [];
+
+  for (const operation of input) {
+    result.push({
+      log: [],
+      listenerId: operation.op,
+      event: operation.event,
+      payload: operation.payload
+    });
+  }
+
+  return result;
+}

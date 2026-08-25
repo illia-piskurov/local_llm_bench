@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-8mzm22jmre3i3jbn47x2jg",
+  "object": "chat.completion",
+  "created": 1787074129,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const numbers = input.numbers;\n    const k = input.k;\n\n    // 1. Count frequencies\n    const freqMap = new Map();\n    for (const num of numbers) {\n        freqMap.set(num, (freqMap.get(num) || 0) + 1);\n    }\n\n    // 2. Convert map entries to an array of [number, frequency] pairs\n    let sortedEntries = Array.from(freqMap.entries()).map(([num, freq]) => ({ num: num, freq: freq }));\n\n    // 3. Sort the entries\n    // Sort criteria:\n    // a) Descending frequency (b1 - b2 > 0 means descending) -> b2.freq - b1.freq\n    // b) Tie-breaker: Ascending number value -> a1.num - a2.num\n    sortedEntries.sort((a, b) => {\n        // Compare frequencies (descending)\n        if (b.freq !== a.freq) {\n            return b.freq - a.freq;\n        }\n        // Frequencies are equal, compare numbers (ascending)\n        return a.num - b.num;\n    });\n\n    // 4. Select the top K numbers\n    const result = [];\n    for (let i = 0; i < Math.min(k, sortedEntries.length); i++) {\n        result.push(sortedEntries[i].num);\n    }\n\n    return result;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 147,
+    "completion_tokens": 341,
+    "total_tokens": 488,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

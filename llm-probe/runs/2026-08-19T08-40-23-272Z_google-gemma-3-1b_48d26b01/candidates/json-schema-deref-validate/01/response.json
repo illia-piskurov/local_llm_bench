@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-hypqcjqtxnc3ohsyvvqwsy",
+  "object": "chat.completion",
+  "created": 1787128882,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const schema = input.schema;\n  const data = input.data;\n\n  const valid = false;\n  const errors = [];\n\n  if (typeof data === 'object' && data !== null && typeof schema === 'object' && schema !== null) {\n    if (data.definitions && data.definitions.hasOwnProperty('User')) {\n      const user = data.definitions.User;\n      if (user && typeof user.type === 'string') {\n        if (!schema.properties.User.type || user.type !== schema.properties.User.type) {\n          errors.push({path: '#/id', message: 'Expected type number'});\n        }\n      }\n    }\n  }\n\n  return { valid, errors };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 408,
+    "completion_tokens": 180,
+    "total_tokens": 588,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

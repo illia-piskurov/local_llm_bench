@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-146s1dxlvohosh0t6zfxwa",
+  "object": "chat.completion",
+  "created": 1787139283,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n  if (!input.objects.length) return {};\n\n  const mergedObject = {};\n  \n  input.objects.forEach(obj => {\n    for (const key in obj) {\n      if (obj[key] !== undefined) {\n        if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {\n          // Recursively merge objects\n          mergedObject[key] = solve({ objects: [obj[key]] });\n        } else if (Array.isArray(obj[key])) {\n          // Replace array with the later value\n          mergedObject[key] = obj[key];\n        } else {\n          // Replace primitive values\n          mergedObject[key] = obj[key];\n        }\n      }\n    }\n  });\n\n  return mergedObject;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 219,
+    "completion_tokens": 156,
+    "total_tokens": 375,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

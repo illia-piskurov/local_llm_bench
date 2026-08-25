@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "google/gemma-3n-e4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    \"\"\"\n    Реализует топологическую сортировку задач с зависимостями.\n\n    Args:\n        tasks: Словарь, где ключ - имя задачи (строка), а значение - список имён задач,\n               от которых она зависит (эти задачи должны быть выполнены раньше).\n\n    Returns:\n        Список имён всех задач в порядке, при котором каждая задача идёт строго после всех своих зависимостей.\n        Если в графе зависимостей есть цикл - возвращает None.\n    \"\"\"\n\n    in_degree = {}\n    for task in tasks:\n        in_degree[task] = 0\n    for task in tasks:\n        for dependency in tasks[task]:\n            if dependency in in_degree:\n                in_degree[task] += 1\n            else:\n                in_degree[task] = 1\n\n    queue = []\n    for task in in_degree:\n        if in_degree[task] == 0:\n            queue.append(task)\n\n    result = []\n    while queue:\n        task = queue.pop(0)\n        result.append(task)\n\n        for dependent_task in tasks:\n            if task in tasks[dependent_task]:\n                in_degree[dependent_task] -= 1\n                if in_degree[dependent_task] == 0:\n                    queue.append(dependent_task)\n\n    if len(result) != len(tasks):\n        return None  # Цикл обнаружен\n    else:\n        return result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 225,
+    "total_output_tokens": 367,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.045782948884417,
+    "time_to_first_token_seconds": 1.9948620000000001
+  },
+  "response_id": "resp_a338197d12a5387bcb8d31df6aede33ce0e592500d539f25"
+}

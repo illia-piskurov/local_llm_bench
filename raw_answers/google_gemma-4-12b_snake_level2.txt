@@ -1,0 +1,316 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Snake Evolution</title>
+    <style>
+        :root {
+            --bg-color: #0f0c29;
+            --snake-head: #00ff88;
+            --snake-body: #00bd65;
+            --food-color: #ff3e3e;
+            --accent-color: #7d5fff;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: radial-gradient(circle, #24243e 0%, #0f0c29 100%);
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            padding: 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+        }
+
+        #score-board {
+            position: absolute;
+            top: -50px;
+            left: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--snake-head);
+        }
+
+        canvas {
+            display: block;
+            border-radius: 10px;
+            background-color: #1a1a2e;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .game-over-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            z-index: 10;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 60px;
+            color: var(--food-color);
+            text-shadow: 0 0 20px var(--food-color);
+            animation: shake 0.5s infinite alternate;
+        }
+
+        @keyframes shake {
+            from { transform: rotate(-2deg); }
+            to { transform: rotate(2deg); }
+        }
+
+        p {
+            font-size: 18px;
+            margin: 20px 0;
+            color: #ccc;
+            letter-spacing: 1px;
+        }
+
+        .retry-hint {
+            color: var(--snake-head);
+            font-weight: bold;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="score-board">Score: <span id="score">0</span></div>
+        <canvas id="snakeGame" width="400" height="400"></canvas>
+        <div id="overlay" class="game-over-overlay">
+            <h1>GAME OVER</h1>
+            <p>Press any key to restart</p>
+            <span class="retry-hint">PRESS ANY KEY</span>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('snakeGame');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const overlay = document.getElementById('overlay');
+
+        const box = 20;
+        let score = 0;
+        let snake = [];
+        let food = {};
+        let particles = [];
+        let d = null;
+        let nextD = null;
+        let gameActive = true;
+        let lastUpdateTime = 0;
+
+        // Particle System for "Juice"
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = (Math.random() - 0.5) * 6;
+                this.speedY = (Math.random() - 0.5) * 6;
+                this.alpha = 1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.alpha -= 0.02;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function init() {
+            snake = [
+                {x: 9 * box, y: 10 * box},
+                {x: 8 * box, y: 10 * box},
+                {x: 7 * box, y: 10 * box}
+            ];
+            score = 0;
+            scoreElement.innerText = score;
+            d = "RIGHT";
+            nextD = "RIGHT";
+            gameActive = true;
+            overlay.style.display = 'none';
+            particles = [];
+            createFood();
+        }
+
+        function createFood() {
+            food = {
+                x: Math.floor(Math.random() * 19 + 1) * box,
+                y: Math.floor(Math.random() * 19 + 1) * box
+            };
+            for (let i = 0; i < snake.length; i++) {
+                if (snake[i].x === food.x && snake[i].y === food.y) {
+                    createFood();
+                    break;
+                }
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const key = e.key;
+            if ((key === 'ArrowUp' || key === 'w') && d !== "DOWN") nextD = "UP";
+            else if ((key === 'ArrowDown' || key === 's') && d !== "UP") nextD = "DOWN";
+            else if ((key === 'ArrowLeft' || key === 'a') && d !== "RIGHT") nextD = "LEFT";
+            else if ((key === 'ArrowRight' || key === 'd') && d !== "LEFT") nextD = "RIGHT";
+
+            if (!gameActive && (key.length === 1)) {
+                init();
+            }
+        });
+
+        function spawnParticles(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push(new Particle(x + box/2, y + box/2, color));
+            }
+        }
+
+        function draw() {
+            const now = Date.now();
+            if (!gameActive) return;
+
+            // Logic update every 100ms (standard snake speed)
+            if (now - lastUpdateTime > 100) {
+                lastUpdateTime = now;
+                d = nextD;
+
+                let snakeX = snake[0].x;
+                let snakeY = snake[0].y;
+
+                if (d === "LEFT") snakeX -= box;
+                if (d === "UP") snakeY -= box;
+                if (d === "RIGHT") snakeX += box;
+                if (d === "DOWN") snakeY += box;
+
+                let ate = false;
+                if (snakeX === food.x && snakeY === food.y) {
+                    score++;
+                    scoreElement.innerText = score;
+                    ate = true;
+                    createFood();
+                    spawnParticles(food.x, food.y, '#ff3e3e');
+                }
+
+                const newHead = { x: snakeX, y: snakeY };
+
+                if (
+                    snakeX < 0 || snakeX >= canvas.width ||
+                    snakeY < 0 || snakeY >= canvas.height ||
+                    snake.some((seg) => seg.x === snakeX && seg.y === snakeY)
+                ) {
+                    gameActive = false;
+                    overlay.style.display = 'flex';
+                }
+
+                if (!ate) {
+                    snake.pop();
+                }
+                snake.unshift(newHead);
+            }
+
+            // Rendering (runs every frame for smooth animations/particles)
+            ctx.fillStyle = "#1a1a2e";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Grid Effect (Subtle)
+            ctx.strokeStyle = "rgba(255,255,255,0.03)";
+            for(let i=0; i<canvas.width; i+=box) {
+                ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke();
+            }
+
+            // Draw Food with Glow
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "#ff3e3e";
+            ctx.fillStyle = "#ff3e3e";
+            ctx.beginPath();
+            ctx.arc(food.x + box/2, food.y + box/2, (box/2 - 2), 0, Math.PI*2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Draw Snake
+            snake.forEach((segment, index) => {
+                const isHead = index === 0;
+                const gradient = ctx.createLinearGradient(
+                    segment.x, segment.y, 
+                    segment.x + box, segment.y + box
+                );
+                
+                if (isHead) {
+                    gradient.addColorStop(0, "#00ff88");
+                    gradient.addColorStop(1, "#00bd65");
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = "#00ff88";
+                } else {
+                    gradient.addColorStop(0, "#00bd65");
+                    gradient.addColorStop(1, "#008a49");
+                    ctx.shadowBlur = 0;
+                }
+
+                ctx.fillStyle = gradient;
+                // Rounded rectangle for snake body
+                const r = 6;
+                ctx.beginPath();
+                ctx.roundRect(segment.x, segment.y, box-2, box-2, r);
+                ctx.fill();
+            });
+            ctx.shadowBlur = 0;
+
+            // Update and Draw Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) particles.splice(i, 1);
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        init();
+        requestAnimationFrame(draw);
+    </script>
+</body>
+</html>
+```

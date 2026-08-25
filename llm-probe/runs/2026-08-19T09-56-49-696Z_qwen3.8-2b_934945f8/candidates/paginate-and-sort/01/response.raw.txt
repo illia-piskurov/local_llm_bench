@@ -1,0 +1,179 @@
+```javascript
+/**
+ * Process an array of records with filtering, sorting, and pagination.
+ * Synchronous ES2023 implementation.
+ */
+function solve(input) {
+    const items = input.items;
+    
+    // Filter: if provided, filter items based on field value and operation
+    let filteredItems = [...items]; // Create a shallow copy of the array
+    if (input.filter !== undefined) {
+        const { field, op, value } = input.filter;
+        
+        for (const item of filteredItems) {
+            // Case-insensitive substring match on String(item[field])
+            const val = String(item[field]).toLowerCase();
+            if (!op.toLowerCase().includes('contains')) continue;
+            if (value.toLowerCase() === '') continue;
+            
+            if (field === 'name' && !val.includes(value.toLowerCase())) {
+                filteredItems.push(...items); // Keep original for stable sort
+            } else if (item[field] !== value) {
+                filteredItems = [];
+            }
+        }
+    }
+    
+    // Sort: if provided, sort items with custom stability
+    let sortedItems = [...filteredItems];
+    if (input.sort !== undefined) {
+        const { field, dir } = input.sort;
+        
+        for (let i = 0; i < sortedItems.length - 1; i++) {
+            for (let j = i + 1; j < sortedItems.length; j++) {
+                const itemA = sortedItems[i];
+                const itemB = sortedItems[j];
+                
+                let cmpValA, cmpValB;
+                if (itemA[field] !== undefined && itemB[field] !== undefined) {
+                    cmpValA = itemA[field];
+                    cmpValB = itemB[field];
+                } else if (itemA[field] === undefined && itemB[field] === undefined) {
+                    continue;
+                } else if (itemA[field] !== undefined) {
+                    cmpValA = String(itemA[field]).toLowerCase();
+                } else {
+                    cmpValA = '';
+                }
+                
+                const cmpValB = String(itemB[field]).toLowerCase();
+                
+                // Stable sort: for ties, preserve original relative order (j > i means B comes after A)
+                if ((cmpValA < cmpValB && dir === 'asc') ||
+                    (cmpValA > cmpValB && dir === 'desc')) {
+                    sortedItems[i] = itemB;
+                    sortedItems[j] = itemA;
+                } else if (cmpValA <= cmpValB) { // For ties, A comes before B (stable)
+                    continue;
+                } else {
+                    swapped = true;
+                }
+            }
+        }
+    }
+    
+    // Pagination: slice to get page items and calculate total pages
+    const start = Math.max(0, (input.page - 1) * input.pageSize);
+    const end = start + input.pageSize;
+    const paginatedItems = sortedItems.slice(start, end);
+    const totalPages = Math.ceil(sortedItems.length / input.pageSize);
+    
+    return { items: paginatedItems, total: sortedItems.length, page: input.page, totalPages: Math.max(0, totalPages) };
+}
+
+// Example usage and test cases:
+console.log(solve({
+    items: [
+        {"id": 1, "name": "Apples", "qty": 10},
+        {"id": 2, "name": "Bananas", "qty": 5},
+        {"id": 3, "name": "Avocados", "qty": 8}
+    ],
+    filter: { field: "name", op: "contains", value: "a" },
+    sort: { field: "qty", dir: "asc" },
+    page: 1,
+    pageSize: 2
+}));
+
+// Test case 2: no filter/sort provided, default behavior
+console.log(solve({
+    items: [
+        {"id": 1, "name": "Apple"},
+        {"id": 2, "name": "Banana"},
+        {"id": 3, "name": "Cherry"}
+    ],
+    page: 1,
+    pageSize: 5
+}));
+
+// Test case 3: filter with 'neq' (not equal) operation
+console.log(solve({
+    items: [
+        {"id": 1, "name": "Apple"},
+        {"id": 2, "name": "Banana"},
+        {"id": 3, "name": "Cherry"}
+    ],
+    filter: { field: "name", op: "neq", value: "Apple" },
+    page: 1,
+    pageSize: 2
+}));
+
+// Test case 4: sort with descending order
+console.log(solve({
+    items: [
+        {"id": 1, "name": "Apple", "qty": 3},
+        {"id": 2, "name": "Banana", "qty": 5},
+        {"id": 3, "name": "Cherry", "qty": 8}
+    ],
+    sort: { field: "qty", dir: "desc" },
+    page: 1,
+    pageSize: 2
+}));
+
+// Test case 5: empty items array
+console.log(solve({
+    items: [],
+    filter: {},
+    sort: {},
+    page: 1,
+    pageSize: 10
+}));
+
+// Test case 6: contains with case-insensitive matching
+console.log(solve({
+    items: [
+        {"id": 1, "name": "APPLES"},
+        {"id": 2, "name": "Bananas"},
+        {"id": 3, "name": "Avocados"}
+    ],
+    filter: { field: "name", op: "contains", value: "a" },
+    page: 1,
+    pageSize: 5
+}));
+
+// Test case 7: all items match filter (entire array is returned)
+console.log(solve({
+    items: [
+        {"id": 1, "name": "Apple"},
+        {"id": 2, "name": "Banana"}
+    ],
+    filter: { field: "name", op: "contains", value: "ap" },
+    page: 1,
+    pageSize: 3
+}));
+
+// Test case 8: no total pages when items < pageSize (returns single page)
+console.log(solve({
+    items: [
+        {"id": 1},
+        {"id": 2}
+    ],
+    filter: {},
+    sort: { field: "id", dir: "asc" },
+    page: 1,
+    pageSize: 10
+}));
+
+// Test case 9: large pagination (should handle efficiently)
+console.log(solve({
+    items: Array.from({ length: 25 }, (_, i) => ({ id: i + 1, name: `Item_${i+1}` })),
+    filter: { field: "name", op: "contains", value: "s" },
+    sort: { field: "id", dir: "asc" },
+    page: 3,
+    pageSize: 4
+}));
+```
+
+**Time Complexity:** O(n²) for the sorting step in the worst case (bubble sort), which is acceptable for small-to-medium datasets. The filter passes through items linearly if no match is found or all pass through.
+
+**Space Complexity:** O(n) for creating copies of arrays during filtering and sorting.

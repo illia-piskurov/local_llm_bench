@@ -1,0 +1,198 @@
+import heapq
+from collections import defaultdict
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    task_info = {}
+    for name, (duration, deps, priority) in tasks.items():
+        task_info[name] = {
+            'duration': duration,
+            'deps': deps,
+            'priority': priority
+        }
+        
+    adj = defaultdict(list)
+    in_degree = {name: 0 for name in tasks}
+    
+    for name, info in task_info.items():
+        for dep in info['deps']:
+            if dep not in tasks:
+                pass
+            adj[dep].append(name)
+            in_degree[name] += 1
+            
+    queue = [name for name, deg in in_degree.items() if deg == 0]
+    processed_count = 0
+    
+    while queue:
+        u = queue.pop(0)
+        processed_count += 1
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+                
+    if processed_count < len(tasks):
+        return None
+        
+    current_time = 0
+    active_tasks = {} 
+    completed_order = []
+    
+    while len(completed_order) < len(tasks):
+        finished_now = []
+        for name, finish_time in list(active_tasks.items()):
+            if finish_time <= current_time:
+                finished_now.append((name, finish_time))
+        
+        finished_now.sort(key=lambda x: (-task_info[x[0]]['priority'], task_info[x[0]]['duration'], x[0]))
+        
+        for name, _ in finished_now:
+            completed_order.append(name)
+            del active_tasks[name]
+            
+        if active_tasks:
+            current_time = min(active_tasks.values())
+            
+        ready_heap = []
+        for name, info in task_info.items():
+            if name not in completed_order and name not in active_tasks:
+                deps_ok = all(dep in completed_order for dep in info['deps'])
+                if deps_ok:
+                    heapq.heappush(ready_heap, (-info['priority'], info['duration'], name))
+                    
+        slots = workers - len(active_tasks)
+        while slots > 0 and ready_heap:
+            _, duration, name = heapq.heappop(ready_heap)
+            finish_time = current_time + duration
+            active_tasks[name] = finish_time
+            slots -= 1
+            
+    return completed_order
+
+def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
+    if not tasks:
+        return 0
+    
+    task_info = {}
+    for name, (duration, deps, priority) in tasks.items():
+        task_info[name] = {
+            'duration': duration,
+            'deps': deps
+        }
+        
+    adj = defaultdict(list)
+    in_degree = {name: 0 for name in tasks}
+    
+    for name, info in task_info.items():
+        for dep in info['deps']:
+            if dep not in tasks:
+                pass
+            adj[dep].append(name)
+            in_degree[name] += 1
+            
+    queue = [name for name, deg in in_degree.items() if deg == 0]
+    processed_count = 0
+    
+    while queue:
+        u = queue.pop(0)
+        processed_count += 1
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+                
+    if processed_count < len(tasks):
+        return None
+        
+    dist = {name: info['duration'] for name, info in task_info.items()}
+    
+    topo_order = []
+    temp_in_degree = dict(in_degree)
+    q = [name for name, deg in temp_in_degree.items() if deg == 0]
+    while q:
+        u = q.pop(0)
+        topo_order.append(u)
+        for v in adj[u]:
+            temp_in_degree[v] -= 1
+            if temp_in_degree[v] == 0:
+                q.append(v)
+                
+    for u in topo_order:
+        for v in adj[u]:
+            dist[v] = max(dist[v], dist[u] + task_info[v]['duration'])
+            
+    return max(dist.values())
+
+def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
+    if not tasks:
+        return 0
+    
+    task_info = {}
+    for name, (duration, deps, priority) in tasks.items():
+        task_info[name] = {
+            'duration': duration,
+            'deps': deps,
+            'priority': priority
+        }
+        
+    adj = defaultdict(list)
+    in_degree = {name: 0 for name in tasks}
+    
+    for name, info in task_info.items():
+        for dep in info['deps']:
+            if dep not in tasks:
+                pass
+            adj[dep].append(name)
+            in_degree[name] += 1
+            
+    queue = [name for name, deg in in_degree.items() if deg == 0]
+    processed_count = 0
+    
+    while queue:
+        u = queue.pop(0)
+        processed_count += 1
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+                
+    if processed_count < len(tasks):
+        return None
+        
+    current_time = 0
+    active_tasks = {} 
+    completed_order = []
+    
+    while len(completed_order) < len(tasks):
+        finished_now = []
+        for name, finish_time in list(active_tasks.items()):
+            if finish_time <= current_time:
+                finished_now.append((name, finish_time))
+        
+        finished_now.sort(key=lambda x: (-task_info[x[0]]['priority'], task_info[x[0]]['duration'], x[0]))
+        
+        for name, _ in finished_now:
+            completed_order.append(name)
+            del active_tasks[name]
+            
+        if active_tasks:
+            current_time = min(active_tasks.values())
+            
+        ready_heap = []
+        for name, info in task_info.items():
+            if name not in completed_order and name not in active_tasks:
+                deps_ok = all(dep in completed_order for dep in info['deps'])
+                if deps_ok:
+                    heapq.heappush(ready_heap, (-info['priority'], info['duration'], name))
+                    
+        slots = workers - len(active_tasks)
+        while slots > 0 and ready_heap:
+            _, duration, name = heapq.heappop(ready_heap)
+            finish_time = current_time + duration
+            active_tasks[name] = finish_time
+            slots -= 1
+            
+    return current_time

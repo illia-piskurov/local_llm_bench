@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-1h2626osorqc0nky9x2pes",
+  "object": "chat.completion",
+  "created": 1787139492,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n  const intervals = input.intervals.sort((a, b) => a[0] - b[0]);\n  let merged = [intervals[0]];\n  \n  for (let i = 1; i < intervals.length; i++) {\n    if (merged[merged.length - 1][1] >= intervals[i][0]) {\n      merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], intervals[i][1]);\n    } else {\n      merged.push(intervals[i]);\n    }\n  }\n  \n  return merged;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 163,
+    "completion_tokens": 133,
+    "total_tokens": 296,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

@@ -139,3 +139,31 @@ LEVEL2_TESTS = [
         ["WATCH a NULL -> 1"],
     ),
 ]
+
+LEVEL3_TESTS = [
+    (
+        "snapshot_restores_full_state",
+        "SET a 1\nBEGIN\nSET a 2\nSNAPSHOT s\nSET a 3\nRESTORE s\nGET a\nCOMMIT\nGET a",
+        ["2", "2"],
+    ),
+    (
+        "snapshot_is_deep_copied",
+        "SET a 1\nSNAPSHOT s1\nSET a 2\nSNAPSHOT s2\nSET a 3\nRESTORE s1\nGET a\nRESTORE s2\nGET a",
+        ["1", "2"],
+    ),
+    (
+        "restore_preserves_open_transactions",
+        "BEGIN\nSET a 1\nSNAPSHOT s\nSET a 2\nROLLBACK\nRESTORE s\nCOMMIT\nGET a",
+        ["1"],
+    ),
+    (
+        "restore_keeps_watch_registrations",
+        "WATCH a\nSET a 1\nSNAPSHOT s\nSET a 2\nRESTORE s\nSET a 3",
+        ["WATCH a NULL -> 1", "WATCH a 1 -> 2", "WATCH a 1 -> 3"],
+    ),
+    (
+        "snapshot_inside_nested_transactions",
+        "BEGIN\nSET a 1\nBEGIN\nSET b 2\nSNAPSHOT s\nSET a 3\nROLLBACK\nRESTORE s\nGET a\nGET b\nCOMMIT\nGET a\nGET b",
+        ["1", "2", "1", "2"],
+    ),
+]

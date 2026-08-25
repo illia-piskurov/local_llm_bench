@@ -11,6 +11,7 @@
 Скрипт прогоняет:
   - LEVEL 1 тесты: PUSH/POP/ADD/SUB/MUL/DIV/DUP/SWAP/PRINT, комментарии/пустые строки, ошибки
   - LEVEL 2 тесты: LABEL/JMP/JZ/JNZ, включая циклы
+  - LEVEL 3 тесты: CALL/RET (подпрограммы и рекурсия), EQ/GT/LT, STORE/LOAD (переменные)
 
 и печатает отчёт + итоговый счёт по каждому уровню.
 """
@@ -18,6 +19,15 @@
 import importlib.util
 import sys
 import traceback
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+from timeout_utils import call_with_timeout
 
 
 def load_run(path):
@@ -201,26 +211,80 @@ LEVEL2_TESTS = [
     ),
 ]
 
+LEVEL3_TESTS = [
+    (
+        "call_ret_basic",
+        "PUSH 5\nCALL double\nPRINT\nJMP end\nLABEL double\nPUSH 2\nMUL\nRET\nLABEL end",
+        ["10"],
+    ),
+    (
+        "call_ret_nested",
+        "CALL func_a\nPRINT\nJMP end\nLABEL func_b\nPUSH 10\nRET\nLABEL func_a\nCALL func_b\nPUSH 2\nMUL\nRET\nLABEL end",
+        ["20"],
+    ),
+    (
+        "comparison_eq_gt_lt",
+        "PUSH 5\nPUSH 5\nEQ\nPRINT\nPUSH 5\nPUSH 10\nEQ\nPRINT\nPUSH 10\nPUSH 5\nGT\nPRINT\nPUSH 5\nPUSH 10\nGT\nPRINT\nPUSH 3\nPUSH 7\nLT\nPRINT\nPUSH 7\nPUSH 3\nLT\nPRINT",
+        ["1", "0", "1", "0", "1", "0"],
+    ),
+    (
+        "store_and_load",
+        "PUSH 42\nSTORE x\nPUSH 100\nSTORE y\nLOAD x\nLOAD y\nADD\nPRINT",
+        ["142"],
+    ),
+    (
+        "store_overwrite",
+        "PUSH 10\nSTORE val\nPUSH 99\nSTORE val\nLOAD val\nPRINT",
+        ["99"],
+    ),
+    (
+        "recursive_factorial",
+        "PUSH 4\nCALL fact\nPRINT\nJMP end\nLABEL fact\nDUP\nPUSH 1\nGT\nJZ base_case\nDUP\nPUSH 1\nSUB\nCALL fact\nMUL\nRET\nLABEL base_case\nPOP\nPUSH 1\nRET\nLABEL end",
+        ["24"],
+    ),
+    (
+        "recursive_fibonacci",
+        "PUSH 6\nCALL fib\nPRINT\nJMP end\nLABEL fib\nDUP\nPUSH 2\nLT\nJZ fib_rec\nRET\nLABEL fib_rec\nDUP\nPUSH 1\nSUB\nCALL fib\nSWAP\nPUSH 2\nSUB\nCALL fib\nADD\nRET\nLABEL end",
+        ["8"],
+    ),
+    (
+        "ret_without_call_error",
+        "RET",
+        "ERROR",
+    ),
+    (
+        "load_undefined_variable_error",
+        "LOAD undefined_var",
+        "ERROR",
+    ),
+    (
+        "call_undefined_label_error",
+        "CALL missing_label",
+        "ERROR",
+    ),
+]
 
-def run_suite(name, tests, run_fn):
+
+def run_suite(name, tests, path):
     passed = 0
     failed = []
     for test_name, program, expected in tests:
-        try:
-            result = run_fn(program)
-            if expected == "ERROR":
-                failed.append((test_name, "ожидалась ошибка, но выполнение прошло успешно", result))
-                continue
-            result_norm = norm(result)
-            if result_norm == expected:
-                passed += 1
-            else:
-                failed.append((test_name, f"ожидалось {expected}, получено {result_norm}", None))
-        except Exception as e:
+        success, result = call_with_timeout(path, "run", (program,))
+        if not success:
             if expected == "ERROR":
                 passed += 1
             else:
-                failed.append((test_name, f"неожиданное исключение: {e}", None))
+                failed.append((test_name, f"неожиданное исключение: {result}", None))
+            continue
+
+        if expected == "ERROR":
+            failed.append((test_name, "ожидалась ошибка, но выполнение прошло успешно", result))
+            continue
+        result_norm = norm(result)
+        if result_norm == expected:
+            passed += 1
+        else:
+            failed.append((test_name, f"ожидалось {expected}, получено {result_norm}", None))
 
     total = len(tests)
     print(f"\n=== {name}: {passed}/{total} ===")
@@ -237,19 +301,21 @@ def main():
 
     path = sys.argv[1]
     try:
-        run_fn = load_run(path)
+        load_run(path)
     except Exception as e:
         print(f"Не удалось загрузить решение: {e}")
         traceback.print_exc()
         sys.exit(1)
 
-    p1, t1, _ = run_suite("LEVEL 1", LEVEL1_TESTS, run_fn)
-    p2, t2, _ = run_suite("LEVEL 2", LEVEL2_TESTS, run_fn)
+    p1, t1, _ = run_suite("LEVEL 1", LEVEL1_TESTS, path)
+    p2, t2, _ = run_suite("LEVEL 2", LEVEL2_TESTS, path)
+    p3, t3, _ = run_suite("LEVEL 3", LEVEL3_TESTS, path)
 
     print("\n=== ИТОГО ===")
     print(f"Level 1: {p1}/{t1}")
     print(f"Level 2: {p2}/{t2}")
-    print(f"Всего:   {p1 + p2}/{t1 + t2}")
+    print(f"Level 3: {p3}/{t3}")
+    print(f"Всего:   {p1 + p2 + p3}/{t1 + t2 + t3}")
 
 
 if __name__ == "__main__":

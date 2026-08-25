@@ -1,0 +1,108 @@
+```python
+def run(program: str) -> list[str]:
+    instructions = []
+    labels = {}
+    
+    # Pre-processing phase to identify labels and map them to instruction indices
+    lines = program.splitlines()
+    for i, line in enumerate(lines):
+        line_num = i + 1
+        stripped = line.strip()
+        if not stripped or stripped.startswith('#'):
+            continue
+        
+        parts = stripped.split()
+        if not parts:
+            continue
+            
+        cmd = parts[0].upper()
+        instructions.append({
+            'line_num': line_num,
+            'cmd': cmd,
+            'args': parts[1:]
+        })
+        
+        if cmd == "LABEL":
+            # Store the index of this instruction in the instructions list
+            labels[parts[1]] = len(instructions) - 1
+
+    stack = []
+    output = []
+    pc = 0  # Program counter (index in the instructions list)
+
+    while pc < len(instructions):
+        instr = instructions[pc]
+        line_num = instr['line_num']
+        cmd = instr['cmd']
+        args = instr['args']
+
+        if cmd == "PUSH":
+            try:
+                stack.append(int(args[0]))
+            except (IndexError, ValueError):
+                pass # Or handle as syntax error if required
+        elif cmd == "POP":
+            if len(stack) < 1:
+                raise ValueError(f"Line {line_num}: Stack underflow")
+            stack.pop()
+        elif cmd == "ADD":
+            if len(stack) < 2:
+                raise ValueError(f"Line {line_num}: Stack underflow")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a + b)
+        elif cmd == "SUB":
+            if len(stack) < 2:
+                raise ValueError(f"Line {line_num}: Stack underflow")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+        elif cmd == "MUL":
+            if len(stack) < 2:
+                raise ValueError(f"Line {line_num}: Stack underflow")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a * b)
+        elif cmd == "DIV":
+            if len(stack) < 2:
+                raise ValueError(f"Line {line_num}: Stack underflow")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise ValueError(f"Line {line_num}: Division by zero")
+            stack.append(a // b)
+        elif cmd == "DUP":
+            if len(stack) < 1:
+                raise ValueError(f"Line {line_num}: Stack underflow")
+            stack.append(stack[-1])
+        elif cmd == "SWAP":
+            if len(stack) < 2:
+                raise ValueError(f"Line {line_num}: Stack underflow")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a)
+            stack.append(b)
+        elif cmd == "PRINT":
+            if len(stack) < 1:
+                raise ValueError(f"Line {line_num}: Stack underflow")
+            output.append(str(stack[-1]))
+        elif cmd == "LABEL":
+            pass
+        elif cmd == "JMP":
+            pc = labels[args[0]]
+            continue
+        elif cmd == "JZ":
+            val = stack.pop()
+            if val == 0:
+                pc = labels[args[0]]
+                continue
+        elif cmd == "JNZ":
+            val = stack.pop()
+            if val != 0:
+                pc = labels[args[0]]
+                continue
+        
+        pc += 1
+
+    return output
+```

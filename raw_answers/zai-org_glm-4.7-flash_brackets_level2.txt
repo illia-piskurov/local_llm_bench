@@ -1,0 +1,51 @@
+```python
+def is_balanced(s: str) -> bool:
+    stack = []
+    pairs = {')': '(', ']': '[', '}': '{'}
+    for char in s:
+        if char in pairs.values():
+            stack.append(char)
+        elif char in pairs:
+            if not stack or stack.pop() != pairs[char]:
+                return False
+    return not stack
+
+
+def max_depth(s: str) -> int:
+    stack = []
+    pairs = {')': '(', ']': '[', '}': '{'}
+    depth = 0
+    max_d = 0
+
+    for char in s:
+        if char in pairs.values():
+            stack.append(char)
+            depth += 1
+            if depth > max_d:
+                max_d = depth
+        elif char in pairs:
+            if stack and stack[-1] == pairs[char]:
+                stack.pop()
+                depth -= 1
+            # Если закрывающая скобка не совпадает с вершиной стека, глубина не меняется
+
+    return max_d
+
+
+def find_unmatched(s: str) -> list[int]:
+    stack = []
+    pairs = {')': '(', ']': '[', '}': '{'}
+    unmatched_indices = []
+
+    for i, char in enumerate(s):
+        if char in pairs.values():
+            stack.append(i)
+        elif char in pairs:
+            if not stack or stack[-1] != pairs[char]:
+                unmatched_indices.append(i)
+            else:
+                stack.pop()
+
+    unmatched_indices.extend(stack)
+    return sorted(unmatched_indices)
+```

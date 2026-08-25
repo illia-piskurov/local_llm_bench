@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-2p54n9lmfz2dgcc5z63tv5",
+  "object": "chat.completion",
+  "created": 1787119332,
+  "model": "nvidia/nemotron-3-nano-4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const items = [...input.items];\n\n  // Filter\n  if (input.filter) {\n    const { field, op, value } = input.filter;\n    const getValue = item => String(item[field]) || '';\n    const compare = val1 => Number(val1);\n    const filtered = items.filter(item => {\n      switch (op) {\n        case 'eq':\n          return compare(getValue(item)) === value;\n        case 'neq':\n          return compare(getValue(item)) !== value;\n        case 'gt':\n          return compare(getValue(item)) > value;\n        case 'lt':\n          return compare(getValue(item)) < value;\n        case 'gte':\n          return compare(getValue(item)) >= value;\n        case 'lte':\n          return compare(getValue(item)) <= value;\n        case 'contains':\n          const v = String(value).toLowerCase();\n          const s = getValue(item).toLowerCase();\n          return s.includes(v);\n        default:\n          return false;\n      }\n    });\n    items = filtered;\n  }\n\n  // Sort (stable)\n  if (input.sort) {\n    const { field, dir } = input.sort;\n    const sortItem = (a, b) => {\n      let av = Number(a[field]) || NaN;\n      let bv = Number(b[field]) || NaN;\n      if (av === bv) return 0; // preserve order\n      return dir === 'asc' ? av - bv : bv - av;\n    };\n    items = [...items].sort(sortItem);\n  }\n\n  const total = items.length;\n  const page = Math.max(input.page || 1, 1);\n  const size = input.pageSize || 10;\n  const start = (page - 1) * size;\n  const end = start + size;\n  const pagedItems = items.slice(start, end);\n  const totalPages = total === 0 ? 0 : Math.ceil(total / size);\n\n  return {\n    items: pagedItems,\n    total,\n    page,\n    totalPages\n  };\n}",
+        "reasoning_content": "We need to produce JS module export function solve.\n\nImplement filter: if input.filter present. field string, op one of eq,neq,gt,gte,lt,lte,contains. value any. For contains, case-insensitive substring matching on String(item[field])? So item[field] maybe string; we need to compare lower-case includes lower-case substring.\n\nSorting stable: JS sort is not guaranteed stable but we can use custom comparator with tie-breaking original index. Since stable needed preserving relative order for ties; we can keep original order when values equal by using index as secondary key. Use sort with (a,b) => a[field] - b[field] if field numeric? But operator: eq etc. For sorting, only dir asc/desc. So just numeric compare.\n\nBut filter first, then sort stable: we need to produce sorted array of filtered items preserving original relative order for ties; using sort with comparator that returns 0 yields stable? Might be fine.\n\nPagination: page index starts at 1 default 1, pageSize default 10. Return objects.\n\nImplement function.\n\nEdge cases: total=0 => totalPages 0.\n\nIf filter not provided, keep all items.\n\nSort only if input.sort provided.\n\nPagination always compute pages = Math.ceil(total/ pageSize) unless total zero? Actually spec: If total is 0, totalPages must be 0. So handle that.\n\nLet's code:\n\nfunction solve(input){\n const items = [...input.items];\n // filter\n if (input.filter){\n   const {field, op, value}= input.filter;\n   items = items.filter(item=>{\n     const val=item[field] ?? '';\n     switch(op){\n       case 'eq': return val===value;\n       case 'neq': return val!==value;\n       case 'gt': return Number.isNaN(val)||Number.isNaN(value)?0: val>value;\n       case 'lt': return Number.isNaN(val)||Number.isNaNaN(value)?0: val<value;\n       case 'gte': return !('>'===op); // but we can compute\n           return (val>=value);\n       case 'lte': return val<=value;\n       case 'contains':\n          const str=String(val).toLowerCase();\n          const s=String(item[field]).toLowerCase();\n          return s.includes(str);\n       default: return false;\n     }\n   });\n }\n // sort\n if (input.sort){\n   const {field, dir}= input.sort;\n   items = items.slice().sort((a,b)=>{\n        let av=Number(a[field])||NaN;\n        let bv=Number(b[field])||NaN;\n        if (av===bv) return 0; // stable\n        else return dir==='asc'? av - bv : bv - av;\n   });\n }\n const total = items.length;\n const page = Math.max(input.page||1,1);\n const size = input.pageSize || 10;\n const start = (page-1)*size;\n const end=start+size;\n const pagedItems = items.slice(start,end);\n const totalPages = total===0 ? 0 : Math.ceil(total/size);\n // ensure page within range? Not required but likely.\n return{\n   items: pagedItems,\n   total,\n   page,\n   totalPages\n };\n\nBut need to ensure for 'gt' etc we use proper comparisons. Use Number.isFinite.\n\nSimplify:\n\ncase 'gt': return av > value;\ncase 'lt': return av < value;\n\nEdge numeric NaN.\n\nNow produce final export.\n\nReturn JSON-compatible object (plain JS object).\n\nExport function.\n\nWrite as ES2023 module: const solve = function(...){...}; But we need to export.\n\nIn ESM, define:\n\nexport function solve(input) { ... }\n\nWe'll write code inside.\n\nLet's output only the module content.\n",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 411,
+    "completion_tokens": 1261,
+    "total_tokens": 1672,
+    "completion_tokens_details": {
+      "reasoning_tokens": 815
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "nvidia/nemotron-3-nano-4b"
+}

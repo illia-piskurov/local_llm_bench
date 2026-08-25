@@ -1,0 +1,29 @@
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    # Вычисляем граф зависимостей и степени входящих ребер (in-degree)
+    in_degree = {task: 0 for task in tasks}
+    adj = {task: [] for task in tasks}
+    
+    for task, deps in tasks.items():
+        for dep in deps:
+            if dep not in tasks:
+                return None  # Зависимость на несуществующую задачу
+            adj[dep].append(task)
+            in_degree[task] += 1
+    
+    # Инициализируем очередь с задачами, у которых нет входящих ребер (in-degree == 0)
+    queue = [t for t in tasks if in_degree[t] == 0]
+    
+    sorted_tasks = []
+    
+    while queue:
+        current = queue.pop(0)
+        sorted_tasks.append(current)
+        
+        # Уменьшаем in-degree для всех задач, зависящих от текущей
+        for neighbor in adj[current]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+    
+    # Если не все задачи были обработаны — есть цикл в графе
+    return sorted_tasks if len(sorted_tasks) == len(tasks) else None

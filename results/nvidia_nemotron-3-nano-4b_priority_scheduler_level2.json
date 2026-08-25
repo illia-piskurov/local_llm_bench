@@ -1,0 +1,15 @@
+{
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-17 14:07:19",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+    "parallel_tasks_reduce_makespan: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+    "dependencies_and_workers: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+    "critical_path_longer_than_worker_parallelism: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+    "wide_graph_with_unlocks: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence"
+  ]
+}

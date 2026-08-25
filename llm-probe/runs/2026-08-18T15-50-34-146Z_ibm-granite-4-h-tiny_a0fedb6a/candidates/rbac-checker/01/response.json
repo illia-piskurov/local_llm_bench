@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-60o0vixu9cpznlf3j0izg",
+  "object": "chat.completion",
+  "created": 1787068329,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const roles = input.roles;\n  const users = input.users;\n\n  return input.requests.map(request => {\n    const userRoles = (users[request.user]?.roles || []).map(role => `${role}.*`);\n    const allPermissionsToAllow = new Set([...userRoles, ...input.users[request.user]?.allows?.filter(p => p)?.map(p => p.split(':')[0] + ':*')]);\n\n    for (const role of userRoles) {\n      if (allPermissionsToAllow.has(`${roles[role].join('|')}.*`) || allPermissionsToAllow.has('*')) {\n        return true;\n      }\n    }\n\n    const deny = users[request.user]?.denies?.find(p => p === request.permission);\n    if (deny !== undefined) {\n      return false;\n    }\n\n    for (const role of userRoles) {\n      if (roles[role].includes(request.permission)) {\n        return true;\n      }\n    }\n\n    if (allPermissionsToAllow.has(`${request.permission}.*`) || allPermissionsToAllow.has('*')) {\n      return true;\n    }\n\n    return false;\n  });\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 365,
+    "completion_tokens": 236,
+    "total_tokens": 601,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

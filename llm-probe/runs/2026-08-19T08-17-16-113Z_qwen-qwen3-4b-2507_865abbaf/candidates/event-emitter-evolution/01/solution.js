@@ -1,0 +1,103 @@
+export function solve(input) {
+    const listeners = {};
+    const log = [];
+    
+    for (const operation of input.operations) {
+        switch (operation.op) {
+            case "on":
+                const { event, listenerId } = operation;
+                if (!listeners[event]) {
+                    listeners[event] = [];
+                }
+                listeners[event].push(listenerId);
+                break;
+                
+            case "once":
+                const { event: onceEvent, listenerId: onceListenerId } = operation;
+                if (!listeners[onceEvent]) {
+                    listeners[onceEvent] = [];
+                }
+                listeners[onceEvent].push({
+                    id: onceListenerId,
+                    type: "once"
+                });
+                break;
+                
+            case "off":
+                const { event: offEvent, listenerId: offListenerId } = operation;
+                if (listeners[offEvent]) {
+                    const index = listeners[offEvent].findIndex(listener => 
+                        listener && listener.id === offListenerId
+                    );
+                    if (index !== -1) {
+                        listeners[offEvent].splice(index, 1);
+                    }
+                }
+                break;
+                
+            case "emit":
+                const { event: emitEvent, payload } = operation;
+                const matchedListeners = [];
+                
+                // Check for wildcard and prefix matches
+                const eventMatch = (event, target) => {
+                    if (target === "*") return true;
+                    if (target.endsWith("*")) {
+                        return event.startsWith(target.slice(0, -1));
+                    }
+                    return event === target;
+                };
+                
+                // First, check for exact matches
+                if (listeners[emitEvent]) {
+                    for (const listener of listeners[emitEvent]) {
+                        if (listener && typeof listener === "string") {
+                            matchedListeners.push(listener);
+                        }
+                    }
+                }
+                
+                // Then check for wildcard and prefix matches
+                for (const [key, list] of Object.entries(listeners)) {
+                    if (key === "*") {
+                        for (const listener of list) {
+                            if (listener && typeof listener === "string") {
+                                matchedListeners.push(listener);
+                            }
+                        }
+                    } else if (key.endsWith("*")) {
+                        if (emitEvent.startsWith(key.slice(0, -1))) {
+                            for (const listener of list) {
+                                if (listener && typeof listener === "string") {
+                                    matchedListeners.push(listener);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Process each matched listener
+                for (const listenerId of matchedListeners) {
+                    // Check if it's a one-time listener
+                    let isOnce = false;
+                    if (typeof listenerId === "object" && listenerId.type === "once") {
+                        isOnce = true;
+                        // Remove it after first invocation
+                        const index = listeners[emitEvent].findIndex(l => l.id === listenerId.id);
+                        if (index !== -1) {
+                            listeners[emitEvent].splice(index, 1);
+                        }
+                    }
+                    
+                    log.push({
+                        listenerId: listenerId,
+                        event: emitEvent,
+                        payload: payload
+                    });
+                }
+                break;
+        }
+    }
+    
+    return { log };
+}

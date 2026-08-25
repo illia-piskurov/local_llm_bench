@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "liquid/lfm2.5-1.2b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    from heapq import heappush, heappop\n\n    def has_cycle(task, visited, stack):\n        if task in stack:\n            return True\n        if task in visited:\n            return False\n        visited.add(task)\n        stack.add(task)\n        for dep in tasks[task][1]:\n            if has_cycle(dep, visited, stack):\n                return True\n        stack.remove(task)\n        return False\n\n    tasks_with_priority = [(priority, duration, deps, task) for task, (duration, deps, priority) in tasks.items()]\n    tasks_with_order = sorted(tasks_with_priority, key=lambda x: (-x[0], x[1], x[2]))\n\n    if has_cycle(tasks_with_priority[0][2]):\n        return None\n\n    completed = set()\n    ready_queue = []\n    order = []\n\n    for priority, duration, deps, task in tasks_with_priority:\n        if all(dep in completed for dep in deps) and len(ready_queue) < workers:\n            if not ready_queue or (priority > -ready_queue[0][0]) or \\\n               (priority == -ready_queue[0][0] and duration < -ready_queue[0][1]) or \\\n               (priority == -ready_queue[0][0] and duration == -ready_queue[0][1]):\n                ready_queue.append((priority, duration, deps, task))\n            completed.add(task)\n            order.append(task)\n\n    while ready_queue:\n        priority, duration, deps, task = heappop(ready_queue)\n        order.append(task)\n        for dep in tasks[task][1]:\n            if dep not in completed:\n                completed.add(dep)\n                heappush(ready_queue, (priority, duration, deps, tasks[dep][2]))\n\n    return order\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 319,
+    "total_output_tokens": 467,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 53.41184455117409,
+    "time_to_first_token_seconds": 0.257168
+  },
+  "response_id": "resp_3d36f50f42817967c12899c7e0c72314fb2b02b1a700322d"
+}

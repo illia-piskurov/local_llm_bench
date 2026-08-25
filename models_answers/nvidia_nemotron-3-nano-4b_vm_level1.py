@@ -1,69 +1,72 @@
 def run(program: str) -> list[str]:
-    stack = []
     lines = program.splitlines()
-    for idx, raw in enumerate(lines):
-        line_no = idx + 1
-        stripped = raw.lstrip()
-        if not stripped or stripped.startswith('#'):
+    stack = []
+    output = []
+
+    for idx, raw in enumerate(lines, start=1):
+        line = raw.strip()
+        if not line or line.startswith('#'):
             continue
 
-        tokens = stripped.split()
+        tokens = line.split()
         cmd = tokens[0]
-        args = tokens[1:]
 
-        try:
-            if cmd == 'PUSH':
-                n = int(args[0])
-                stack.append(n)
-            elif cmd == 'POP':
-                if not stack:
-                    raise ValueError(f'Line {line_no}: stack underflow')
-                stack.pop()
-            elif cmd == 'ADD':
-                if len(stack) < 2:
-                    raise ValueError(f'Line {line_no}: insufficient values for ADD')
-                b = stack.pop()
-                a = stack.pop()
-                stack.append(a + b)
-            elif cmd == 'SUB':
-                if len(stack) < 2:
-                    raise ValueError(f'Line {line_no}: insufficient values for SUB')
-                b = stack.pop()
-                a = stack.pop()
-                stack.append(a - b)
-            elif cmd == 'MUL':
-                if len(stack) < 2:
-                    raise ValueError(f'Line {line_no}: insufficient values for MUL')
-                b = stack.pop()
-                a = stack.pop()
-                stack.append(a * b)
-            elif cmd == 'DIV':
-                if len(stack) < 2:
-                    raise ValueError(f'Line {line_no}: insufficient values for DIV')
-                b = stack.pop()
-                if b == 0:
-                    raise ValueError(f'Line {line_no}: division by zero')
-                a = stack.pop()
-                stack.append(a // b)
-            elif cmd == 'DUP':
-                if not stack:
-                    raise ValueError(f'Line {line_no}: stack underflow for DUP')
-                stack.append(stack[-1])
-            elif cmd == 'SWAP':
-                if len(stack) < 2:
-                    raise ValueError(f'Line {line_no}: insufficient values for SWAP')
-                top = stack.pop()
-                second = stack.pop()
-                stack.append(top)
-                stack.append(second)
-            elif cmd == 'PRINT':
-                if not stack:
-                    raise ValueError(f'Line {line_no}: stack underflow for PRINT')
-                output.append(stack[-1])
-            else:
-                raise ValueError(f'Line {line_no}: unknown instruction "{cmd}"')
-        except Exception as e:
-            # Re-raise with line number info
-            raise ValueError(str(e)) from None
+        if cmd == 'PUSH':
+            n = int(tokens[1])
+            stack.append(n)
+
+        elif cmd == 'POP':
+            if not stack:
+                raise Exception(f'Stack underflow at line {idx}')
+            stack.pop()
+
+        elif cmd == 'ADD':
+            if len(stack) < 2:
+                raise Exception(f'Stack underflow at line {idx}')
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a + b)
+
+        elif cmd == 'SUB':
+            if len(stack) < 2:
+                raise Exception(f'Stack underflow at line {idx}')
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+
+        elif cmd == 'MUL':
+            if len(stack) < 2:
+                raise Exception(f'Stack underflow at line {idx}')
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a * b)
+
+        elif cmd == 'DIV':
+            if len(stack) < 2:
+                raise Exception(f'Stack underflow at line {idx}')
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise Exception(f'Division by zero at line {idx}')
+            stack.append(a // b)
+
+        elif cmd == 'DUP':
+            if not stack:
+                raise Exception(f'Stack underflow at line {idx}')
+            stack.append(stack[-1])
+
+        elif cmd == 'SWAP':
+            if len(stack) < 2:
+                raise Exception(f'Stack underflow at line {idx}')
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a)
+            stack.append(b)
+
+        elif cmd == 'PRINT':
+            output.append(str(stack[-1]))
+
+        else:
+            raise Exception(f'Unknown command "{cmd}" at line {idx}')
 
     return output

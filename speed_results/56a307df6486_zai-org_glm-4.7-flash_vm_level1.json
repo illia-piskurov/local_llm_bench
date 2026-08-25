@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "zai-org/glm-4.7-flash",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-07-12 13:00:00",
+  "stats": {
+    "input_tokens": 318,
+    "total_output_tokens": 2990,
+    "reasoning_output_tokens": 2464,
+    "tokens_per_second": 12.650159669342258,
+    "time_to_first_token_seconds": 3.0593090000000003,
+    "model_load_time_seconds": 69.751
+  }
+}

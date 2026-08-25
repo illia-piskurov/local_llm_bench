@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-twphuhfhnfhuqm9oh2ab",
+  "object": "chat.completion",
+  "created": 1787069342,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { table, select, where, orderBy, limit, offset } = input.query;\n  const params = [];\n  let sqlParts = [];\n\n  // Build SELECT part\n  if (select.length > 0) {\n    sqlParts.push(`SELECT ${select.join(', ')}`);\n  }\n  if (where) {\n    const whereParts = [];\n    for (const condition of where) {\n      const [field, op, value] = condition;\n      let param = '';\n      if (op === 'IS NULL' || op === 'IS NOT NULL') param += field;\n      else if (op === 'IN') {\n        param = `${field} IN (${value.join(',')})`;\n      } else {\n        param += `$${value}`;\n      }\n      whereParts.push(`WHERE ${field} ${op} ${param}`);\n    }\n    sqlParts.push(`WHERE ${whereParts.join(' AND ')}`);\n  }\n\n  // Handle joins\n  if (where?.type && where.type === 'INNER') {\n    const joinParts = [];\n    for (const { table: joinTable, on } of where) {\n      joinParts.push(`JOIN ${joinTable} ON ${on[leftCol]} = ${on[rightCol]}`);\n    }\n    sqlParts.push(`JOIN ${table} ON ${joinParts.join(' ')}`);\n  }\n\n  // Build WHERE clause\n  const whereClause = where ? `WHERE ${where}` : '';\n  sqlParts.push(whereClause);\n\n  // GroupBy and orderBy handling (simplified)\n  const groupBy = where?.groupBy || [];\n  const orderBy = where?.orderBy || [];\n  const paramsLength = Math.min(limit ? parseInt(limit) : 0, params.length);\n  const orderedParams = params.slice(0, paramsLength).map((_, i) => `$${i + 1}`);\n\n  if (orderBy) {\n    sqlParts.push(`ORDER BY ${orderBy[0].field} ${orderBy.dir ? ' ASC' : ' DESC'}`);\n    params.push(orderedParams);\n  }\n\n  // Compose final SQL\n  const sql = sqlParts.join('');\n  return { sql, params: params };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 543,
+    "completion_tokens": 521,
+    "total_tokens": 1064,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

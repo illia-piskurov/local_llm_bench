@@ -1,0 +1,18 @@
+export function solve(input) {
+    const matrix = input.matrix;
+    const rows = matrix.length;
+    const cols = matrix[0].length;
+    
+    // Create a new matrix rotated 90 degrees clockwise
+    const result = [];
+    
+    for (let c = 0; c < cols; c++) {
+        const newRow = [];
+        for (let r = rows - 1; r >= 0; r--) {
+            newRow.push(matrix[r][c]);
+        }
+        result.push(newRow);
+    }
+    
+    return result;
+}

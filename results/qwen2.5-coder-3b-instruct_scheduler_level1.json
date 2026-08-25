@@ -1,0 +1,14 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-17 16:23:12",
+  "passed": 6,
+  "total": 10,
+  "failures": [
+    "simple_chain: невалидный топологический порядок: ['c']",
+    "diamond: невалидный топологический порядок: ['d']",
+    "multiple_roots: невалидный топологический порядок: ['d']",
+    "wide_graph: невалидный топологический порядок: ['deploy']"
+  ]
+}

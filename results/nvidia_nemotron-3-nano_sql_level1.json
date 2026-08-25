@@ -1,0 +1,13 @@
+{
+  "model": "nvidia/nemotron-3-nano",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-08-25 13:57:48",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "where_and_or_nested: SQL: ожидали 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', получили 'SELECT id, email FROM users WHERE (status = $1 (role = $2 age >= $3 or ) and )'",
+    "order_by_limit_offset: SQL: ожидали 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', получили 'SELECT * FROM articles ORDER BY views DESC, id ASC OFFSET 20 LIMIT 10'",
+    "multiple_and_conditions: SQL: ожидали 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', получили 'SELECT * FROM logs WHERE (level = $1 code != $2 timestamp > $3 and )'"
+  ]
+}

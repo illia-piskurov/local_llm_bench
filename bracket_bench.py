@@ -5,16 +5,7 @@ Level 1: is_balanced(s: str) -> bool
 Level 2: max_depth(s: str) -> int, find_unmatched(s: str) -> list[int]
 """
 
-import importlib.util
-
-
-def load_function(path, func_name):
-    spec = importlib.util.spec_from_file_location("solution", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    if not hasattr(module, func_name):
-        raise AttributeError(f"В решении не найдена функция {func_name}(...)")
-    return getattr(module, func_name)
+from timeout_utils import call_with_timeout, load_function
 
 
 # Каждый тест: (имя, строка, ожидаемый bool)
@@ -57,14 +48,13 @@ UNMATCHED_TESTS = [
 ]
 
 
-def run_level1_suite(is_balanced_fn):
+def run_level1_suite(path):
     passed = 0
     failed = []
     for name, s, expected in LEVEL1_TESTS:
-        try:
-            result = is_balanced_fn(s)
-        except Exception as e:
-            failed.append((name, f"неожиданное исключение: {e}"))
+        success, result = call_with_timeout(path, "is_balanced", (s,))
+        if not success:
+            failed.append((name, f"неожиданное исключение: {result}"))
             continue
         if bool(result) == expected:
             passed += 1
@@ -79,15 +69,14 @@ def run_level1_suite(is_balanced_fn):
     return passed, total, failures
 
 
-def run_level2_suite(max_depth_fn, find_unmatched_fn):
+def run_level2_suite(path):
     passed = 0
     failed = []
 
     for name, s, expected in MAX_DEPTH_TESTS:
-        try:
-            result = max_depth_fn(s)
-        except Exception as e:
-            failed.append((f"max_depth/{name}", f"неожиданное исключение: {e}"))
+        success, result = call_with_timeout(path, "max_depth", (s,))
+        if not success:
+            failed.append((f"max_depth/{name}", f"неожиданное исключение: {result}"))
             continue
         if result == expected:
             passed += 1
@@ -95,10 +84,9 @@ def run_level2_suite(max_depth_fn, find_unmatched_fn):
             failed.append((f"max_depth/{name}", f"ожидалось {expected}, получено {result}"))
 
     for name, s, expected in UNMATCHED_TESTS:
-        try:
-            result = find_unmatched_fn(s)
-        except Exception as e:
-            failed.append((f"find_unmatched/{name}", f"неожиданное исключение: {e}"))
+        success, result = call_with_timeout(path, "find_unmatched", (s,))
+        if not success:
+            failed.append((f"find_unmatched/{name}", f"неожиданное исключение: {result}"))
             continue
         if sorted(result) == expected:
             passed += 1

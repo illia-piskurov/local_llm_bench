@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "passed": 4,
+  "total": 4,
+  "tests": [
+    {
+      "id": "three",
+      "passed": true
+    },
+    {
+      "id": "one",
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "mutation-check",
+      "passed": true
+    }
+  ],
+  "durationMs": 21
+}

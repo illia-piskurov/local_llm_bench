@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-b3uypy3x72q6nrp4j23g7g",
+  "object": "chat.completion",
+  "created": 1787082512,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    /**\n     * Helper function to check if two values are deeply equal.\n     * Handles primitives, null, arrays, and plain objects.\n     */\n    const isDeepEqual = (a, b) => {\n        // 1. Strict equality handles identical references, numbers, strings, booleans, undefined, and null === null\n        if (a === b) return true;\n\n        // 2. Handle non-primitive comparisons involving null or type mismatches\n        // If one is null/undefined or if types differ significantly after initial checks, they are not equal.\n        const typeA = typeof a;\n        const typeB = typeof b;\n\n        if (a === null || typeA !== 'object' || b === null || typeB !== 'object') {\n            // If we reached here, and they weren't strictly equal, and at least one is not an object,\n            // or if either is null, they must be unequal. (E.g., 1 != \"1\", [] != {})\n            return false;\n        }\n\n        const isArrayA = Array.isArray(a);\n        const isArrayB = Array.isArray(b);\n\n        // 3. Type checking for structural mismatch (Array vs Object)\n        if (isArrayA !== isArrayB) {\n            return false;\n        }\n\n        // --- Handle Arrays ---\n        if (isArrayA) { // Both are arrays\n            const len = a.length;\n            if (len !== b.length) return false;\n\n            for (let i = 0; i < len; i++) {\n                if (!isDeepEqual(a[i], b[i])) {\n                    return false;\n                }\n            }\n            return true;\n        }\n\n\n        // --- Handle Objects ---\n        const keysA = Object.keys(a);\n        const keysB = Object.keys(b);\n\n        // Check key count\n        if (keysA.length !== keysB.length) {\n            return false;\n        }\n\n        for (let i = 0; i < keysA.length; i++) {\n            const key = keysA[i];\n\n            // Check if the corresponding key exists in B\n            if (!Object.prototype.hasOwnProperty.call(b, key)) {\n                return false;\n            }\n\n            // Recurse comparison for values\n            if (!isDeepEqual(a[key], b[key])) {\n                return false;\n            }\n        }\n\n        return true;\n    };\n\n    // The goal is to compare input.a and input.b\n    return isDeepEqual(input.a, input.b);\n}",
+        "reasoning_content": "Plan:\n1.  Define the `solve` function that takes an input object.\n2.  Implement a recursive deep equality checking logic inside or called by `solve`.\n3.  Handle base cases: primitives (including null), and type mismatches.\n4.  Handle reference types: Arrays and plain Objects.\n5.  For arrays, check length and recursively compare elements.\n6.  For objects, check the number of keys and recursively compare values for all pairs of keys.\n\nConstraint Checklist & Confidence Score:\n1. Write correct JS solution (Yes)\n2. Return only one ESM module (Yes)\n3. No explanation/Markdown (Yes)\n4. Function signature: `export function solve(input)` (Yes)\n5. Deeply equal JSON values (Yes)\n6. Handle nulls, primitives, arrays, plain objects (Yes)\n7. Recursively check (Yes)\n8. Do not use `JSON.stringify` (Yes)\n9. Sync JS ES2023 only (Yes)\n10. No imports/requires/async/etc. (Yes)\n11. Do not mutate input (Yes)\n\nConfidence Score: 5/5\n\nRefinement: The comparison needs to handle the structure of the input object itself, comparing `input.a` and `input.b`. I will create a helper function `isDeepEqual(a, b)` and call it with `(input.a, input.b)`. Since `solve` receives `input`, both target values are available as properties of `input`.\n\nImplementation details:\n*   Check for strict equality first (handles primitives and same reference).\n*   If not strictly equal, check types. If one is null/primitive and the other isn't, they are unequal.\n*   Handle arrays: Check length, then iterate and recurse.\n*   Handle objects: Use `Object.keys()` to get keys, check key count, ensure all keys in A exist in B (and vice versa), then iterate over keys and recurse.\n\nLet's structure the code using an internal recursive function.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 165,
+    "completion_tokens": 1050,
+    "total_tokens": 1215,
+    "completion_tokens_details": {
+      "reasoning_tokens": 450
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

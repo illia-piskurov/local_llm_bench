@@ -1,0 +1,15 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-17 22:14:46",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: name 'plan_order' is not defined",
+    "parallel_tasks_reduce_makespan: неожиданное исключение: name 'plan_order' is not defined",
+    "dependencies_and_workers: неожиданное исключение: name 'plan_order' is not defined",
+    "critical_path_longer_than_worker_parallelism: неожиданное исключение: name 'plan_order' is not defined",
+    "wide_graph_with_unlocks: неожиданное исключение: name 'plan_order' is not defined"
+  ]
+}

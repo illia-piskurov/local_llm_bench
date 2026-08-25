@@ -1,0 +1,21 @@
+{
+  "model_instance_id": "openai/gpt-oss-20b",
+  "output": [
+    {
+      "type": "reasoning",
+      "content": "Implement parser to get sets for each field. Then iterate from next minute after from_time until count found. Use datetime UTC naive with tzinfo=timezone.utc. Ensure day-of-month and day-of-week both match? Cron typical: either field matches. But spec unclear; assume both must match (AND). We'll implement AND. Iterate minute by minute may be slow but fine for small counts. Use while len< count. Return formatted strings."
+    },
+    {
+      "type": "message",
+      "content": "```python\nimport datetime\nfrom typing import List, Set\n\ndef parse_field(field: str, min_val: int, max_val: int) -> Set[int]:\n    result = set()\n    if field == '*':\n        return set(range(min_val, max_val + 1))\n    parts = field.split(',')\n    for part in parts:\n        if '-' in part:\n            a, b = part.split('-')\n            a, b = int(a), int(b)\n            result.update(range(a, b + 1))\n        else:\n            result.add(int(part))\n    return result\n\ndef parse_cron(cron: str):\n    minute_str, hour_str, dom_str, month_str, dow_str = cron.strip().split()\n    minutes = parse_field(minute_str, 0, 59)\n    hours   = parse_field(hour_str, 0, 23)\n    days_mo = parse_field(dom_str, 1, 31)\n    months  = parse_field(month_str, 1, 12)\n    days_wk = parse_field(dow_str, 0, 6)\n    return minutes, hours, days_mo, months, days_wk\n\ndef next_runs(cron: str, from_time: str, count: int) -> List[str]:\n    minutes, hours, days_mo, months, days_wk = parse_cron(cron)\n    start_dt = datetime.datetime.fromisoformat(from_time.replace('Z', '+00:00'))\n    # Ensure we start after the given time\n    current = start_dt + datetime.timedelta(minutes=1)\n    current = current.replace(second=0, microsecond=0)\n\n    results = []\n    while len(results) < count:\n        if (current.minute in minutes and\n            current.hour   in hours   and\n            current.month  in months  and\n            current.day    in days_mo and\n            current.weekday() % 7 in days_wk):\n            # ISO format with milliseconds .000Z\n            iso_str = current.strftime('%Y-%m-%dT%H:%M:%S.000Z')\n            results.append(iso_str)\n        current += datetime.timedelta(minutes=1)\n    return results\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 509,
+    "total_output_tokens": 556,
+    "reasoning_output_tokens": 87,
+    "tokens_per_second": 9.080900352977537,
+    "time_to_first_token_seconds": 5.18638
+  },
+  "response_id": "resp_29fd2ad14271fa68cb8b1cce40eff09236d0b964b628dc65"
+}

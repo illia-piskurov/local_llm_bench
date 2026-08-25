@@ -1,0 +1,8 @@
+{
+  "model": "qwen/qwen3.5-9b",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-07-13 12:05:26",
+  "manual_score": 9,
+  "comment": "Рабочая, немного текст про нажмите любую клавишу не центрирована, мелочь"
+}

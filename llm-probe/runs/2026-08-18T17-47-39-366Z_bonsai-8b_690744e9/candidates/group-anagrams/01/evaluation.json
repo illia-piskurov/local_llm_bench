@@ -1,0 +1,14 @@
+{
+  "status": "runtime_error",
+  "passed": 0,
+  "total": 5,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": false,
+      "error": "Expected [], got {}"
+    }
+  ],
+  "durationMs": 22,
+  "error": "not a function"
+}

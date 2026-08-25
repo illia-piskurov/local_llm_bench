@@ -1,0 +1,11 @@
+{
+  "hardware": "AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon",
+  "savedHardware": [
+    "AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon",
+    "AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon"
+  ],
+  "defaults": {
+    "hardware": "AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon",
+    "timeoutMs": 9000000
+  }
+}

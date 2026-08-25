@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "qwen/qwen3-4b-2507",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    if not tasks:\n        return []\n    \n    # Собираем все задачи\n    all_tasks = set(tasks.keys())\n    for deps in tasks.values():\n        all_tasks.update(deps)\n    \n    # Если задач нет, возвращаем пустой список\n    if not all_tasks:\n        return []\n    \n    # Словарь для хранения входящих степеней (количество зависимостей)\n    in_degree = {}\n    for task in all_tasks:\n        in_degree[task] = 0\n    \n    # Устанавливаем входящие степени\n    for task, deps in tasks.items():\n        for dep in deps:\n            in_degree[dep] += 1\n    \n    # Начинаем с задач, у которых входящий степень 0\n    queue = []\n    for task in all_tasks:\n        if in_degree[task] == 0:\n            queue.append(task)\n    \n    result = []\n    \n    # Проводим топологическую сортировку\n    while queue:\n        # Берём задачу с нулевым входящим степенем\n        current = queue.pop(0)\n        result.append(current)\n        \n        # Обновляем входящие степени для всех задач, которые зависят от текущей\n        for next_task in tasks.get(current, []):\n            in_degree[next_task] -= 1\n            # Если входящий степень стала 0, добавляем в очередь\n            if in_degree[next_task] == 0:\n                queue.append(next_task)\n    \n    # Если результат не содержит все задачи — есть цикл\n    if len(result) != len(all_tasks):\n        return None\n    \n    return result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 229,
+    "total_output_tokens": 381,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 21.92917957068422,
+    "time_to_first_token_seconds": 1.012836
+  },
+  "response_id": "resp_f55f762e8d282c5c1957bebcfbe9dee9424c3c7bf55b6f38"
+}

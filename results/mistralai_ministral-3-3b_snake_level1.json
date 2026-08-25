@@ -2,7 +2,7 @@
   "model": "mistralai/ministral-3-3b",
   "benchmark": "snake",
   "level": "level1",
-  "tested_at": "2026-07-10 16:04:18",
+  "tested_at": "2026-08-17 18:48:20",
   "manual_score": 1,
-  "comment": "Game Over со старта. Перезагрузка страницы не помогает"
+  "comment": "not work"
 }

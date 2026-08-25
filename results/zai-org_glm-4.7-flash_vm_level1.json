@@ -1,0 +1,9 @@
+{
+  "model": "zai-org/glm-4.7-flash",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-07-12 13:00:02",
+  "passed": 18,
+  "total": 18,
+  "failures": []
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-slqqjmbwzqbasgqzmsw1v",
+  "object": "chat.completion",
+  "created": 1787139501,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { grid, start, end } = input;\n    const rows = grid.length;\n    const cols = grid[0].length;\n\n    const queue = [[start]];\n    let steps = 0;\n\n    while (queue.length > 0) {\n        const levelSize = queue.length;\n        for (let i = 0; i < levelSize; i++) {\n            const [x, y] = queue.shift();\n            if ([x, y].join() === end.join()) return steps;\n\n            const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];\n\n            for (const [dx, dy] of directions) {\n                const newX = x + dx;\n                const newY = y + dy;\n\n                if (newX < 0 || newX >= rows || newY < 0 || newY >= cols || grid[newX][newY] === 1) continue;\n\n                queue.push([newX, newY]);\n            }\n        }\n\n        steps++;\n    }\n\n    return -1;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 155,
+    "completion_tokens": 232,
+    "total_tokens": 387,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

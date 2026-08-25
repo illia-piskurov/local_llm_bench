@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-19T05-59-13-311Z_nvidia-nemotron-3-nano-4b_d827c119",
+  "status": "running",
+  "startedAt": "2026-08-19T05:59:13.311Z",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "hardware": "AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon",
+  "temperature": 0.8,
+  "maxTokens": 16000,
+  "samples": 1,
+  "taskIds": [
+    "flat-to-tree",
+    "paginate-and-sort",
+    "deep-merge",
+    "csv-parse",
+    "render-template",
+    "shopping-cart",
+    "query-string-parser",
+    "schema-validator",
+    "state-reducer",
+    "rbac-checker",
+    "i18n-pluralize",
+    "sql-query-builder",
+    "json-schema-deref-validate",
+    "cron-next-runs",
+    "longest-substring-no-repeat",
+    "group-anagrams",
+    "top-k-frequent",
+    "merge-intervals",
+    "flatten-tree",
+    "shortest-path-grid",
+    "lcs-length",
+    "topological-sort",
+    "rotate-square-matrix",
+    "validate-sudoku-board",
+    "deep-equal",
+    "bytecode-vm-evolution",
+    "event-emitter-evolution"
+  ],
+  "nodeVersion": "v24.19.0",
+  "candidates": [
+    {
+      "taskId": "flat-to-tree",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 179267,
+      "generationMs": 179234,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 313,
+        "completion_tokens": 1309,
+        "total_tokens": 1622,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1106
+        }
+      },
+      "completionTokens": 1309,
+      "tokensPerSec": 7,
+      "passed": 1,
+      "total": 4
+    },
+    {
+      "taskId": "paginate-and-sort",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 108125,
+      "generationMs": 108096,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 411,
+        "completion_tokens": 1261,
+        "total_tokens": 1672,
+        "completion_tokens_details": {
+          "reasoning_tokens": 815
+        }
+      },
+      "completionTokens": 1261,
+      "tokensPerSec": 12,
+      "passed": 1,
+      "total": 4,
+      "error": "'items' is read-only"
+    },
+    {
+      "taskId": "deep-merge",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 59019,
+      "generationMs": 58993,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 233,
+        "completion_tokens": 744,
+        "total_tokens": 977,
+        "completion_tokens_details": {
+          "reasoning_tokens": 578
+        }
+      },
+      "completionTokens": 744,
+      "tokensPerSec": 13,
+      "passed": 3,
+      "total": 4
+    },
+    {
+      "taskId": "csv-parse",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 156584,
+      "generationMs": 156526,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 281,
+        "completion_tokens": 2031,
+        "total_tokens": 2312,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1641
+        }
+      },
+      "completionTokens": 2031,
+      "tokensPerSec": 13,
+      "passed": 2,
+      "total": 4
+    },
+    {
+      "taskId": "render-template",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 588853,
+      "generationMs": 588804,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 271,
+        "completion_tokens": 1244,
+        "total_tokens": 1515,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1050
+        }
+      },
+      "completionTokens": 1244,
+      "tokensPerSec": 2,
+      "passed": 3,
+      "total": 4
+    },
+    {
+      "taskId": "shopping-cart",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "runtime_error",
+      "durationMs": 105808,
+      "generationMs": 105757,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 470,
+        "completion_tokens": 1866,
+        "total_tokens": 2336,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1469
+        }
+      },
+      "completionTokens": 1866,
+      "tokensPerSec": 18,
+      "passed": 1,
+      "total": 4,
+      "error": "'value' is not defined"
+    }
+  ]
+}

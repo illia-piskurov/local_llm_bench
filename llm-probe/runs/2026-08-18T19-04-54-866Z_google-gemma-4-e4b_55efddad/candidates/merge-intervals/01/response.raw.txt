@@ -1,0 +1,49 @@
+```javascript
+export function solve(input) {
+    if (!input || !Array.isArray(input.intervals)) {
+        return [];
+    }
+
+    const intervals = input.intervals;
+
+    // 1. Handle empty or invalid input array
+    if (intervals.length === 0) {
+        return [];
+    }
+
+    // 2. Sort the intervals based on their start time
+    // Using slice to avoid mutating the original input array
+    const sortedIntervals = [...intervals].sort((a, b) => a[0] - b[0]);
+
+    const merged = [];
+    let currentStart = sortedIntervals[0][0];
+    let currentEnd = sortedIntervals[0][1];
+
+    for (let i = 1; i < sortedIntervals.length; i++) {
+        const [nextStart, nextEnd] = sortedIntervals[i];
+
+        // Check for overlap or touching condition: next start must be less than or equal to current end + 1
+        // Since the problem defines intervals as [start, end], "touching" usually means
+        // that the next interval starts exactly where the current one ends (nextStart === currentEnd)
+        // OR if it overlaps (nextStart < currentEnd).
+
+        // If nextStart <= currentEnd (overlap or touching boundary)
+        if (nextStart <= currentEnd) {
+            // Merge: Extend the current end to the maximum of the two ends
+            currentEnd = Math.max(currentEnd, nextEnd);
+        } else {
+            // No overlap/gap found. Finalize the current merged interval.
+            merged.push([currentStart, currentEnd]);
+
+            // Start a new merged interval with the current non-overlapping segment
+            currentStart = nextStart;
+            currentEnd = nextEnd;
+        }
+    }
+
+    // Push the last processed interval
+    merged.push([currentStart, currentEnd]);
+
+    return merged;
+}
+```

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-khaxb16u5qhleg7mu0n5f",
+  "object": "chat.completion",
+  "created": 1787068508,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  return deepEqual(input.a, input.b);\n}\n\nfunction deepEqual(a, b) {\n  if (a === null && b === null) return true;\n  if (a === undefined || b === undefined) return false;\n  if (typeof a !== typeof b) return false;\n\n  const type = typeof a;\n  if (type !== 'object' && !Array.isArray(a)) return a === b;\n\n  if (Array.isArray(a)) {\n    if (!Array.isArray(b) || a.length !== b.length) return false;\n    for (let i = 0; i < a.length; i++) {\n      if (!deepEqual(a[i], b[i])) return false;\n    }\n    return true;\n  }\n\n  const keysA = Object.keys(a);\n  const keysB = Object.keys(b);\n\n  if (keysA.length !== keysB.length) return false;\n\n  for (const key of keysA) {\n    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) return false;\n  }\n\n  return true;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 150,
+    "completion_tokens": 226,
+    "total_tokens": 376,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

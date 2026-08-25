@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-91tirmon4gsvzbpfiggrzg",
+  "object": "chat.completion",
+  "created": 1787065405,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { state, actions } = input;\n    const resultState = JSON.parse(JSON.stringify(state));\n\n    for (const action of actions) {\n        if (action.type === 'SET') {\n            const pathParts = action.path.split('.');\n            let current = resultState;\n\n            for (let i = 0; i < pathParts.length - 1; i++) {\n                const part = pathParts[i];\n                if (!current[part]) {\n                    current[part] = {};\n                }\n                current = current[part];\n            }\n\n            current[pathParts[pathParts.length - 1]] = action.value;\n        } else if (action.type === 'TOGGLE') {\n            const pathParts = action.path.split('.');\n            let current = resultState;\n\n            for (const part of pathParts) {\n                if (!current[part]) {\n                    current[part] = false; // Default to false if missing\n                }\n                current = current[part];\n            }\n\n            if (typeof current === 'boolean') {\n                current = !current;\n            } else {\n                current = true;\n            }\n        } else if (action.type === 'ARRAY_PUSH') {\n            const pathParts = action.path.split('.');\n            let current = resultState;\n\n            for (const part of pathParts) {\n                if (!current[part]) {\n                    current[part] = [];\n                }\n                current = current[part];\n            }\n\n            current.push(action.item);\n        } else if (action.type === 'ARRAY_REMOVE') {\n            const pathParts = action.path.split('.');\n            let current = resultState;\n\n            for (const part of pathParts) {\n                if (!current[part]) {\n                    throw new Error(`Invalid path: ${action.path}`);\n                }\n                current = current[part];\n            }\n\n            if (Array.isArray(current)) {\n                const index = action.index;\n                if (index >= 0 && index < current.length) {\n                    current.splice(index, 1);\n                }\n            } else {\n                throw new Error(`Path ${action.path} is not an array`);\n            }\n        } else if (action.type === 'DELETE') {\n            const pathParts = action.path.split('.');\n            let current = resultState;\n\n            for (let i = 0; i < pathParts.length - 1; i++) {\n                const part = pathParts[i];\n                if (!current[part]) {\n                    throw new Error(`Invalid path: ${action.path}`);\n                }\n                current = current[part];\n            }\n\n            delete current[pathParts[pathParts.length - 1]];\n        }\n    }\n\n    return resultState;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 343,
+    "completion_tokens": 563,
+    "total_tokens": 906,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-lomwbxvrfok37q6w9lq8",
+  "object": "chat.completion",
+  "created": 1787069376,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  let maxLength = 0;\n  let n = input.length;\n  let charIndexMap = new Map();\n  let left = 0;\n  let uniqueChars = 0;\n\n  for (let right = 0; right < n; right++) {\n    const char = input[right];\n    if (charIndexMap.has(char)) {\n      left = Math.max(left, charIndexMap.get(char) + 1);\n    }\n    charIndexMap.set(char, right);\n\n    uniqueChars = Math.max(uniqueChars, right - left + 1);\n\n    maxLength = Math.max(maxLength, right - left + 1);\n  }\n\n  return maxLength;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 126,
+    "completion_tokens": 165,
+    "total_tokens": 291,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

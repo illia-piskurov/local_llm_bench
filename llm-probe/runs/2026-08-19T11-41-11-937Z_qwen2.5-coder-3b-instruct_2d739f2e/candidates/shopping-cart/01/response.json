@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-09lrh1eceyqt3irqsypsewx",
+  "object": "chat.completion",
+  "created": 1787139729,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { items, coupon, taxRate } = input;\n    let subtotal = 0;\n    let discount = 0;\n\n    // Calculate subtotal\n    items.forEach(item => {\n        subtotal += item.price * item.qty;\n    });\n\n    // Apply discount based on coupon type and category\n    if (coupon) {\n        switch (coupon.type) {\n            case 'percent':\n                discount = Math.min(subtotal * coupon.value / 100, subtotal);\n                break;\n            case 'fixed':\n                discount = Math.min(coupon.value, subtotal);\n                break;\n            case 'category_percent':\n                const categoryDiscount = items.reduce((acc, item) => {\n                    return acc + (item.category === coupon.category ? item.price * item.qty : 0);\n                }, 0);\n                discount = Math.min(categoryDiscount * coupon.value / 100, subtotal);\n                break;\n            default:\n                discount = 0;\n        }\n    }\n\n    // Calculate tax\n    let tax = 0;\n    if (taxRate !== undefined) {\n        const netAmountAfterDiscount = subtotal - discount;\n        tax = Math.round((netAmountAfterDiscount * taxRate * 100) / 100);\n    }\n\n    // Calculate total\n    let total = Math.round((subtotal - discount + tax) * 100) / 100;\n\n    return {\n        subtotal: parseFloat(subtotal.toFixed(2)),\n        discount: parseFloat(discount.toFixed(2)),\n        tax: parseFloat(tax.toFixed(2)),\n        total: parseFloat(total.toFixed(2))\n    };\n}\n```\n\nThis JavaScript function `solve` takes an object `input` containing items, a coupon, and a tax rate. It calculates the subtotal, applies any discount based on the coupon type and category, computes the tax, and finally determines the total. The result is returned as a JSON-compatible object with rounded values for each field.",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 439,
+    "completion_tokens": 408,
+    "total_tokens": 847,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

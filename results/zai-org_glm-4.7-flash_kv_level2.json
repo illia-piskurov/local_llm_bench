@@ -1,0 +1,12 @@
+{
+  "model": "zai-org/glm-4.7-flash",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-07-11 14:29:49",
+  "passed": 23,
+  "total": 25,
+  "failures": [
+    "nested_commit_propagates_to_outer_only: ожидалось ['2', '2'], получено ['1', '1']",
+    "count_respects_transaction: ожидалось ['2', '1'], получено ['1', '1']"
+  ]
+}

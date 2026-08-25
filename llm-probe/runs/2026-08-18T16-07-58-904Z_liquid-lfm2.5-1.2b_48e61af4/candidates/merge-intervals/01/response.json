@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-dyeh2az9yfgr0rusfcbww",
+  "object": "chat.completion",
+  "created": 1787069386,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const intervals = input.intervals;\n  if (!intervals || intervals.length === 0) return [];\n\n  intervals.sort((a, b) => a.start - b.start);\n\n  const merged = [intervals[0]];\n\n  for (let i = 1; i < intervals.length; i++) {\n    const current = intervals[i];\n    const last = merged[merged.length - 1];\n\n    if (current.start <= last.end + 1) {\n      merged[merged.length - 1][1] = Math.max(last.end, current.end);\n    } else {\n      merged.push([current.start, current.end]);\n    }\n  }\n\n  return merged;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 174,
+    "completion_tokens": 160,
+    "total_tokens": 334,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-08-19 14:01:08",
+  "stats": {
+    "input_tokens": 1581,
+    "total_output_tokens": 1358,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 33.07748217518302,
+    "time_to_first_token_seconds": 6.3339620000000005,
+    "model_load_time_seconds": null
+  }
+}

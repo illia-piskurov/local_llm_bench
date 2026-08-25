@@ -1,0 +1,25 @@
+{
+  "status": "failed",
+  "passed": 3,
+  "total": 4,
+  "tests": [
+    {
+      "id": "nested-set-and-create-parents",
+      "passed": true
+    },
+    {
+      "id": "toggle-non-boolean",
+      "passed": false,
+      "error": "Expected {\"ready\":true}, got {\"ready\":\"yes\"}"
+    },
+    {
+      "id": "delete-property",
+      "passed": true
+    },
+    {
+      "id": "empty-actions",
+      "passed": true
+    }
+  ],
+  "durationMs": 30
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-kjwf1po4ijp62sumwg4xvl",
+  "object": "chat.completion",
+  "created": 1787139320,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { schema, data } = input;\n  \n  if (typeof schema !== 'object' || schema === null) return { valid: false };\n  \n  let errors = {};\n  \n  for (const [field, rule] of Object.entries(schema)) {\n    if (rule.required && (!data[field] || data[field] === null)) {\n      errors[field] = ['Required'];\n      continue;\n    }\n    \n    const value = data[field];\n    \n    switch (rule.type) {\n      case 'string':\n        if (!value || typeof value !== 'string') {\n          errors[field] = ['Invalid type'];\n          break;\n        }\n        \n        if (typeof rule.min === 'number' && value.length < rule.min) {\n          errors[field].push('Too short');\n        } else if (typeof rule.max === 'number' && value.length > rule.max) {\n          errors[field].push('Too long');\n        } else if (typeof rule.pattern !== 'undefined' && !new RegExp(rule.pattern).test(value)) {\n          errors[field].push('Invalid format');\n        }\n        break;\n      case 'number':\n        if (!value || typeof value !== 'number') {\n          errors[field] = ['Invalid type'];\n          break;\n        }\n        \n        if (typeof rule.min === 'number' && value < rule.min) {\n          errors[field].push('Too small');\n        } else if (typeof rule.max === 'number' && value > rule.max) {\n          errors[field].push('Too large');\n        }\n        break;\n      case 'boolean':\n        if (!value || typeof value !== 'boolean') {\n          errors[field] = ['Invalid type'];\n          break;\n        }\n        break;\n      case 'array':\n        if (!value || !Array.isArray(value)) {\n          errors[field] = ['Invalid type'];\n          break;\n        }\n        \n        if (typeof rule.min === 'number' && value.length < rule.min) {\n          errors[field].push('Too few items');\n        } else if (typeof rule.max === 'number' && value.length > rule.max) {\n          errors[field].push('Too many items');\n        }\n        break;\n    }\n  }\n  \n  return { valid: Object.keys(errors).length === 0, errors };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 341,
+    "completion_tokens": 477,
+    "total_tokens": 818,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

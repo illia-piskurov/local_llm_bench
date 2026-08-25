@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ym2q6dpgh2rqw4akh5ncg9",
+  "object": "chat.completion",
+  "created": 1787082190,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(root) {\n  if (!root) {\n    return [];\n  }\n\n  const result = [];\n  const queue = [root];\n\n  while (queue.length > 0) {\n    // Dequeue the current node\n    const node = queue[0];\n    queue.shift();\n\n    // Process the value\n    result.push(node.value);\n\n    // Enqueue children if they exist\n    if (node.left) {\n      queue.push(node.left);\n    }\n    if (node.right) {\n      queue.push(node.right);\n    }\n  }\n\n  return result;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 186,
+    "completion_tokens": 150,
+    "total_tokens": 336,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

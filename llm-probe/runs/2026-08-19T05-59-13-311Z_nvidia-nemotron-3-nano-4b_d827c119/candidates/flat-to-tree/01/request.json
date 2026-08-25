@@ -1,0 +1,16 @@
+{
+  "model": "nvidia/nemotron-3-nano-4b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Convert a flat array of nodes in input.nodes (each node has id: string|number, name: string, and parentId: string|number|null) into a hierarchical tree where each node has a children array containing its direct child nodes. Roots have parentId: null or parentId not present in input.nodes. Return an array of root nodes in their original relative order. Each node's children array must also preserve original relative order. Every node in the output must include a children array (empty array [] if no children).\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"nodes\":[{\"id\":1,\"name\":\"Root\",\"parentId\":null},{\"id\":2,\"name\":\"Child A\",\"parentId\":1},{\"id\":3,\"name\":\"Child B\",\"parentId\":1}]}\noutput: [{\"id\":1,\"name\":\"Root\",\"parentId\":null,\"children\":[{\"id\":2,\"name\":\"Child A\",\"parentId\":1,\"children\":[]},{\"id\":3,\"name\":\"Child B\",\"parentId\":1,\"children\":[]}]}]"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

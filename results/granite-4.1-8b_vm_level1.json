@@ -1,0 +1,13 @@
+{
+  "model": "granite-4.1-8b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-08-07 21:56:40",
+  "passed": 15,
+  "total": 18,
+  "failures": [
+    "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно"
+  ]
+}

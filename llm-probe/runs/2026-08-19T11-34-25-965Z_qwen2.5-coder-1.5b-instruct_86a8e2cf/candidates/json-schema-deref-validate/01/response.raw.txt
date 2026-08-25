@@ -1,0 +1,85 @@
+```js
+function solve(input) {
+  const { definitions, schema, data } = input;
+  
+  function validateType(type, value) {
+    switch (type) {
+      case 'string':
+        return typeof value === 'string';
+      case 'number':
+        return typeof value === 'number' && !isNaN(value);
+      case 'boolean':
+        return typeof value === 'boolean';
+      case 'array':
+        return Array.isArray(value) && value.every(item => validateType('object', item));
+      case 'object':
+        const keys = Object.keys(schema.properties);
+        if (keys.length > 0) {
+          return keys.every(key => schema.properties[key].type === typeof data[key]);
+        } else {
+          return true;
+        }
+    }
+  }
+
+  function validateSchema(data, schema, path = '#') {
+    let valid = true;
+    const errors = [];
+
+    for (const key in schema.properties) {
+      if (schema.required.includes(key)) {
+        if (!data.hasOwnProperty(key)) {
+          errors.push({ path: `${path}/${key}`, message: 'Missing required property' });
+          valid = false;
+          continue;
+        }
+      }
+
+      const propSchema = schema.properties[key];
+      let subPath = `${path}/${key}`;
+
+      if (propSchema.type === 'array') {
+        const items = data[key];
+        subPath += '/0';
+        if (!Array.isArray(items)) {
+          errors.push({ path: subPath, message: 'Expected type array' });
+          valid = false;
+          continue;
+        }
+        for (let i = 0; i < items.length; i++) {
+          const itemErrors = validateSchema(items[i], propSchema.items, `${subPath}/${i}`);
+          if (!itemErrors.valid) {
+            errors.push(...itemErrors.errors);
+            valid = false;
+          }
+        }
+      } else if (propSchema.type === 'object') {
+        const subData = data[key];
+        subPath += '/0';
+        if (typeof subData !== 'object' || subData === null) {
+          errors.push({ path: subPath, message: 'Expected type object' });
+          valid = false;
+          continue;
+        }
+        const itemErrors = validateSchema(subData, propSchema, `${subPath}`);
+        if (!itemErrors.valid) {
+          errors.push(...itemErrors.errors);
+          valid = false;
+        }
+      } else {
+        const value = data[key];
+        const valueErrors = validateType(propSchema.type, value);
+        if (!valueErrors.valid) {
+          errors.push({ path: subPath, message: 'Value not of type ' + propSchema.type });
+          valid = false;
+        }
+      }
+    }
+
+    return { valid, errors };
+  }
+
+  const result = validateSchema(data, schema, '#');
+  return { valid: result.valid, errors: result.errors };
+}
+```

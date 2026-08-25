@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-e8fdgo9sh5l08b4x3je2rin",
+  "object": "chat.completion",
+  "created": 1787127611,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const schema = input.schema;\n    const data = input.data;\n    const errors = {};\n\n    for (const field in schema) {\n        const rule = schema[field];\n        const value = data[field];\n\n        let fieldErrors = [];\n\n        // Check type\n        if (value === undefined || value === null) {\n            if (rule.required) {\n                fieldErrors.push(\"Required\");\n            }\n        } else {\n            const valueType = typeof value;\n            if (rule.type && valueType !== rule.type) {\n                fieldErrors.push(\"Invalid type\");\n            }\n\n            // Check min\n            if (rule.min !== undefined) {\n                if (rule.type === \"string\") {\n                    if (value.length < rule.min) {\n                        fieldErrors.push(\"Too short\");\n                    }\n                } else if (rule.type === \"number\") {\n                    if (value < rule.min) {\n                        fieldErrors.push(\"Too small\");\n                    }\n                } else if (rule.type === \"array\") {\n                    if (value.length < rule.min) {\n                        fieldErrors.push(\"Too few items\");\n                    }\n                }\n            }\n\n            // Check max\n            if (rule.max !== undefined) {\n                if (rule.type === \"string\") {\n                    if (value.length > rule.max) {\n                        fieldErrors.push(\"Too long\");\n                    }\n                } else if (rule.type === \"number\") {\n                    if (value > rule.max) {\n                        fieldErrors.push(\"Too large\");\n                    }\n                } else if (rule.type === \"array\") {\n                    if (value.length > rule.max) {\n                        fieldErrors.push(\"Too many items\");\n                    }\n                }\n            }\n\n            // Check pattern\n            if (rule.pattern !== undefined && rule.type === \"string\") {\n                const regex = new RegExp(rule.pattern);\n                if (!regex.test(value)) {\n                    fieldErrors.push(\"Invalid format\");\n                }\n            }\n        }\n\n        if (fieldErrors.length > 0) {\n            errors[field] = fieldErrors;\n        }\n    }\n\n    return {\n        valid: Object.keys(errors).length === 0,\n        errors: errors\n    };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 341,
+    "completion_tokens": 446,
+    "total_tokens": 787,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

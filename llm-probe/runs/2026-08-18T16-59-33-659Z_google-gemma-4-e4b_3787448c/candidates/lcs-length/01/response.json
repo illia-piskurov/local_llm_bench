@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-tkaxkyezfxm7c2ex017if",
+  "object": "chat.completion",
+  "created": 1787074423,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const s1 = input.a;\n    const s2 = input.b;\n    const m = s1.length;\n    const n = s2.length;\n\n    // dp[i][j] will store the length of the LCS of s1[0...i-1] and s2[0...j-1]\n    // We use a 2D array of size (m+1) x (n+1)\n    const dp = Array(m + 1).fill(0).map(() => Array(n + 1).fill(0));\n\n    for (let i = 1; i <= m; i++) {\n        for (let j = 1; j <= n; j++) {\n            // If characters match, the LCS length increases by 1 based on previous result\n            if (s1[i - 1] === s2[j - 1]) {\n                dp[i][j] = dp[i - 1][j - 1] + 1;\n            } else {\n                // If characters do not match, take the maximum LCS length obtained by:\n                // 1. Excluding the last character of s1 (dp[i-1][j])\n                // 2. Excluding the last character of s2 (dp[i][j-1])\n                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n            }\n        }\n    }\n\n    return dp[m][n];\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 131,
+    "completion_tokens": 358,
+    "total_tokens": 489,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

@@ -1,0 +1,10 @@
+Run-length encode input.text: replace consecutive repeated characters with count+char (e.g. 'aaabbc' → '3a2b1c'). Return the encoded string.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"text":"aaabbc"}
+output: "3a2b1c"

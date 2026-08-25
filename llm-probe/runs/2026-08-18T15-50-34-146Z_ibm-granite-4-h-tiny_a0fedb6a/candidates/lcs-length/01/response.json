@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-g1exuxcj2fn2z30fuhj28r",
+  "object": "chat.completion",
+  "created": 1787068480,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const a = input.a;\n    const b = input.b;\n    const lenA = a.length;\n    const lenB = b.length;\n    const dp = Array(lenA + 1).fill(null).map(() => Array(lenB + 1).fill(0));\n    \n    for (let i = 1; i <= lenA; i++) {\n        for (let j = 1; j <= lenB; j++) {\n            if (a[i - 1] === b[j - 1]) {\n                dp[i][j] = dp[i - 1][j - 1] + 1;\n            } else {\n                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n            }\n        }\n    }\n    \n    return dp[lenA][lenB];\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 118,
+    "completion_tokens": 185,
+    "total_tokens": 303,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

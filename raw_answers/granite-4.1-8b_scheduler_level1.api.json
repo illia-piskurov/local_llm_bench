@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-8b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    from collections import defaultdict, deque\n\n    # Создаем граф зависимостей и словарь для подсчета входящих ребер\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n\n    # Построение графа и заполнение in_degree\n    for task, dependencies in tasks.items():\n        for dep in dependencies:\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    # Очередь для задач без предшественников\n    queue = deque([task for task in in_degree if in_degree[task] == 0])\n\n    result = []\n\n    while queue:\n        current_task = queue.popleft()\n        result.append(current_task)\n\n        # Уменьшаем входящий индекс для всех смежных задач\n        for dependent_task in graph[current_task]:\n            in_degree[dependent_task] -= 1\n            if in_degree[dependent_task] == 0:\n                queue.append(dependent_task)\n\n    # Если результат не содержит всех задач, есть цикл зависимости\n    if len(result) != len(tasks):\n        return None\n\n    return result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 328,
+    "total_output_tokens": 293,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.640797212882518,
+    "time_to_first_token_seconds": 2.474632
+  },
+  "response_id": "resp_9169cbcda638d8e140c4dd35b0189ec00da3ac1aa2112a60"
+}

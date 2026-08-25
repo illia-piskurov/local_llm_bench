@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-u9tas3xxwu9gowxey0inu",
+  "object": "chat.completion",
+  "created": 1787127553,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const items = input.items || [];\n  const coupon = input.coupon || null;\n  const taxRate = input.taxRate || 0;\n\n  // 1. Calculate subtotal\n  let subtotal = 0;\n  for (const item of items) {\n    subtotal += item.price * item.qty;\n  }\n  const subtotalRounded = Math.round(subtotal * 100) / 100;\n\n  // 2. Calculate discount\n  let discount = 0;\n\n  if (coupon) {\n    const { type, value, category } = coupon;\n\n    if (type === 'percent') {\n      discount = Math.min(subtotalRounded * (value / 100), subtotalRounded);\n    } else if (type === 'fixed') {\n      discount = Math.min(value, subtotalRounded);\n    } else if (type === 'category_percent') {\n      let categoryDiscount = 0;\n      for (const item of items) {\n        if (item.category === category) {\n          categoryDiscount += item.price * item.qty;\n        }\n      }\n      discount = Math.min(categoryDiscount * (value / 100), subtotalRounded);\n    }\n  }\n\n  // 3. Calculate tax\n  const taxableAmount = subtotalRounded - discount;\n  let tax = 0;\n  if (taxRate > 0) {\n    tax = Math.round(taxableAmount * taxRate * 100) / 100;\n  }\n\n  // 4. Calculate total\n  const total = Math.round((subtotalRounded - discount + tax) * 100) / 100;\n\n  return {\n    subtotal: subtotalRounded,\n    discount: Math.round(discount * 100) / 100,\n    tax: tax,\n    total: total\n  };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 439,
+    "completion_tokens": 399,
+    "total_tokens": 838,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

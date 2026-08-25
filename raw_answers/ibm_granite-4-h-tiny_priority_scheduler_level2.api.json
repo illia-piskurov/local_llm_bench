@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nfrom collections import defaultdict, deque\n\ndef critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:\n    graph = defaultdict(list)\n    indegree = {task: 0 for task in tasks}\n    \n    for task, (_, deps, _) in tasks.items():\n        for dep in deps:\n            graph[dep].append(task)\n            indegree[task] += 1\n    \n    def topological_sort():\n        queue = deque([task for task in tasks if indegree[task] == 0])\n        sorted_tasks = []\n        \n        while queue:\n            current = min(queue, key=lambda t: (-tasks[t][2], tasks[t][0], t))\n            sorted_tasks.append(current)\n            queue.remove(current)\n            \n            for neighbor in graph[current]:\n                indegree[neighbor] -= 1\n                if indegree[neighbor] == 0:\n                    queue.append(neighbor)\n        \n        return sorted_tasks if len(sorted_tasks) == len(tasks) else None\n    \n    order = topological_sort()\n    \n    if not order:\n        return None\n    \n    longest_path = defaultdict(int)\n    for task in reversed(order):\n        max_prev = max((longest_path[prev] for prev in graph[task]), default=0)\n        longest_path[task] = max_prev + tasks[task][0]\n    \n    return max(longest_path.values(), default=0)\n\ndef makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:\n    order = plan_order(tasks, workers)\n    \n    if not order:\n        return None\n    \n    schedule = []\n    current_time = 0\n    available_workers = workers\n    \n    while order or any(indegree[task] == 0 for task in tasks):\n        ready_tasks = [task for task in order if indegree[task] == 0]\n        \n        if not ready_tasks:\n            current_time += 1\n            continue\n        \n        ready_tasks.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))\n        \n        while available_workers > 0 and ready_tasks:\n            task = ready_tasks.pop(0)\n            schedule.append((task, current_time))\n            \n            for neighbor in graph[task]:\n                indegree[neighbor] -= 1\n            \n            if indegree[task] == 0:\n                order.remove(task)\n        \n        current_time += 1\n    \n    return max(end_time for _, end_time in schedule)\n\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 1070,
+    "total_output_tokens": 517,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 39.84005412699037,
+    "time_to_first_token_seconds": 2.6600140000000003
+  },
+  "response_id": "resp_a7f76eb614e8005f3305bf99ca0001440aeb52450ad6d900"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-omqlcjwzbvn8luvwfnakv",
+  "object": "chat.completion",
+  "created": 1787069297,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { template, data } = input;\n  const resolvedTemplate = template.replace(/\\{(\\w+)\\}/g, (match, key) => {\n    const value = data[key] ?? null;\n    if (value === undefined || value === null) return '';\n    if (typeof value === 'string') return value;\n    return String(value);\n  });\n  const paths = resolvedTemplate.split(/(\\s+)/).map(p => p.trim());\n  let result = '';\n  paths.forEach(path => {\n    const parts = path.split('.');\n    let current = data;\n    for (let i = 0; i < parts.length; i++) {\n      if (!current || parts[i] === '') continue;\n      const part = parts[i];\n      if (part.includes('.')) {\n        const key = part.split('.')[parts.length - 1];\n        current = current[key] || '';\n      } else {\n        current = current[key];\n      }\n    }\n    result += resolvedTemplate.replace(/\\{(\\w+)\\}/g, (_, key) => current ? current[key] : '');\n  });\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 281,
+    "completion_tokens": 254,
+    "total_tokens": 535,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

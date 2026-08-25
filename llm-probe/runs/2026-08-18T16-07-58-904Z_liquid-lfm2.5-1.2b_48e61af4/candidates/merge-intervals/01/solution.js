@@ -1,0 +1,21 @@
+export function solve(input) {
+  const intervals = input.intervals;
+  if (!intervals || intervals.length === 0) return [];
+
+  intervals.sort((a, b) => a.start - b.start);
+
+  const merged = [intervals[0]];
+
+  for (let i = 1; i < intervals.length; i++) {
+    const current = intervals[i];
+    const last = merged[merged.length - 1];
+
+    if (current.start <= last.end + 1) {
+      merged[merged.length - 1][1] = Math.max(last.end, current.end);
+    } else {
+      merged.push([current.start, current.end]);
+    }
+  }
+
+  return merged;
+}

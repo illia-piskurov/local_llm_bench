@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "microsoft/phi-4-mini-reasoning",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-08-17 15:12:57",
+  "stats": {
+    "input_tokens": 328,
+    "total_output_tokens": 12265,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 11.121165537392024,
+    "time_to_first_token_seconds": 2.5282620000000002,
+    "model_load_time_seconds": null
+  }
+}

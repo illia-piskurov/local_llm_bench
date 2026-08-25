@@ -1,0 +1,96 @@
+```python
+class StackError(Exception):
+    def __init__(self, message, line_number):
+        super().__init__(f"{message} at line {line_number}")
+
+def run(program: str) -> list[str]:
+    lines = program.strip().split('\n')
+    stack = []
+    output = []
+    labels = {}
+    current_line = 0
+
+    for line_number, line in enumerate(lines, start=1):
+        if line.startswith('#'):
+            continue
+
+        parts = line.split()
+        command = parts[0]
+
+        try:
+            if command == 'PUSH':
+                if len(parts) != 2:
+                    raise StackError("Invalid PUSH instruction", line_number)
+                stack.append(int(parts[1]))
+            elif command == 'POP':
+                if not stack:
+                    raise StackError("Stack is empty", line_number)
+                stack.pop()
+            elif command == 'ADD':
+                if len(stack) < 2:
+                    raise StackError("Not enough values on the stack for ADD", line_number)
+                b, a = stack.pop(), stack.pop()
+                stack.append(a + b)
+            elif command == 'SUB':
+                if len(stack) < 2:
+                    raise StackError("Not enough values on the stack for SUB", line_number)
+                b, a = stack.pop(), stack.pop()
+                stack.append(a - b)
+            elif command == 'MUL':
+                if len(stack) < 2:
+                    raise StackError("Not enough values on the stack for MUL", line_number)
+                b, a = stack.pop(), stack.pop()
+                stack.append(a * b)
+            elif command == 'DIV':
+                if len(stack) < 2:
+                    raise StackError("Not enough values on the stack for DIV", line_number)
+                b, a = stack.pop(), stack.pop()
+                if b == 0:
+                    raise StackError("Division by zero", line_number)
+                stack.append(a // b)
+            elif command == 'DUP':
+                if not stack:
+                    raise StackError("Stack is empty", line_number)
+                stack.append(stack[-1])
+            elif command == 'SWAP':
+                if len(stack) < 2:
+                    raise StackError("Not enough values on the stack for SWAP", line_number)
+                a, b = stack.pop(), stack.pop()
+                stack.append(a)
+                stack.append(b)
+            elif command == 'PRINT':
+                if not stack:
+                    raise StackError("Stack is empty", line_number)
+                output.append(str(stack[-1]))
+            elif command == 'LABEL':
+                if len(parts) != 2:
+                    raise StackError("Invalid LABEL instruction", line_number)
+                labels[parts[1]] = current_line
+            elif command == 'JMP':
+                if parts[1] not in labels:
+                    raise StackError(f"Unknown label: {parts[1]} at line {line_number}")
+                current_line = labels[parts[1]]
+            elif command == 'JZ':
+                if len(stack) < 1:
+                    raise StackError("Not enough values on the stack for JZ", line_number)
+                value = stack.pop()
+                if value == 0:
+                    if parts[1] not in labels:
+                        raise StackError(f"Unknown label: {parts[1]} at line {line_number}")
+                    current_line = labels[parts[1]]
+            elif command == 'JNZ':
+                if len(stack) < 1:
+                    raise StackError("Not enough values on the stack for JNZ", line_number)
+                value = stack.pop()
+                if value != 0:
+                    if parts[1] not in labels:
+                        raise StackError(f"Unknown label: {parts[1]} at line {line_number}")
+                    current_line = labels[parts[1]]
+            else:
+                raise StackError(f"Unknown instruction: {command}", line_number)
+
+        except Exception as e:
+            print(e)
+
+    return output
+```

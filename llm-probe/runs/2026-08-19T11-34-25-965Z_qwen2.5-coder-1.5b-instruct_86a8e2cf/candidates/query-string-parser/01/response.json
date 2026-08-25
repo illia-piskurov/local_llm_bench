@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ov8f0dvn3mp67pmir7xz",
+  "object": "chat.completion",
+  "created": 1787139310,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const queryString = input.query ? input.query.slice(1) : '';\n  const result = {};\n  \n  if (!queryString) return result;\n  \n  const pairs = queryString.split('&');\n  for (const pair of pairs) {\n    const [key, value] = pair.split('=').map(decodeURIComponent);\n    \n    if (value === '') {\n      value = true; // Default to boolean true\n    } else if (!isNaN(value)) {\n      value = parseFloat(value); // Parse numeric values\n    } else if (value.toLowerCase() === 'true') {\n      value = true; // Parse boolean values\n    } else if (value.toLowerCase() === 'false') {\n      value = false; // Parse boolean values\n    }\n    \n    const keyParts = key.split('[');\n    if (keyParts.length > 1) {\n      let currentObject = result;\n      for (let i = 0; i < keyParts.length - 1; i++) {\n        currentObject = currentObject[keyParts[i]];\n        if (!currentObject) {\n          currentObject = {};\n          result[keyParts[i]] = currentObject;\n        }\n      }\n      const nestedKey = keyParts.pop();\n      currentObject[nestedKey] = value;\n    } else {\n      result[key] = value;\n    }\n  }\n  \n  return result;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 336,
+    "completion_tokens": 284,
+    "total_tokens": 620,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

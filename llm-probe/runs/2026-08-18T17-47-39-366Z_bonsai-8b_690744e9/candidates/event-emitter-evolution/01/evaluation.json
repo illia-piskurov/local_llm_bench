@@ -1,0 +1,23 @@
+{
+  "status": "failed",
+  "passed": 0,
+  "total": 3,
+  "tests": [
+    {
+      "id": "once-and-off",
+      "passed": false,
+      "error": "Expected {\"log\":[{\"listenerId\":\"btn-once\",\"event\":\"click\",\"payload\":1},{\"listenerId\":\"btn-perm\",\"event\":\"click\",\"payload\":1},{\"listenerId\":\"btn-perm\",\"event\":\"click\",\"payload\":2}]}, got {\"log\":[{\"listenerId\":\"btn-once\",\"event\":\"click\"}]}"
+    },
+    {
+      "id": "wildcard-matching",
+      "passed": false,
+      "error": "Expected {\"log\":[{\"listenerId\":\"global-logger\",\"event\":\"order.paid\",\"payload\":{\"orderId\":101}},{\"listenerId\":\"order-service\",\"event\":\"order.paid\",\"payload\":{\"orderId\":101}},{\"listenerId\":\"receipt-mailer\",\"event\":\"order.paid\",\"payload\":{\"orderId\":101}},{\"listenerId\":\"global-logger\",\"event\":\"user.signup\",\"payload\":{\"userId\":5}}]}, got {\"log\":[]}"
+    },
+    {
+      "id": "duplicate-listener-ordering",
+      "passed": false,
+      "error": "Expected {\"log\":[{\"listenerId\":\"A\",\"event\":\"msg\",\"payload\":\"hello\"},{\"listenerId\":\"B\",\"event\":\"msg\",\"payload\":\"hello\"}]}, got {\"log\":[]}"
+    }
+  ],
+  "durationMs": 21
+}

@@ -1,0 +1,22 @@
+```javascript
+export function solve(input) {
+  if (typeof input !== 'object' || input === null) return false;
+
+  if (input.a === null && input.b === null) return true;
+  if (input.a === null || input.b === null) return false;
+
+  const keysA = Object.keys(input.a);
+  const keysB = Object.keys(input.b);
+
+  if (keysA.length !== keysB.length) return false;
+
+  for (const key of keysA) {
+    if (!input.a.hasOwnProperty(key) || !input.b.hasOwnProperty(key)) return false;
+    if (typeof input.a[key] === 'object' && typeof input.b[key] === 'object') {
+      if (!solve(input.a[key]) || !solve(input.b[key])) return false;
+    } else if (typeof input.a[key] !== typeof input.b[key]) return false;
+  }
+
+  return true;
+}
+```

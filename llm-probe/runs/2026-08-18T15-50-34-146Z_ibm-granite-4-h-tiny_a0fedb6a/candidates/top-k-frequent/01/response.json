@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ueymti60e4undnvtj5j5h",
+  "object": "chat.completion",
+  "created": 1787068457,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const counts = {};\n  for (const num of input.numbers) {\n    counts[num] = (counts[num] || 0) + 1;\n  }\n  \n  const sortedNumbers = Object.entries(counts).sort((a, b) => {\n    if (b[1] !== a[1]) {\n      return b[1] - a[1];\n    } else {\n      return a[0] - b[0];\n    }\n  });\n  \n  return sortedNumbers.slice(0, input.k).map(([num]) => Number(num));\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 135,
+    "completion_tokens": 125,
+    "total_tokens": 260,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

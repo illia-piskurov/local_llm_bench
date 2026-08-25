@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-j57qaboupqg5jetzc35boe",
+  "object": "chat.completion",
+  "created": 1787037239,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const n = input.n;\n    if (n <= 2) return 0;\n\n    let count = 0;\n    for (let num = 2; num < n; num++) {\n        let isPrime = true;\n        for (let i = 2, maxDivisor = Math.sqrt(num); i <= maxDivisor; i++) {\n            if (num % i === 0) {\n                isPrime = false;\n                break;\n            }\n        }\n        if (isPrime) count++;\n    }\n    return count;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 130,
+    "completion_tokens": 127,
+    "total_tokens": 257,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

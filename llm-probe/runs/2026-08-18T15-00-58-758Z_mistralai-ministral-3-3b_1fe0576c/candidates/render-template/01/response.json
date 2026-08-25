@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-3w5tulxg4zzqltz82sh1ma",
+  "object": "chat.completion",
+  "created": 1787065328,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { template, data } = input;\n    return template.split('{{').reduce((acc, part, i) => {\n        if (i === 0) return acc + part;\n\n        const [closingBrace, ...rest] = part.split('}}');\n        const path = rest.join('}}');\n\n        let value = data;\n        const trimmedPath = path.trim();\n        if (!trimmedPath) return acc + '}';\n\n        for (const segment of trimmedPath.split('.')) {\n            if (value === undefined || value === null) break;\n            value = value[segment];\n        }\n\n        const strValue = String(value);\n        return acc + strValue + '}}';\n    }, '');\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 259,
+    "completion_tokens": 160,
+    "total_tokens": 419,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

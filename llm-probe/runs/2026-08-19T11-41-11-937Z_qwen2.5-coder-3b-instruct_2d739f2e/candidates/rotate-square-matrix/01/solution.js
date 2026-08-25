@@ -1,0 +1,17 @@
+export function solve(input) {
+  // Extract the matrix from the input object
+  const matrix = input.matrix;
+  
+  // Create a new matrix with dimensions reversed
+  const rotatedMatrix = Array(matrix[0].length).fill().map(() => []);
+
+  // Rotate the original matrix 90 degrees clockwise
+  for (let i = 0; i < matrix.length; i++) {
+    for (let j = 0; j < matrix[i].length; j++) {
+      rotatedMatrix[j][matrix.length - 1 - i] = matrix[i][j];
+    }
+  }
+
+  // Return the new rotated matrix
+  return rotatedMatrix;
+}

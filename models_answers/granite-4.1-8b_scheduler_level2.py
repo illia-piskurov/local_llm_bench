@@ -1,0 +1,38 @@
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    from collections import defaultdict, deque
+
+    # Создаем граф зависимостей и словари для хранения времени на предшественников и самых ранних начал
+    graph = defaultdict(list)
+    earliest_start = {task: 0 for task in tasks}
+    durations = {task: duration for task, (duration, _) in tasks.items()}
+
+    # Построение графа зависимостей
+    for task, (_, dependencies) in tasks.items():
+        for dep in dependencies:
+            graph[dep].append(task)
+
+    # Инициализация очереди для задач без предшественников
+    queue = deque([task for task in earliest_start if not graph[task]])
+
+    while queue:
+        current_task = queue.popleft()
+
+        # Обновление времени начала для всех зависимых задач
+        for dependent_task in graph[current_task]:
+            earliest_start[dependent_task] = max(
+                earliest_start[dependent_task],
+                earliest_start[current_task]
+            )
+            # Удаление ребра, если текущая задача стала последней в своем предшественнике
+            if all(earliest_start[child] == earliest_start[current_task] + durations[current_task] for child in graph[dependent_task]):
+                queue.append(dependent_task)
+
+    # Вычисление позднего времени завершения для каждой задачи и определение критического пути
+    latest_finish = {task: earliest_start[task] + durations[task] for task in tasks}
+    critical_path_length = max(latest_finish.values())
+
+    # Проверка наличия циклов (если какая-то задача не была обработана в очереди, есть цикл)
+    if len(queue) != len(tasks):
+        return None
+
+    return critical_path_length

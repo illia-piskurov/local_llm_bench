@@ -1,0 +1,63 @@
+_DELETED = object()
+
+
+def run(program: str) -> list[str]:
+    global_store: dict[str, str] = {}
+    tx_stack: list[dict[str, object]] = []
+    output: list[str] = []
+
+    for line in program.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+
+        parts = line.split()
+        cmd = parts[0].upper()
+
+        if cmd == 'SET':
+            key, value = parts[1], parts[2]
+            if tx_stack:
+                tx_stack[-1][key] = value
+            else:
+                global_store[key] = value
+
+        elif cmd == 'GET':
+            key = parts[1]
+            found = False
+            for layer in reversed(tx_stack):
+                if key in layer:
+                    output.append("NULL" if layer[key] is _DELETED else layer[key])
+                    found = True
+                    break
+            if not found:
+                output.append(global_store.get(key, "NULL"))
+
+        elif cmd == 'DELETE':
+            key = parts[1]
+            if tx_stack:
+                tx_stack[-1][key] = _DELETED
+            else:
+                global_store.pop(key, None)
+
+        elif cmd == 'BEGIN':
+            tx_stack.append({})
+
+        elif cmd == 'COMMIT':
+            if not tx_stack:
+                output.append("NO TRANSACTION")
+            else:
+                layer = tx_stack.pop()
+                target = tx_stack[-1] if tx_stack else global_store
+                for key, val in layer.items():
+                    if val is _DELETED:
+                        target.pop(key, None)
+                    else:
+                        target[key] = val
+
+        elif cmd == 'ROLLBACK':
+            if not tx_stack:
+                output.append("NO TRANSACTION")
+            else:
+                tx_stack.pop()
+
+    return output

@@ -1,0 +1,37 @@
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    indeg = {t: 0 for t in tasks}
+    for deps in tasks.values():
+        indeg.update(deps)
+    rem = {t: d for t, (d, _, _) in tasks.items()}
+    total = len(tasks)
+    completed = 0
+    order = []
+    running = set()
+    ready = []                     # heap key = (-priority, duration, name)
+
+    import heapq
+    for t in indeg:
+        if indeg[t] == 0:
+            d, priority, name = tasks[t]
+            heapq.heappush(ready, (-priority, d, name))
+
+    while completed < total:
+        # finish tasks that have remaining time == 1
+        to_remove = [t for t in list(running) if rem[t] == 1]
+        for t in to_remove:
+            running.remove(t)
+            completed += 1
+            d, priority, name = tasks[t]
+            for dep in tasks[t][1]:
+                indeg[dep] -= 1
+                if indeg[dep] == 0 and dep not in running:
+                    heapq.heappush(ready, (-priority, d, dep))
+
+        # start new tasks up to the worker limit
+        while len(running) < workers and ready:
+            _, dur, name = heapq.heappop(ready)
+            running.add(name)
+            order.append(name)
+            rem[name] = dur
+
+    return None if completed != total else order

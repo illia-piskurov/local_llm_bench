@@ -1,0 +1,26 @@
+{
+  "status": "failed",
+  "passed": 2,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "array-replacement",
+      "passed": true
+    },
+    {
+      "id": "nested-three-layers",
+      "passed": false,
+      "error": "Expected {\"a\":{\"b\":{\"c\":99,\"d\":2,\"e\":100}}}, got {\"a\":{\"b\":{\"e\":100}}}"
+    },
+    {
+      "id": "primitive-overwrites-object",
+      "passed": false,
+      "error": "Expected {\"val\":\"plain_string\"}, got {\"val\":{\"nested\":true}}"
+    }
+  ],
+  "durationMs": 22
+}

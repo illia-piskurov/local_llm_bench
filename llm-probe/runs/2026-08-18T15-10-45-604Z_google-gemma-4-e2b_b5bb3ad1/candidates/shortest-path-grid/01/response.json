@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-a7807zkykg4088u2s4a4kd3",
+  "object": "chat.completion",
+  "created": 1787067134,
+  "model": "google/gemma-4-e2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const grid = input.grid;\n    const start = input.start;\n    const end = input.end;\n\n    if (!grid || grid.length === 0) {\n        return -1;\n    }\n\n    const R = grid.length;\n    const C = grid[0].length;\n\n    const startR = start[0];\n    const startC = start[1];\n    const endR = end[0];\n    const endC = end[1];\n\n    // Check if start or end are blocked (though typically they are assumed valid starting points)\n    if (grid[startR][startC] === 1 || grid[endR][endC] === 1) {\n        // If the start position itself is blocked, it's unreachable unless start == end and start is allowed.\n        // Assuming standard graph traversal rules where start/end must be traversable (0).\n        if (startR === endR && startC === endC) {\n            return 0;\n        }\n        return -1;\n    }\n\n    // BFS Initialization\n    // Queue stores [r, c, distance]\n    const queue = [[startR, startC, 0]];\n    const visited = new Set();\n    visited.add(`${startR},${startC}`);\n\n    // Directions: Up, Down, Left, Right\n    const directions = [\n        [-1, 0],\n        [1, 0],\n        [0, -1],\n        [0, 1]\n    ];\n\n    while (queue.length > 0) {\n        const [r, c, dist] = queue.shift();\n\n        if (r === endR && c === endC) {\n            return dist;\n        }\n\n        for (const [dr, dc] of directions) {\n            const nr = r + dr;\n            const nc = c + dc;\n\n            // Boundary check\n            if (nr >= 0 && nr < R && nc >= 0 && nc < C) {\n                // Check if traversable (grid value must be 0) and not visited\n                if (grid[nr][nc] === 0 && !visited.has(`${nr},${nc}`)) {\n                    visited.add(`${nr},${nc}`);\n                    queue.push([nr, nc, dist + 1]);\n                }\n            }\n        }\n    }\n\n    // End of BFS: target is unreachable\n    return -1;\n}",
+        "reasoning_content": "Thinking Process:\n\n1.  **Understand the Goal:** The task is to find the minimum number of 4-directional moves (up, down, left, right) from a starting cell (`input.start`) to an ending cell (`input.end`) on a grid (`input.grid`). Movement is restricted to '0' cells (0-cells), and '1' cells are blocked (1-cells).\n\n2.  **Input Analysis:**\n    *   `input.grid`: A 2D array representing the grid. `grid[r][c]` seems to indicate if a cell is traversable or blocked. The prompt states: \"0-cells in input.grid\", and \"1-cells are blocked\". This implies '0' means open, '1' means blocked (walls).\n    *   `input.start`: `[r_start, c_start]` coordinates.\n    *   `input.end`: `[r_end, c_end]` coordinates.\n\n3.  **Algorithm Choice:** Finding the minimum number of moves in an unweighted grid graph is a classic Breadth-First Search (BFS) problem.\n\n4.  **BFS Implementation Details:**\n    *   **State:** The current cell coordinates `(r, c)`.\n    *   **Goal:** Reach `input.end`.\n    *   **Transitions:** Move to adjacent cells (up, down, left, right).\n    *   **Constraints/Validity Checks:**\n        *   The new cell must be within the grid boundaries.\n        *   The new cell must be traversable (must be a '0' based on the interpretation, or implicitly handled by checking if it exists and is not blocked). Since the problem defines 1s as blocked, we check `input.grid[r][c] == 0`.\n    *   **Tracking:** Need a way to keep track of visited cells and the distance traveled.\n\n5.  **Step-by-Step BFS Plan:**\n    *   Initialize dimensions: $R$ (rows), $C$ (columns).\n    *   Check initial state: If `start` or `end` are invalid, handle edge cases (though typical competitive programming assumes valid inputs unless specified).\n    *   Queue initialization: Start with `(start_r, start_c)` and distance 0.\n    *   Visited set/array: To prevent cycles and redundant work.\n\n6.  **Execution (Self-Correction/Refinement):** The input format is an object. We need to parse it first.\n\n    Let $R = \\text{input.grid.length}$, $C = \\text{input.grid}[0].length$.\n\n    *   Start BFS from `(start_r, start_c)`.\n    *   Queue: `[[start_r, start_c, 0]]`\n    *   Visited: `set([(start_r, start_c)])`\n\n    While queue is not empty:\n        Pop $(r, c, d)$.\n        If $(r, c) == (end_r, end_c)$, return $d$.\n        For each neighbor $(nr, nc)$:\n            Check bounds: $0 \\le nr < R$ and $0 \\le nc < C$.\n            Check traversability: `input.grid[nr][nc] == 0`.\n            Check visited: Not in visited set.\n            If valid, mark visited, push $(nr, nc, d+1)$ to queue.\n\n7.  **Handling Input Structure:** The input is provided as an object.\n\n    `start_r = input.start[0]`\n    `start_c = input.start[1]`\n    `end_r = input.end[0]`\n    `end_c = input.end[1]`\n\n8.  **Writing the Code (JavaScript, synchronous):** Need to ensure the environment handles standard array/object access correctly. Since we are restricted to pure JS without external libraries, standard BFS structure is fine.\n\n9.  **Final Review against Constraints:**\n    *   ES2023 only, synchronous. (Checked)\n    *   No imports/require/async/timers. (Checked)\n    *   Return format: JSON-compatible value (integer or -1). (Checked)\n\nLet's structure the implementation within the `solve` function.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 168,
+    "completion_tokens": 1503,
+    "total_tokens": 1671,
+    "completion_tokens_details": {
+      "reasoning_tokens": 939
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e2b"
+}

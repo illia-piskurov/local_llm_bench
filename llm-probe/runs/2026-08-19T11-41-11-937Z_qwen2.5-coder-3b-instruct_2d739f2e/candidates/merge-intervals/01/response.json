@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-79ixm53rojws8p3gjlndfs",
+  "object": "chat.completion",
+  "created": 1787139946,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    if (input.intervals.length === 0) return [];\n\n    // Sort intervals by start time\n    input.intervals.sort((a, b) => a[0] - b[0]);\n\n    const mergedIntervals = [];\n    let currentInterval = input.intervals[0];\n\n    for (let i = 1; i < input.intervals.length; i++) {\n        const interval = input.intervals[i];\n        \n        if (interval[0] <= currentInterval[1]) {\n            // Overlap or touching, merge the intervals\n            currentInterval[1] = Math.max(currentInterval[1], interval[1]);\n        } else {\n            // No overlap, add the current interval to the merged list\n            mergedIntervals.push(currentInterval);\n            currentInterval = interval;\n        }\n    }\n\n    // Add the last interval after the loop\n    mergedIntervals.push(currentInterval);\n\n    return mergedIntervals;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 163,
+    "completion_tokens": 203,
+    "total_tokens": 366,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

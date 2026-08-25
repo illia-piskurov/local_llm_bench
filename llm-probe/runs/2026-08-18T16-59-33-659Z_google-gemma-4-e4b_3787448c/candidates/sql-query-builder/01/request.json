@@ -1,0 +1,16 @@
+{
+  "model": "google/gemma-4-e4b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Compile a JSON query AST in input.query into a parameterized SQL string and params array.\nAST Structure:\n- table: string (e.g. 'users')\n- select: array of column strings (e.g. ['id', 'name']) or alias objects { expr: string, as: string }. Default ['*'].\n- joins: optional array of { type?: 'INNER'|'LEFT'|'RIGHT', table: string, on: { [leftCol: string]: string } }.\n- where: optional condition object with recursive AND/OR or { field: string, op: string, value: any }.\n  Supported ops: '=', '!=', '>', '<', '>=', '<=', 'LIKE', 'IN', 'IS NULL', 'IS NOT NULL'.\n  - For 'IS NULL' / 'IS NOT NULL', do not add a parameter.\n  - For 'IN', value is an array, produce `field IN ($1, $2)`.\n  - For other ops, add parameter `$n`.\n- groupBy: optional array of column strings.\n- orderBy: optional array of { field: string, dir?: 'ASC'|'DESC' } (default 'ASC').\n- limit: optional number.\n- offset: optional number.\nPlaceholders are numbered sequentially starting at $1, $2...\nReturn { sql: string, params: any[] }.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"query\":{\"table\":\"users\",\"select\":[\"id\",\"email\"],\"where\":{\"AND\":[{\"field\":\"status\",\"op\":\"=\",\"value\":\"active\"},{\"OR\":[{\"field\":\"role\",\"op\":\"=\",\"value\":\"admin\"},{\"field\":\"age\",\"op\":\">=\",\"value\":21}]}]},\"orderBy\":[{\"field\":\"created_at\",\"dir\":\"DESC\"}],\"limit\":10}}\noutput: {\"sql\":\"SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3)) ORDER BY created_at DESC LIMIT 10\",\"params\":[\"active\",\"admin\",21]}"
+    }
+  ],
+  "temperature": 1,
+  "max_tokens": 16000,
+  "stream": false
+}

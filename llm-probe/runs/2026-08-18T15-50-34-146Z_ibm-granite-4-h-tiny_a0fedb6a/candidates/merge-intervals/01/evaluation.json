@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "passed": 6,
+  "total": 6,
+  "tests": [
+    {
+      "id": "touching",
+      "passed": true
+    },
+    {
+      "id": "unsorted",
+      "passed": true
+    },
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "single",
+      "passed": true
+    },
+    {
+      "id": "no-merge",
+      "passed": true
+    },
+    {
+      "id": "all-merge",
+      "passed": true
+    }
+  ],
+  "durationMs": 27
+}

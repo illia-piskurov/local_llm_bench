@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "passed": 5,
+  "total": 5,
+  "tests": [
+    {
+      "id": "tie",
+      "passed": true
+    },
+    {
+      "id": "negative",
+      "passed": true
+    },
+    {
+      "id": "all",
+      "passed": true
+    },
+    {
+      "id": "single",
+      "passed": true
+    },
+    {
+      "id": "k-equals-total",
+      "passed": true
+    }
+  ],
+  "durationMs": 28
+}

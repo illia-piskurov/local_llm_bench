@@ -1,0 +1,14 @@
+export function solve(input) {
+  let result = [];
+  let currentInterval = null;
+
+  for (let i = 0; i < input.intervals.length; i++) {
+    const interval = input.intervals[i];
+    if (currentInterval === null || interval[0] > currentInterval[1]) {
+      currentInterval = interval;
+    }
+    result.push(currentInterval);
+  }
+
+  return result;
+}

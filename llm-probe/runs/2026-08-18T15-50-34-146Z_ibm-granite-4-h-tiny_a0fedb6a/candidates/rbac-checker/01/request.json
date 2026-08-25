@@ -1,0 +1,16 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Check access permissions for an array of requests in input.requests against security configuration.\nInput structure:\n- input.roles: { [roleName]: string[] } (array of permission rules granted by role)\n- input.users: { [userId]: { roles?: string[], allows?: string[], denies?: string[] } }\n- input.requests: Array of { user: string, permission: string }\nRules:\n1. Explicit denies override everything: if any rule in user's 'denies' matches requested permission, result is false.\n2. Rule matching: exact match ('posts:read'), namespace wildcard ('posts:*' matches any 'posts:...'), or super wildcard ('*' matches anything).\n3. Access is granted (true) if any user's role grants it OR if listed in user's 'allows', unless denied.\n4. If user not found, result is false.\nReturn an array of booleans corresponding to each request in input.requests.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"roles\":{\"viewer\":[\"articles:read\"],\"admin\":[\"*\"]},\"users\":{\"alice\":{\"roles\":[\"viewer\"]},\"bob\":{\"roles\":[\"admin\"],\"denies\":[\"users:delete\"]}},\"requests\":[{\"user\":\"alice\",\"permission\":\"articles:read\"},{\"user\":\"alice\",\"permission\":\"articles:write\"},{\"user\":\"bob\",\"permission\":\"articles:write\"},{\"user\":\"bob\",\"permission\":\"users:delete\"}]}\noutput: [true,false,true,false]"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

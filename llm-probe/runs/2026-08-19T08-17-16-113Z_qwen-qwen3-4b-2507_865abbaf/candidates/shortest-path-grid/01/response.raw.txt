@@ -1,0 +1,57 @@
+```javascript
+export function solve(input) {
+    const grid = input.grid;
+    const start = input.start;
+    const end = input.end;
+    
+    const rows = grid.length;
+    const cols = grid[0].length;
+    
+    // If start or end is out of bounds
+    if (start[0] < 0 || start[0] >= rows || start[1] < 0 || start[1] >= cols ||
+        end[0] < 0 || end[0] >= rows || end[1] < 0 || end[1] >= cols) {
+        return -1;
+    }
+    
+    // If start and end are the same
+    if (start[0] === end[0] && start[1] === end[1]) {
+        return 0;
+    }
+    
+    // BFS to find minimum moves
+    const queue = [[start[0], start[1], 0]];
+    const visited = new Set();
+    visited.add(`${start[0]},${start[1]}`);
+    
+    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]]; // right, left, down, up
+    
+    while (queue.length > 0) {
+        const [row, col, moves] = queue.shift();
+        
+        for (const [dr, dc] of directions) {
+            const newRow = row + dr;
+            const newCol = col + dc;
+            
+            // Check bounds
+            if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
+                continue;
+            }
+            
+            // Check if cell is blocked (1) or already visited
+            if (grid[newRow][newCol] === 1 || visited.has(`${newRow},${newCol}`)) {
+                continue;
+            }
+            
+            // Check if we reached the end
+            if (newRow === end[0] && newCol === end[1]) {
+                return moves + 1;
+            }
+            
+            visited.add(`${newRow},${newCol}`);
+            queue.push([newRow, newCol, moves + 1]);
+        }
+    }
+    
+    return -1;
+}
+```

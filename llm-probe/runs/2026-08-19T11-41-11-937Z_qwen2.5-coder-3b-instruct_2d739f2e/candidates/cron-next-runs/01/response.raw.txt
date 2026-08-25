@@ -1,0 +1,56 @@
+```javascript
+function solve(input) {
+  const [minute, hour, dayOfMonth, month, dayOfWeek] = input.cron.split(' ');
+  let fromTimestamp = new Date(input.from).getTime();
+  
+  function parseField(field) {
+    if (field === '*') return null;
+    if (field.includes('-')) {
+      const [start, end] = field.split('-').map(Number);
+      return Array.from({ length: Math.ceil((end - start + 1) / 15) }, (_, i) => start + i * 15);
+    }
+    if (field.includes('/')) {
+      const [start, step] = field.split('/').map(Number);
+      let arr = [];
+      for (let i = start; i <= 23; i += step) {
+        arr.push(i);
+      }
+      return arr;
+    }
+    return [Number(field)];
+  }
+
+  function isMatch(date, minute, hour, dayOfMonth, month, dayOfWeek) {
+    if (minute !== null && date.getMinutes() !== minute) return false;
+    if (hour !== null && date.getHours() !== hour) return false;
+    if (dayOfMonth !== null && date.getDate() !== dayOfMonth) return false;
+    if (month !== null && date.getMonth() + 1 !== month) return false;
+    if (dayOfWeek !== null && date.getDay() !== dayOfWeek) return false;
+    return true;
+  }
+
+  function nextDate(fromTimestamp, minute, hour, dayOfMonth, month, dayOfWeek) {
+    let now = new Date(fromTimestamp);
+    while (!isMatch(now, minute, hour, dayOfMonth, month, dayOfWeek)) {
+      now.setDate(now.getDate() + 1);
+    }
+    return now;
+  }
+
+  const minuteList = parseField(minute);
+  const hourList = parseField(hour);
+  const dayOfMonthList = parseField(dayOfMonth);
+  const monthList = parseField(month);
+  const dayOfWeekList = parseField(dayOfWeek);
+
+  let result = [];
+  for (let i = 0; i < input.count; i++) {
+    fromTimestamp = nextDate(fromTimestamp, minuteList[i % minuteList.length], hourList[i % hourList.length],
+      dayOfMonthList[i % dayOfMonthList.length], monthList[i % monthList.length],
+      dayOfWeekList[i % dayOfWeekList.length]).getTime();
+    result.push(new Date(fromTimestamp).toISOString().split('.')[0] + 'Z');
+  }
+
+  return result;
+}
+```

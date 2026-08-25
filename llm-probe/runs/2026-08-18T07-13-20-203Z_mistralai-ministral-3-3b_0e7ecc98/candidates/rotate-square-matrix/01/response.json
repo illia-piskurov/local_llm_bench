@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-gw93ehvtijkenhtfztqb18",
+  "object": "chat.completion",
+  "created": 1787037298,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const matrix = [...input.matrix];\n    return matrix.map((row, i) => row.reverse()).reverse();\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 133,
+    "completion_tokens": 35,
+    "total_tokens": 168,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

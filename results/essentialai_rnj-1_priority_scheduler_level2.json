@@ -1,0 +1,15 @@
+{
+  "model": "essentialai/rnj-1",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-08-04 21:19:57",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: ожидалось order=['a'], ms=5, cp=5; получено order=['a'], ms=None, cp=None",
+    "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=None, cp=None",
+    "dependencies_and_workers: ожидалось order=['a', 'c', 'b', 'd'], ms=11, cp=11; получено order=['a', 'c', 'b', 'd'], ms=None, cp=None",
+    "critical_path_longer_than_worker_parallelism: ожидалось order=['a', 'b', 'c', 'd'], ms=16, cp=4; получено order=['a', 'b', 'c', 'd'], ms=None, cp=None",
+    "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=None, cp=None"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "google/gemma-3-4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    \"\"\"\n    Выполняет топологическую сортировку задач с зависимостями.\n\n    Args:\n        tasks (dict): Словарь, где ключ - имя задачи, а значение - список зависимых задач.\n\n    Returns:\n        list[str]: Список имён задач в порядке топологической сортировки или None, если есть цикл.\n    \"\"\"\n    in_degree = {}\n    for task in tasks:\n        in_degree[task] = 0\n    for task in tasks:\n        for dependency in tasks[task]:\n            if dependency in in_degree:\n                in_degree[task] += 1\n            else:\n                return None\n\n    queue = []\n    for task in in_degree:\n        if in_degree[task] == 0:\n            queue.append(task)\n\n    result = []\n    while queue:\n        task = queue.pop(0)\n        result.append(task)\n        for dependent in tasks:\n            if task in tasks[dependent]:\n                in_degree[dependent] -= 1\n                if in_degree[dependent] == 0:\n                    queue.append(dependent)\n\n    if len(result) != len(tasks):\n        return None\n    else:\n        return result\n\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    \"\"\"\n    Вычисляет длину критического пути.\n\n    Args:\n        tasks (dict): Словарь, где значение - кортеж (длительность_задачи, список_зависимостей).\n\n    Returns:\n        int: Длина критического пути или None, если есть цикл.\n    \"\"\"\n    sorted_tasks = topo_sort(tasks)\n    if sorted_tasks is None:\n        return None\n\n    distances = {}\n    for task in tasks:\n        distances[task] = 0\n\n    for task in sorted_tasks:\n        duration, dependencies = tasks[task]\n        max_dependency_distance = 0\n        for dependency in dependencies:\n            if dependency in distances:\n                max_dependency_distance = max(max_dependency_distance, distances[dependency])\n        distances[task] = max_dependency_distance + duration\n\n    return max(distances.values())\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 691,
+    "total_output_tokens": 538,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 6.464606071478716,
+    "time_to_first_token_seconds": 13.807056000000001,
+    "model_load_time_seconds": 11.538
+  },
+  "response_id": "resp_9978d5502b2f622676881220b6d38ba014c2c187cc3cf12e"
+}

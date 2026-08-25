@@ -1,0 +1,13 @@
+{
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-08-17 11:50:03",
+  "passed": 24,
+  "total": 27,
+  "failures": [
+    "unconditional_jump_skips_code: ожидалось ['3'], получено ['1001']",
+    "jz_not_taken_when_nonzero: ожидалось ['1'], получено ['1', '1']",
+    "jnz_not_taken_when_zero: ожидалось ['0'], получено ['0', '0']"
+  ]
+}

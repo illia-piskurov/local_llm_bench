@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Validate an object input.data against input.schema.\nSchema is an object where keys map to rules:\n- type: 'string' | 'number' | 'boolean' | 'array'\n- required (boolean): if true and value is undefined or null, error is 'Required'\n- min (number): for string (min length -> 'Too short'), number (min value -> 'Too small'), array (min items -> 'Too few items')\n- max (number): for string (max length -> 'Too long'), number (max value -> 'Too large'), array (max items -> 'Too many items')\n- pattern (string): regex string for string values -> 'Invalid format'\nIf value is present and type does not match, error is 'Invalid type'.\nCollect all matching errors per field. Return { valid: boolean, errors: { [field]: string[] } }. If no errors, errors must be {} and valid must be true.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"schema\":{\"username\":{\"type\":\"string\",\"required\":true,\"min\":3},\"age\":{\"type\":\"number\",\"min\":18}},\"data\":{\"username\":\"al\",\"age\":16}}\noutput: {\"valid\":false,\"errors\":{\"username\":[\"Too short\"],\"age\":[\"Too small\"]}}"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

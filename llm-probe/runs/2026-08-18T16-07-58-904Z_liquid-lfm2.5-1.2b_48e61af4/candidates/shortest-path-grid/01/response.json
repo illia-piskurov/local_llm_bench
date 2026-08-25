@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-6mpfmoad4xdqd1fx58wi9o",
+  "object": "chat.completion",
+  "created": 1787069391,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { grid, start, end } = input;\n  const rows = grid.length;\n  const cols = grid[0].length;\n  const startX = start[0];\n  const startY = start[1];\n  const endX = end[0];\n  const endY = end[1];\n\n  const directions = [[0,1], [1,0], [0,-1], [-1,0]];\n  const visited = Array.from({ length: rows }, () => Array(cols).fill(false));\n  let count = 0;\n\n  function isValid(r, c) {\n    return r >= 0 && r < rows && c >= 0 && c < cols && grid[r][c] === 0;\n  }\n\n  function bfs() {\n    const queue = [start];\n    visited[start[0]][start[1]] = true;\n    while (queue.length > 0) {\n      const [x, y] = queue.shift();\n      if (x === endX && y === endY) return count;\n      for (const [dx, dy] of directions) {\n        const nx = x + dx;\n        const ny = y + dy;\n        if (isValid(nx, ny) && !visited[nx][ny]) {\n          visited[nx][ny] = true;\n          queue.push([nx, ny]);\n        }\n      }\n    }\n    return -1;\n  }\n\n  return bfs();\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 171,
+    "completion_tokens": 330,
+    "total_tokens": 501,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

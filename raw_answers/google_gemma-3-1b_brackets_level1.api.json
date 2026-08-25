@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "google/gemma-3-1b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    \"\"\"\n    Проверяет, является ли строка сбалансированной скобками.\n    \"\"\"\n    stack = []\n    mapping = {')': '(', ']': '[', '}': '{'}\n\n    for char in s:\n        if char in mapping:\n            if stack and stack[-1] == mapping[char]:\n                stack.pop()\n            else:\n                return False\n        elif char in ['(', '[', '{']:\n            stack.append(char)\n\n    return not stack\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 187,
+    "total_output_tokens": 130,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 70.66623034799314,
+    "time_to_first_token_seconds": 0.281248
+  },
+  "response_id": "resp_8e8014bced42de2430f3abe833aae5b8eda3d62c84b88b9d"
+}

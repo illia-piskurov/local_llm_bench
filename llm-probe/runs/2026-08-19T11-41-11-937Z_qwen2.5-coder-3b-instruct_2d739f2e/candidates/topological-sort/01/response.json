@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-sysq3ovm7qbkw2n01uvhdf",
+  "object": "chat.completion",
+  "created": 1787139982,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const n = input.n;\n    const edges = input.edges;\n\n    // Build adjacency list and in-degree array\n    const adjList = new Array(n).fill(null).map(() => []);\n    const inDegree = new Array(n).fill(0);\n\n    for (const [from, to] of edges) {\n        adjList[from].push(to);\n        inDegree[to]++;\n    }\n\n    // Queue for BFS\n    const queue = [];\n    for (let i = 0; i < n; i++) {\n        if (inDegree[i] === 0) {\n            queue.push(i);\n        }\n    }\n\n    const result = [];\n\n    while (queue.length > 0) {\n        const node = queue.shift();\n        result.push(node);\n\n        // Decrease in-degree of neighbors\n        for (const neighbor of adjList[node]) {\n            inDegree[neighbor]--;\n            if (inDegree[neighbor] === 0) {\n                queue.push(neighbor);\n            }\n        }\n    }\n\n    // Check if all nodes were visited\n    return result.length === n ? result : null;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 165,
+    "completion_tokens": 239,
+    "total_tokens": 404,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-o86aryakmg6yvumz3vvi5",
+  "object": "chat.completion",
+  "created": 1787139706,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const csv = input.csv;\n    \n    // Split the CSV string into rows using newline as a delimiter\n    const rows = csv.split(/\\r?\\n/);\n\n    // Remove any trailing empty lines\n    while (rows.length > 0 && rows[rows.length - 1] === '') {\n        rows.pop();\n    }\n\n    // If there are no rows or only the header row, return an empty array\n    if (rows.length <= 1) {\n        return [];\n    }\n\n    const headers = rows.shift().split(',');\n\n    // Parse each row into an object using the headers as keys\n    return rows.map(row => {\n        const values = row.split(',');\n        const result = {};\n        for (let i = 0; i < headers.length; i++) {\n            const value = values[i];\n            if (value.startsWith('\"') && value.endsWith('\"')) {\n                // Unescape escaped quotes\n                result[headers[i]] = value.slice(1, -1).replace(/\"\"/g, '\"');\n            } else {\n                // Trim whitespace and preserve internal whitespace in quoted values\n                result[headers[i]] = value.trim();\n            }\n        }\n        return result;\n    });\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 262,
+    "completion_tokens": 259,
+    "total_tokens": 521,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

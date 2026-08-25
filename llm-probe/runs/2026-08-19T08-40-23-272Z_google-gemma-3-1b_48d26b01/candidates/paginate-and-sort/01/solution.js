@@ -1,0 +1,34 @@
+export function solve(input) {
+  const items = input.items;
+
+  if (!input.filter) {
+    return { items: [], total: 0, page: 1, totalPages: 1 };
+  }
+
+  if (!input.sort) {
+    return { items: [...input.items], total: 0, page: 1, totalPages: 1 };
+  }
+
+  const filteredItems = input.filter(item => {
+    const field = item[input.filter().field];
+    const op = item[input.filter().op];
+    return (op === 'contains' && item[input.filter().value]) || (op === 'eq' && item[input.filter().value]);
+  });
+
+  const sortedItems = input.sort(item => {
+    const field = item[input.sort.field];
+    const dir = item[input.sort.dir];
+    return dir === 'asc' ? (-1) : 1;
+  });
+
+
+  const paginatedItems = items.slice(0, input.page);
+  const totalPages = Math.ceil(input.total / input.pageSize);
+
+  return {
+    items: paginatedItems,
+    total: totalPages,
+    page: input.page,
+    totalPages: totalPages
+  };
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-vcpxkamp7gpgbe1wmwrmnd",
+  "object": "chat.completion",
+  "created": 1787139348,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n    let state = input.state;\n    for (const action of input.actions) {\n        switch (action.type) {\n            case 'SET':\n                const pathComponents = action.path.split('.');\n                let currentPath = state;\n                for (let i = 0; i < pathComponents.length - 1; i++) {\n                    if (!currentPath.hasOwnProperty(pathComponents[i])) {\n                        currentPath[pathComponents[i]] = {};\n                    }\n                    currentPath = currentPath[pathComponents[i]];\n                }\n                currentPath[pathComponents[pathComponents.length - 1]] = action.value;\n                break;\n            case 'TOGGLE':\n                const pathComponents = action.path.split('.');\n                let currentPath = state;\n                for (let i = 0; i < pathComponents.length - 1; i++) {\n                    if (!currentPath.hasOwnProperty(pathComponents[i])) {\n                        currentPath[pathComponents[i]] = {};\n                    }\n                    currentPath = currentPath[pathComponents[i]];\n                }\n                const value = currentPath[pathComponents[pathComponents.length - 1]];\n                currentPath[pathComponents[pathComponents.length - 1]] = typeof value === 'boolean' ? !value : true;\n                break;\n            case 'ARRAY_PUSH':\n                const pathComponents = action.path.split('.');\n                let currentPath = state;\n                for (let i = 0; i < pathComponents.length - 2; i++) {\n                    if (!currentPath.hasOwnProperty(pathComponents[i])) {\n                        currentPath[pathComponents[i]] = {};\n                    }\n                    currentPath = currentPath[pathComponents[i]];\n                }\n                const arrayPath = pathComponents[pathComponents.length - 1];\n                if (!Array.isArray(currentPath[arrayPath])) {\n                    currentPath[arrayPath] = [];\n                }\n                currentPath[arrayPath].push(action.item);\n                break;\n            case 'ARRAY_REMOVE':\n                const pathComponents = action.path.split('.');\n                let currentPath = state;\n                for (let i = 0; i < pathComponents.length - 2; i++) {\n                    if (!currentPath.hasOwnProperty(pathComponents[i])) {\n                        currentPath[pathComponents[i]] = {};\n                    }\n                    currentPath = currentPath[pathComponents[i]];\n                }\n                const arrayPath = pathComponents[pathComponents.length - 1];\n                if (Array.isArray(currentPath[arrayPath]) && action.index >= 0 && action.index < currentPath[arrayPath].length) {\n                    currentPath[arrayPath].splice(action.index, 1);\n                }\n                break;\n            case 'DELETE':\n                const pathComponents = action.path.split('.');\n                let currentPath = state;\n                for (let i = 0; i < pathComponents.length - 1; i++) {\n                    if (!currentPath.hasOwnProperty(pathComponents[i])) {\n                        currentPath[pathComponents[i]] = {};\n                    }\n                    currentPath = currentPath[pathComponents[i]];\n                }\n                delete currentPath[pathComponents[pathComponents.length - 1]];\n                break;\n        }\n    }\n    return state;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 320,
+    "completion_tokens": 613,
+    "total_tokens": 933,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

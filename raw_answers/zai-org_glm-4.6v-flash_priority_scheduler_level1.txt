@@ -1,0 +1,82 @@
+```python
+import heapq
+from collections import defaultdict, deque
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    graph = defaultdict(list)
+    indegree = {name: 0 for name in tasks}
+    
+    for name, (dur, deps, pri) in tasks.items():
+        for d in deps:
+            if d not in tasks:
+                continue
+            graph[d].append(name)
+            indegree[name] += 1
+    
+    queue = deque([name for name in indegree if indegree[name] == 0])
+    visited = set()
+    
+    while queue:
+        node = queue.popleft()
+        visited.add(node)
+        for neighbor in graph[node]:
+            indegree[neighbor] -= 1
+            if indegree[neighbor] == 0 and neighbor not in visited:
+                queue.append(neighbor)
+    
+    if len(visited) != len(tasks):
+        return None
+    
+    topo_order = []
+    for name in tasks:
+        if name not in visited:
+            topo_order.append(name)
+    
+    earliest_start = {name: 0 for name in tasks}
+    for name in topo_order:
+        dur, deps, pri = tasks[name]
+        max_dep_time = 0
+        for d in deps:
+            if earliest_start[d] + tasks[d][0] > max_dep_time:
+                max_dep_time = earliest_start[d] + tasks[d][0]
+        earliest_start[name] = max_dep_time
+    
+    priority_queue = []
+    for name in tasks:
+        dur, deps, pri = tasks[name]
+        if all(d in tasks and earliest_start[d] == 0 for d in deps):
+            heapq.heappush(priority_queue, (-pri, dur, name))
+    
+    result = []
+    current_time = 0
+    while priority_queue:
+        selected_tasks = []
+        for _ in range(workers):
+            if not priority_queue:
+                break
+            task = heapq.heappop(priority_queue)
+            selected_tasks.append(task[2])
+        
+        start_time = current_time
+        result.extend(selected_tasks)
+        for name in selected_tasks:
+            duration = tasks[name][0]
+            completion_time = start_time + duration
+        
+        current_time = max(current_time, completion_time)
+        
+        for name in selected_tasks:
+            dur, deps, pri = tasks[name]
+            new_earliest_start = 0
+            for d in deps:
+                if earliest_start[d] + tasks[d][0] > new_earliest_start:
+                    new_earliest_start = earliest_start[d] + tasks[d][0]
+            
+            if current_time >= new_earliest_start:
+                heapq.heappush(priority_queue, (-pri, duration, name))
+    
+    return result
+```

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-fnd9xuh45aspc7lr5h51v9",
+  "object": "chat.completion",
+  "created": 1787065581,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { numbers, k } = input;\n    const frequencyMap = new Map();\n\n    for (const num of numbers) {\n        frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);\n    }\n\n    return Array.from(frequencyMap.entries())\n        .sort((a, b) => b[1] - a[1] || a[0] - b[0])\n        .slice(0, k)\n        .map(([num]) => num);\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 137,
+    "completion_tokens": 116,
+    "total_tokens": 253,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

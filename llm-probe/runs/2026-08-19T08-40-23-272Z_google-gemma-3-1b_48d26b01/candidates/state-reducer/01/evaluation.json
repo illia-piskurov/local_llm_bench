@@ -1,0 +1,27 @@
+{
+  "status": "failed",
+  "passed": 1,
+  "total": 4,
+  "tests": [
+    {
+      "id": "nested-set-and-create-parents",
+      "passed": false,
+      "error": "Expected {\"config\":{\"theme\":{\"dark\":true}}}, got {\"user\":{\"name\":\"config.theme.dark\"}}"
+    },
+    {
+      "id": "toggle-non-boolean",
+      "passed": false,
+      "error": "Expected {\"ready\":true}, got {\"ready\":\"yes\",\"user\":{\"active\":true}}"
+    },
+    {
+      "id": "delete-property",
+      "passed": false,
+      "error": "Expected {\"user\":{\"name\":\"Alice\"}}, got {\"user\":{\"name\":\"Alice\",\"tempToken\":\"123\"}}"
+    },
+    {
+      "id": "empty-actions",
+      "passed": true
+    }
+  ],
+  "durationMs": 26
+}

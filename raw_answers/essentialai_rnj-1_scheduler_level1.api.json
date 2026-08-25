@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    from collections import defaultdict\n\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n\n    # Build the graph and calculate in-degrees\n    for task, deps in tasks.items():\n        for dep in deps:\n            if dep not in in_degree:\n                return None  # Invalid dependency\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    queue = [task for task, degree in in_degree.items() if degree == 0]\n    result = []\n\n    while queue:\n        current = queue.pop(0)\n        result.append(current)\n\n        for neighbor in graph[current]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    return result if len(result) == len(tasks) else None\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 264,
+    "total_output_tokens": 199,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.263906005696683,
+    "time_to_first_token_seconds": 2.552989
+  },
+  "response_id": "resp_9a089732bf1db5184df121e46624e86518f043ba5afeb4ca"
+}

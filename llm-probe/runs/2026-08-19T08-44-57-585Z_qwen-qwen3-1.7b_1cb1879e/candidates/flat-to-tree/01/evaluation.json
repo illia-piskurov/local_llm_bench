@@ -1,0 +1,18 @@
+{
+  "status": "runtime_error",
+  "passed": 1,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "multiple-roots",
+      "passed": false,
+      "error": "Expected [{\"id\":\"r1\",\"name\":\"Root 1\",\"parentId\":null,\"children\":[{\"id\":\"c1\",\"name\":\"Child 1\",\"parentId\":\"r1\",\"children\":[]}]},{\"id\":\"r2\",\"name\":\"Root 2\",\"parentId\":null,\"children\":[]}], got [{\"id\":\"r1\",\"name\":\"Root 1\",\"parentId\":null},{\"id\":\"r2\",\"name\":\"Root 2\",\"parentId\":null}]"
+    }
+  ],
+  "durationMs": 39,
+  "error": "Invalid input"
+}

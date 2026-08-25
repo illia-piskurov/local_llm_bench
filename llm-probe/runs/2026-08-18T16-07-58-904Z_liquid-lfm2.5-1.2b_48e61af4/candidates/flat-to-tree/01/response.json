@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-8pa283qv64fufeuyhe4rth",
+  "object": "chat.completion",
+  "created": 1787069278,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const nodes = input.nodes;\n  const rootNodes = [];\n\n  function buildTree(node, parentId) {\n    if (node.parentId === null || node.parentId === undefined) {\n      rootNodes.push({ ...node, children: [] });\n      return;\n    }\n    const childNodes = nodes.filter(n => n.parentId === node.id);\n    for (const child of childNodes) {\n      buildTree(child, node.id);\n    }\n  }\n\n  buildTree(nodes[0], null);\n\n  // Preserve order and structure\n  const result = rootNodes.map(node => ({\n    ...node,\n    children: node.children || []\n  }));\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 316,
+    "completion_tokens": 160,
+    "total_tokens": 476,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

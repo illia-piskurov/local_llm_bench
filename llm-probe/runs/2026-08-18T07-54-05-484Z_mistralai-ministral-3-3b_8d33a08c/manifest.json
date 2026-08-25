@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-18T07-54-05-484Z_mistralai-ministral-3-3b_8d33a08c",
+  "status": "completed",
+  "startedAt": "2026-08-18T07:54:05.484Z",
+  "model": "mistralai/ministral-3-3b",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "hardware": "AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon",
+  "temperature": 0.2,
+  "maxTokens": 2048,
+  "samples": 1,
+  "taskIds": [
+    "shopping-cart"
+  ],
+  "nodeVersion": "v24.19.0",
+  "candidates": [
+    {
+      "taskId": "shopping-cart",
+      "attempt": 1,
+      "status": "failed",
+      "durationMs": 20861,
+      "generationMs": 20832,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 458,
+        "completion_tokens": 420,
+        "total_tokens": 878,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 420,
+      "tokensPerSec": 20,
+      "passed": 0,
+      "total": 4
+    }
+  ],
+  "completedAt": "2026-08-18T07:54:26.406Z"
+}

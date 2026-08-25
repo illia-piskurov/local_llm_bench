@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-8b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```html\n<!DOCTYPE html>\n<html lang=\"ru\">\n<head>\n<meta charset=\"UTF-8\">\n<title>Змейка</title>\n<style>\n  body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #000; }\n  canvas { border: 1px solid #fff; }\n  .score { font-family: monospace; font-size: 24px; color: #fff; margin-top: 10px; }\n</style>\n</head>\n<body>\n<canvas id=\"gameCanvas\" width=\"400\" height=\"400\"></canvas>\n<div class=\"score\">Счет: 0</div>\n<script>\n  const canvas = document.getElementById('gameCanvas');\n  const ctx = canvas.getContext('2d');\n  let score = 0;\n  const food = { x: 200, y: 200 };\n  let directionX = 1, directionY = 0;\n\n  function drawSnake(snake) {\n    snake.forEach(segment => {\n      ctx.fillStyle = segment.color || '#fff';\n      ctx.fillRect(segment.x * 20, segment.y * 20, 20, 20);\n    });\n  }\n\n  function moveSnake() {\n    const headX = snake[0].x + directionX;\n    const headY = snake[0].y + directionY;\n\n    if (headX < 0 || headX >= canvas.width / 20 ||\n        headY < 0 || headY >= canvas.height / 20 ||\n        snake.some(s => s.x === headX && s.y === headY)) {\n      return 'gameOver';\n    }\n\n    snake.unshift({ x: headX, y: headY });\n\n    if (headX === food.x && headY === food.y) {\n      score++;\n      generateFood();\n    } else {\n      snake.pop();\n    }\n\n    return null;\n  }\n\n  function drawFood() {\n    ctx.fillStyle = '#f00';\n    ctx.fillRect(food.x * 20, food.y * 20, 20, 20);\n  }\n\n  function generateFood() {\n    food.x = Math.floor(Math.random() * (canvas.width / 20));\n    food.y = Math.floor(Math.random() * (canvas.height / 20));\n  }\n\n  let snake = [{ x: 10, y: 10 }];\n  document.addEventListener('keydown', e => {\n    if (e.key === 'ArrowUp' && directionY !== 1) { directionX = 0; directionY = -1; }\n    else if (e.key === 'ArrowDown' && directionY !== -1) { directionX = 0; directionY = 1; }\n    else if (e.key === 'ArrowLeft' && directionX !== 1) { directionX = -1; directionY = 0; }\n    else if (e.key === 'ArrowRight' && directionX !== -1) { directionX = 1; directionY = 0; }\n    else if (e.key === 'w') { directionX = 0; directionY = -1; }\n    else if (e.key === 's') { directionX = 0; directionY = 1; }\n    else if (e.key === 'a') { directionX = -1; directionY = 0; }\n    else if (e.key === 'd') { directionX = 1; directionY = 0; }\n  });\n\n  function gameLoop() {\n    const result = moveSnake();\n    if (result === 'gameOver') {\n      alert('Game Over! Счет: ' + score);\n      location.reload();\n      return;\n    }\n\n    ctx.clearRect(0, 0, canvas.width, canvas.height);\n    drawFood();\n    drawSnake(snake);\n    document.querySelector('.score').textContent = `Счет: ${score}`;\n    requestAnimationFrame(gameLoop);\n  }\n\n  generateFood();\n  gameLoop();\n</script>\n</body>\n</html>\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 290,
+    "total_output_tokens": 836,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.178734170286996,
+    "time_to_first_token_seconds": 2.0841239999999996
+  },
+  "response_id": "resp_8d6944687d5b70f730af53524bf84c53628ff79cbb63b0b0"
+}

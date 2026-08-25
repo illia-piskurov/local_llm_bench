@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-jtpwala71hj3yiq40a7jfp",
+  "object": "chat.completion",
+  "created": 1787139522,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    return JSON.parse(JSON.stringify(input.matrix.map(row => row.reverse()).reverse()));\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 134,
+    "completion_tokens": 24,
+    "total_tokens": 158,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

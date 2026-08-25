@@ -1,0 +1,20 @@
+export function solve(input) {
+  if (typeof input !== 'object' || input === null) {
+    return input === input.b; // Handle primitives and nulls directly
+  }
+
+  const keysA = Object.keys(input);
+  const keysB = Object.keys(input.b);
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  for (const key of keysA) {
+    if (!solve({ a: input[key], b: input.b[key] })) {
+      return false;
+    }
+  }
+
+  return true;
+}

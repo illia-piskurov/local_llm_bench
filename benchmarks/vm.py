@@ -42,21 +42,52 @@ JNZ <name>     — снять значение со стека, перейти �
 """
 
 
+LEVEL3_PROMPT = """\
+Дополни свою реализацию поддержкой подпрограмм, операций сравнения и именованных переменных:
+
+1. Подпрограммы (стек вызовов):
+   CALL <name>  — сохранить адрес возврата в стек вызовов и перейти к метке <name>
+   RET          — снять адрес возврата со стека вызовов и перейти к нему (к инструкции, следующей сразу за CALL).
+                  Если стек вызовов пуст — кинуть понятную ошибку.
+
+2. Операции сравнения:
+   EQ           — снять два значения (b, затем a), положить 1, если a == b, иначе 0
+   GT           — снять два значения (b, затем a), положить 1, если a > b, иначе 0
+   LT           — снять два значения (b, затем a), положить 1, если a < b, иначе 0
+
+3. Именованные переменные (память):
+   STORE <var>  — снять значение со стека и сохранить в переменную <var>
+   LOAD <var>   — положить значение переменной <var> на стек. Если переменная <var> ещё не была сохранена — кинуть понятную ошибку.
+
+Требования:
+- Поддержка вложенных и рекурсивных вызовов подпрограмм через CALL/RET.
+- Не меняй поведение уже реализованных инструкций и сохрани сигнатуру run(program: str) -> list[str].
+
+В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока.
+"""
+
+
 class VMBenchmark(Benchmark):
     id = "vm"
-    name = "Стековая VM (PUSH/ADD/.../LABEL/JMP)"
+    name = "Стековая VM (PUSH/ADD/.../LABEL/JMP/CALL/RET)"
     short = "VM"
     levels = [
         Level(id="level1", name="Level 1 (базовые инструкции)", prompt=LEVEL1_PROMPT, requires=None),
         Level(id="level2", name="Level 2 (LABEL/JMP/JZ/JNZ)", prompt=LEVEL2_PROMPT, requires="level1"),
+        Level(id="level3", name="Level 3 (CALL/RET/EQ/GT/LT/STORE/LOAD)", prompt=LEVEL3_PROMPT, requires="level2"),
     ]
 
     def run_tests(self, level_id: str, answer_path: Path) -> TestResult:
-        tests = bench.LEVEL1_TESTS if level_id == "level1" else bench.LEVEL1_TESTS + bench.LEVEL2_TESTS
+        if level_id == "level1":
+            tests = bench.LEVEL1_TESTS
+        elif level_id == "level2":
+            tests = bench.LEVEL1_TESTS + bench.LEVEL2_TESTS
+        else:
+            tests = bench.LEVEL1_TESTS + bench.LEVEL2_TESTS + bench.LEVEL3_TESTS
         name = self.level_by_id(level_id).name
         try:
-            run_fn = bench.load_run(str(answer_path))
+            bench.load_run(str(answer_path))
         except Exception as e:
             return TestResult(0, len(tests), [f"не удалось загрузить решение: {e}"])
-        passed, total, failures = bench.run_suite(name, tests, run_fn)
+        passed, total, failures = bench.run_suite(name, tests, str(answer_path))
         return TestResult(passed, total, failures)

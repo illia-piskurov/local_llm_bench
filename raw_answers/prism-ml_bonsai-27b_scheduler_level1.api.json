@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "prism-ml/bonsai-27b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    # Вычисляем граф зависимостей и степени входящих ребер (in-degree)\n    in_degree = {task: 0 for task in tasks}\n    adj = {task: [] for task in tasks}\n    \n    for task, deps in tasks.items():\n        for dep in deps:\n            if dep not in tasks:\n                return None  # Зависимость на несуществующую задачу\n            adj[dep].append(task)\n            in_degree[task] += 1\n    \n    # Инициализируем очередь с задачами, у которых нет входящих ребер (in-degree == 0)\n    queue = [t for t in tasks if in_degree[t] == 0]\n    \n    sorted_tasks = []\n    \n    while queue:\n        current = queue.pop(0)\n        sorted_tasks.append(current)\n        \n        # Уменьшаем in-degree для всех задач, зависящих от текущей\n        for neighbor in adj[current]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n    \n    # Если не все задачи были обработаны — есть цикл в графе\n    return sorted_tasks if len(sorted_tasks) == len(tasks) else None\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 216,
+    "total_output_tokens": 297,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 5.259535963715223,
+    "time_to_first_token_seconds": 4.438828
+  },
+  "response_id": "resp_359cce124d128a59392db1679972d6de47a21846478b12ab"
+}

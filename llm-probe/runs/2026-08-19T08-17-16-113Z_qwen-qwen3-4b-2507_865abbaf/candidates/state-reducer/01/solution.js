@@ -1,0 +1,99 @@
+export function solve(input) {
+    const state = { ...input.state };
+    const actions = input.actions;
+
+    actions.forEach(action => {
+        switch (action.type) {
+            case 'SET':
+                const pathParts = action.path.split('.');
+                let current = state;
+                
+                for (let i = 0; i < pathParts.length - 1; i++) {
+                    const part = pathParts[i];
+                    if (!current[part]) {
+                        current[part] = {};
+                    }
+                    current = current[part];
+                }
+                
+                const lastPart = pathParts[pathParts.length - 1];
+                current[lastPart] = action.value;
+                break;
+                
+            case 'TOGGLE':
+                const togglePathParts = action.path.split('.');
+                let toggleCurrent = state;
+                
+                for (let i = 0; i < togglePathParts.length - 1; i++) {
+                    const part = togglePathParts[i];
+                    if (!toggleCurrent[part]) {
+                        toggleCurrent[part] = {};
+                    }
+                    toggleCurrent = toggleCurrent[part];
+                }
+                
+                const toggleLastPart = togglePathParts[togglePathParts.length - 1];
+                const currentValue = toggleCurrent[toggleLastPart];
+                if (typeof currentValue === 'boolean') {
+                    toggleCurrent[toggleLastPart] = !currentValue;
+                } else {
+                    toggleCurrent[toggleLastPart] = true;
+                }
+                break;
+                
+            case 'ARRAY_PUSH':
+                const pushPathParts = action.path.split('.');
+                let pushCurrent = state;
+                
+                for (let i = 0; i < pushPathParts.length - 1; i++) {
+                    const part = pushPathParts[i];
+                    if (!pushCurrent[part]) {
+                        pushCurrent[part] = [];
+                    }
+                    pushCurrent = pushCurrent[part];
+                }
+                
+                const pushLastPart = pushPathParts[pushPathParts.length - 1];
+                pushCurrent.push(action.item);
+                break;
+                
+            case 'ARRAY_REMOVE':
+                const removePathParts = action.path.split('.');
+                let removeCurrent = state;
+                
+                for (let i = 0; i < removePathParts.length - 1; i++) {
+                    const part = removePathParts[i];
+                    if (!removeCurrent[part]) {
+                        removeCurrent[part] = [];
+                    }
+                    removeCurrent = removeCurrent[part];
+                }
+                
+                const removeLastPart = removePathParts[removePathParts.length - 1];
+                if (Array.isArray(removeCurrent)) {
+                    if (action.index >= 0 && action.index < removeCurrent.length) {
+                        removeCurrent.splice(action.index, 1);
+                    }
+                }
+                break;
+                
+            case 'DELETE':
+                const deletePathParts = action.path.split('.');
+                let deleteCurrent = state;
+                
+                for (let i = 0; i < deletePathParts.length - 1; i++) {
+                    const part = deletePathParts[i];
+                    if (!deleteCurrent[part]) {
+                        deleteCurrent[part] = {};
+                    }
+                    deleteCurrent = deleteCurrent[part];
+                }
+                
+                const deleteLastPart = deletePathParts[deletePathParts.length - 1];
+                delete deleteCurrent[deleteLastPart];
+                break;
+        }
+    });
+
+    return state;
+}

@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-08-17 12:15:37",
+  "stats": {
+    "input_tokens": 461,
+    "total_output_tokens": 3287,
+    "reasoning_output_tokens": 2889,
+    "tokens_per_second": 11.081545489309333,
+    "time_to_first_token_seconds": 6.196324,
+    "model_load_time_seconds": null
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-0tz7humc6c4ns02gh32w2wi",
+  "object": "chat.completion",
+  "created": 1787127635,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const state = { ...input.state };\n    const actions = input.actions;\n\n    actions.forEach(action => {\n        switch (action.type) {\n            case 'SET':\n                const pathParts = action.path.split('.');\n                let current = state;\n                \n                for (let i = 0; i < pathParts.length - 1; i++) {\n                    const part = pathParts[i];\n                    if (!current[part]) {\n                        current[part] = {};\n                    }\n                    current = current[part];\n                }\n                \n                const lastPart = pathParts[pathParts.length - 1];\n                current[lastPart] = action.value;\n                break;\n                \n            case 'TOGGLE':\n                const togglePathParts = action.path.split('.');\n                let toggleCurrent = state;\n                \n                for (let i = 0; i < togglePathParts.length - 1; i++) {\n                    const part = togglePathParts[i];\n                    if (!toggleCurrent[part]) {\n                        toggleCurrent[part] = {};\n                    }\n                    toggleCurrent = toggleCurrent[part];\n                }\n                \n                const toggleLastPart = togglePathParts[togglePathParts.length - 1];\n                const currentValue = toggleCurrent[toggleLastPart];\n                if (typeof currentValue === 'boolean') {\n                    toggleCurrent[toggleLastPart] = !currentValue;\n                } else {\n                    toggleCurrent[toggleLastPart] = true;\n                }\n                break;\n                \n            case 'ARRAY_PUSH':\n                const pushPathParts = action.path.split('.');\n                let pushCurrent = state;\n                \n                for (let i = 0; i < pushPathParts.length - 1; i++) {\n                    const part = pushPathParts[i];\n                    if (!pushCurrent[part]) {\n                        pushCurrent[part] = [];\n                    }\n                    pushCurrent = pushCurrent[part];\n                }\n                \n                const pushLastPart = pushPathParts[pushPathParts.length - 1];\n                pushCurrent.push(action.item);\n                break;\n                \n            case 'ARRAY_REMOVE':\n                const removePathParts = action.path.split('.');\n                let removeCurrent = state;\n                \n                for (let i = 0; i < removePathParts.length - 1; i++) {\n                    const part = removePathParts[i];\n                    if (!removeCurrent[part]) {\n                        removeCurrent[part] = [];\n                    }\n                    removeCurrent = removeCurrent[part];\n                }\n                \n                const removeLastPart = removePathParts[removePathParts.length - 1];\n                if (Array.isArray(removeCurrent)) {\n                    if (action.index >= 0 && action.index < removeCurrent.length) {\n                        removeCurrent.splice(action.index, 1);\n                    }\n                }\n                break;\n                \n            case 'DELETE':\n                const deletePathParts = action.path.split('.');\n                let deleteCurrent = state;\n                \n                for (let i = 0; i < deletePathParts.length - 1; i++) {\n                    const part = deletePathParts[i];\n                    if (!deleteCurrent[part]) {\n                        deleteCurrent[part] = {};\n                    }\n                    deleteCurrent = deleteCurrent[part];\n                }\n                \n                const deleteLastPart = deletePathParts[deletePathParts.length - 1];\n                delete deleteCurrent[deleteLastPart];\n                break;\n        }\n    });\n\n    return state;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 320,
+    "completion_tokens": 690,
+    "total_tokens": 1010,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

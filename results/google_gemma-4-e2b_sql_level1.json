@@ -1,0 +1,16 @@
+{
+  "model": "google/gemma-4-e2b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-08-19 14:06:01",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "simple_select_all: SQL: ожидали 'SELECT * FROM products', получили 'SELECT * FROM products;'",
+    "select_specific_columns: SQL: ожидали 'SELECT id, email, created_at FROM users', получили 'SELECT id, email, created_at FROM users;'",
+    "simple_where_equality: SQL: ожидали 'SELECT * FROM users WHERE status = $1', получили 'SELECT * FROM users status = $1;'",
+    "where_and_or_nested: SQL: ожидали 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', получили 'SELECT id, email FROM users;'; params: ожидали ['active', 'admin', 21], получили []",
+    "order_by_limit_offset: SQL: ожидали 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', получили 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20;'",
+    "multiple_and_conditions: SQL: ожидали 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', получили 'SELECT * FROM logs;'; params: ожидали ['error', 404, 1000], получили []"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ffoxbms7hzen1l82wmfam",
+  "object": "chat.completion",
+  "created": 1787065737,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const listeners = new Map();\n    const logEntries = [];\n\n    for (const operation of input.operations) {\n        if (operation.op === \"on\") {\n            const { event, listenerId } = operation;\n            if (!listeners.has(event)) {\n                listeners.set(event, []);\n            }\n            listeners.get(event).push(listenerId);\n        } else if (operation.op === \"once\") {\n            const { event, listenerId } = operation;\n            if (!listeners.has(event)) {\n                listeners.set(event, []);\n            }\n            listeners.get(event).push({ type: \"once\", id: listenerId });\n        } else if (operation.op === \"off\") {\n            const { event, listenerId } = operation;\n            if (listeners.has(event)) {\n                const existingListeners = listeners.get(event);\n                listeners.set(\n                    event,\n                    existingListeners.filter(l =>\n                        l.type !== \"once\" ? l.id !== listenerId : true\n                    )\n                );\n            }\n        } else if (operation.op === \"emit\") {\n            const { event, payload } = operation;\n            const matchingEvents = new Set();\n\n            // Collect all relevant events\n            for (const [e, listenersForE] of listeners) {\n                if (e === \"*\" || e.startsWith(event + \".\")) {\n                    matchingEvents.add(e);\n                }\n            }\n\n            // Process each matched event\n            for (const e of matchingEvents) {\n                const currentListeners = listeners.get(e) || [];\n                const processedListeners = [];\n\n                for (const listener of currentListeners) {\n                    if (listener.type === \"once\") {\n                        logEntries.push({\n                            log: [\n                                { listenerId: listener.id, event: e, payload }\n                            ]\n                        });\n                        processedListeners.push(listener);\n                    } else {\n                        logEntries.push({\n                            log: [\n                                { listenerId: listener, event: e, payload }\n                            ]\n                        });\n                        processedListeners.push(listener);\n                    }\n                }\n\n                listeners.set(e, processedListeners);\n            }\n        }\n    }\n\n    return { log: logEntries.flat() };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 422,
+    "completion_tokens": 452,
+    "total_tokens": 874,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

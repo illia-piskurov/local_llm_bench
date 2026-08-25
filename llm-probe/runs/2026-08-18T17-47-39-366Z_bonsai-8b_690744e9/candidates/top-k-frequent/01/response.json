@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-0pjt2hx8t9u6b4zyi4hbiy",
+  "object": "chat.completion",
+  "created": 1787075548,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const counts = {};\n  const numbers = input.numbers;\n\n  for (const num of numbers) {\n    counts[num] = (counts[num] || 0) + 1;\n  }\n\n  const sorted = Object.entries(counts)\n    .sort((a, b) => {\n      if (a[1] !== b[1]) return b[1] - a[1];\n      return a[0] - b[0];\n    });\n\n  const result = [];\n  for (let i = 0; i < sorted.length && i < input.k; i++) {\n    result.push(sorted[i][0]);\n  }\n\n  return result;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 141,
+    "completion_tokens": 144,
+    "total_tokens": 285,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

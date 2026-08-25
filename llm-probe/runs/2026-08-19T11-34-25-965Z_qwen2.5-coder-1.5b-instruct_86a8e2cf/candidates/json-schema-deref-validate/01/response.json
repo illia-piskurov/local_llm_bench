@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-sqdpg8hiapr293yn5fpgxc",
+  "object": "chat.completion",
+  "created": 1787139433,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nfunction solve(input) {\n  const { definitions, schema, data } = input;\n  \n  function validateType(type, value) {\n    switch (type) {\n      case 'string':\n        return typeof value === 'string';\n      case 'number':\n        return typeof value === 'number' && !isNaN(value);\n      case 'boolean':\n        return typeof value === 'boolean';\n      case 'array':\n        return Array.isArray(value) && value.every(item => validateType('object', item));\n      case 'object':\n        const keys = Object.keys(schema.properties);\n        if (keys.length > 0) {\n          return keys.every(key => schema.properties[key].type === typeof data[key]);\n        } else {\n          return true;\n        }\n    }\n  }\n\n  function validateSchema(data, schema, path = '#') {\n    let valid = true;\n    const errors = [];\n\n    for (const key in schema.properties) {\n      if (schema.required.includes(key)) {\n        if (!data.hasOwnProperty(key)) {\n          errors.push({ path: `${path}/${key}`, message: 'Missing required property' });\n          valid = false;\n          continue;\n        }\n      }\n\n      const propSchema = schema.properties[key];\n      let subPath = `${path}/${key}`;\n\n      if (propSchema.type === 'array') {\n        const items = data[key];\n        subPath += '/0';\n        if (!Array.isArray(items)) {\n          errors.push({ path: subPath, message: 'Expected type array' });\n          valid = false;\n          continue;\n        }\n        for (let i = 0; i < items.length; i++) {\n          const itemErrors = validateSchema(items[i], propSchema.items, `${subPath}/${i}`);\n          if (!itemErrors.valid) {\n            errors.push(...itemErrors.errors);\n            valid = false;\n          }\n        }\n      } else if (propSchema.type === 'object') {\n        const subData = data[key];\n        subPath += '/0';\n        if (typeof subData !== 'object' || subData === null) {\n          errors.push({ path: subPath, message: 'Expected type object' });\n          valid = false;\n          continue;\n        }\n        const itemErrors = validateSchema(subData, propSchema, `${subPath}`);\n        if (!itemErrors.valid) {\n          errors.push(...itemErrors.errors);\n          valid = false;\n        }\n      } else {\n        const value = data[key];\n        const valueErrors = validateType(propSchema.type, value);\n        if (!valueErrors.valid) {\n          errors.push({ path: subPath, message: 'Value not of type ' + propSchema.type });\n          valid = false;\n        }\n      }\n    }\n\n    return { valid, errors };\n  }\n\n  const result = validateSchema(data, schema, '#');\n  return { valid: result.valid, errors: result.errors };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 390,
+    "completion_tokens": 594,
+    "total_tokens": 984,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "passed": 4,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "numeric-gt-filter",
+      "passed": true
+    },
+    {
+      "id": "desc-sort-and-second-page",
+      "passed": true
+    },
+    {
+      "id": "contains-case-insensitive",
+      "passed": true
+    }
+  ],
+  "durationMs": 24
+}

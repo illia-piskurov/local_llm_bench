@@ -1,0 +1,136 @@
+class TransactionDB:
+    def __init__(self):
+        self.global_store = {}
+        self.stack = []  # Stack of nested transactions
+        self.watched_keys = {}  # {key: (old_value, is_watching)}
+        self.output = []
+
+    def run(self, program: str) -> list[str]:
+        output = []
+        commands = [cmd.strip() for cmd in program.split('\n') if cmd.strip()]
+        current_transaction = None
+        transaction_stack = []
+
+        for cmd in commands:
+            parts = cmd.split()
+            if not parts:
+                continue
+
+            if parts[0] == 'BEGIN':
+                new_tx = {'store': {}, 'parent': current_transaction}
+                transaction_stack.append(new_tx)
+                current_transaction = new_tx
+
+            elif parts[0] == 'COMMIT':
+                if not transaction_stack:
+                    output.append("NO TRANCTION")
+                    continue
+                tx = transaction_stack.pop()
+                if tx['parent'] is None:  # Global commit
+                    self.global_store.update(tx['store'])
+                else:
+                    tx['parent']['store'].update(tx['store'])
+
+            elif parts[0] == 'ROLLBACK':
+                if not transaction_stack:
+                    output.append("NO TRANCTION")
+                    continue
+                tx = transaction_stack.pop()
+                tx['store'] = {}
+
+            elif parts[0] == 'SET' and len(parts) >= 3:
+                key, value = parts[1], parts[2]
+                current_tx = transaction_stack[-1] if transaction_stack else self.global_store
+
+                # Apply SET to the most recent transaction
+                old_value = current_tx.get(key)
+                current_tx[key] = value
+
+                # Check for watched keys and notify
+                if key in self.watched_keys:
+                    old_watch_val, is_watching = self.watched_keys[key]
+                    new_watch_val = str(value) if value != "NULL" else "NULL"
+                    if old_watch_val != new_watch_val or (old_watch_val == value and value != "NULL"):
+                        output.append(f"WATCH {key} {old_watch_val} -> {new_watch_val}")
+
+            elif parts[0] == 'GET':
+                key = parts[1]
+                tx = None
+                for t in reversed(transaction_stack):
+                    if key in t['store']:
+                        tx = t
+                        break
+                if tx:
+                    output.append(tx['store'].get(key, "NULL"))
+                elif key in self.global_store:
+                    output.append(self.global_store.get(key, "NULL"))
+                else:
+                    output.append("NULL")
+
+            elif parts[0] == 'DELETE' and len(parts) >= 2:
+                key = parts[1]
+                # Delete from the most recent transaction first
+                for t in reversed(transaction_stack):
+                    if key in t['store']:
+                        old_value = t[key]
+                        del t[key]
+                        break
+                elif key in self.global_store:
+                    old_value = self.global_store.pop(key, None)
+
+                # Check for watched keys and notify
+                if key in self.watched_keys:
+                    old_watch_val, is_watching = self.watched_keys[key]
+                    new_watch_val = "NULL" if not any(t.get(key) == "NULL" or t.get(key) == str(old_value)
+                                                     for t in (transaction_stack[-1] if transaction_stack else [self.global_store])) else "NULL"
+                    output.append(f"WATCH {key} {old_watch_val} -> {new_watch_val}")
+
+            elif parts[0] == 'COUNT' and len(parts) >= 2:
+                value = parts[1]
+                count = 0
+                # Check current transaction first
+                for t in transaction_stack:
+                    if value in t['store'].values():
+                        count += t['store'].values().__len__()
+                # Then check global store
+                if value in self.global_store.values():
+                    count += self.global_store.values().__len__()
+
+                # Count only unique keys with this value (avoid double counting)
+                tx_keys = set()
+                for t in transaction_stack:
+                    for k, v in t['store'].items():
+                        if v == value and k not in tx_keys:
+                            count += 1
+                            tx_keys.add(k)
+
+                global_keys = {k: self.global_store[k] for k, v in self.global_store.items() if v == value}
+                count += len(global_keys)
+                output.append(str(count))
+
+            elif parts[0] == 'WATCH' and len(parts) >= 2:
+                key = parts[1]
+                current_value = None
+                # Find the most recent transaction that has this key
+                for t in reversed(transaction_stack):
+                    if key in t['store']:
+                        current_value = t[key]
+                        break
+                elif key in self.global_store:
+                    current_value = self.global_store[key]
+
+                self.watched_keys[key] = (current_value, True)
+
+        return output
+
+# Пример использования для тестирования:
+db = TransactionDB()
+program = """
+BEGIN
+SET a 10
+WATCH a
+GET a
+COMMIT
+COUNT 10
+"""
+print(db.run(program))

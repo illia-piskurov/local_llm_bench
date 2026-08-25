@@ -1,0 +1,82 @@
+```python
+def run(program: str) -> list[str]:
+    lines = program.strip().split('\n')
+    stack = [{}]
+    output = []
+    watches = {}
+
+    for line in lines:
+        if not line.strip():
+            continue
+
+        parts = line.split()
+        cmd = parts[0]
+
+        if cmd == 'SET':
+            key, value = parts[1], parts[2]
+            old_value = None
+            for i in range(len(stack) - 1, -1, -1):
+                if key in stack[i]:
+                    old_value = stack[i][key]
+                    break
+
+            stack[-1][key] = value
+
+            if key in watches:
+                new_value = value
+                if old_value != new_value and (old_value is None or old_value != new_value):
+                    output.append(f"WATCH {key} {old_value if old_value is not None else 'NULL'} -> {new_value}")
+
+        elif cmd == 'GET':
+            key = parts[1]
+            for i in range(len(stack) - 1, -1, -1):
+                if key in stack[i]:
+                    output.append(stack[i][key])
+                    break
+            else:
+                output.append('NULL')
+
+        elif cmd == 'DELETE':
+            key = parts[1]
+            old_value = None
+            for i in range(len(stack) - 1, -1, -1):
+                if key in stack[i]:
+                    old_value = stack[i][key]
+                    del stack[i][key]
+                    break
+
+            if key in watches:
+                output.append(f"WATCH {key} {old_value if old_value is not None else 'NULL'} -> NULL")
+
+        elif cmd == 'BEGIN':
+            stack.append({})
+
+        elif cmd == 'COMMIT':
+            if len(stack) > 1:
+                top = stack.pop()
+                for k, v in top.items():
+                    stack[-1][k] = v
+            else:
+                output.append('NO TRANSACTION')
+
+        elif cmd == 'ROLLBACK':
+            if len(stack) > 1:
+                stack.pop()
+            else:
+                output.append('NO TRANSACTION')
+
+        elif cmd == 'COUNT':
+            value = parts[1]
+            count = 0
+            for i in range(len(stack)):
+                for k, v in stack[i].items():
+                    if v == value:
+                        count += 1
+            output.append(str(count))
+
+        elif cmd == 'WATCH':
+            key = parts[1]
+            watches[key] = True
+
+    return output
+```

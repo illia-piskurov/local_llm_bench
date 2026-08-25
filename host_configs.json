@@ -1,0 +1,17 @@
+[
+  {
+    "id": "56a307df6486",
+    "label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+    "created_at": "2026-07-11 13:24:57"
+  },
+  {
+    "id": "67cdd38469f9",
+    "label": "Intel Core i5-1235U | 16GB | Intel Xe Graphics",
+    "created_at": "2026-08-04 15:49:18"
+  },
+  {
+    "id": "e9d2b834bf61",
+    "label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+    "created_at": "2026-08-13 09:48:48"
+  }
+]

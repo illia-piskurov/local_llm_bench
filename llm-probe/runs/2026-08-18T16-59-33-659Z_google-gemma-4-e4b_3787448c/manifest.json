@@ -1,0 +1,444 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-18T16-59-33-659Z_google-gemma-4-e4b_3787448c",
+  "status": "completed",
+  "startedAt": "2026-08-18T16:59:33.659Z",
+  "model": "google/gemma-4-e4b",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "hardware": "AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon",
+  "temperature": 1,
+  "maxTokens": 16000,
+  "samples": 1,
+  "taskIds": [
+    "flat-to-tree",
+    "paginate-and-sort",
+    "deep-merge",
+    "csv-parse",
+    "render-template",
+    "shopping-cart",
+    "query-string-parser",
+    "schema-validator",
+    "state-reducer",
+    "rbac-checker",
+    "i18n-pluralize",
+    "sql-query-builder",
+    "json-schema-deref-validate",
+    "cron-next-runs",
+    "longest-substring-no-repeat",
+    "group-anagrams",
+    "top-k-frequent",
+    "merge-intervals",
+    "flatten-tree",
+    "shortest-path-grid",
+    "lcs-length",
+    "topological-sort",
+    "rotate-square-matrix",
+    "validate-sudoku-board",
+    "deep-equal",
+    "bytecode-vm-evolution",
+    "event-emitter-evolution"
+  ],
+  "nodeVersion": "v24.14.0",
+  "candidates": [
+    {
+      "taskId": "flat-to-tree",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "paginate-and-sort",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "deep-merge",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "csv-parse",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "render-template",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "shopping-cart",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 84300,
+      "generationMs": 84277,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 474,
+        "completion_tokens": 1084,
+        "total_tokens": 1558,
+        "completion_tokens_details": {
+          "reasoning_tokens": 413
+        }
+      },
+      "completionTokens": 1084,
+      "tokensPerSec": 13,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "query-string-parser",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "schema-validator",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "state-reducer",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "rbac-checker",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 101983,
+      "generationMs": 101945,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 397,
+        "completion_tokens": 1313,
+        "total_tokens": 1710,
+        "completion_tokens_details": {
+          "reasoning_tokens": 548
+        }
+      },
+      "completionTokens": 1313,
+      "tokensPerSec": 13,
+      "passed": 3,
+      "total": 3
+    },
+    {
+      "taskId": "i18n-pluralize",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "sql-query-builder",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "json-schema-deref-validate",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "cron-next-runs",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "longest-substring-no-repeat",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 14523,
+      "generationMs": 14495,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 127,
+        "completion_tokens": 206,
+        "total_tokens": 333,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 206,
+      "tokensPerSec": 14,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "group-anagrams",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 114139,
+      "generationMs": 114117,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 155,
+        "completion_tokens": 1683,
+        "total_tokens": 1838,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1264
+        }
+      },
+      "completionTokens": 1683,
+      "tokensPerSec": 15,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "top-k-frequent",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 24622,
+      "generationMs": 24600,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 147,
+        "completion_tokens": 341,
+        "total_tokens": 488,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 341,
+      "tokensPerSec": 14,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "merge-intervals",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 110840,
+      "generationMs": 110820,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 172,
+        "completion_tokens": 1553,
+        "total_tokens": 1725,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1214
+        }
+      },
+      "completionTokens": 1553,
+      "tokensPerSec": 14,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "taskId": "flatten-tree",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 62443,
+      "generationMs": 62422,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 186,
+        "completion_tokens": 847,
+        "total_tokens": 1033,
+        "completion_tokens_details": {
+          "reasoning_tokens": 640
+        }
+      },
+      "completionTokens": 847,
+      "tokensPerSec": 14,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "shortest-path-grid",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 95734,
+      "generationMs": 95714,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 168,
+        "completion_tokens": 1352,
+        "total_tokens": 1520,
+        "completion_tokens_details": {
+          "reasoning_tokens": 829
+        }
+      },
+      "completionTokens": 1352,
+      "tokensPerSec": 14,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "lcs-length",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 19311,
+      "generationMs": 19292,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 131,
+        "completion_tokens": 358,
+        "total_tokens": 489,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 358,
+      "tokensPerSec": 19,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "topological-sort",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 97667,
+      "generationMs": 97644,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 176,
+        "completion_tokens": 1796,
+        "total_tokens": 1972,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1326
+        }
+      },
+      "completionTokens": 1796,
+      "tokensPerSec": 18,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "rotate-square-matrix",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 20936,
+      "generationMs": 20915,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 146,
+        "completion_tokens": 306,
+        "total_tokens": 452,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 306,
+      "tokensPerSec": 15,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "validate-sudoku-board",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 32544,
+      "generationMs": 32522,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 207,
+        "completion_tokens": 424,
+        "total_tokens": 631,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 424,
+      "tokensPerSec": 13,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "deep-equal",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 57207,
+      "generationMs": 57186,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 165,
+        "completion_tokens": 671,
+        "total_tokens": 836,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 671,
+      "tokensPerSec": 12,
+      "passed": 8,
+      "total": 8
+    },
+    {
+      "taskId": "bytecode-vm-evolution",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    },
+    {
+      "taskId": "event-emitter-evolution",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Request to http://127.0.0.1:1234/v1 timed out after 120000ms"
+    }
+  ],
+  "completedAt": "2026-08-18T17:41:31.128Z"
+}

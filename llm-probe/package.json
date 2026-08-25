@@ -1,0 +1,27 @@
+{
+  "name": "llm-probe",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "probe": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "npm run build && node dist/cli.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test dist/evaluator/evaluator.test.js dist/runner.test.js dist/tasks.test.js dist/compare.test.js dist/model-client.test.js dist/html-report.test.js",
+    "start": "node dist/cli.js"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.7.0",
+    "quickjs-emscripten": "^0.32.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-08-17 22:15:59",
+  "passed": 10,
+  "total": 15,
+  "failures": [
+    "simple_transaction_rollback: ожидалось ['5'], получено ['NULL']",
+    "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+    "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', 'NULL', 'NULL']",
+    "nested_commit_propagates_to_outer_only: ожидалось ['2', '2'], получено ['1', '1']",
+    "multiple_keys_independent: ожидалось ['2', '1', '2'], получено ['2', 'NULL', 'NULL']"
+  ]
+}

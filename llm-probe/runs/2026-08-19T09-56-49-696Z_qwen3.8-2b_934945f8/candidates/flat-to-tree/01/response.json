@@ -1,0 +1,33 @@
+{
+  "id": "chatcmpl-b5n2mc72ronv0jv2s8n1c",
+  "object": "chat.completion",
+  "created": 1787133409,
+  "model": "qwen3.8-2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const nodes = input.nodes;\n  if (!nodes || nodes.length === 0) return [];\n\n  // Step 1: Build a map of all parents so we can efficiently find parent references during reduction\n  const parentMap = new Map();\n  for (const node of nodes) {\n    const parentId = node.parentId ?? \"\";\n    if (parentId !== \"\") {\n      parentMap.set(parentId, true);\n    }\n  }\n\n  // Step 2: Use map to transform each node into a child object with children array\n  const resultNodes = nodes.map(node => ({\n    id: node.id,\n    name: node.name,\n    parentId: node.parentId ?? null,\n    children: []\n  }));\n\n  // Step 3: Flatten the tree back to array using reduce\n  return Array.prototype.reduce(\n    (acc, node) => {\n      const parentId = node.parentId;\n      if (!parentId || parentId === \"\") {\n        acc.push(node);\n        return acc;\n      }\n      const parentIndex = resultNodes.findIndex(n => n.id == parentId);\n      if (parentIndex !== -1) {\n        resultNodes[parentIndex].children.push(...resultNodes[node.id]);\n      }\n      return acc;\n    },\n    []\n  );\n\n  // Step 4: Sort nodes by original id to preserve relative order, then group into roots and children\n  const sorted = [...nodes]\n    .map(n => ({ ...n, id: parseInt(n.id) }))\n    .sort((a, b) => a.id - b.id);\n\n  return sorted.reduce(\n    (acc, node) => {\n      const parentId = node.parentId ?? null;\n      if (parentId === null || parentId === undefined || parentId === \"\") {\n        acc.push(node);\n        return acc;\n      }\n      const parentIndex = resultNodes.findIndex(n => n.id == parentId);\n      if (parentIndex !== -1) {\n        // Group all nodes with this parentId into a children array\n        const groupChildren = resultNodes.slice(parentId === null ? 0 : parentIndex + 1, parentIndex + 2).map(\n          child => ({ ...child })\n        );\n\n        acc.push({ id: node.id, name: node.name, parentId });\n        return [...acc, ...groupChildren];\n      }\n      return acc;\n    },\n    []\n  ).map(n => ({ ...n }));\n}\n```\n\n**Time complexity:** O(n log n) due to sorting nodes by their original id. All other operations are O(n).\n\n**Space complexity:** O(n) for the result array and auxiliary maps.",
+        "reasoning_content": "The problem requires converting a flat array of nodes into a hierarchical tree structure.\n\nKey requirements:\n1. Only use synchronous JavaScript - no async, no loops, no recursion (that's not allowed), no function calls that could be interpreted as \"processes\" or \"subprocesses\"\n2. No imports, no require statements\n3. Do not mutate input\n4. Build the tree structure without using any iterative approach\n\nSince we cannot use recursive functions and cannot use loops (for/while) or array methods that would create a loop, I need to manually iterate through nodes one at a time.\n\nApproach: Use `Array.prototype.map` to transform the flat nodes into an object with \"children\" key, then flatten it back using `Array.prototype.reduce`. This satisfies the synchronous requirement while avoiding loops.\n\nThe logic is straightforward:\n- For each node in input.nodes: create an object with id, name, parentId (or null if missing), and children array\n- Collect all non-null parentIds into a set for O(1) lookup during reduction\n- In reduce, find the node matching that parentId, append it to its children array\n\nThis avoids recursion while still being synchronous.\n",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 294,
+    "completion_tokens": 843,
+    "total_tokens": 1137,
+    "completion_tokens_details": {
+      "reasoning_tokens": 247
+    }
+  },
+  "stats": {
+    "total_draft_tokens_count": 423,
+    "accepted_draft_tokens_count": 354,
+    "rejected_draft_tokens_count": 69
+  },
+  "system_fingerprint": "qwen3.8-2b"
+}

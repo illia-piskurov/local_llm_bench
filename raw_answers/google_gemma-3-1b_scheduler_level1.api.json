@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "google/gemma-3-1b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    \"\"\"\n    Реализует планировщик задач с зависимостями в одном Python файле.\n\n    Args:\n        tasks: Словарь, где ключ — имя задачи (строка), а значение — список имён задач,\n               от которых она зависит (эти задачи должны быть выполнены раньше).\n\n    Returns:\n        Список имён всех задач в порядке, при котором каждая задача идёт строго после всех своих зависимостей.\n        Если в графе зависимостей есть цикл — верни None.\n    \"\"\"\n    visited = set()\n    recursion_stack = []\n    result = []\n\n    def dfs(task):\n        if task in recursion_stack:\n            return\n\n        visited.add(task)\n        recursion_stack.append(task)\n\n        for dependent_task in tasks[task]:\n            dfs(dependent_task)\n\n        recursion_stack.pop()\n\n    for task in tasks:\n        if task not in visited:\n            dfs(task)\n\n    return result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 225,
+    "total_output_tokens": 250,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 70.67169773771414,
+    "time_to_first_token_seconds": 0.31782299999999997
+  },
+  "response_id": "resp_b729298eebbd3546eb9452cb02ea84e82ba1ce0b0225ce68"
+}

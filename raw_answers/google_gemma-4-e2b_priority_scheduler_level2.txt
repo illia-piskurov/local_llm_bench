@@ -1,0 +1,279 @@
+```python
+import heapq
+from collections import defaultdict
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    """
+    Планировщик задач с зависимостями, приоритетами и ограниченным числом исполнителей.
+    """
+    if not tasks:
+        return []
+
+    # 1. Инициализация данных и графа
+    task_data = {}
+    dependencies = defaultdict(set)
+    in_degree = defaultdict(int)
+    all_task_names = set()
+
+    for name, (duration, deps, priority) in tasks.items():
+        task_data[name] = {
+            'duration': duration,
+            'deps': set(deps),
+            'priority': priority,
+            'status': 'pending',  # pending, ready, running, finished
+            'start_time': -1,
+            'finish_time': -1
+        }
+        all_task_names.add(name)
+
+    # Построение графа и расчет вхождений (in-degrees)
+    for name, data in task_data.items():
+        in_degree[name] = len(data['deps'])
+
+    # 2. Инициализация очередей
+    ready_queue = []  # ( -priority, duration, name )
+    
+    for name in all_task_names:
+        if in_degree[name] == 0:
+            duration = task_data[name]['duration']
+            priority = task_data[name]['priority']
+            heapq.heappush(ready_queue, (-priority, duration, name))
+
+    running_tasks = []  # Список задач, которые сейчас выполняются: (finish_time, task_name)
+    scheduled_order = []
+    current_time = 0
+    
+    # 3. Основной цикл планирования
+    while ready_queue or running_tasks:
+        
+        # A. Обработка завершенных задач и обновление времени
+        if running_tasks:
+            # Находим следующее событие (самое раннее завершение)
+            next_finish_time = min(ft for ft, _ in running_tasks)
+            current_time = max(current_time, next_finish_time)
+
+            newly_finished = []
+            running_tasks_to_keep = []
+            
+            # Определяем задачи, которые завершились на current_time
+            for finish_time, task_name in running_tasks:
+                if finish_time <= current_time:
+                    newly_finished.append(task_name)
+                else:
+                    running_tasks_to_keep.append((finish_time, task_name))
+            
+            running_tasks = running_tasks_to_keep
+
+            # Обработка завершенных задач
+            for task_name in newly_finished:
+                task_data[task_name]['status'] = 'finished'
+                scheduled_order.append(task_name)
+                
+                # Обновляем зависимости для зависимых задач
+                for dependent_name in all_task_names:
+                    if task_name in task_data[dependent_name]['deps']:
+                        task_data[dependent_name]['deps'].remove(task_name)
+                        if not task_data[dependent_name]['deps']:
+                            # Задача стала готова
+                            duration = task_data[dependent_name]['duration']
+                            priority = task_data[dependent_name]['priority']
+                            heapq.heappush(ready_queue, (-priority, duration, dependent_name))
+
+        # B. Запуск новых задач (если есть свободные исполнители и задачи в очереди)
+        while ready_queue and len(running_tasks) < workers:
+            # Извлекаем задачу с наивысшим приоритетом
+            neg_p, dur, name = heapq.heappop(ready_queue)
+            
+            if task_data[name]['status'] != 'pending':
+                continue
+
+            # Запуск задачи
+            task_data[name]['status'] = 'running'
+            task_data[name]['start_time'] = current_time
+            finish_time = current_time + dur
+            task_data[name]['finish_time'] = finish_time
+            
+            # Добавляем в список текущих исполнителей
+            heapq.heappush(running_tasks, (finish_time, name))
+
+        # Если нет задач, которые могут быть запущены и нет выполняющихся, но есть задачи в очереди, 
+        # это означает, что мы ждем завершения.
+        if not running_tasks and ready_queue:
+            # Этого не должно произойти при корректном обновлении current_time, но для гарантии
+            current_time += 1
+
+
+    # 4. Проверка на циклы и возврат результата
+    if len(scheduled_order) != len(all_task_names):
+        return None
+
+    return scheduled_order
+
+
+def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
+    """
+    Находит длину самого длинного зависимого пути по сумме duration.
+    """
+    if not tasks:
+        return 0
+
+    task_data = {}
+    in_degree = defaultdict(int)
+    all_task_names = set()
+
+    for name, (duration, deps, priority) in tasks.items():
+        task_data[name] = {
+            'duration': duration,
+            'deps': set(deps),
+            'priority': priority,
+        }
+        all_task_names.add(name)
+
+    # Построение графа и расчет вхождений (in-degrees)
+    for name in all_task_names:
+        in_degree[name] = len(task_data[name]['deps'])
+
+    # 1. Инициализация для топологической сортировки
+    queue = []
+    for name in all_task_names:
+        if in_degree[name] == 0:
+            queue.append(name)
+
+    topological_order = []
+    
+    # 2. Топологическая сортировка и цикл
+    while queue:
+        u = queue.pop(0)
+        topological_order.append(u)
+
+        for v in all_task_names:
+            if u in task_data[v]['deps']:
+                task_data[v]['deps'].remove(u)
+                in_degree[v] -= 1
+                if in_degree[v] == 0:
+                    queue.append(v)
+
+    # Проверка на цикл
+    if len(topological_order) != len(all_task_names):
+        return None  # Цикл обнаружен
+
+    # 3. Расчет критического пути (длины самого длинного пути)
+    
+    # earliest_finish_time[task] = минимальное время, когда задача может завершиться
+    earliest_finish_time = {}
+    max_duration = 0
+
+    for name in all_task_names:
+        current_duration = task_data[name]['duration']
+        
+        # Находим максимальное время завершения всех предшественников
+        max_pred_finish = 0
+        for dep in task_data[name]['deps']:
+            if dep in earliest_finish_time:
+                max_pred_finish = max(max_pred_finish, earliest_finish_time[dep])
+            else:
+                # Этого не должно произойти при корректной топологической сортировке
+                return None 
+
+        earliest_start_time = max_pred_finish
+        finish_time = earliest_start_time + current_duration
+        earliest_finish_time[name] = finish_time
+        max_duration = max(max_duration, finish_time)
+
+    return max_duration
+
+
+def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
+    """
+    Рассчитывает общее время завершения всех задач с учетом ограничений исполнителей.
+    """
+    # Используем логику plan_order для симуляции
+    scheduled_order = plan_order(tasks, workers)
+
+    if scheduled_order is None:
+        return None
+
+    # Если планировщик вернул порядок, мы можем рассчитать время завершения
+    task_data = {}
+    all_task_names = set()
+
+    for name, (duration, deps, priority) in tasks.items():
+        task_data[name] = {
+            'duration': duration,
+            'deps': set(deps),
+            'priority': priority,
+        }
+        all_task_names.add(name)
+
+    # Построение графа и расчет вхождений (in-degrees)
+    for name in all_task_names:
+        task_data[name]['in_degree'] = len(task_data[name]['deps'])
+
+
+    # 1. Инициализация очередей
+    ready_queue = []  # ( -priority, duration, name )
+    
+    for name in all_task_names:
+        if task_data[name]['in_degree'] == 0:
+            duration = task_data[name]['duration']
+            priority = task_data[name]['priority']
+            heapq.heappush(ready_queue, (-priority, duration, name))
+
+    running_tasks = []  # Список задач, которые сейчас выполняются: (finish_time, task_name)
+    current_time = 0
+    
+    # 2. Основной цикл планирования (Симуляция)
+    while ready_queue or running_tasks:
+        
+        if running_tasks:
+            next_finish_time = min(ft for ft, _ in running_tasks)
+            current_time = max(current_time, next_finish_time)
+
+            newly_finished = []
+            running_tasks_to_keep = []
+            
+            for finish_time, task_name in running_tasks:
+                if finish_time <= current_time:
+                    newly_finished.append(task_name)
+                else:
+                    running_tasks_to_keep.append((finish_time, task_name))
+            
+            running_tasks = running_tasks_to_keep
+
+            for task_name in newly_finished:
+                # Обновляем зависимости для зависимых задач
+                for dependent_name in all_task_names:
+                    if task_name in task_data[dependent_name]['deps']:
+                        task_data[dependent_name]['deps'].remove(task_name)
+                        task_data[dependent_name]['in_degree'] -= 1
+                        if task_data[dependent_name]['in_degree'] == 0:
+                            # Задача стала готова
+                            duration = task_data[dependent_name]['duration']
+                            priority = task_data[dependent_name]['priority']
+                            heapq.heappush(ready_queue, (-priority, duration, dependent_name))
+
+        # Запуск новых задач
+        while ready_queue and len(running_tasks) < workers:
+            neg_p, dur, name = heapq.heappop(ready_queue)
+            
+            if task_data[name]['status'] != 'pending':
+                continue 
+
+            task_data[name]['status'] = 'running'
+            finish_time = current_time + dur
+            task_data[name]['finish_time'] = finish_time
+            
+            heapq.heappush(running_tasks, (finish_time, name))
+
+
+    # 3. Расчет Makespan
+    if not task_data:
+        return 0
+
+    # Makespan - это максимальное время завершения всех задач
+    makespan = 0
+    for name in all_task_names:
+        makespan = max(makespan, task_data[name]['finish_time'])
+
+    return makespan
+```

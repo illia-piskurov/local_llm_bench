@@ -1,0 +1,18 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-08-25 10:22:45",
+  "passed": 3,
+  "total": 11,
+  "failures": [
+    "simple_where_equality: исключение/таймаут: Unsupported condition format: status",
+    "where_and_or_nested: исключение/таймаут: Unsupported condition format: [{'field': 'status', 'op': '=', 'value': 'active'}, {'OR': [{'field': 'role', 'op': '=', 'value': 'admin'}, {'field': 'age', 'op': '>=', 'value': 21}]}]",
+    "multiple_and_conditions: исключение/таймаут: Unsupported condition format: [{'field': 'level', 'op': '=', 'value': 'error'}, {'field': 'code', 'op': '!=', 'value': 404}, {'field': 'timestamp', 'op': '>', 'value': 1000}]",
+    "left_join_with_group_by: SQL: ожидали 'SELECT orders.id, orders.total FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id, orders.total', получили 'SELECT orders.id, orders.total FROM orders JOIN items ON orders LEFT ['items', 'order_id'] WHERE JOIN items ON orders LEFT ['items', 'order_id'] GROUP BY orders.id, orders.total'",
+    "multiple_joins_inner_and_left: SQL: ожидали 'SELECT posts.title, users.name FROM posts INNER JOIN users ON posts.author_id = users.id LEFT JOIN comments ON posts.id = comments.post_id', получили 'SELECT posts.title, users.name FROM posts JOIN users ON posts INNER ['users', 'id'] JOIN comments ON posts LEFT ['comments', 'post_id'] WHERE JOIN users ON posts INNER ['users', 'id'] AND JOIN comments ON posts LEFT ['comments', 'post_id']'",
+    "where_in_operator: исключение/таймаут: Unsupported condition format: id",
+    "where_is_null_and_like: исключение/таймаут: Unsupported condition format: [{'field': 'deleted_at', 'op': 'IS NULL'}, {'field': 'email', 'op': 'LIKE', 'value': '%@example.com'}]",
+    "where_is_not_null: исключение/таймаут: Unsupported condition format: completed_at"
+  ]
+}

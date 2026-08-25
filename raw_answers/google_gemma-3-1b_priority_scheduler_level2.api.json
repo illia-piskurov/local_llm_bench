@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "google/gemma-3-1b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:\n    \"\"\"\n    Длина самого длинного зависимого пути по сумме duration, игнорируя priority.\n    Если в графе зависимостей есть цикл — верни None.\n    \"\"\"\n    task_map = {task: (duration, deps, priority) for task, (duration, deps, priority) in tasks.items()}\n    in_degree = {task: 0 for task in task_map}\n    graph = {task: [] for task in task_map}\n\n    for task, (duration, deps, priority) in task_map.items():\n        for dep in deps:\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    queue = [task for task in task_map if in_degree[task] == 0]\n    if not queue:\n        return None\n\n    while queue:\n        node = queue.pop(0)\n        for neighbor in graph[node]:\n            in_degree[neighbor] -= 1\n            queue.append(neighbor)\n\n    if len(queue) != len(task_map):\n        return None\n\n    longest_path = 0\n    max_duration = 0\n    for node in task_map:\n        if in_degree[node] == 0:\n            longest_path = max(longest_path, task_map[node][0])\n            max_duration = max(max_duration, task_map[node][0])\n\n    return longest_path\ndef makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:\n    \"\"\"\n    Общее время завершения всех задач при тех же правилах выбора задач, что и в plan_order.\n    Используй тот же детерминированный порядок выбора готовых задач:\n    priority по убыванию, duration по возрастанию, name по возрастанию.\n    Если в графе зависимостей есть цикл — верни None.\n    \"\"\"\n    task_map = {task: (duration, deps, priority) for task, (duration, deps, priority) in tasks.items()}\n    in_degree = {task: 0 for task in task_map}\n    graph = {task: [] for task in task_map}\n\n    for task, (duration, deps, priority) in task_map.items():\n        for dep in deps:\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    queue = [task for task in task_map if in_degree[task] == 0]\n    if not queue:\n        return 0\n\n    while queue:\n        node = queue.pop(0)\n        for neighbor in graph[node]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    if len(queue) != len(task_map):\n        return None\n\n    max_time = 0\n    for node in task_map:\n        if in_degree[node] > max_time:\n            max_time = in_degree[node]\n\n    return max_time\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 985,
+    "total_output_tokens": 742,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 42.303639561132236,
+    "time_to_first_token_seconds": 0.7525
+  },
+  "response_id": "resp_bfa6e2319f15493f8d7270fa43e82196772c5b33e582d5ad"
+}

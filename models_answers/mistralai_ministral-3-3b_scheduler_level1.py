@@ -1,53 +1,28 @@
-import sys
 from collections import deque
 
 def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
-    # Создаем копию словаря задач для избежания модификации исходного
-    graph = {task: dependencies.copy() for task, dependencies in tasks.items()}
     in_degree = {task: 0 for task in tasks}
+    graph = {task: [] for task in tasks}
 
-    # Подсчитываем индекс входящих рёбер (входящие зависимости)
-    for task, deps in graph.items():
-        for dep in deps:
-            if dep not in graph:  # Если зависимость не существует — ошибка
-                return None
+    # Подсчёт степени входа и построение графа
+    for task, dependencies in tasks.items():
+        for dep in dependencies:
+            if dep not in tasks:
+                return None  # цикл или несуществующая задача
+            graph[dep].append(task)
             in_degree[task] += 1
 
-    # Начальные задачи с нулевым входящим ребром (не зависят от других)
+    # Начальный набор задач без зависимостей
     queue = deque([task for task in in_degree if in_degree[task] == 0])
     result = []
 
     while queue:
-        current_task = queue.popleft()
-        result.append(current_task)
+        current = queue.popleft()
+        result.append(current)
 
-        # Уменьшаем входящие рёбра для всех задач, зависящих от текущей
-        for dependent_task in graph.get(current_task, []):
-            in_degree[dependent_task] -= 1
+        for neighbor in graph[current]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
 
-            # Если входящее ребро стало нулевым — добавляем в очередь
-            if in_degree[dependent_task] == 0:
-                queue.append(dependent_task)
-
-    # Проверяем на наличие циклов (если не все задачи обработаны)
     return None if len(result) != len(tasks) else result
-
-# Пример использования и сохранение в файл
-if __name__ == "__main__":
-    tasks = {
-        "A": ["B"],
-        "B": ["C"],
-        "C": [],
-        "D": ["A", "E"],
-        "E": ["F"],
-        "F": []
-    }
-
-    result = topo_sort(tasks)
-    with open("topo_sorted_tasks.txt", "w") as f:
-        if result is None:
-            print("Граф содержит цикл!", file=f)
-        else:
-            print("Порядок выполнения:", "\n".join(result), file=f)
-
-    sys.exit(0 if result is not None else 1)  # Успех/неудача

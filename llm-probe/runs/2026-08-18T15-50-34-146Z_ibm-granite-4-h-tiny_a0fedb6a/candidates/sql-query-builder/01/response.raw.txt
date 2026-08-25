@@ -1,0 +1,119 @@
+```javascript
+export function solve(input) {
+    const { table, select = ['*'], joins = [], where, groupBy, orderBy, limit, offset } = input.query;
+    let sql = `SELECT ${select.join(', ')}`;
+    sql += ` FROM ${table}`;
+
+    if (joins.length > 0) {
+        sql += ' ';
+        for (let i = 0; i < joins.length; i++) {
+            const { type = 'INNER', table: jTable, on } = joins[i];
+            sql += ` ${type.toUpperCase()} JOIN ${jTable}`;
+            if (Object.keys(on).length > 0) {
+                sql += ` ON ${Object.keys(on)[0]} ${on[Object.keys(on)[0]]}`;
+            }
+        }
+    }
+
+    if (where) {
+        sql += ' WHERE';
+        const params = [];
+        const appendWhere = (cond, level = 1) => {
+            let op;
+            switch (cond.op) {
+                case '=':
+                    op = '=';
+                    break;
+                case '!=':
+                    op = '<>';
+                    break;
+                case '>':
+                    op = '>';
+                    break;
+                case '<':
+                    op = '<';
+                    break;
+                case '>=':
+                    op = '>=';
+                    break;
+                case '<=':
+                    op = '<=';
+                    break;
+                case 'LIKE':
+                    op = 'LIKE';
+                    break;
+                case 'IN':
+                    op = 'IN';
+                    break;
+                case 'IS NULL':
+                    op = 'IS NULL';
+                    break;
+                case 'IS NOT NULL':
+                    op = 'IS NOT NULL';
+                    break;
+            }
+            if (op === 'IN') {
+                sql += ` ${cond.field} ${op} (${cond.value.map(() => '$').join(', ')})`;
+                params.push(...cond.value);
+            } else {
+                const field = cond.field;
+                let value = cond.value;
+                if (Array.isArray(value)) {
+                    sql += ` ${field} ${op} (${
+                        Array(cond.value.length)
+                            .fill()
+                            .map(() => '$')
+                            .join(', ')
+                    })`;
+                    params.push(...value);
+                } else {
+                    sql += ` ${field} ${op} $${params.length + 1}`;
+                    params.push(value);
+                }
+            }
+            if (level > 1 && cond.AND) {
+                appendWhere(cond.AND[0]);
+                for (let i = 1; i < cond.AND.length; i++) {
+                    sql += ` ${cond.AND[i].type.toUpperCase()} `;
+                    appendWhere(cond.AND[i]);
+                }
+            } else if (level > 1 && cond.OR) {
+                sql += ' OR ';
+                appendWhere(cond.OR[0]);
+                for (let i = 1; i < cond.OR.length; i++) {
+                    sql += ` ${cond.OR[i].type.toUpperCase()} `;
+                    appendWhere(cond.OR[i]);
+                }
+            } else if (level === 1) {
+                sql += ' ';
+            }
+        };
+        appendWhere(where);
+    }
+
+    if (groupBy && groupBy.length > 0) {
+        sql += ` GROUP BY ${groupBy.join(', ')}`;
+    }
+
+    if (orderBy && orderBy.length > 0) {
+        sql += ' ORDER BY';
+        for (let i = 0; i < orderBy.length; i++) {
+            const { field, dir = 'ASC' } = orderBy[i];
+            sql += ` ${field} ${dir.toUpperCase()}`;
+            if (i < orderBy.length - 1) {
+                sql += ', ';
+            }
+        }
+    }
+
+    if (limit !== undefined) {
+        sql += ` LIMIT ${limit}`;
+    }
+
+    if (offset !== undefined) {
+        sql += ` OFFSET ${offset || 0}`;
+    }
+
+    return { sql, params };
+}
+```

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ssmv4kuomu1spgthl7goh",
+  "object": "chat.completion",
+  "created": 1787065316,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const csv = input.csv;\n    if (!csv || !csv.trim()) return [];\n\n    const lines = csv.split('\\n').filter(Boolean);\n    if (lines.length < 2) return [];\n\n    const headers = lines[0].split(',');\n    const dataRows = lines.slice(1).map(row => {\n        const parts = [];\n        let currentPart = '';\n        let inQuotes = false;\n\n        for (const char of row) {\n            if (char === '\"') {\n                inQuotes = !inQuotes;\n            } else if (char === ',' && !inQuotes) {\n                parts.push(currentPart.trim());\n                currentPart = '';\n            } else {\n                currentPart += char;\n            }\n        }\n\n        parts.push(currentPart.trim());\n        return parts;\n    });\n\n    const result = headers.map((header, index) => ({\n        [header]: dataRows[index]\n    }));\n\n    return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 269,
+    "completion_tokens": 205,
+    "total_tokens": 474,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

@@ -1,0 +1,26 @@
+{
+  "status": "failed",
+  "passed": 2,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": false,
+      "error": "Expected {\"items\":[],\"total\":0,\"page\":1,\"totalPages\":0}, got {\"items\":[],\"total\":0,\"totalPages\":null}"
+    },
+    {
+      "id": "numeric-gt-filter",
+      "passed": true
+    },
+    {
+      "id": "desc-sort-and-second-page",
+      "passed": true
+    },
+    {
+      "id": "contains-case-insensitive",
+      "passed": false,
+      "error": "Expected {\"items\":[{\"tag\":\"TypeScript\"},{\"tag\":\"JavaScript\"}],\"total\":2,\"page\":1,\"totalPages\":1}, got {\"items\":[],\"total\":2,\"totalPages\":null}"
+    }
+  ],
+  "durationMs": 23
+}

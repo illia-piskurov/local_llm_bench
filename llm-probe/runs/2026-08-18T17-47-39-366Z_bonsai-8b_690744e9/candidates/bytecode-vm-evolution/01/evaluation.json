@@ -1,0 +1,8 @@
+{
+  "status": "compile_error",
+  "passed": 0,
+  "total": 6,
+  "tests": [],
+  "durationMs": 18,
+  "error": "invalid redefinition of lexical identifier"
+}

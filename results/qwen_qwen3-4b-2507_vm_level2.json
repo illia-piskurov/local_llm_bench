@@ -1,0 +1,17 @@
+{
+  "model": "qwen/qwen3-4b-2507",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-08-17 15:54:53",
+  "passed": 20,
+  "total": 27,
+  "failures": [
+    "unconditional_jump_skips_code: неожиданное исключение: Unknown label 'skip' at line 2",
+    "jz_taken_when_zero: неожиданное исключение: Unknown label 'zero' at line 2",
+    "jz_not_taken_when_nonzero: неожиданное исключение: Unknown label 'zero' at line 2",
+    "jnz_taken_when_nonzero: неожиданное исключение: Unknown label 'nz' at line 2",
+    "jnz_not_taken_when_zero: неожиданное исключение: Unknown label 'nz' at line 2",
+    "countdown_loop: ожидалось ['5', '4', '3', '2', '1'], получено ['5']",
+    "count_up_loop: ожидалось ['1', '2', '3', '4', '5'], получено ['1']"
+  ]
+}

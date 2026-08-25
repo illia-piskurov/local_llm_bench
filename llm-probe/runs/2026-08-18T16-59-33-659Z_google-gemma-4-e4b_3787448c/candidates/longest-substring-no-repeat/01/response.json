@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-woon943z9v8o7vjzuxh3x",
+  "object": "chat.completion",
+  "created": 1787074000,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const text = input.text;\n    let maxLength = 0;\n    let left = 0;\n    const charSet = new Set();\n\n    for (let right = 0; right < text.length; right++) {\n        // If the character at 'right' is already in the current window [left, right-1]\n        while (charSet.has(text[right])) {\n            // Shrink the window from the left until the duplicate is removed\n            charSet.delete(text[left]);\n            left++;\n        }\n\n        // Expand the window to include text[right]\n        charSet.add(text[right]);\n\n        // Update the maximum length found so far\n        // The current length is (right - left + 1)\n        maxLength = Math.max(maxLength, right - left + 1);\n    }\n\n    return maxLength;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 127,
+    "completion_tokens": 206,
+    "total_tokens": 333,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-htzh30sca298j0f3wolw3r",
+  "object": "chat.completion",
+  "created": 1787139928,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const wordMap = new Map();\n\n    for (const word of input.words) {\n        const sortedWord = word.split('').sort().join('');\n        if (!wordMap.has(sortedWord)) {\n            wordMap.set(sortedWord, []);\n        }\n        wordMap.get(sortedWord).push(word);\n    }\n\n    const groupedAnagrams = Array.from(wordMap.values()).map(group => group.sort());\n\n    // Sort groups by their first word alphabetically\n    groupedAnagrams.sort((a, b) => a[0].localeCompare(b[0]));\n\n    return groupedAnagrams;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 143,
+    "completion_tokens": 130,
+    "total_tokens": 273,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

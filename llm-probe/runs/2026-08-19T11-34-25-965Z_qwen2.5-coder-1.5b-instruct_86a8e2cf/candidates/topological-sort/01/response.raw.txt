@@ -1,0 +1,34 @@
+```js
+export function solve(input) {
+  const n = input.n;
+  const edges = input.edges;
+  const indegree = new Array(n).fill(0);
+
+  for (const [from, to] of edges) {
+    indegree[to]++;
+  }
+
+  const queue = [];
+  const result = [];
+
+  for (let i = 0; i < n; i++) {
+    if (indegree[i] === 0) {
+      queue.push(i);
+    }
+  }
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    result.push(current);
+
+    for (const to of edges.filter(([from, _]) => from === current)) {
+      indegree[to]--;
+      if (indegree[to] === 0) {
+        queue.push(to);
+      }
+    }
+  }
+
+  return result.length === n ? result : null;
+}
+```

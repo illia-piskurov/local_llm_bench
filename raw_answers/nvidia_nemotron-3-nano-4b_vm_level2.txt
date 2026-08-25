@@ -1,0 +1,131 @@
+```python
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    stack = []
+    output = []
+
+    # Build label map while parsing (ignoring comments/empty)
+    label_map = {}
+    for idx, raw in enumerate(lines):
+        line = raw.strip()
+        if not line or line.startswith('#'):
+            continue
+        tokens = line.split()
+        cmd = tokens[0]
+        if cmd == 'LABEL':
+            label_map[tokens[1]] = idx
+
+    i = 0
+    while i < len(lines):
+        raw = lines[i]
+        line = raw.strip()
+        if not line or line.startswith('#'):
+            i += 1
+            continue
+
+        tokens = line.split()
+        cmd = tokens[0]
+
+        # LABEL – just record (already done) and move on
+        if cmd == 'LABEL':
+            i += 1
+            continue
+
+        # JMP / JZ / JNZ – handle jumps
+        elif cmd == 'JMP':
+            target = tokens[1]
+            if target not in label_map:
+                raise Exception(f'Label "{target}" not defined at line {i}')
+            i = label_map[target] - 1
+            continue
+
+        elif cmd == 'JZ':
+            if len(stack) < 1:
+                raise Exception(f'Stack underflow at line {i}')
+            b = stack.pop()
+            if b == 0:
+                target = tokens[1]
+                if target not in label_map:
+                    raise Exception(f'Label "{target}" not defined at line {i}')
+                i = label_map[target] - 1
+            else:
+                i += 1
+                continue
+
+        elif cmd == 'JNZ':
+            if len(stack) < 1:
+                raise Exception(f'Stack underflow at line {i}')
+            b = stack.pop()
+            if b != 0:
+                target = tokens[1]
+                if target not in label_map:
+                    raise Exception(f'Label "{target}" not defined at line {i}')
+                i = label_map[target] - 1
+            else:
+                i += 1
+                continue
+
+        # Existing stack operations (PUSH, POP, ADD, SUB, MUL, DIV, DUP, SWAP)
+        elif cmd == 'PUSH':
+            n = int(tokens[1])
+            stack.append(n)
+
+        elif cmd == 'POP':
+            if not stack:
+                raise Exception(f'Stack underflow at line {i}')
+            stack.pop()
+
+        elif cmd == 'ADD':
+            if len(stack) < 2:
+                raise Exception(f'Stack underflow at line {i}')
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a + b)
+
+        elif cmd == 'SUB':
+            if len(stack) < 2:
+                raise Exception(f'Stack underflow at line {i}')
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+
+        elif cmd == 'MUL':
+            if len(stack) < 2:
+                raise Exception(f'Stack underflow at line {i}')
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a * b)
+
+        elif cmd == 'DIV':
+            if len(stack) < 2:
+                raise Exception(f'Stack underflow at line {i}')
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise Exception(f'Division by zero at line {i}')
+            stack.append(a // b)
+
+        elif cmd == 'DUP':
+            if not stack:
+                raise Exception(f'Stack underflow at line {i}')
+            stack.append(stack[-1])
+
+        elif cmd == 'SWAP':
+            if len(stack) < 2:
+                raise Exception(f'Stack underflow at line {i}')
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a)
+            stack.append(b)
+
+        # PRINT
+        elif cmd == 'PRINT':
+            output.append(str(stack[-1]))
+
+        else:
+            raise Exception(f'Unknown command "{cmd}" at line {i}')
+
+        i += 1
+
+    return output
+```

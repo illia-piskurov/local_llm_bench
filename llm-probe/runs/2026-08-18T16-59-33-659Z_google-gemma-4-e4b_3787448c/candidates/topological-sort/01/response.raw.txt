@@ -1,0 +1,54 @@
+export function solve(input) {
+    const n = input.n;
+    if (n === 0) return [];
+
+    // 1. Initialization
+    // Adjacency List: adj[i] stores all nodes reachable directly from i.
+    const adj = Array.from({ length: n }, () => []);
+    
+    // In-Degree array: inDegree[i] counts how many edges point into node i.
+    const inDegree = new Array(n).fill(0);
+
+    // 2. Build Graph and Calculate In-Degrees
+    for (const [u, v] of input.edges) {
+        adj[u].push(v);
+        inDegree[v]++;
+    }
+
+    // 3. Initialize Queue with nodes having in-degree 0
+    let queue = [];
+    for (let i = 0; i < n; i++) {
+        if (inDegree[i] === 0) {
+            queue.push(i);
+        }
+    }
+
+    const result = [];
+    let head = 0; // Using an index pointer instead of array shift for efficiency
+
+    // 4. Kahn's Algorithm (Topological Sort)
+    while (head < queue.length) {
+        const u = queue[head++];
+        result.push(u);
+
+        // Iterate through all neighbors v of u
+        for (const v of adj[u]) {
+            // "Remove" the edge (u, v) by decreasing the in-degree of v
+            inDegree[v]--;
+
+            // If v's in-degree drops to 0, it can now be processed
+            if (inDegree[v] === 0) {
+                queue.push(v);
+            }
+        }
+    }
+
+    // 5. Cycle Detection
+    if (result.length !== n) {
+        // If we couldn't process all nodes, there must be a cycle.
+        return null;
+    } else {
+        // The result array contains one valid topological ordering.
+        return result;
+    }
+}

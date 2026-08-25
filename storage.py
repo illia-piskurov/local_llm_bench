@@ -2,7 +2,7 @@ import json
 import re
 from pathlib import Path
 
-from benchmarks.base import Benchmark, StoredResult
+from benchmarks.base import Benchmark, SpeedSample, StoredResult
 
 
 def safe_filename(key: str) -> str:
@@ -46,9 +46,28 @@ class ResultStore:
             encoding="utf-8",
         )
 
-    def clear(self, benchmark: Benchmark, model_key: str, level_id: str) -> None:
+    def clear(self, benchmark: Benchmark, model_key: str, level_id: str) -> int:
+        count = 0
         for path in self.paths_for(benchmark, model_key, level_id):
-            path.unlink(missing_ok=True)
+            if path.exists():
+                path.unlink(missing_ok=True)
+                count += 1
+        return count
+
+    def clear_model(self, model_key: str, benchmarks: list[Benchmark]) -> int:
+        count = 0
+        for benchmark in benchmarks:
+            for level_id in benchmark.level_order:
+                count += self.clear(benchmark, model_key, level_id)
+        return count
+
+    def clear_all(self, benchmarks: list[Benchmark]) -> int:
+        count = 0
+        for result in self.all_saved():
+            for benchmark in benchmarks:
+                if benchmark.id == result.benchmark:
+                    count += self.clear(benchmark, result.model, result.level)
+        return count
 
     def all_saved(self) -> list[StoredResult]:
         results = []
@@ -56,6 +75,64 @@ class ResultStore:
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 results.append(StoredResult.from_dict(data))
+            except (json.JSONDecodeError, OSError, KeyError):
+                continue
+        return results
+
+
+class SpeedResultStore:
+    def __init__(self, speed_results_dir: Path):
+        self.speed_results_dir = speed_results_dir
+
+    def ensure_dir(self) -> None:
+        self.speed_results_dir.mkdir(parents=True, exist_ok=True)
+
+    def path_for(self, host_id: str, model_key: str, benchmark_id: str, level_id: str) -> Path:
+        key = safe_filename(model_key)
+        return self.speed_results_dir / f"{host_id}_{key}_{benchmark_id}_{level_id}.json"
+
+    def save(self, sample: SpeedSample) -> None:
+        self.ensure_dir()
+        path = self.path_for(sample.host_id, sample.model, sample.benchmark, sample.level)
+        path.write_text(json.dumps(sample.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def clear_level(self, model_key: str, benchmark_id: str, level_id: str) -> int:
+        if not self.speed_results_dir.exists():
+            return 0
+        count = 0
+        key = safe_filename(model_key)
+        for path in self.speed_results_dir.glob(f"*_{key}_{benchmark_id}_{level_id}.json"):
+            path.unlink(missing_ok=True)
+            count += 1
+        return count
+
+    def clear_model(self, model_key: str) -> int:
+        if not self.speed_results_dir.exists():
+            return 0
+        count = 0
+        key = safe_filename(model_key)
+        for path in self.speed_results_dir.glob(f"*_{key}_*.json"):
+            path.unlink(missing_ok=True)
+            count += 1
+        return count
+
+    def clear_all(self) -> int:
+        if not self.speed_results_dir.exists():
+            return 0
+        count = 0
+        for path in self.speed_results_dir.glob("*.json"):
+            path.unlink(missing_ok=True)
+            count += 1
+        return count
+
+    def all_saved(self) -> list[SpeedSample]:
+        results = []
+        if not self.speed_results_dir.exists():
+            return results
+        for path in sorted(self.speed_results_dir.glob("*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                results.append(SpeedSample.from_dict(data))
             except (json.JSONDecodeError, OSError, KeyError):
                 continue
         return results

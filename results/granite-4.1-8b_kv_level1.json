@@ -1,0 +1,25 @@
+{
+  "model": "granite-4.1-8b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-08-07 21:55:15",
+  "passed": 0,
+  "total": 15,
+  "failures": [
+    "basic_set_get: ожидалось ['10'], получено []",
+    "get_missing: ожидалось ['NULL'], получено []",
+    "delete_then_get: ожидалось ['NULL'], получено []",
+    "delete_missing_key_noop: ожидалось ['NULL'], получено []",
+    "overwrite_set: ожидалось ['2'], получено []",
+    "commit_no_transaction: ожидалось ['NO TRANSACTION'], получено ['COMMIT']",
+    "rollback_no_transaction: ожидалось ['NO TRANSACTION'], получено ['ROLLBACK']",
+    "simple_transaction_commit: ожидалось ['10'], получено ['COMMIT']",
+    "simple_transaction_rollback: ожидалось ['5'], получено ['ROLLBACK']",
+    "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['ROLLBACK']",
+    "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['ROLLBACK', 'ROLLBACK']",
+    "nested_commit_propagates_to_outer_only: ожидалось ['2', '2'], получено ['COMMIT', 'COMMIT']",
+    "rollback_after_commit_is_no_transaction: ожидалось ['NO TRANSACTION'], получено ['COMMIT', 'ROLLBACK']",
+    "multiple_keys_independent: ожидалось ['2', '1', '2'], получено ['ROLLBACK']",
+    "set_new_key_inside_transaction: ожидалось ['100', '100'], получено ['COMMIT']"
+  ]
+}

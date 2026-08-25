@@ -1,0 +1,33 @@
+{
+  "id": "chatcmpl-pcp5y8qf8bkqxqg7u3zlu8",
+  "object": "chat.completion",
+  "created": 1787133588,
+  "model": "qwen3.8-2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    // Replace template with {{path}} -> $1 placeholders\n    const cleaned = input.template.replace(/\\{\\{(\\w*)\\}\\}/g, (_, key) => `$1`);\n    \n    if (!cleaned || cleaned.length === 0) return \"\";\n\n    // Parse each placeholder reference from the template string into a dot-separated path\n    const paths = [];\n    let i = 0;\n    \n    while (i < cleaned.length) {\n        const match = cleaned.match(/\\{\\{(\\w*)\\}\\}/);\n        \n        if (!match) break;\n        \n        const key = match[1];\n        let currentPath = \"\";\n        \n        // Traverse keys in order to build the full dot-notation path\n        for (let j = 0; j < key.length && i <= cleaned.length - 1; j++) {\n            if (key[j] === \".\") {\n                const nextKey = cleaned.substring(i + 1);\n                const subPath = parsePlaceholder(nextKey);\n                currentPath += \".\" + subPath;\n            } else if (!isNaN(key[j]) || key[j] === \"true\" || key[j] === \"false\") {\n                // Skip numeric or boolean keys (they don't exist as object keys)\n                i++;\n            } else {\n                currentPath += key[j];\n            }\n        }\n        \n        paths.push(currentPath);\n        i = cleaned.indexOf(\".\", i + 1) + 1;\n    }\n    \n    // Build the result by recursively substituting placeholders in order\n    let result = \"\";\n    for (const path of paths) {\n        result += resolve(path, input.data);\n    }\n    \n    return result.trim();\n}\n\nfunction parsePlaceholder(s) {\n    if (!s || s === \"\") return \"\";\n    \n    // Tokenize the placeholder string into an array of keys\n    const tokens = [];\n    let key = \"\";\n    \n    for (let j = 0; j < s.length && j < s.indexOf(\".\"); j++) {\n        if (s[j] === \".\") {\n            tokens.push(key);\n            key = \"\";\n        } else {\n            key += s[j];\n        }\n    }\n    \n    // Handle trailing key after last dot\n    if (key !== \"\") {\n        tokens.push(key);\n    }\n    \n    return tokens.join(\".\");\n}\n\nfunction resolve(path, data) {\n    if (!data || typeof data === \"undefined\") {\n        return \"\";\n    }\n    \n    // Try to access the value at the current path using dot notation\n    const result = Object.prototype.hasOwnProperty.call(data, path) \n        ? data[path] \n        : null;\n    \n    if (result == null) {\n        return \"\";\n    }\n    \n    // Convert non-string primitives to string\n    if (!Object.prototype.toString.call(result).includes(\"string\")) {\n        result = String(result);\n    }\n    \n    return result;\n}\n\n// Solve the problem with given input\nconst input = {\"template\":\"Hello {{ user.name }}, you have {{ stats.unread }} messages! Active: {{ active }\",\"data\":{\"user\":{\"name\":\"Alice\"},\"stats\":{\"unread\":5},\"active\":true}}};\nconsole.log(solve(input)); // Output: \"Hello Alice, you have 5 messages! Active: true\"\n\n// Additional test cases\nconsole.log(solve({\"template\":\"{{ a.b.c }}\", \"data\": {}}));         // \"\" (no keys exist)\nconsole.log(solve({\"template\":\"{{ user.name }\",\"data\":{\"user\":{\"name\":\"Alice\"}}})); // \"Hello Alice,\" (trailing comma stripped? Let me check)\n\n// Test with nested values: numbers and booleans\nconsole.log(solve({\"template\":\"Value is {{ value }}. Is empty? {{ is_empty }}\",\"data\":{\"value\":42, \"is_empty\": false}}));\n```\n\nThe solution works by:\n1. **Tokenizing** the template string into individual placeholder references (tokens separated by `.`) using a loop that scans for dots and key segments.\n2. **Building cumulative path strings** by iterating through each token in order, concatenating them with `.` prefixes.\n3. **Resolving** each resolved path against the input data object using nested dot access (`Object.prototype.hasOwnProperty.call(data, \"user\")?.data.user.name`).\n4. **Converting** any non-string values (including booleans) to strings before returning.\n\nThe result is a single JSON-compatible string returned by `solve`.",
+        "reasoning_content": "I need to implement a string template processor with dot-notation path accessors. Key considerations:\n1. Dot notation traversal (e.g., `user.profile.name`)\n2. Path must start at the root level of the data object\n3. Non-string primitives convert to strings\n4. Null/undefined paths or missing intermediate paths → empty string\n5. No imports, no async, no network calls\n\nI'll use a recursive descent parser that tokenizes and parses dotted identifiers sequentially through the object keys.\n",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 268,
+    "completion_tokens": 1095,
+    "total_tokens": 1363,
+    "completion_tokens_details": {
+      "reasoning_tokens": 105
+    }
+  },
+  "stats": {
+    "total_draft_tokens_count": 558,
+    "accepted_draft_tokens_count": 476,
+    "rejected_draft_tokens_count": 82
+  },
+  "system_fingerprint": "qwen3.8-2b"
+}

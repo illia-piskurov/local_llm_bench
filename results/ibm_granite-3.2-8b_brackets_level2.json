@@ -1,0 +1,20 @@
+{
+  "model": "ibm/granite-3.2-8b",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-08-04 23:13:23",
+  "passed": 5,
+  "total": 15,
+  "failures": [
+    "max_depth/flat: ожидалось 1, получено 0",
+    "max_depth/nested3: ожидалось 3, получено 0",
+    "max_depth/mixed_types_nested: ожидалось 3, получено 0",
+    "find_unmatched/all_matched: ожидалось [], получено [1]",
+    "find_unmatched/single_unclosed_open: ожидалось [0], получено []",
+    "find_unmatched/mismatch_and_unclosed: ожидалось [0, 1], получено []",
+    "find_unmatched/stray_close_after_valid_pair: ожидалось [2], получено [1, 2]",
+    "find_unmatched/wrong_order_classic: ожидалось [0, 2], получено [1, 2]",
+    "find_unmatched/mixed_with_text: ожидалось [3, 7], получено []",
+    "find_unmatched/fully_balanced_nested: ожидалось [], получено [0, 1, 3, 5]"
+  ]
+}

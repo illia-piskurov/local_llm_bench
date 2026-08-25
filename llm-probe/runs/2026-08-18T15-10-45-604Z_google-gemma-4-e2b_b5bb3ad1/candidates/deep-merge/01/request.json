@@ -1,0 +1,16 @@
+{
+  "model": "google/gemma-4-e2b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Recursively merge an array of objects from input.objects from left to right (later objects override earlier ones). Rules: Plain objects are merged recursively by key. Arrays and primitive values are replaced entirely by the later value. Keys with undefined value are ignored (previous value is retained). Return a new plain object without mutating inputs. If input.objects is empty, return {}.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"objects\":[{\"theme\":{\"colors\":{\"primary\":\"blue\",\"secondary\":\"gray\"}},\"tags\":[1,2]},{\"theme\":{\"colors\":{\"primary\":\"red\"}},\"tags\":[3]}]}\noutput: {\"theme\":{\"colors\":{\"primary\":\"red\",\"secondary\":\"gray\"}},\"tags\":[3]}"
+    }
+  ],
+  "temperature": 1,
+  "max_tokens": 16000,
+  "stream": false
+}

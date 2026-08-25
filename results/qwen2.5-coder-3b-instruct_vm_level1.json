@@ -1,0 +1,15 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-08-17 16:20:21",
+  "passed": 13,
+  "total": 18,
+  "failures": [
+    "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+    "comments_and_blank_lines: неожиданное исключение: list index out of range",
+    "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно",
+    "empty_program: неожиданное исключение: list index out of range"
+  ]
+}

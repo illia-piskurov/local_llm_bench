@@ -1,0 +1,27 @@
+{
+  "status": "failed",
+  "passed": 1,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "multiple-roots",
+      "passed": false,
+      "error": "Expected [{\"id\":\"r1\",\"name\":\"Root 1\",\"parentId\":null,\"children\":[{\"id\":\"c1\",\"name\":\"Child 1\",\"parentId\":\"r1\",\"children\":[]}]},{\"id\":\"r2\",\"name\":\"Root 2\",\"parentId\":null,\"children\":[]}], got [{\"id\":\"r1\",\"name\":\"Root 1\",\"parentId\":null,\"children\":[{\"id\":\"c1\",\"name\":\"Child 1\",\"parentId\":\"r1\"}]},{\"id\":\"r2\",\"name\":\"Root 2\",\"parentId\":null,\"children\":[]}]"
+    },
+    {
+      "id": "orphan-as-root",
+      "passed": false,
+      "error": "Expected [{\"id\":10,\"name\":\"Orphan\",\"parentId\":999,\"children\":[{\"id\":11,\"name\":\"Child of Orphan\",\"parentId\":10,\"children\":[]}]}], got [{\"id\":10,\"name\":\"Orphan\",\"parentId\":999,\"children\":[{\"id\":11,\"name\":\"Child of Orphan\",\"parentId\":10}]}]"
+    },
+    {
+      "id": "deep-nesting",
+      "passed": false,
+      "error": "Expected [{\"id\":1,\"name\":\"L1\",\"parentId\":null,\"children\":[{\"id\":2,\"name\":\"L2\",\"parentId\":1,\"children\":[{\"id\":3,\"name\":\"L3\",\"parentId\":2,\"children\":[{\"id\":4,\"name\":\"L4\",\"parentId\":3,\"children\":[]}]}]}]}], got [{\"id\":1,\"name\":\"L1\",\"parentId\":null,\"children\":[{\"id\":2,\"name\":\"L2\",\"parentId\":1}]}]"
+    }
+  ],
+  "durationMs": 33
+}

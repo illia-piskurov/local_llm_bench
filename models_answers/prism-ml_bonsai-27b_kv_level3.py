@@ -1,0 +1,118 @@
+def run(program: str) -> list[str]:
+    store = {}
+    tx_stack = []
+    output = []
+    watchers = {}  # key -> set of (old_value, new_value) pairs to report
+    snapshots = {}
+
+    def get_visible(key):
+        for tx in reversed(tx_stack):
+            if key in tx:
+                return tx[key]
+        return store.get(key)
+
+    def set_visible(key, value):
+        if tx_stack:
+            tx_stack[-1][key] = value
+        else:
+            store[key] = value
+
+    for line in program.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+
+        parts = line.split()
+        cmd = parts[0]
+
+        def get_visible(key):
+            for tx in reversed(tx_stack):
+                if key in tx:
+                    return tx[key]
+            return store.get(key)
+
+        def set_visible(key, value):
+            if tx_stack:
+                tx_stack[-1][key] = value
+            else:
+                store[key] = value
+
+        if cmd == "SET":
+            key, value = parts[1], " ".join(parts[2:])
+            old_val = get_visible(key)
+            set_visible(key, value)
+            if key in watchers and old_val != value:
+                output.append(f"WATCH {key} {old_val if old_val is not None else 'NULL'} -> {value}")
+
+        elif cmd == "GET":
+            key = parts[1]
+            val = get_visible(key)
+            output.append(val if val is not None else "NULL")
+
+        elif cmd == "DELETE":
+            key = parts[1]
+            old_val = get_visible(key)
+            if tx_stack and key in tx_stack[-1]:
+                del tx_stack[-1][key]
+            elif store.get(key) is not None:
+                del store[key]
+            if key in watchers and old_val != value:
+                output.append(f"WATCH {key} {old_val if old_val is not None else 'NULL'} -> NULL")
+
+        elif cmd == "BEGIN":
+            tx_stack.append({})
+
+        elif cmd == "COMMIT":
+            if not tx_stack:
+                output.append("NO TRANSACTION")
+            else:
+                changes = tx_stack.pop()
+                if tx_stack:
+                    for k, v in changes.items():
+                        tx_stack[-1][k] = v
+                else:
+                    store.update(changes)
+
+        elif cmd == "ROLLBACK":
+            if not tx_stack:
+                output.append("NO TRANSACTION")
+            else:
+                tx_stack.pop()
+
+        elif cmd == "COUNT":
+            value = parts[1]
+            count = 0
+            for key in store:
+                if get_visible(key) == value:
+                    count += 1
+            for tx in reversed(tx_stack):
+                for k, v in tx.items():
+                    if v == value:
+                        count += 1
+            output.append(str(count))
+
+        elif cmd == "WATCH":
+            key = parts[1]
+            old_val = get_visible(key)
+            watchers[key] = {(old_val, None)}
+
+        elif cmd == "SNAPSHOT":
+            name = parts[1]
+            snapshots[name] = {
+                'store': store.copy(),
+                'tx_stack': [dict(tx) for tx in tx_stack],
+                'watchers': dict(watchers),
+            }
+
+        elif cmd == "RESTORE":
+            name = parts[1]
+            snap = snapshots[name]
+            store.clear()
+            store.update(snap['store'])
+            tx_stack.clear()
+            for tx in snap['tx_stack']:
+                tx_stack.append(dict(tx))
+            watchers.clear()
+            watchers.update(snap['watchers'])
+
+    return output

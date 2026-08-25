@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-9wn5zmv4wi936drnjb5isl",
+  "object": "chat.completion",
+  "created": 1787139747,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const query = input.query.startsWith('?') ? input.query.slice(1) : input.query;\n  if (!query) return {};\n\n  const result = {};\n  for (const part of query.split('&')) {\n    const [key, value] = part.split('=');\n    let decodedKey = decodeURIComponent(key);\n\n    if (decodedKey.endsWith('[]')) {\n      const keyWithoutBracket = decodedKey.slice(0, -2);\n      if (!result[keyWithoutBracket]) result[keyWithoutBracket] = [];\n      result[keyWithoutBracket].push(value ? decodeURIComponent(value) : true);\n    } else if (key.includes('[')) {\n      let currentObj = result;\n      const nestedKeys = decodedKey.split(/\\[\\]/g).map((k, i) => k.trim());\n      for (let i = 0; i < nestedKeys.length; i++) {\n        if (!currentObj[nestedKeys[i]]) {\n          currentObj[nestedKeys[i]] = {};\n        }\n        currentObj = currentObj[nestedKeys[i]];\n      }\n      currentObj[nestedKeys.pop()] = value ? decodeURIComponent(value) : true;\n    } else {\n      result[decodedKey] = value ? decodeURIComponent(value) : true;\n    }\n  }\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 336,
+    "completion_tokens": 273,
+    "total_tokens": 609,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

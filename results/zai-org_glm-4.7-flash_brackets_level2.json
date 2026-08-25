@@ -1,0 +1,14 @@
+{
+  "model": "zai-org/glm-4.7-flash",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-07-12 15:01:33",
+  "passed": 11,
+  "total": 15,
+  "failures": [
+    "find_unmatched/all_matched: ожидалось [], получено [0, 1]",
+    "find_unmatched/stray_close_after_valid_pair: ожидалось [2], получено [0, 1, 2]",
+    "find_unmatched/wrong_order_classic: ожидалось [0, 2], получено [0, 1, 2, 3]",
+    "find_unmatched/fully_balanced_nested: ожидалось [], получено [0, 1, 2, 3, 4, 5]"
+  ]
+}

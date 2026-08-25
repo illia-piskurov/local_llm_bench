@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "google/gemma-3n-e4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    \"\"\"\n    Реализует топологическую сортировку задач с зависимостями.\n\n    Args:\n        tasks: Словарь, где ключ - имя задачи (строка), а значение - список имён задач,\n               от которых она зависит (эти задачи должны быть выполнены раньше).\n\n    Returns:\n        Список имён всех задач в порядке, при котором каждая задача идёт строго после всех своих зависимостей.\n        Если в графе зависимостей есть цикл - возвращает None.\n    \"\"\"\n\n    in_degree = {}\n    for task in tasks:\n        in_degree[task] = 0\n    for task in tasks:\n        for dependency in tasks[task]:\n            if dependency in in_degree:\n                in_degree[task] += 1\n            else:\n                in_degree[task] = 1\n\n    queue = []\n    for task in in_degree:\n        if in_degree[task] == 0:\n            queue.append(task)\n\n    result = []\n    while queue:\n        task = queue.pop(0)\n        result.append(task)\n\n        for dependent_task in tasks:\n            if task in tasks[dependent_task]:\n                in_degree[dependent_task] -= 1\n                if in_degree[dependent_task] == 0:\n                    queue.append(dependent_task)\n\n    if len(result) != len(tasks):\n        return None  # Цикл обнаружен\n    else:\n        return result\n\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    \"\"\"\n    Вычисляет длину критического пути в задаче с зависимостями.\n\n    Args:\n        tasks: Словарь, где значение - кортеж (длительность_задачи, список_зависимостей).\n\n    Returns:\n        Длина критического пути. Если в графе зависимостей есть цикл - возвращает None.\n    \"\"\"\n\n    sorted_tasks = topo_sort(tasks)\n    if sorted_tasks is None:\n        return None\n\n    dp = {}  # dp[task] - максимальная длина пути, заканчивающаяся задачей task\n\n    for task in sorted_tasks:\n        duration, dependencies = tasks[task]\n        max_path_len = duration\n        for dependency in dependencies:\n            if dependency in dp:\n                max_path_len = max(max_path_len, dp[dependency] + duration)\n        dp[task] = max_path_len\n\n    if not dp:\n      return 0 # Handle the case where there are no tasks.\n\n    return max(dp.values())\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 748,
+    "total_output_tokens": 629,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 12.490997148557554,
+    "time_to_first_token_seconds": 5.179946
+  },
+  "response_id": "resp_8d0119ea4e1a69a1e755037d737e1a05eeb2490da0e0d8a3"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-a4so3os4qnehpiobr1m6cv",
+  "object": "chat.completion",
+  "created": 1787082166,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    if (!input || !Array.isArray(input.intervals)) {\n        return [];\n    }\n\n    const intervals = input.intervals;\n\n    // 1. Handle empty or invalid input array\n    if (intervals.length === 0) {\n        return [];\n    }\n\n    // 2. Sort the intervals based on their start time\n    // Using slice to avoid mutating the original input array\n    const sortedIntervals = [...intervals].sort((a, b) => a[0] - b[0]);\n\n    const merged = [];\n    let currentStart = sortedIntervals[0][0];\n    let currentEnd = sortedIntervals[0][1];\n\n    for (let i = 1; i < sortedIntervals.length; i++) {\n        const [nextStart, nextEnd] = sortedIntervals[i];\n\n        // Check for overlap or touching condition: next start must be less than or equal to current end + 1\n        // Since the problem defines intervals as [start, end], \"touching\" usually means\n        // that the next interval starts exactly where the current one ends (nextStart === currentEnd)\n        // OR if it overlaps (nextStart < currentEnd).\n\n        // If nextStart <= currentEnd (overlap or touching boundary)\n        if (nextStart <= currentEnd) {\n            // Merge: Extend the current end to the maximum of the two ends\n            currentEnd = Math.max(currentEnd, nextEnd);\n        } else {\n            // No overlap/gap found. Finalize the current merged interval.\n            merged.push([currentStart, currentEnd]);\n\n            // Start a new merged interval with the current non-overlapping segment\n            currentStart = nextStart;\n            currentEnd = nextEnd;\n        }\n    }\n\n    // Push the last processed interval\n    merged.push([currentStart, currentEnd]);\n\n    return merged;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 172,
+    "completion_tokens": 433,
+    "total_tokens": 605,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

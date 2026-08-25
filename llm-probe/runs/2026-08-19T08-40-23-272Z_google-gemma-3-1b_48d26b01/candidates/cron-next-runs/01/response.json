@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-w8qre4ag08vusuj9x8dgn",
+  "object": "chat.completion",
+  "created": 1787128887,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const parsedCron = input.split(\" \");\n  const from = input[input.indexOf(\" \") + 2];\n  const count = parseInt(input[input.indexOf(\" \") + 3]);\n\n  if (count === 0) return [];\n\n  const nextDay = parsedCron.pop();\n  const nextMonth = parsedCron.pop();\n  const nextDayOfWeek = parsedCron.pop() || 'Sunday';\n\n  if (input.includes(\"*\")) {\n    if (nextDay < from) {\n      return [];\n    }\n  } else if (input.includes(\"15\")) {\n    if (nextDay === from && nextMonth === input.indexOf(\" \") + 4 ) {\n      return [];\n    }\n\n  } else if (input.includes(\"1\")) {\n    if (nextDay < from) {\n      return [];\n    }\n  } else if (input.includes(\"15\")) {\n    if(nextDay === from && nextMonth === input.indexOf(\" \") + 4 ) {\n        return []\n    }\n  }\n\n  const result = [];\n  if(nextDay < from) {\n      result.push(from);\n      result.push(nextDay);\n  } else if (nextMonth === input.indexOf(\" \") + 4){\n      result.push(input.indexOf(\" \") + 4);\n      result.push(nextMonth);\n\n  }\n\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 419,
+    "completion_tokens": 338,
+    "total_tokens": 757,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ymrw4yumgz9g43jicok11",
+  "object": "chat.completion",
+  "created": 1787068494,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const matrix = JSON.parse(JSON.stringify(input.matrix));\n  for (let i = 0; i < Math.floor(matrix.length / 2); i++) {\n    for (let j = i; j < matrix.length - i - 1; j++) {\n      const temp = matrix[i][j];\n      matrix[i][j] = matrix[j][matrix.length - 1 - i];\n      matrix[j][matrix.length - 1 - i] = matrix[matrix.length - 1 - i][matrix.length - 1 - j];\n      matrix[matrix.length - 1 - i][matrix.length - 1 - j] = matrix[matrix.length - 1 - j][i];\n      matrix[matrix.length - 1 - j][i] = temp;\n    }\n  }\n  return JSON.parse(JSON.stringify(matrix));\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 131,
+    "completion_tokens": 180,
+    "total_tokens": 311,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

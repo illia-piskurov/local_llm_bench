@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "passed": 6,
+  "total": 6,
+  "tests": [
+    {
+      "id": "zero",
+      "passed": true
+    },
+    {
+      "id": "one",
+      "passed": true
+    },
+    {
+      "id": "two",
+      "passed": true
+    },
+    {
+      "id": "three",
+      "passed": true
+    },
+    {
+      "id": "twenty",
+      "passed": true
+    },
+    {
+      "id": "large",
+      "passed": true
+    }
+  ],
+  "durationMs": 18
+}

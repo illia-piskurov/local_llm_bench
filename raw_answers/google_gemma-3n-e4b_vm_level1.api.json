@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "google/gemma-3n-e4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef run(program: str) -> list[str]:\n    \"\"\"\n    Запускает интерпретатор стекового языка и возвращает список выведенных строк.\n\n    Args:\n        program: Многострочный текст, представляющий программу на стековом языке.\n\n    Returns:\n        Список строк, содержащих вывод оператора PRINT.\n    \"\"\"\n\n    stack = []\n    output = []\n    lines = program.splitlines()\n    for i, line in enumerate(lines):\n        line = line.strip()\n        if not line or line.startswith(\"#\"):\n            continue\n\n        try:\n            parts = line.split()\n            instruction = parts[0]\n\n            if instruction == \"PUSH\":\n                stack.append(int(parts[1]))\n            elif instruction == \"POP\":\n                if not stack:\n                    raise ValueError(f\"Stack underflow on line {i + 1}\")\n                stack.pop()\n            elif instruction == \"ADD\":\n                if len(stack) < 2:\n                    raise ValueError(f\"Not enough operands for ADD on line {i + 1}\")\n                operand2 = stack.pop()\n                operand1 = stack.pop()\n                stack.append(operand1 + operand2)\n            elif instruction == \"SUB\":\n                if len(stack) < 2:\n                    raise ValueError(f\"Not enough operands for SUB on line {i + 1}\")\n                operand2 = stack.pop()\n                operand1 = stack.pop()\n                stack.append(operand1 - operand2)\n            elif instruction == \"MUL\":\n                if len(stack) < 2:\n                    raise ValueError(f\"Not enough operands for MUL on line {i + 1}\")\n                operand2 = stack.pop()\n                operand1 = stack.pop()\n                stack.append(operand1 * operand2)\n            elif instruction == \"DIV\":\n                if len(stack) < 2:\n                    raise ValueError(f\"Not enough operands for DIV on line {i + 1}\")\n                operand2 = stack.pop()\n                operand1 = stack.pop()\n                if operand2 == 0:\n                    raise ZeroDivisionError(f\"Division by zero on line {i + 1}\")\n                stack.append(operand1 // operand2)  # Integer division\n            elif instruction == \"DUP\":\n                if not stack:\n                    raise ValueError(f\"Stack is empty, cannot DUP on line {i + 1}\")\n                stack.append(stack[-1])\n            elif instruction == \"SWAP\":\n                if len(stack) < 2:\n                    raise ValueError(f\"Not enough elements to SWAP on line {i + 1}\")\n                stack[-1], stack[-2] = stack[-2], stack[-1]\n            elif instruction == \"PRINT\":\n                if not stack:\n                    raise ValueError(f\"Stack is empty, cannot PRINT on line {i + 1}\")\n                output.append(str(stack[-1]))\n            else:\n                raise ValueError(f\"Unknown instruction: {instruction} on line {i + 1}\")\n\n        except (ValueError, ZeroDivisionError) as e:\n            output.append(str(e))\n            \n    return output\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 322,
+    "total_output_tokens": 728,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 17.506389832288786,
+    "time_to_first_token_seconds": 3.961478
+  },
+  "response_id": "resp_a0c937aef9a2ab02547acb2e6658ac9db8264bdd87b450f7"
+}

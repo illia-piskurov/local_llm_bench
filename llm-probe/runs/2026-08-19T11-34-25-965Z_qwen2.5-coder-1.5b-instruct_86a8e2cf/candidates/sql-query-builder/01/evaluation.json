@@ -1,0 +1,23 @@
+{
+  "status": "failed",
+  "passed": 0,
+  "total": 3,
+  "tests": [
+    {
+      "id": "simple-select-all",
+      "passed": false,
+      "error": "Expected {\"sql\":\"SELECT * FROM products\",\"params\":[]}, got {\"sql\":\"SELECT * WHERE  ORDER BY created_at ASC\",\"params\":[]}"
+    },
+    {
+      "id": "select-with-expr-and-joins",
+      "passed": false,
+      "error": "Expected {\"sql\":\"SELECT id, COUNT(items.id) AS item_count FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id\",\"params\":[]}, got {\"sql\":\"SELECT id, COUNT(items.id) AS item_count LEFT JOIN items ON orders.id = $1 WHERE  GROUP BY orders.id ORDER BY created_at ASC\",\"params\":[\"items.order_id\"]}"
+    },
+    {
+      "id": "where-in-and-null-and-offset",
+      "passed": false,
+      "error": "Expected {\"sql\":\"SELECT * FROM users WHERE (id IN ($1, $2, $3) AND deleted_at IS NULL) LIMIT 5 OFFSET 15\",\"params\":[10,20,30]}, got {\"sql\":\"SELECT * WHERE  ORDER BY created_at ASC LIMIT 5 OFFSET 15\",\"params\":[null]}"
+    }
+  ],
+  "durationMs": 28
+}

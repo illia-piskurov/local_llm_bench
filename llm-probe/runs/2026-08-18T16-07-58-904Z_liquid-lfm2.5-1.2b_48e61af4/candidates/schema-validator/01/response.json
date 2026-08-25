@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-jx1i1pukogjnrkny25ggjq",
+  "object": "chat.completion",
+  "created": 1787069320,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const schema = input.schema;\n  const errors = {};\n  const valid = true;\n\n  for (const field in schema) {\n    const rule = schema[field];\n    const value = input.data[field];\n\n    if (rule.required && (value === undefined || value === null)) {\n      errors[field] = [\"Required\"];\n    } else if (typeof value !== rule.type) {\n      errors[field] = \"Invalid type\";\n    } else if (rule.min !== undefined && value < rule.min) {\n      errors[field] = \"Too small\";\n    } else if (rule.max !== undefined && value > rule.max) {\n      errors[field] = \"Too large\";\n    } else if (Array.isArray(value) && rule.minItems && value.length < rule.minItems) {\n      errors[field] = \"Too few items\";\n    } else if (Array.isArray(value) && rule.maxItems && value.length > rule.maxItems) {\n      errors[field] = \"Too many items\";\n    }\n  }\n\n  return { valid: valid, errors };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 360,
+    "completion_tokens": 241,
+    "total_tokens": 601,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

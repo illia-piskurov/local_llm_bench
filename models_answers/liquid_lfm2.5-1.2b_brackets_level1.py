@@ -1,0 +1,12 @@
+def is_balanced(s: str) -> bool:
+    stack = []
+    opening = {'(': ')', '{': '}', '[': ']'}
+    closing = {')': '(', '}': '{', ']': '['}
+    
+    for char in s:
+        if char in opening:
+            stack.append(char)
+        elif char in closing:
+            if not stack or opening[stack.pop()] != char:
+                return False
+    return not stack

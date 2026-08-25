@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "google/gemma-3-1b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    \"\"\"\n    Реализует расчёт критического пути в графе зависимостей.\n\n    Args:\n        tasks: Словарь, где значение — кортеж (длительность_задачи, список_зависимостей).\n\n    Returns:\n        Длина критического пути - суммарная длительность самой долгой цепочки зависимых друг от друга задач.\n        Если в графе есть цикл — верни None.\n    \"\"\"\n    visited = set()\n    recursion_stack = []\n    max_length = 0\n\n    def dfs(task):\n        if task in visited:\n            return 0\n\n        visited.add(task)\n        for dependent_task in tasks[task][1]:\n            length = dfs(dependent_task)\n            max_length = max(max_length, length + 1)\n\n        recursion_stack.append(task)\n        visited.remove(task)\n        for dependent_task in tasks[task][1]:\n            length = dfs(dependent_task)\n            max_length = max(max_length, length + 1)\n\n        recursion_stack.pop()\n\n    for task in tasks:\n        if task not in visited:\n            dfs(task)\n\n    return max_length\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 631,
+    "total_output_tokens": 311,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 70.00944114457107,
+    "time_to_first_token_seconds": 0.794311
+  },
+  "response_id": "resp_6ea055be2319edd4ec2305be379cc64e69efba9d7f06df83"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ojzb1vjhg6jrt74dlq44w",
+  "object": "chat.completion",
+  "created": 1787075341,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const schema = input.schema;\n  const data = input.data;\n  const errors = {};\n  \n  for (const field in data) {\n    if (!data.hasOwnProperty(field)) continue;\n    \n    const value = data[field];\n    const rule = schema[field] || {};\n    \n    // Check required\n    if (rule.required && (value === undefined || value === null)) {\n      errors[field] = \"Required\";\n      continue;\n    }\n    \n    // Check type\n    if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') {\n      errors[field] = \"Invalid type\";\n      continue;\n    }\n    \n    // Handle array types\n    if (rule.type === 'array') {\n      if (!Array.isArray(value)) {\n        errors[field] = \"Invalid type\";\n        continue;\n      }\n      \n      const count = value.length;\n      \n      // Check min\n      if (rule.min) {\n        if (count < rule.min) {\n          errors[field] = `Too few items`;\n        } else if (count > rule.max && rule.max) {\n          errors[field] = `Too many items`;\n        }\n      }\n      \n      // Check max\n      if (rule.max) {\n        if (count > rule.max) {\n          errors[field] = `Too many items`;\n        } else if (count < rule.min && rule.min) {\n          errors[field] = `Too few items`;\n        }\n      }\n      \n      // Check pattern\n      if (rule.pattern) {\n        const regex = new RegExp(rule.pattern);\n        if (!regex.test(value)) {\n          errors[field] = \"Invalid format\";\n        }\n      } else if (typeof value === 'string' && rule.type !== 'array') {\n        // For string type, check min and max\n        if (rule.min) {\n          if (value.length < rule.min) {\n            errors[field] = \"Too short\";\n          } else if (value.length > rule.max && rule.max) {\n            errors[field] = \"Too long\";\n          }\n        }\n        \n        if (rule.max) {\n          if (value.length > rule.max) {\n            errors[field] = \"Too large\";\n          } else if (value.length < rule.min && rule.min) {\n            errors[field] = \"Too small\";\n          }\n        }\n      } else if (typeof value === 'number' && rule.type !== 'array') {\n        // For number type, check min and max\n        if (rule.min && value < rule.min) {\n          errors[field] = \"Too small\";\n        } else if (rule.max && value > rule.max) {\n          errors[field] = \"Too large\";\n        }\n      }\n    }\n  }\n  \n  return { valid: Object.keys(errors).length === 0, errors };\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 345,
+    "completion_tokens": 588,
+    "total_tokens": 933,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

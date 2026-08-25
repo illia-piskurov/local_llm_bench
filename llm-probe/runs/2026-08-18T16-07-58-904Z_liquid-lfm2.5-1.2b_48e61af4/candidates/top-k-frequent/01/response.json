@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-zcg6eltbzsww3rveb2pr",
+  "object": "chat.completion",
+  "created": 1787069383,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const { numbers } = input;\n  const freq = {};\n  numbers.forEach(n => {\n    freq[n] = (freq[n] || 0) + 1;\n  });\n  const sorted = Object.entries(freq)\n    .sort((a, b) => {\n      const freqDiff = b[1] - a[1];\n      if (freqDiff === 0) return a[0] - b[0];\n      return freqDiff;\n    })\n    .map(([num]) => num);\n  return sorted.slice(0, k).map(Number);\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 148,
+    "completion_tokens": 141,
+    "total_tokens": 289,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

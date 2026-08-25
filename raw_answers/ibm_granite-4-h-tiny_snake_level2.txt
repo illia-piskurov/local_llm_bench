@@ -1,0 +1,168 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
+        canvas { border: 2px solid black; }
+        .score { position: absolute; top: 10px; left: 10px; color: white; font-family: Arial, sans-serif; }
+        .game-over {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .game-over .restart {
+            margin-top: 10px;
+            cursor: pointer;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1em;
+            margin: 10px 0;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .game-over .restart:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div class="score">Score: <span id="score">0</span></div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let snake = [{x: 200, y: 200}];
+        let direction = 'RIGHT';
+        let food = {x: Math.round(Math.random() * (canvas.width / 20)) * 20, y: Math.round(Math.random() * (canvas.height / 20)) * 20};
+        let score = 0;
+        const gameLoopInterval = setInterval(gameLoop, 100);
+
+        canvas.addEventListener('keydown', handleKeyDown);
+        document.querySelector('.game-over .restart').addEventListener('click', restartGame);
+
+        function drawSnake() {
+            ctx.fillStyle = 'green';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x, segment.y, 20, 20);
+            });
+        }
+
+        function drawFood() {
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(food.x + 10, food.y + 10, 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
+            else if (event.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
+            else if (event.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
+            else if (event.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
+            else if (event.key === 'w' && direction !== 'DOWN') direction = 'UP';
+            else if (event.key === 's' && direction !== 'UP') direction = 'DOWN';
+            else if (event.key === 'a' && direction !== 'RIGHT') direction = 'LEFT';
+            else if (event.key === 'd' && direction !== 'LEFT') direction = 'RIGHT';
+        }
+
+        function gameLoop() {
+            const head = {x: snake[0].x, y: snake[0].y};
+            switch(direction) {
+                case 'UP': head.y -= 20; break;
+                case 'DOWN': head.y += 20; break;
+                case 'LEFT': head.x -= 20; break;
+                case 'RIGHT': head.x += 20; break;
+            }
+
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                clearInterval(gameLoopInterval);
+                showGameOver('Game Over! Your score: ' + score);
+                return;
+            }
+
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    clearInterval(gameLoopInterval);
+                    showGameOver('Game Over! Your score: ' + score);
+                    return;
+                }
+            }
+
+            const newHead = {x: head.x, y: head.y};
+            switch(direction) {
+                case 'UP': newHead.y -= 20; break;
+                case 'DOWN': newHead.y += 20; break;
+                case 'LEFT': newHead.x -= 20; break;
+                case 'RIGHT': newHead.x += 20; break;
+            }
+
+            snake.unshift(newHead);
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                food = {x: Math.round(Math.random() * (canvas.width / 20)) * 20, y: Math.round(Math.random() * (canvas.height / 20)) * 20};
+                drawFood();
+            } else {
+                snake.pop();
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawSnake();
+            drawFood();
+            document.getElementById('score').textContent = score;
+        }
+
+        function showGameOver(message) {
+            const gameOverDiv = document.querySelector('.game-over');
+            gameOverDiv.innerHTML = `<div>${message}<br><span class="restart">Press Restart to Play Again</span></div>`;
+            gameOverDiv.style.display = 'flex';
+            document.body.addEventListener('click', () => {
+                location.reload();
+            });
+        }
+
+        function restartGame() {
+            clearInterval(gameLoopInterval);
+            snake = [{x: 200, y: 200}];
+            direction = 'RIGHT';
+            score = 0;
+            food = {x: Math.round(Math.random() * (canvas.width / 20)) * 20, y: Math.round(Math.random() * (canvas.height / 20)) * 20};
+            document.querySelector('.game-over').style.display = 'none';
+            gameLoop();
+        }
+
+        function drawSnake() {
+            ctx.fillStyle = 'green';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x, segment.y, 20, 20);
+            });
+        }
+
+        function drawFood() {
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(food.x + 10, food.y + 10, 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    </script>
+</body>
+</html>
+```

@@ -1,0 +1,10 @@
+Return the lexicographically smallest pair [i, j] (i < j) from input.numbers whose elements sum to input.target. Return [] if no such pair exists.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"numbers":[2,7,11,15],"target":9}
+output: [0,1]

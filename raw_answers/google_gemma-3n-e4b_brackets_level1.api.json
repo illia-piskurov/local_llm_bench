@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "google/gemma-3n-e4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    \"\"\"\n    Проверяет сбалансированность скобок в строке.\n\n    Args:\n        s: Строка для проверки.\n\n    Returns:\n        True, если строка сбалансирована, False - в противном случае.\n    \"\"\"\n    stack = []\n    mapping = {\")\": \"(\", \"]\": \"[\", \"}\": \"{\"}\n\n    for char in s:\n        if char in mapping:\n            top_element = stack.pop() if stack else '#'  # Use '#' as a placeholder for empty stack\n            if mapping[char] != top_element:\n                return False\n        elif char in \"([{\":\n            stack.append(char)\n\n    return not stack\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 187,
+    "total_output_tokens": 175,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 3.1697688530289216,
+    "time_to_first_token_seconds": 12.027179,
+    "model_load_time_seconds": 15.607
+  },
+  "response_id": "resp_e6070728fceae57f10b519ab2b7dc947ad21a2392902a400"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-vrxbkkudm281zni0detgef",
+  "object": "chat.completion",
+  "created": 1787075586,
+  "model": "bonsai-8b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```json\n{\n  \"solve\": function(input) {\n    const { a, b } = input;\n    const m = a.length;\n    const n = b.length;\n    const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));\n\n    for (let i = 1; i <= m; i++) {\n      for (let j = 1; j <= n; j++) {\n        if (a[i - 1] === b[j - 1]) {\n          dp[i][j] = dp[i - 1][j - 1] + 1;\n        } else {\n          dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n        }\n      }\n    }\n\n    return dp[m][n];\n  }\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 124,
+    "completion_tokens": 180,
+    "total_tokens": 304,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "bonsai-8b"
+}

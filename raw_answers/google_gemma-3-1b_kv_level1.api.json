@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "google/gemma-3-1b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nimport threading\n\nclass InMemoryKeyValueStore:\n    def __init__(self):\n        self.lock = threading.Lock()\n        self.transactions = []\n\n    def set(self, key, value):\n        with self.lock:\n            if not isinstance(key, str) or not isinstance(value, str):\n                print(\"Invalid input\")\n                return\n\n            try:\n                self.transactions.append((key, value))\n            except Exception as e:\n                print(f\"Error setting key: {e}\")\n                return\n\n    def get(self, key):\n        with self.lock:\n            if not isinstance(key, str) or key is None:\n                print(\"Invalid input\")\n                return \"NULL\"\n            try:\n                return self.transactions[key]\n            except IndexError:\n                print(\"No transaction\")\n                return \"NO TRANSACTION\"\n\n    def delete(self, key):\n        with self.lock:\n            if not isinstance(key, str) or key is None:\n                print(\"Invalid input\")\n                return\n\n            try:\n                del self.transactions[key]\n            except KeyError:\n                pass  # Key doesn't exist, no error\n\n    def run(self):\n        print(\"Starting transaction...\")\n        while True:\n            command = input()\n            if command == \"SET\":\n                try:\n                    key, value = command.split()\n                    self.set(key, value)\n                except ValueError:\n                    print(\"Invalid command\")\n\n            elif command == \"GET\":\n                value = self.get(command)\n                print(value)\n\n            elif command == \"COMMIT\":\n                if len(self.transactions) > 0:\n                    try:\n                        self.transactions[-1]  # Last transaction\n                    except IndexError:\n                        pass\n                    print(\"Transaction committed\")\n                else:\n                    print(\"NO TRANSACTION\")\n\n            elif command == \"ROLLBACK\":\n                if len(self.transactions) > 0:\n                    try:\n                        last_transaction = self.transactions[-1]\n                        with self.lock:\n                            self.transactions.pop()\n                        print(\"Transaction rolled back\")\n                    except IndexError:\n                        pass\n\n                else:\n                    print(\"NO TRANSACTION\")\n\n\n            else:\n                print(\"Invalid command\")\n\n            if command == \"END\":\n                break\n\n        print(\"Transaction finished.\")\n\nif __name__ == '__main__':\n    store = InMemoryKeyValueStore()\n    store.run()\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 405,
+    "total_output_tokens": 560,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 70.82393914908326,
+    "time_to_first_token_seconds": 0.5718070000000001
+  },
+  "response_id": "resp_2d3a4caf89525ea7f609bf9f2e72767917fd0da43f3daeab"
+}

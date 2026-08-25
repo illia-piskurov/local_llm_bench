@@ -1,0 +1,16 @@
+{
+  "model": "mistralai/ministral-3-3b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Apply a list of actions in input.actions to initial state in input.state without mutating input.\nActions:\n- { type: 'SET', path: string, value: any }: sets property at dot-separated path (creates nested objects if missing).\n- { type: 'TOGGLE', path: string }: negates boolean at path (if value is not boolean, sets true).\n- { type: 'ARRAY_PUSH', path: string, item: any }: appends item to array at path (creates [item] if array missing).\n- { type: 'ARRAY_REMOVE', path: string, index: number }: removes element at index if within bounds.\n- { type: 'DELETE', path: string }: deletes key at path.\nReturn the resulting state object.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"state\":{\"user\":{\"name\":\"Bob\",\"active\":false},\"tags\":[\"a\",\"b\"]},\"actions\":[{\"type\":\"TOGGLE\",\"path\":\"user.active\"},{\"type\":\"ARRAY_PUSH\",\"path\":\"tags\",\"item\":\"c\"},{\"type\":\"ARRAY_REMOVE\",\"path\":\"tags\",\"index\":0}]}\noutput: {\"user\":{\"name\":\"Bob\",\"active\":true},\"tags\":[\"b\",\"c\"]}"
+    }
+  ],
+  "temperature": 0.1,
+  "max_tokens": 16000,
+  "stream": false
+}

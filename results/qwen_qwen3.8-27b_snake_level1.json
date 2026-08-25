@@ -1,0 +1,8 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-08-15 22:10:06",
+  "manual_score": 10,
+  "comment": "ok"
+}

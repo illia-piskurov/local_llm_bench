@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-uwsfed47hzkr6isc016zp",
+  "object": "chat.completion",
+  "created": 1787127977,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    if (!input || !Array.isArray(input.words)) {\n        return [];\n    }\n    \n    const wordMap = new Map();\n    \n    for (const word of input.words) {\n        // Sort the letters in the word to create a key\n        const sortedWord = word.split('').sort().join('');\n        \n        if (!wordMap.has(sortedWord)) {\n            wordMap.set(sortedWord, []);\n        }\n        \n        wordMap.get(sortedWord).push(word);\n    }\n    \n    // Sort each group of anagrams alphabetically\n    for (const group of wordMap.values()) {\n        group.sort();\n    }\n    \n    // Convert map values to array of groups and sort groups by first word\n    const groups = Array.from(wordMap.values());\n    groups.sort((a, b) => a[0].localeCompare(b[0]));\n    \n    return groups;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 143,
+    "completion_tokens": 188,
+    "total_tokens": 331,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

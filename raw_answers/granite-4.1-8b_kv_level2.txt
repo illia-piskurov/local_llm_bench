@@ -1,0 +1,103 @@
+```python
+class KeyValueStore:
+    def __init__(self):
+        self.storage = {}
+        self.transactions = []
+        self.watches = {}
+
+    def set(self, key, value):
+        if self.transactions:
+            self.transactions[-1][key] = value
+        else:
+            self.storage[key] = value
+        self._notify_watchers(key, None, value)
+
+    def get(self, key):
+        return self.storage.get(key, "NULL") if not self.transactions or key not in self.transactions[-1] else self.transactions[-1].get(key, "NULL")
+
+    def delete(self, key):
+        if self.transactions:
+            if key in self.transactions[-1]:
+                del self.transactions[-1][key]
+        elif key in self.storage:
+            del self.storage[key]
+        self._notify_watchers(key, self.get(key), None)
+
+    def begin(self):
+        self.transactions.append({})
+
+    def commit(self):
+        if not self.transactions:
+            print("NO TRANSACTION")
+        else:
+            last_tx = self.transactions.pop()
+            for key, value in last_tx.items():
+                self.storage[key] = value
+
+    def rollback(self):
+        if not self.transactions:
+            print("NO TRANSACTION")
+        else:
+            self.transactions.pop()
+
+    def count(self, value):
+        visible_storage = self.storage.copy()
+        if self.transactions:
+            visible_storage.update(self.transactions[-1])
+        return sum(1 for v in visible_storage.values() if v == value)
+
+    def watch(self, key):
+        self.watches[key] = self.get(key)
+
+    def _notify_watchers(self, key, old_value, new_value):
+        if key in self.watches:
+            old_display = self.watches[key]
+            if old_value is None:
+                old_display = "NULL"
+            if new_value is None:
+                new_display = "NULL"
+            else:
+                new_display = new_value
+            if old_display != new_display:
+                print(f"WATCH {key} {old_display} -> {new_display}")
+            self.watches[key] = new_value if new_value is not None else "NULL"
+
+def run(program: str) -> list[str]:
+    store = KeyValueStore()
+    output_lines = []
+    for line in program.splitlines():
+        stripped_line = line.strip()
+        if not stripped_line:
+            continue
+        parts = stripped_line.split()
+        cmd = parts[0]
+        if cmd == "SET":
+            key, value = parts[1], parts[2]
+            store.set(key, value)
+        elif cmd == "GET":
+            key = parts[1]
+            print(store.get(key))
+            output_lines.append(f"GET {key} {store.get(key)}")
+        elif cmd == "DELETE":
+            key = parts[1]
+            store.delete(key)
+        elif cmd == "BEGIN":
+            store.begin()
+        elif cmd == "COMMIT":
+            store.commit()
+            if "NO TRANSACTION" in (store.commit(),):
+                output_lines.append("COMMIT NO TRANSACTION")
+        elif cmd == "ROLLBACK":
+            store.rollback()
+            if "NO TRANSACTION" in (store.rollback(),):
+                output_lines.append("ROLLBACK NO TRANSACTION")
+        elif cmd == "COUNT":
+            value = parts[1]
+            count = store.count(value)
+            print(count)
+            output_lines.append(f"COUNT {value} {count}")
+        elif cmd == "WATCH":
+            key = parts[1]
+            store.watch(key)
+    return output_lines
+```

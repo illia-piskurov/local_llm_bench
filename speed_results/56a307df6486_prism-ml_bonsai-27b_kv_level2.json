@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "prism-ml/bonsai-27b",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-08-03 21:34:02",
+  "stats": {
+    "input_tokens": 1014,
+    "total_output_tokens": 639,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 8.179916168020341,
+    "time_to_first_token_seconds": 11.872214,
+    "model_load_time_seconds": null
+  }
+}

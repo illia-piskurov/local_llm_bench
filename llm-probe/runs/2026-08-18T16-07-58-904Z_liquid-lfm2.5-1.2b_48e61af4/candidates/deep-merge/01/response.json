@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-qubhzkn4suhg3tgqlzlhnc",
+  "object": "chat.completion",
+  "created": 1787069289,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  if (!input.objects || input.objects.length === 0) return {};\n\n  const result = {};\n  input.objects.forEach(obj => {\n    result = mergeObjects(result, obj);\n  });\n  return result;\n}\n\nfunction mergeObjects(target, source) {\n  for (const key in source) {\n    if (source[key] !== undefined) {\n      if (typeof target[key] === 'object' && typeof source[key] === 'object') {\n        target[key] = mergeObjects(target[key], source[key]);\n      } else {\n        target[key] = source[key];\n      }\n    }\n  }\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 257,
+    "completion_tokens": 141,
+    "total_tokens": 398,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

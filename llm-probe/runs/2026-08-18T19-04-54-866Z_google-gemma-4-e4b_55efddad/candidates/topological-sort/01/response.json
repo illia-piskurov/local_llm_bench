@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-lym9ucan5iavcujco9nupd",
+  "object": "chat.completion",
+  "created": 1787082309,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const n = input.n;\n    const edges = input.edges;\n\n    if (n === 0) return [];\n\n    // 1. Initialization: Build Adjacency List and In-Degree array\n    // Use Arrays for fixed size structures like degrees, Maps/Objects for adjacency lists if nodes are sparse, but since n is small enough (and we index from 0 to n-1), arrays are fine here.\n    const adj = Array(n).fill(0).map(() => []);\n    const inDegree = Array(n).fill(0);\n\n    for (const [u, v] of edges) {\n        adj[u].push(v);\n        inDegree[v]++;\n    }\n\n    // 2. Queue Setup: Find all nodes with in-degree 0\n    const queue = [];\n    for (let i = 0; i < n; i++) {\n        if (inDegree[i] === 0) {\n            queue.push(i);\n        }\n    }\n\n    const result = [];\n    let head = 0; // Pointer for queue simulation\n\n    // 3. Processing (Kahn's Algorithm)\n    while (head < queue.length) {\n        const u = queue[head++];\n        result.push(u);\n\n        for (const v of adj[u]) {\n            inDegree[v]--;\n            if (inDegree[v] === 0) {\n                queue.push(v);\n            }\n        }\n    }\n\n    // 4. Result Check\n    if (result.length === n) {\n        return result;\n    } else {\n        // Cycle detected\n        return null;\n    }\n}",
+        "reasoning_content": "Plan: Implement Kahn's algorithm for topological sorting.\n\n1.  **Initialization**:\n    *   Calculate the in-degree of every node (number of incoming edges).\n    *   Build an adjacency list representation of the graph.\n\n2.  **Queue Setup**:\n    *   Initialize a queue with all nodes that have an in-degree of 0.\n\n3.  **Processing**:\n    *   Initialize the result array (the topological order).\n    *   While the queue is not empty:\n        *   Dequeue a node `u`.\n        *   Add `u` to the result array.\n        *   For every neighbor `v` of `u`:\n            *   Decrement the in-degree of `v`.\n            *   If the in-degree of `v` becomes 0, enqueue `v`.\n\n4.  **Result Check**:\n    *   If the size of the result array equals the total number of nodes `n`, a topological order exists, return the array.\n    *   Otherwise (if we processed fewer than `n` nodes), a cycle exists, return `null`.\n\nConstraints check:\n*   Synchronous JS ES2023 only. (OK)\n*   No mutations of input structure recommended (will work on copies/calculated structures).\n*   Must implement the function signature exactly.\n\nLet's walk through the example: $N=4$, Edges = [[0,1], [0,2], [1,3], [2,3]].\n\n1.  **Initialization**:\n    *   $N=4$. Nodes: 0, 1, 2, 3.\n    *   Adjacency List (Adj):\n        *   0: [1, 2]\n        *   1: [3]\n        *   2: [3]\n        *   3: []\n    *   In-degree array (Degree):\n        *   0: 0\n        *   1: 1 (from 0)\n        *   2: 1 (from 0)\n        *   3: 2 (from 1, 2)\n\n2.  **Queue Setup**:\n    *   Queue Q = [0] (Nodes with in-degree 0).\n    *   Result R = []\n\n3.  **Processing**:\n    *   **Step 1**: Dequeue $u=0$. R = [0].\n        *   Neighbors of 0: 1, 2.\n        *   Process 1: Degree[1] becomes $1-1=0$. Enqueue 1. Q = [1].\n        *   Process 2: Degree[2] becomes $1-1=0$. Enqueue 2. Q = [1, 2].\n\n    *   **Step 2**: Dequeue $u=1$. R = [0, 1].\n        *   Neighbors of 1: 3.\n        *   Process 3: Degree[3] becomes $2-1=1$. (Not 0). Q = [2].\n\n    *   **Step 3**: Dequeue $u=2$. R = [0, 1, 2].\n        *   Neighbors of 2: 3.\n        *   Process 3: Degree[3] becomes $1-1=0$. Enqueue 3. Q = [3].\n\n    *   **Step 4**: Dequeue $u=3$. R = [0, 1, 2, 3].\n        *   Neighbors of 3: None. Q = [].\n\n4.  **Result Check**:\n    *   Size of R (4) == N (4). Return R. [0, 1, 2, 3] is valid.\n\n(Note on ordering: If multiple nodes can be processed simultaneously, like in Step 2 vs Step 3, the resulting order depends on implementation details (e.g., which neighbors are iterated first or how ties in the queue are broken). [0, 2, 1, 3] is also valid. The algorithm naturally finds *a* valid ordering.)\n\nImplementation details: Need to handle input parsing and data structure setup robustly. Using Maps/Objects for adjacency lists and degrees is best practice here given JavaScript constraints.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 176,
+    "completion_tokens": 1330,
+    "total_tokens": 1506,
+    "completion_tokens_details": {
+      "reasoning_tokens": 935
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

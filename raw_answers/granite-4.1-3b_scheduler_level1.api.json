@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "granite-4.1-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    from collections import defaultdict\n\n    # Создаем граф и входной/выходный порядок для каждого узла\n    graph = defaultdict(list)\n    indegree = {task: 0 for task in tasks}\n\n    # Заполняем граф и индев посторонних задач\n    for task, dependencies in tasks.items():\n        for dependency in dependencies:\n            graph[dependency].append(task)\n            indegree[task] += 1\n\n    # Отсортируем начальные задачи (не имеющие зависимостей)\n    queue = [task for task in tasks if indegree[task] == 0]\n    result = []\n\n    while queue:\n        # Убеждаемся, что можем продолжить сортировку без циклов\n        if not graph:\n            break\n\n        current_task = queue.pop(0)\n        result.append(current_task)\n\n        for dependent_task in graph[current_task]:\n            indegree[dependent_task] -= 1\n            if indegree[dependent_task] == 0:\n                queue.append(dependent_task)\n\n        # Удаляем завершенные пути, чтобы избежать циклов\n        del graph[current_task]\n\n    # Если все узлы не обработаны, есть цикл в графе\n    if len(result) != len(tasks):\n        return None\n\n    return result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 328,
+    "total_output_tokens": 343,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 29.18157259409632,
+    "time_to_first_token_seconds": 0.753854,
+    "model_load_time_seconds": 2.344
+  },
+  "response_id": "resp_be2e716705442a3bf43378dbe45f4cdd15ee479495c1d586"
+}

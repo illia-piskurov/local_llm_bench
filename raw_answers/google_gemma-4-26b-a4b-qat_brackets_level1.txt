@@ -1,0 +1,56 @@
+```python
+def is_balanced(s: str) -> bool:
+    """
+    Проверяет, является ли строка сбалансированной по скобкам: (), [], {}.
+    Игнорирует любые другие символы.
+    """
+    stack = []
+    # Словарь соответствия закрывающей скобки открывающей
+    bracket_map = {
+        ')': '(',
+        ']': '[',
+        '}': '{'
+    }
+    # Множество открывающих скобок для быстрого поиска
+    opening_brackets = {'(', '[', '{'}
+
+    for char in s:
+        if char in opening_brackets:
+            # Если встречаем открывающую скобку, кладем её в стек
+            stack.append(char)
+        elif char in bracket_map:
+            # Если встречаем закрывающую скобку:
+            # 1. Проверяем, не пуст ли стек (нет ли лишней закрывающей скобки)
+            # 2. Проверяем, соответствует ли она последней открытой скобке
+            if not stack or stack.pop() != bracket_map[char]:
+                return False
+    
+    # Если после прохода по строке стек пуст, значит все скобки закрыты правильно
+    return not stack
+
+if __name__ == "__main__":
+    # Тестовые случаи
+    test_cases = [
+        ("()", True),
+        ("[]", True),
+        ("{}", True),
+        ("([])", True),
+        ("()[]{}", True),
+        ("([{}])", True),
+        ("a(b[c]d)e", True),
+        ("(", False),
+        (")", False),
+        ("([)]", False),
+        ("((", False),
+        ("))", False),
+        ("{[}]", False),
+        ("", True),
+        ("123!@# (abc) [def] {ghi}", True),
+    ]
+
+    for string, expected in test_cases:
+        result = is_balanced(string)
+        assert result == expected, f"Ошибка: для '{string}' ожидалось {expected}, получено {result}"
+
+    print("Все тесты пройдены успешно!")
+```

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-et1dsvwhmf9jo57ztio1ij",
+  "object": "chat.completion",
+  "created": 1787128916,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  if (!input || !input[0]) {\n    return 0;\n  }\n  let n = input.length;\n  let m = input[0].length;\n\n  const dp = Array(n + 1).fill(null).map(() => Array(m + 1).fill(null));\n\n  for (let i = 1; i <= n; i++) {\n    for (let j = 1; j <= m; j++) {\n      if (input[i - 1] === input[j - 1]) {\n        dp[i][j] = dp[i - 1][j - 1] + 1;\n      } else {\n        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);\n      }\n    }\n  }\n\n  return dp[n][m];\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 125,
+    "completion_tokens": 219,
+    "total_tokens": 344,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

@@ -1,0 +1,77 @@
+```javascript
+export function solve(input) {
+    const { schema, data } = input;
+    const errors = {};
+
+    for (const [field, rule] of Object.entries(schema)) {
+        const value = data[field];
+        const errorList = [];
+
+        if ('required' in rule && rule.required && !value) {
+            errorList.push('Required');
+        }
+
+        switch (rule.type) {
+            case 'string':
+                if (!value || typeof value !== 'string') {
+                    errorList.push('Invalid type');
+                } else {
+                    const min = rule.min ?? Infinity;
+                    const max = rule.max ?? -Infinity;
+
+                    if (value.length < min) errorList.push('Too short');
+                    if (value.length > max) errorList.push('Too long');
+
+                    if ('pattern' in rule && typeof value !== 'string') continue; // Skip invalid type check for pattern
+
+                    const regex = new RegExp(rule.pattern);
+                    if (!regex.test(value)) errorList.push('Invalid format');
+                }
+                break;
+
+            case 'number':
+                if (!value || isNaN(Number(value))) {
+                    errorList.push('Invalid type');
+                } else {
+                    const numValue = Number(value);
+                    const min = rule.min ?? Infinity;
+                    const max = rule.max ?? -Infinity;
+
+                    if (numValue < min) errorList.push('Too small');
+                    if (numValue > max) errorList.push('Too large');
+                }
+                break;
+
+            case 'boolean':
+                if (!value || value !== true && value !== false) {
+                    errorList.push('Invalid type');
+                } else if ('required' in rule && rule.required && !value) {
+                    // Already handled by required check above
+                }
+                break;
+
+            case 'array':
+                if (!Array.isArray(value)) {
+                    errorList.push('Invalid type');
+                } else {
+                    const min = rule.min ?? Infinity;
+                    const max = rule.max ?? -Infinity;
+
+                    if (value.length < min) errorList.push('Too few items');
+                    if (value.length > max) errorList.push('Too many items');
+                }
+                break;
+
+            default:
+                // Unknown type, treat as invalid
+                errorList.push('Invalid type');
+        }
+
+        if (errorList.length > 0) {
+            errors[field] = errorList;
+        }
+    }
+
+    return { valid: Object.keys(errors).length === 0, errors };
+}
+```

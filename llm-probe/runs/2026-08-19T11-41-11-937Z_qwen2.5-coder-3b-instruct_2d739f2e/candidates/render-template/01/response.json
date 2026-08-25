@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-p65x03ymy2lh7m1oq347j",
+  "object": "chat.completion",
+  "created": 1787139717,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { template, data } = input;\n    \n    // Helper function to get value from object using path\n    const getValueFromPath = (obj, path) => {\n        const keys = path.split('.');\n        let current = obj;\n\n        for (const key of keys) {\n            if (!(key in current)) return '';\n            current = current[key];\n        }\n\n        // Convert non-string values to string\n        if (typeof current !== 'string') {\n            current = String(current);\n        }\n\n        return current;\n    };\n\n    // Replace {{path}} placeholders with corresponding data values\n    let result = template.replace(/{{\\s*(.*?)\\s*}}/g, (match, path) => {\n        return getValueFromPath(data, path.trim());\n    });\n\n    return result;\n}\n```\n\nThis solution defines a `solve` function that takes an `input` object containing a `template` string and a `data` object. It uses a helper function `getValueFromPath` to traverse the data object using dot-notation paths. The template string is then modified by replacing each placeholder with its corresponding value from the data, ensuring that placeholders are correctly processed according to the specified rules.",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 256,
+    "completion_tokens": 254,
+    "total_tokens": 510,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

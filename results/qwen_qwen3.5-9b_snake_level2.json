@@ -1,0 +1,8 @@
+{
+  "model": "qwen/qwen3.5-9b",
+  "benchmark": "snake",
+  "level": "level2",
+  "tested_at": "2026-07-13 12:30:42",
+  "manual_score": 9,
+  "comment": "Отлично, немного счет не в том контейнере"
+}

@@ -1,0 +1,12 @@
+{
+  "model": "qwen/qwen3.5-9b",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-08-14 13:32:12",
+  "passed": 23,
+  "total": 25,
+  "failures": [
+    "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['5', '5']",
+    "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['10', '10', 'NULL']"
+  ]
+}

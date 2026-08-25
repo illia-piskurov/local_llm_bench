@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ndg1ddpinv7rhczcof5xz",
+  "object": "chat.completion",
+  "created": 1787065456,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { locales, lang = 'en', key, params = {} } = input;\n    const locale = locales[lang] || {};\n    const translation = locale[key] || locale['default'] || key;\n\n    if (typeof translation === 'object' && !Array.isArray(translation)) {\n        const { zero, one, other } = translation;\n        return replacePlural(\n            zero ?? one ?? other,\n            params.count\n        );\n    }\n\n    return translation.replace(/\\{([^}]+)\\}/g, (_, varName) => String(params[varName] || ''));\n}\n\nfunction replacePlural(str, count) {\n    const { zero, one, other } = str;\n    if (zero && count === 0) return zero;\n    if (one && count === 1) return one;\n    return str.replace(/#/g, String(count));\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 332,
+    "completion_tokens": 196,
+    "total_tokens": 528,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

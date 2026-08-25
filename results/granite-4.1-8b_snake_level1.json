@@ -1,0 +1,8 @@
+{
+  "model": "granite-4.1-8b",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-08-07 22:07:10",
+  "manual_score": 1,
+  "comment": "не работает"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-6mth2dpr0jjpi891saaarc",
+  "object": "chat.completion",
+  "created": 1787139414,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n    const {\n        table,\n        select = ['*'],\n        joins = [],\n        where = {},\n        groupBy = [],\n        orderBy = [{ field: 'created_at', dir: 'ASC' }],\n        limit = 0,\n        offset = 0\n    } = input.query;\n\n    let sql = `SELECT ${select.map(c => (typeof c === 'string' ? c : `${c.expr} AS ${c.as}`)).join(', ')}`;\n    let params = [];\n\n    if (joins.length) {\n        joins.forEach(j => {\n            const { type, table: t, on } = j;\n            const conditions = Object.entries(on).map(([leftCol, rightCol]) =>\n                `${leftCol} = $${params.push(rightCol)}`\n            );\n            sql += ` ${type ? `${type} JOIN` : 'INNER JOIN'} ${t} ON ${conditions.join(' AND ')}`;\n        });\n    }\n\n    if (where) {\n        let conditions = [];\n        Object.entries(where).forEach(([field, { op, value }]) => {\n            if (op === 'IS NULL' || op === 'IS NOT NULL') return;\n            const paramIndex = params.push(value);\n            switch (op) {\n                case '=':\n                    conditions.push(`${field} = $${paramIndex}`);\n                    break;\n                case '!=':\n                    conditions.push(`${field} != $${paramIndex}`);\n                    break;\n                case '>':\n                    conditions.push(`${field} > $${paramIndex}`);\n                    break;\n                case '<':\n                    conditions.push(`${field} < $${paramIndex}`);\n                    break;\n                case '>=':\n                    conditions.push(`${field} >= $${paramIndex}`);\n                    break;\n                case '<=':\n                    conditions.push(`${field} <= $${paramIndex}`);\n                    break;\n                case 'LIKE':\n                    conditions.push(`${field} LIKE $${paramIndex}`);\n                    break;\n                case 'IN':\n                    conditions.push(`${field} IN (${value.map(v => `$${params.push(v)}`).join(', ')})`);\n                    break;\n            }\n        });\n        sql += ` WHERE ${conditions.join(' AND ')}`;\n    }\n\n    if (groupBy.length) {\n        sql += ` GROUP BY ${groupBy.map(c => c).join(',')}`;\n    }\n\n    if (orderBy.length) {\n        sql += ` ORDER BY ${orderBy.map(o => `${o.field} ${o.dir || 'ASC'}`).join(', ')}`;\n    }\n\n    if (limit > 0) {\n        sql += ` LIMIT ${limit}`;\n    }\n    if (offset > 0) {\n        sql += ` OFFSET ${offset}`;\n    }\n\n    return { sql, params };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 496,
+    "completion_tokens": 559,
+    "total_tokens": 1055,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

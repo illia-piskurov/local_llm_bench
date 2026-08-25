@@ -1,0 +1,88 @@
+class Transaction:
+    def __init__(self, snapshot):
+        self.snapshot = snapshot
+        self.changes = {}
+
+class KeyStore:
+    def __init__(self):
+        self.data = {}
+        self.stack = []
+
+    def get(self, key):
+        for tx in reversed(self.stack):
+            if key in tx.changes:
+                val = tx.changes[key]
+                if val is None:
+                    return "NULL"
+                return val
+            if key in tx.snapshot:
+                return tx.snapshot[key]
+        if key in self.data:
+            return self.data[key]
+        return "NULL"
+
+    def set(self, key, value):
+        if not self.stack:
+            self.data[key] = value
+        else:
+            self.stack[-1].changes[key] = value
+
+    def delete(self, key):
+        if not self.stack:
+            if key in self.data:
+                del self.data[key]
+        else:
+            self.stack[-1].changes[key] = None
+
+    def begin(self):
+        self.stack.append(Transaction(self.data.copy()))
+
+    def commit(self):
+        if not self.stack:
+            return "NO TRANSACTION"
+        tx = self.stack.pop()
+        if self.stack:
+            parent = self.stack[-1].snapshot
+            for k, v in tx.changes.items():
+                if v is None:
+                    parent.pop(k, None)
+                else:
+                    parent[k] = v
+        else:
+            for k, v in tx.changes.items():
+                if v is None:
+                    self.data.pop(k, None)
+                else:
+                    self.data[k] = v
+
+    def rollback(self):
+        if not self.stack:
+            return "NO TRANSACTION"
+        self.stack.pop()
+
+def run(program: str) -> list[str]:
+    store = KeyStore()
+    output = []
+    lines = program.strip().split('\n')
+    for line in lines:
+        if not line.strip():
+            continue
+        parts = line.split()
+        cmd = parts[0]
+        if cmd == "SET":
+            store.set(parts[1], parts[2])
+        elif cmd == "GET":
+            output.append(store.get(parts[1]))
+        elif cmd == "DELETE":
+            store.delete(parts[1])
+        elif cmd == "BEGIN":
+            store.begin()
+        elif cmd == "COMMIT":
+            res = store.commit()
+            if res:
+                output.append(res)
+        elif cmd == "ROLLBACK":
+            res = store.rollback()
+            if res:
+                output.append(res)
+    return output

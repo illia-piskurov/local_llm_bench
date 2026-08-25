@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-2mjhp6y7v3vxupbzhiew5",
+  "object": "chat.completion",
+  "created": 1787127499,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    if (!input || input.trim() === '') {\n        return [];\n    }\n\n    const rows = input.split('\\n');\n    const headerRow = rows[0].trim();\n    \n    if (!headerRow) {\n        return [];\n    }\n\n    // Parse header row to get column names\n    const headers = [];\n    let current = '';\n    let inQuote = false;\n    let i = 0;\n    \n    while (i < headerRow.length) {\n        if (headerRow[i] === '\"') {\n            inQuote = !inQuote;\n            i++;\n            continue;\n        }\n        \n        if (!inQuote && headerRow[i] === ',') {\n            headers.push(current.trim());\n            current = '';\n        } else {\n            current += headerRow[i];\n        }\n        i++;\n    }\n    \n    if (current.trim() !== '') {\n        headers.push(current.trim());\n    }\n    \n    const result = [];\n    \n    // Process data rows\n    for (let i = 1; i < rows.length; i++) {\n        const row = rows[i].trim();\n        if (!row) continue;\n        \n        const rowData = {};\n        let current = '';\n        let inQuote = false;\n        let j = 0;\n        \n        while (j < row.length) {\n            if (row[j] === '\"') {\n                inQuote = !inQuote;\n                j++;\n                continue;\n            }\n            \n            if (!inQuote && row[j] === ',') {\n                rowData[current.trim()] = current.trim();\n                current = '';\n            } else {\n                current += row[j];\n            }\n            j++;\n        }\n        \n        if (current.trim() !== '') {\n            rowData[current.trim()] = current.trim();\n        }\n        \n        // Map values to headers\n        const rowHeaders = [];\n        let tempCurrent = '';\n        let tempInQuote = false;\n        let tempJ = 0;\n        \n        while (tempJ < row.length) {\n            if (row[tempJ] === '\"') {\n                tempInQuote = !tempInQuote;\n                tempJ++;\n                continue;\n            }\n            \n            if (!tempInQuote && row[tempJ] === ',') {\n                rowHeaders.push(tempCurrent.trim());\n                tempCurrent = '';\n            } else {\n                tempCurrent += row[tempJ];\n            }\n            tempJ++;\n        }\n        \n        if (tempCurrent.trim() !== '') {\n            rowHeaders.push(tempCurrent.trim());\n        }\n        \n        // Map the values to headers\n        for (let k = 0; k < headers.length; k++) {\n            const key = headers[k];\n            const value = rowHeaders[k];\n            rowData[key] = value;\n        }\n        \n        result.push(rowData);\n    }\n    \n    return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 262,
+    "completion_tokens": 577,
+    "total_tokens": 839,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

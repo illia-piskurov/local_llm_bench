@@ -1,0 +1,34 @@
+{
+  "status": "failed",
+  "passed": 4,
+  "total": 6,
+  "tests": [
+    {
+      "id": "simple-arithmetic",
+      "passed": true
+    },
+    {
+      "id": "comments-and-empty-lines",
+      "passed": true
+    },
+    {
+      "id": "conditional-jumps",
+      "passed": false,
+      "error": "Expected {\"output\":[\"42\"]}, got {\"output\":[\"999\"],\"error\":\"Unknown label 'end'\"}"
+    },
+    {
+      "id": "division-by-zero-error",
+      "passed": true
+    },
+    {
+      "id": "stack-underflow-error",
+      "passed": true
+    },
+    {
+      "id": "step-limit-exceeded",
+      "passed": false,
+      "error": "Expected {\"output\":[],\"error\":\"Execution step limit exceeded\"}, got {\"output\":[]}"
+    }
+  ],
+  "durationMs": 34
+}

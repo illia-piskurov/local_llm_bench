@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nfrom collections import defaultdict, deque\n\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    graph = defaultdict(list)\n    indegree = {task: 0 for task in tasks}\n    \n    for task, (_, deps, _) in tasks.items():\n        for dep in deps:\n            graph[dep].append(task)\n            indegree[task] += 1\n    \n    def topological_sort():\n        queue = deque([task for task in tasks if indegree[task] == 0])\n        sorted_tasks = []\n        \n        while queue:\n            current = min(queue, key=lambda t: (-tasks[t][2], tasks[t][0], t))\n            sorted_tasks.append(current)\n            queue.remove(current)\n            \n            for neighbor in graph[current]:\n                indegree[neighbor] -= 1\n                if indegree[neighbor] == 0:\n                    queue.append(neighbor)\n        \n        return sorted_tasks if len(sorted_tasks) == len(tasks) else None\n    \n    order = topological_sort()\n    \n    if not order:\n        return None\n    \n    schedule = []\n    current_time = 0\n    available_workers = workers\n    \n    while order or any(indegree[task] == 0 for task in tasks):\n        ready_tasks = [task for task in order if indegree[task] == 0]\n        \n        if not ready_tasks:\n            current_time += 1\n            continue\n        \n        ready_tasks.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))\n        \n        while available_workers > 0 and ready_tasks:\n            task = ready_tasks.pop(0)\n            schedule.append((task, current_time))\n            \n            for neighbor in graph[task]:\n                indegree[neighbor] -= 1\n            \n            if indegree[task] == 0:\n                order.remove(task)\n        \n        current_time += 1\n    \n    return [task for task, _ in schedule]\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 380,
+    "total_output_tokens": 412,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 41.036821184242974,
+    "time_to_first_token_seconds": 2.7106500000000002
+  },
+  "response_id": "resp_7b0f3637bb2c31b605990c993ac5e149cc59310aad3b5b5c"
+}

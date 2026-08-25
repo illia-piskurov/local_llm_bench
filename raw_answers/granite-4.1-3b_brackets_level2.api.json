@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "granite-4.1-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef max_depth(s: str) -> int:\n    stack = []\n    current_depth = 0\n    max_depth = 0\n\n    for char in s:\n        if char in \"([{\":\n            stack.append(char)\n            current_depth += 1\n            max_depth = max(max_depth, current_depth)\n        elif char in \")]}\":\n            if stack and stack[-1] == matching_ending_bracket[char]:\n                stack.pop()\n                current_depth -= 1\n\n    return max_depth\n\ndef find_unmatched(s: str) -> list[int]:\n    stack = []\n    unmatched_indices = []\n\n    for index, char in enumerate(s):\n        if char in \"([{\":\n            stack.append(index)\n        elif char in \")]}\":\n            if stack and matching_start_bracket[char] == s[stack[-1]]:\n                stack.pop()\n            else:\n                unmatched_indices.append(index)\n\n    # Indices of unclosed opening brackets\n    unmatched_indices.extend(stack)\n\n    return sorted(unmatched_indices)\n\ndef is_balanced(s: str) -> bool:\n    stack = []\n    matching_ending_bracket = {')': '(', ']': '[', '}': '{'}\n\n    for char in s:\n        if char in matching_ending_bracket.values():\n            stack.append(char)\n        elif char in matching_ending_bracket.keys():\n            if not stack or stack[-1] != matching_ending_bracket[char]:\n                return False\n            stack.pop()\n\n    return not stack\n\ndef matching_start_bracket = {')': '(', ']': '[', '}': '{'}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 871,
+    "total_output_tokens": 328,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 28.146038466538606,
+    "time_to_first_token_seconds": 1.706322
+  },
+  "response_id": "resp_54afcce0a9bc6fd0f4d99bad71e0624ead861264dc9fe63f"
+}

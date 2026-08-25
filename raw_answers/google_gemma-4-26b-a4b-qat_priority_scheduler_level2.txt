@@ -1,0 +1,164 @@
+```python
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    # 1. Cycle Detection using Kahn's Algorithm
+    in_degree_cycle = {name: len(deps) for name, (dur, deps, prio) in tasks.items()}
+    adj = {name: [] for name in tasks}
+    for name, (dur, deps, prio) in tasks.items():
+        for d in deps:
+            adj[d].append(name)
+
+    queue = [n for n in tasks if in_degree_cycle[n] == 0]
+    visited_count = 0
+    while queue:
+        u = queue.pop(0)
+        visited_count += 1
+        for v in adj[u]:
+            in_degree_cycle[v] -= 1
+            if in_degree_cycle[v] == 0:
+                queue.append(v)
+    
+    if visited_count < len(tasks):
+        return None
+
+    # 2. Simulation
+    current_time = 0
+    completed = set()
+    started_order = []
+    running = []  # List of (finish_time, name)
+    in_degree = {name: len(deps) for name, (dur, deps, prio) in tasks.items()}
+    ready_to_start = [n for n in tasks if in_degree[n] == 0]
+
+    while len(completed) < len(tasks):
+        # A. Complete tasks that finish at the current time
+        finished_this_step = []
+        new_running = []
+        for finish_time, name in running:
+            if finish_time == current_time:
+                finished_this_step.append(name)
+            else:
+                new_running.append((finish_time, name))
+        running = new_running
+
+        for name in finished_this_step:
+            completed.add(name)
+            for neighbor in adj[name]:
+                in_degree[neighbor] -= 1
+                if in_degree[neighbor] == 0:
+                    ready_to_start.append(neighbor)
+
+        # B. Start new tasks
+        ready_to_start.sort(key=lambda x: (-tasks[x][2], tasks[x][0], x))
+        
+        while len(running) < workers and ready_to_start:
+            name = ready_to_start.pop(0)
+            duration = tasks[name][0]
+            running.append((current_time + duration, name))
+            started_order.append(name)
+
+        # C. Advance time
+        if running:
+            next_event_time = min(f_time for f_time, name in running)
+            current_time = next_event_time
+        elif len(completed) < len(tasks):
+            return None # Should not happen if no cycle
+
+    return started_order
+
+def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
+    # 1. Cycle Detection
+    in_degree = {name: len(deps) for name, (dur, deps, prio) in tasks.items()}
+    adj = {name: [] for name in tasks}
+    for name, (dur, deps, prio) in tasks.items():
+        for d in deps:
+            adj[d].append(name)
+
+    queue = [n for n in tasks if in_degree[n] == 0]
+    topo_order = []
+    while queue:
+        u = queue.pop(0)
+        topo_order.append(u)
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+
+    if len(topo_order) < len(tasks):
+        return None
+
+    # 2. Longest Path in DAG using DP
+    # dist[u] is the max duration of a path ending at the start of task u
+    dist = {name: 0 for name in tasks}
+    for u in topo_order:
+        duration_u = tasks[u][0]
+        # The path through u ends at u's finish time
+        finish_u = dist[u] + duration_u
+        for v in adj[u]:
+            if finish_u > dist[v]:
+                dist[v] = finish_u
+
+    # The critical path is the max of (dist[u] + duration[u]) for all u
+    if not tasks:
+        return 0
+    return max(dist[u] + tasks[u][0] for u in tasks)
+
+def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
+    if not tasks:
+        return 0
+    
+    # Cycle Detection
+    in_degree_cycle = {name: len(deps) for name, (dur, deps, prio) in tasks.items()}
+    adj = {name: [] for name in tasks}
+    for name, (dur, deps, prio) in tasks.items():
+        for d in deps:
+            adj[d].append(name)
+    queue = [n for n in tasks if in_degree_cycle[n] == 0]
+    visited_count = 0
+    while queue:
+        u = queue.pop(0)
+        visited_count += 1
+        for v in adj[u]:
+            in_degree_cycle[v] -= 1
+            if in_degree_cycle[v] == 0:
+                queue.append(v)
+    if visited_count < len(tasks):
+        return None
+
+    # Simulation
+    current_time = 0
+    completed = set()
+    running = []  # (finish_time, name)
+    in_degree = {name: len(deps) for name, (dur, deps, prio) in tasks.items()}
+    ready_to_start = [n for n in tasks if in_degree[n] == 0]
+
+    while len(completed) < len(tasks):
+        # A. Complete tasks
+        finished_this_step = []
+        new_running = []
+        for f_time, name in running:
+            if f_time == current_time:
+                finished_this_step.append(name)
+            else:
+                new_running.append((f_time, name))
+        running = new_running
+
+        for name in finished_this_step:
+            completed.add(name)
+            for neighbor in adj[name]:
+                in_degree[neighbor] -= 1
+                if in_degree[neighbor] == 0:
+                    ready_to_start.append(neighbor)
+
+        # B. Start tasks
+        ready_to_start.sort(key=lambda x: (-tasks[x][2], tasks[x][0], x))
+        while len(running) < workers and ready_to_start:
+            name = ready_to_start.pop(0)
+            running.append((current_time + tasks[name][0], name))
+
+        # C. Advance time
+        if running:
+            current_time = min(f_time for f_time, name in running)
+        elif len(completed) < len(tasks):
+            return None
+
+    return current_time
+```

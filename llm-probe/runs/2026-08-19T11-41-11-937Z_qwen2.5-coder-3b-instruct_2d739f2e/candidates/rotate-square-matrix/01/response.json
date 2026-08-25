@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-bk3f85xhx5ftiszr1ab3nk",
+  "object": "chat.completion",
+  "created": 1787139992,
+  "model": "qwen2.5-coder-3b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  // Extract the matrix from the input object\n  const matrix = input.matrix;\n  \n  // Create a new matrix with dimensions reversed\n  const rotatedMatrix = Array(matrix[0].length).fill().map(() => []);\n\n  // Rotate the original matrix 90 degrees clockwise\n  for (let i = 0; i < matrix.length; i++) {\n    for (let j = 0; j < matrix[i].length; j++) {\n      rotatedMatrix[j][matrix.length - 1 - i] = matrix[i][j];\n    }\n  }\n\n  // Return the new rotated matrix\n  return rotatedMatrix;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 134,
+    "completion_tokens": 142,
+    "total_tokens": 276,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-3b-instruct"
+}

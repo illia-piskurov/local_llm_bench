@@ -1,114 +1,143 @@
-def run(program: str) -> list[str]:
-    # Internal state of the key-value store
-    data = {}
-    # Stack to handle nested transaction levels
-    stack = []
-    # Sentinel object to represent a deleted key within a transaction scope
-    _DELETED = object()
-    # Set of keys that have been explicitly set or deleted (to be used by COUNT)
-    known_keys = set()
-    # Set of keys being watched for changes
-    watched_keys = set()
-    results = []
+class Store:
+    def __init__(self):
+        # The global store holds the base values of the keys.
+        self.global_store = {}
+        # A stack where each element is a dictionary representing 
+        # changes made in that specific transaction level.
+        self.transaction_stack = []
+        # Internal marker to distinguish between a value and a deletion.
+        self._TOMBSTONE = object()
+        # Set of keys currently being watched for changes.
+        self.watched_keys = set()
+        # Set of all unique keys ever mentioned in SET, DELETE, or WATCH commands.
+        self.all_known_keys = set()
 
-    def get_current_val(key):
-        """Helper to determine the current visible value of a key."""
-        for i in range(len(stack) - 1, -1, -1):
-            if key in stack[i]:
-                val = stack[i][key]
-                return "NULL" if val is _DELETED else str(val)
-        if key in data:
-            return str(data[key])
+    def get(self, key: str) -> str:
+        # Search from the innermost transaction outwards to the global store.
+        for i in range(len(self.transaction_stack) - 1, -1, -1):
+            if key in self.transaction_stack[i]:
+                val = self.transaction_stack[i][key]
+                # If it's a tombstone or not found, return "NULL".
+                return val if val is not self._TOMBSTONE else "NULL"
+        
+        if key in self.global_store:
+            val = self.global_store[key]
+            return val if val is not self._TOMBSTONE else "NULL"
         return "NULL"
 
-    for line in program.splitlines():
+    def set(self, key: str, value: str) -> list[str]:
+        self.all_known_keys.add(key)
+        old_val = self.get(key)
+        if not self.transaction_stack:
+            self.global_store[key] = value
+        else:
+            self.transaction_stack[-1][key] = value
+        new_val = self.get(key)
+        
+        # If the key is watched and its visible value changed, return a notification.
+        if key in self.watched_keys and old_val != new_val:
+            return [f"WATCH {key} {old_val} -> {new_val}"]
+        return []
+
+    def delete(self, key: str) -> list[str]:
+        self.all_known_keys.add(key)
+        old_val = self.get(key)
+        if not self.transaction_stack:
+            if key in self.global_store:
+                self.global_store[key] = self._TOMBSTONE
+        else:
+            self.transaction_stack[-1][key] = self._TOMBSTONE
+        new_val = self.get(key)
+
+        # If the key is watched and its visible value changed, return a notification.
+        if key in self.watched_keys and old_val != new_val:
+            return [f"WATCH {key} {old_val} -> {new_val}"]
+        return []
+
+    def watch(self, key: str):
+        self.watched_keys.add(key)
+        self.all_known_keys.add(key)
+
+    def count(self, value: str) -> str:
+        # Count how many known keys currently have the specified value.
+        cnt = 0
+        for k in self.all_known_keys:
+            if self.get(k) == value:
+                cnt += 1
+        return str(cnt)
+
+    def begin(self):
+        self.transaction_stack.append({})
+
+    def commit(self) -> str | None:
+        if not self.transaction_stack:
+            return "NO TRANSACTION"
+        
+        # Pop the current transaction and merge its changes into the level below.
+        top = self.transaction_stack.pop()
+        if not self.transaction_stack:
+            # If it was the only transaction, merge directly into global store.
+            for k, v in top.items():
+                self.global_store[k] = v
+        else:
+            # Merge into the parent's transaction dictionary.
+            target = self.transaction_stack[-1]
+            for k, v in top.items():
+                target[k] = v
+        return None
+
+    def rollback(self) -> str | None:
+        if not self.transaction_stack:
+            return "NO TRANSACTION"
+        # Discard the current transaction's changes.
+        self.transaction_stack.pop()
+        return None
+
+def run(program: str) -> list[str]:
+    store = Store()
+    results = []
+    lines = program.splitlines()
+    
+    for line in lines:
         line = line.strip()
         if not line:
             continue
-        
         parts = line.split()
         if not parts:
             continue
-        
-        cmd = parts[0]
-        
+            
+        cmd = parts[0].upper()
         if cmd == "SET":
-            # SET <key> <value>
-            key, val = parts[1], parts[2]
-            known_keys.add(key)
-            old_val = get_current_val(key)
-            
-            if stack:
-                stack[-1][key] = val
-            else:
-                data[key] = val
-            
-            new_val = get_current_val(key)
-            # If the value changed and it's being watched, notify.
-            if old_val != new_val and key in watched_keys:
-                results.append(f"WATCH {key} {old_val} -> {new_val}")
-        
+            # Expects SET <key> <value>
+            if len(parts) >= 3:
+                res = store.set(parts[1], " ".join(parts[2:]))
+                results.extend(res)
         elif cmd == "GET":
-            # GET <key>
-            key = parts[1]
-            results.append(get_current_val(key))
-            
+            # Expects GET <key>
+            if len(parts) >= 2:
+                results.append(store.get(parts[1]))
         elif cmd == "DELETE":
-            # DELETE <key>
-            key = parts[1]
-            known_keys.add(key)
-            old_val = get_current_val(key)
-            
-            if stack:
-                stack[-1][key] = _DELETED
-            else:
-                if key in data:
-                    del data[key]
-            
-            new_val = get_current_val(key)
-            # If the value changed and it's being watched, notify.
-            if old_val != new_val and key in watched_keys:
-                results.append(f"WATCH {key} {old_val} -> {new_val}")
-        
+            # Expects DELETE <key>
+            if len(parts) >= 2:
+                res = store.delete(parts[1])
+                results.extend(res)
         elif cmd == "BEGIN":
-            # BEGIN - start a new transaction level.
-            stack.append({})
-            
+            store.begin()
         elif cmd == "COMMIT":
-            # COMMIT - merge the current transaction into the parent scope.
-            if not stack:
-                results.append("NO TRANSACTION")
-            else:
-                top = stack.pop()
-                if stack:
-                    for k, v in top.items():
-                        stack[-1][k] = v
-                else:
-                    for k, v in top.items():
-                        if v is _DELETED:
-                            if k in data:
-                                del data[k]
-                        else:
-                            data[k] = v
-            
+            res = store.commit()
+            if res is not None:
+                results.append(res)
         elif cmd == "ROLLBACK":
-            # ROLLBACK - discard the current transaction's changes.
-            if not stack:
-                results.append("NO TRANSACTION")
-            else:
-                stack.pop()
-
+            res = store.rollback()
+            if res is not None:
+                results.append(res)
         elif cmd == "COUNT":
-            # COUNT <value> - count keys whose current value equals <value>.
-            target_val = parts[1]
-            count = 0
-            for k in known_keys:
-                if get_current_val(k) == target_val:
-                    count += 1
-            results.append(str(count))
-
+            # Expects COUNT <value>
+            if len(parts) >= 2:
+                results.append(store.count(parts[1]))
         elif cmd == "WATCH":
-            # WATCH <key> - add key to the watch list.
-            watched_keys.add(parts[1])
-            
+            # Expects WATCH <key>
+            if len(parts) >= 2:
+                store.watch(parts[1])
+                
     return results

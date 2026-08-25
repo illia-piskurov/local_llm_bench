@@ -1,0 +1,9 @@
+{
+  "model": "granite-4.1-8b",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-08-07 21:53:55",
+  "passed": 15,
+  "total": 15,
+  "failures": []
+}

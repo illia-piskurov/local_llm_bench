@@ -1,0 +1,9 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "benchmark": "brackets",
+  "level": "level1",
+  "tested_at": "2026-08-17 16:22:00",
+  "passed": 12,
+  "total": 12,
+  "failures": []
+}

@@ -1,0 +1,5 @@
+{"at":"2026-08-18T07:54:05.487Z","type":"run_started"}
+{"at":"2026-08-18T07:54:05.488Z","type":"request_started","taskId":"shopping-cart","attempt":1}
+{"at":"2026-08-18T07:54:26.321Z","type":"response_received","taskId":"shopping-cart","attempt":1,"detail":{"durationMs":20832,"finishReason":"stop","usage":{"prompt_tokens":458,"completion_tokens":420,"total_tokens":878,"completion_tokens_details":{"reasoning_tokens":0}}}}
+{"at":"2026-08-18T07:54:26.406Z","type":"evaluation_finished","taskId":"shopping-cart","attempt":1,"detail":{"status":"failed","passed":0,"total":4}}
+{"at":"2026-08-18T07:54:26.407Z","type":"run_finished","detail":{"status":"completed"}}

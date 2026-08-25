@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-hgogfunwg3bm82x524k4g",
+  "object": "chat.completion",
+  "created": 1787578162,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const query = input.query ?? '';\n  const trimmed = query.startsWith('?') ? query.slice(1) : query;\n  if (!trimmed) return {};\n\n  const result = {};\n\n  const pairs = trimmed.split('&');\n  for (const pair of pairs) {\n    if (!pair) continue;\n    let [rawKey, rawValue] = pair.includes('=')\n      ? pair.split('=', 2)\n      : [pair, true];\n    const key = decodeURIComponent(rawKey);\n    const value =\n      typeof rawValue === 'boolean'\n        ? true\n        : parseValue(decodeURIComponent(rawValue));\n\n    if (key.endsWith('[]')) {\n      const base = key.slice(0, -2);\n      if (!Array.isArray(result[base])) result[base] = [];\n      result[base].push(value);\n      continue;\n    }\n\n    const path = key.split(/\\[|\\]/).filter(Boolean);\n    setPath(result, path, value);\n  }\n\n  return result;\n\n  function parseValue(v) {\n    if (v === 'true') return true;\n    if (v === 'false') return false;\n    const num = Number(v);\n    if (!Number.isNaN(num) && Number.isFinite(num)) return num;\n    return v;\n  }\n\n  function setPath(obj, path, val) {\n    let current = obj;\n    for (let i = 0; i < path.length; i++) {\n      const part = path[i];\n      if (i === path.length - 1) {\n        if (\n          typeof current[part] === 'object' &&\n          current[part] !== null &&\n          !Array.isArray(current[part])\n        ) {\n          current[part] = val;\n        } else {\n          current[part] = val;\n        }\n      } else {\n        if (!Object.prototype.hasOwnProperty.call(current, part) || typeof current[part] !== 'object' || current[part] === null) {\n          current[part] = {};\n        }\n        current = current[part];\n      }\n    }\n  }\n}",
+        "reasoning": "Implement parsing. Use split, decode. Build object recursively. For array keys ending with [], treat base key. For nested brackets like a[b][c], parse parts. We'll use regex to extract tokens. While building, need to create intermediate objects or arrays. For array detection: if key ends with [] -> push into array under base name; but also may have nested like arr[][foo]? Not specified. Assume simple.\n\nImplement function setValue(obj, pathArray, value). If last part is '' (from []), treat as array push. But we already removed []. We'll handle by checking original key endsWith '[]'. We'll store arrays directly: if key ends with [], then obj[base] = existing?push else set new array.\n\nFor nested keys: e.g., user[address][city]. parts ['user','address','city'].\n\nImplement value parsing: if number finite -> Number, if true/false->boolean. else string.\n\nReturn object.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 396,
+    "completion_tokens": 646,
+    "total_tokens": 1042,
+    "completion_tokens_details": {
+      "reasoning_tokens": 194
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

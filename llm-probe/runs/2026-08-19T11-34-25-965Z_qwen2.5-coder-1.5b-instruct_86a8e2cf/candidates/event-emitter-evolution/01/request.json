@@ -1,0 +1,16 @@
+{
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Implement an in-memory event emitter / dispatcher function that processes a sequence of operations in input.operations.\n\nOperations structure:\n- { op: \"on\", event: string, listenerId: string }: registers a persistent listener for the event.\n- { op: \"once\", event: string, listenerId: string }: registers a one-time listener (automatically removed after its first invocation).\n- { op: \"off\", event: string, listenerId: string }: unregisters the specific listener from the event.\n- { op: \"emit\", event: string, payload: any }: triggers all listeners matching the event in the order they were registered.\n  - An exact event matches exact listeners (e.g. \"user.created\" triggers \"user.created\" listeners).\n  - Wildcard listeners: a listener registered for \"*\" matches ANY emitted event.\n  - Prefix wildcard listeners: a listener registered for \"user.*\" matches \"user.login\", \"user.logout\", \"user.created\", etc. (any event starting with \"user.\").\n\nReturn an array of event delivery log entries:\n{ log: Array<{ listenerId: string, event: string, payload: any }> }\nWhere 'event' in each log entry is the actual emitted event name, and 'listenerId' is the receiving listener's ID.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"operations\":[{\"op\":\"on\",\"event\":\"ping\",\"listenerId\":\"L1\"},{\"op\":\"emit\",\"event\":\"ping\",\"payload\":{\"time\":100}}]}\noutput: {\"log\":[{\"listenerId\":\"L1\",\"event\":\"ping\",\"payload\":{\"time\":100}}]}"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

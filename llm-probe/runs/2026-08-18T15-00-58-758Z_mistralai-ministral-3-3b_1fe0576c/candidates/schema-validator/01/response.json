@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-xekicqmkzga562c5ut8tx8",
+  "object": "chat.completion",
+  "created": 1787065377,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { schema, data } = input;\n    const errors = {};\n\n    for (const [field, rule] of Object.entries(schema)) {\n        const value = data[field];\n        const errorList = [];\n\n        if ('required' in rule && rule.required && !value) {\n            errorList.push('Required');\n        }\n\n        switch (rule.type) {\n            case 'string':\n                if (!value || typeof value !== 'string') {\n                    errorList.push('Invalid type');\n                } else {\n                    const min = rule.min ?? Infinity;\n                    const max = rule.max ?? -Infinity;\n\n                    if (value.length < min) errorList.push('Too short');\n                    if (value.length > max) errorList.push('Too long');\n\n                    if ('pattern' in rule && typeof value !== 'string') continue; // Skip invalid type check for pattern\n\n                    const regex = new RegExp(rule.pattern);\n                    if (!regex.test(value)) errorList.push('Invalid format');\n                }\n                break;\n\n            case 'number':\n                if (!value || isNaN(Number(value))) {\n                    errorList.push('Invalid type');\n                } else {\n                    const numValue = Number(value);\n                    const min = rule.min ?? Infinity;\n                    const max = rule.max ?? -Infinity;\n\n                    if (numValue < min) errorList.push('Too small');\n                    if (numValue > max) errorList.push('Too large');\n                }\n                break;\n\n            case 'boolean':\n                if (!value || value !== true && value !== false) {\n                    errorList.push('Invalid type');\n                } else if ('required' in rule && rule.required && !value) {\n                    // Already handled by required check above\n                }\n                break;\n\n            case 'array':\n                if (!Array.isArray(value)) {\n                    errorList.push('Invalid type');\n                } else {\n                    const min = rule.min ?? Infinity;\n                    const max = rule.max ?? -Infinity;\n\n                    if (value.length < min) errorList.push('Too few items');\n                    if (value.length > max) errorList.push('Too many items');\n                }\n                break;\n\n            default:\n                // Unknown type, treat as invalid\n                errorList.push('Invalid type');\n        }\n\n        if (errorList.length > 0) {\n            errors[field] = errorList;\n        }\n    }\n\n    return { valid: Object.keys(errors).length === 0, errors };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 344,
+    "completion_tokens": 518,
+    "total_tokens": 862,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

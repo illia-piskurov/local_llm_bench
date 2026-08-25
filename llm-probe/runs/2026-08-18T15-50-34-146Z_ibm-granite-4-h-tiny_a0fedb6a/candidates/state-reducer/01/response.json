@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-25e60ksbq9yxrogw6d0pu",
+  "object": "chat.completion",
+  "created": 1787068311,
+  "model": "ibm/granite-4-h-tiny",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const { state, actions } = input;\n  let result = JSON.parse(JSON.stringify(state));\n  \n  for (const action of actions) {\n    if (action.type === 'SET') {\n      let obj = result;\n      const pathParts = action.path.split('.');\n      for (let i = 0; i < pathParts.length - 1; i++) {\n        const part = pathParts[i];\n        if (!obj[part]) {\n          obj[part] = {};\n        }\n        obj = obj[part];\n      }\n      obj[pathParts[pathParts.length - 1]] = action.value;\n    } else if (action.type === 'TOGGLE') {\n      let obj = result;\n      const pathParts = action.path.split('.');\n      for (let i = 0; i < pathParts.length - 1; i++) {\n        const part = pathParts[i];\n        obj = obj[part];\n      }\n      const toggleKey = pathParts[pathParts.length - 1];\n      if (typeof obj[toggleKey] === 'boolean') {\n        obj[toggleKey] = !obj[toggleKey];\n      } else {\n        obj[toggleKey] = true;\n      }\n    } else if (action.type === 'ARRAY_PUSH') {\n      let arr = result;\n      const pathParts = action.path.split('.');\n      for (let i = 0; i < pathParts.length - 1; i++) {\n        const part = pathParts[i];\n        if (!arr[part]) {\n          arr[part] = [];\n        }\n        arr = arr[part];\n      }\n      arr.push(action.item);\n    } else if (action.type === 'ARRAY_REMOVE') {\n      let arr = result;\n      const pathParts = action.path.split('.');\n      for (let i = 0; i < pathParts.length - 1; i++) {\n        const part = pathParts[i];\n        arr = arr[part];\n      }\n      const index = action.index;\n      if (index >= 0 && index < arr.length) {\n        arr.splice(index, 1);\n      }\n    } else if (action.type === 'DELETE') {\n      let obj = result;\n      const pathParts = action.path.split('.');\n      for (let i = 0; i < pathParts.length - 1; i++) {\n        const part = pathParts[i];\n        obj = obj[part];\n      }\n      delete obj[pathParts[pathParts.length - 1]];\n    }\n  }\n  \n  return result;\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 318,
+    "completion_tokens": 527,
+    "total_tokens": 845,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "ibm/granite-4-h-tiny"
+}

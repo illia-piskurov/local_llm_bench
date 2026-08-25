@@ -1,0 +1,9 @@
+{
+  "model": "google/gemma-4-26b-a4b-qat",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-08-14 12:12:54",
+  "passed": 15,
+  "total": 15,
+  "failures": []
+}

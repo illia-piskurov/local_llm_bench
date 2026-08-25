@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-uqhgutt4ejyguq45q1kan",
+  "object": "chat.completion",
+  "created": 1787065673,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const program = input.program;\n    const lines = program.split('\\n');\n    let stack = [];\n    let output = [];\n    let labels = new Map();\n    let pc = 0; // Program counter\n    let stepCount = 0;\n\n    for (let i = 0; i < lines.length; i++) {\n        const line = lines[i].trim();\n        if (!line || line.startsWith('#')) continue;\n        const parts = line.split(/\\s+/);\n        const instruction = parts[0];\n\n        // Parse label\n        if (instruction === 'LABEL') {\n            labels.set(parts[1], i + 1); // Store 1-based line number\n            continue;\n        }\n\n        // Execute instruction\n        try {\n            stepCount++;\n            if (stepCount > 1000) throw new Error(\"Execution step limit exceeded\");\n\n            switch (instruction) {\n                case 'PUSH':\n                    stack.push(parseInt(parts[1]));\n                    break;\n                case 'POP':\n                    if (stack.length === 0) throw new Error(`Stack underflow at line ${i + 1}`);\n                    stack.pop();\n                    break;\n                case 'ADD':\n                    if (stack.length < 2) throw new Error(`Stack underflow at line ${i + 1}`);\n                    const b = stack.pop(), a = stack.pop();\n                    stack.push(a + b);\n                    break;\n                case 'SUB':\n                    if (stack.length < 2) throw new Error(`Stack underflow at line ${i + 1}`);\n                    const c = stack.pop(), d = stack.pop();\n                    stack.push(d - c);\n                    break;\n                case 'MUL':\n                    if (stack.length < 2) throw new Error(`Stack underflow at line ${i + 1}`);\n                    const e = stack.pop(), f = stack.pop();\n                    stack.push(e * f);\n                    break;\n                case 'DIV':\n                    if (stack.length < 2) throw new Error(`Stack underflow at line ${i + 1}`);\n                    const g = stack.pop(), h = stack.pop();\n                    if (g === 0) throw new Error(`Division by zero at line ${i + 1}`);\n                    stack.push(Math.trunc(h / g));\n                    break;\n                case 'DUP':\n                    if (stack.length === 0) throw new Error(`Stack underflow at line ${i + 1}`);\n                    const top = stack[stack.length - 1];\n                    stack.push(top);\n                    break;\n                case 'SWAP':\n                    if (stack.length < 2) throw new Error(`Stack underflow at line ${i + 1}`);\n                    const last = stack.pop();\n                    const secondLast = stack.pop();\n                    stack.push(last, secondLast);\n                    break;\n                case 'PRINT':\n                    if (stack.length === 0) throw new Error(`Stack underflow at line ${i + 1}`);\n                    output.push(stack[stack.length - 1].toString());\n                    break;\n                case 'JMP':\n                    const jumpLabel = parts[1];\n                    if (!labels.has(jumpLabel)) throw new Error(`Unknown label '${jumpLabel}'`);\n                    pc = labels.get(jumpLabel) - 1; // Convert to 0-based\n                    continue;\n                case 'JZ':\n                    if (stack.length === 0) throw new Error(`Stack underflow at line ${i + 1}`);\n                    const zeroVal = stack.pop();\n                    if (zeroVal === 0 && labels.has(parts[1])) {\n                        pc = labels.get(parts[1]) - 1;\n                    }\n                    continue;\n                case 'JNZ':\n                    if (stack.length === 0) throw new Error(`Stack underflow at line ${i + 1}`);\n                    const nonZeroVal = stack.pop();\n                    if (nonZeroVal !== 0 && labels.has(parts[1])) {\n                        pc = labels.get(parts[1]) - 1;\n                    }\n                    continue;\n                default:\n                    throw new Error(`Unknown instruction '${instruction}' at line ${i + 1}`);\n            }\n\n            // Move to next instruction\n            if (pc >= lines.length) break;\n            pc++;\n        } catch (error) {\n            return { output, error: error.message };\n        }\n    }\n\n    return { output };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 572,
+    "completion_tokens": 924,
+    "total_tokens": 1496,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

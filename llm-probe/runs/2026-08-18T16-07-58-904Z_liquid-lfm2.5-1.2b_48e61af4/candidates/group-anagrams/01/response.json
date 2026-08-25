@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-wg50w46hqs8bhoftuhjyk",
+  "object": "chat.completion",
+  "created": 1787069380,
+  "model": "liquid/lfm2.5-1.2b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const words = input.words?.words || [];\n  const anagramGroups = words.reduce((acc, word) => {\n    const key = word.sort().join('');\n    if (!acc[key]) acc[key] = [];\n    acc[key].push(word);\n    return acc;\n  }, {});\n\n  const sortedGroups = Object.keys(anagramGroups).map(key => \n    anagramGroups[key].sort().join('')\n  );\n\n  return sortedGroups.map(group => group.split(',').map(w => w.trim()).sort()).filter(g => g.length > 0);\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 161,
+    "completion_tokens": 140,
+    "total_tokens": 301,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "liquid/lfm2.5-1.2b"
+}

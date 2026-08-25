@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "passed": 5,
+  "total": 5,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "primitives-and-leading-qmark",
+      "passed": true
+    },
+    {
+      "id": "array-brackets",
+      "passed": true
+    },
+    {
+      "id": "nested-object",
+      "passed": true
+    },
+    {
+      "id": "encoded-and-no-value-flag",
+      "passed": true
+    }
+  ],
+  "durationMs": 25
+}

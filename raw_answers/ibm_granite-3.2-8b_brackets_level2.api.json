@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "ibm/granite-3.2-8b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef max_depth(s: str) -> int:\n    stack = []\n    depth = 0\n    for i, char in enumerate(s):\n        if char in '{[(':\n            stack.append((char, i))\n            depth += 1\n        elif char in ')}]':\n            if not stack or (stack[-1][0] != '(' and stack[-1][0] != '[' and stack[-1][0] != '{') or \\\n               (stack[-1][0] == '(' and char != ')') or (stack[-1][0] == '[' and char != ']') or \\\n               (stack[-1][0] == '{' and char != '}'):\n                continue\n            else:\n                stack.pop()\n                depth -= 1\n    return depth\n\ndef find_unmatched(s: str) -> list[int]:\n    stack = []\n    unmatched = []\n\n    for i, char in enumerate(s):\n        if char in '{[':\n            stack.append((char, i))\n        elif char in ')}':\n            if not stack or (stack[-1][0] != '(' and stack[-1][0] != '[' and stack[-1][0] != '{') or \\\n               (stack[-1][0] == '(' and char != ')') or (stack[-1][0] == '[' and char != ']') or \\\n               (stack[-1][0] == '{' and char != '}'):\n                unmatched.append(i)\n            else:\n                stack.pop()\n\n    return sorted([u for s, u in stack if s == '(' or s == '[' or s == '{'] + unmatched)\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 929,
+    "total_output_tokens": 353,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 12.80923135540174,
+    "time_to_first_token_seconds": 7.622288999999999
+  },
+  "response_id": "resp_afc2662946c60f5b267cdda40596979b0d430a708e359d75"
+}

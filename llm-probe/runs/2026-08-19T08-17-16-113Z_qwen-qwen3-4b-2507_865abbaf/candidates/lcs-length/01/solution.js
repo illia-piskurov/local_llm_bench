@@ -1,0 +1,23 @@
+export function solve(input) {
+    const a = input.a;
+    const b = input.b;
+    
+    const m = a.length;
+    const n = b.length;
+    
+    // Create a 2D array to store lengths of LCS
+    const dp = Array(m + 1).fill().map(() => Array(n + 1).fill(0));
+    
+    // Fill the dp table
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (a[i - 1] === b[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+                dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+    }
+    
+    return dp[m][n];
+}

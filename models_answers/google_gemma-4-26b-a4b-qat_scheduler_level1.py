@@ -1,0 +1,47 @@
+from collections import deque
+
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    """
+    Performs a topological sort on a directed acyclic graph of tasks.
+    
+    :param tasks: Dictionary where key is task name and value is a list of dependencies.
+    :return: A list of task names in topological order, or None if a cycle is detected.
+    """
+    # 1. Identify all unique tasks (keys and all items in dependency lists)
+    all_tasks = set(tasks.keys())
+    for dependencies in tasks.values():
+        for dep in dependencies:
+            all_tasks.add(dep)
+            
+    # 2. Initialize in-degree count and adjacency list
+    # in_degree[u] = number of tasks that 'u' depends on
+    # adj[u] = list of tasks that depend on 'u'
+    in_degree = {task: 0 for task in all_tasks}
+    adj = {task: [] for task in all_tasks}
+    
+    for task, dependencies in tasks.items():
+        for dep in dependencies:
+            # dep must be completed before task (dep -> task)
+            adj[dep].append(task)
+            in_degree[task] += 1
+            
+    # 3. Kahn's Algorithm
+    # Start with tasks that have no dependencies (in-degree 0)
+    queue = deque([task for task in all_tasks if in_degree[task] == 0])
+    sorted_tasks = []
+    
+    while queue:
+        u = queue.popleft()
+        sorted_tasks.append(u)
+        
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+                
+    # 4. Check for cycles
+    # If the number of sorted tasks is less than total tasks, there's a cycle
+    if len(sorted_tasks) == len(all_tasks):
+        return sorted_tasks
+    else:
+        return None

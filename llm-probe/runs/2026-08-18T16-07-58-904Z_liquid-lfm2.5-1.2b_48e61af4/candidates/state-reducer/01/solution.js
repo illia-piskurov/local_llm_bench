@@ -1,0 +1,55 @@
+export function solve(input) {
+  const { state, actions } = input;
+  let newState = { ...state };
+  
+  actions.forEach(action => {
+    const pathParts = action.path.split('.');
+    let current = newState;
+    
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      const part = pathParts[i];
+      if (!current[part]) {
+        current[part] = {};
+      }
+      current = current[part];
+    }
+    
+    switch (action.type) {
+      case 'SET':
+        Object.assign(current, { [action.path]: action.value });
+        break;
+      case 'TOGGLE':
+        current[action.path] = !current[action.path];
+        break;
+      case 'ARRAY_PUSH':
+        const array = current[action.path];
+        if (!Array.isArray(array)) {
+          array = [];
+        }
+        array.push(action.value);
+        current[action.path] = array;
+        break;
+      case 'ARRAY_REMOVE':
+        if (Array.isArray(current[action.path]) && action.index >= 0 && action.index < current[pathParts.length - 1]) {
+          current[action.path] = current[action.path].slice(0, action.index) + current[action.path].slice(action.index + 1);
+        }
+        break;
+      case 'DELETE':
+        current = deleteDeep(current, action.path);
+        break;
+    }
+  });
+  
+  return newState;
+}
+
+function deleteDeep(obj, path) {
+  const parts = path.split('.');
+  let result = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    result = result[parts[i]];
+  }
+  const lastPart = parts[parts.length - 1];
+  if (result[lastPart] === undefined) return result;
+  return deleteDeep(result[lastPart], lastPart.split('.').slice(-2));
+}

@@ -1,0 +1,958 @@
+```python
+import heapq
+from collections import defaultdict
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    if not tasks:
+        return []
+
+    # Parse tasks and build dependency graph
+    task_info = {}
+    for name, (duration, deps, priority) in tasks.items():
+        task_info[name] = {
+            'duration': duration,
+            'deps': deps,
+            'priority': priority,
+            'start_time': None,
+            'finish_time': None
+        }
+
+    # Check for cycles and build in-degree map using Kahn's algorithm logic
+    # We need to ensure dependencies are valid (no self-loops or cycles)
+    adj = defaultdict(list)
+    in_degree = {name: 0 for name in tasks}
+    
+    for name, info in task_info.items():
+        for dep in info['deps']:
+            if dep not in tasks:
+                # Dependency on non-existent task is invalid? 
+                # Usually implies cycle or error. Let's assume valid input names mostly, 
+                # but strictly speaking, dependency on unknown task makes it impossible to start.
+                # However, for cycle detection, we treat missing deps as blocking (infinite wait).
+                # But the prompt says "if in dependencies there is a cycle".
+                # If dep not in tasks, it's not a cycle in the graph of defined tasks, 
+                # but effectively blocks execution. We'll assume all deps exist for now or handle gracefully.
+                # Let's assume valid inputs where deps are in tasks keys.
+                pass
+            adj[dep].append(name)
+            in_degree[name] += 1
+
+    # Cycle detection using Kahn's algorithm
+    queue = [name for name, deg in in_degree.items() if deg == 0]
+    heapq.heapify(queue) # Use heap to process order? No, just for topo sort.
+    # Actually, standard Kahn's uses a simple queue or stack. 
+    # But we need to detect cycles.
+    
+    processed_count = 0
+    temp_in_degree = dict(in_degree)
+    
+    # We use a list as a queue for Kahn's
+    q = [name for name, deg in temp_in_degree.items() if deg == 0]
+    while q:
+        u = q.pop(0)
+        processed_count += 1
+        for v in adj[u]:
+            temp_in_degree[v] -= 1
+            if temp_in_degree[v] == 0:
+                q.append(v)
+    
+    # If cycle exists, we won't process all tasks
+    if processed_count < len(tasks):
+        return None
+
+    # Simulation State
+    current_time = 0
+    active_tasks = {} # {task_name: finish_time}
+    ready_queue = []  # Heap of (-priority, duration, name)
+    completed_order = []
+    
+    # Helper to add tasks to ready queue
+    def add_ready(name):
+        info = task_info[name]
+        heapq.heappush(ready_queue, (-info['priority'], info['duration'], name))
+
+    # Initialize ready queue with tasks having no dependencies
+    for name in tasks:
+        if not task_info[name]['deps']:
+            add_ready(name)
+
+    while len(completed_order) < len(tasks):
+        # 1. Check for tasks finishing at current_time
+        finished_now = []
+        for name, finish_time in list(active_tasks.items()):
+            if finish_time <= current_time:
+                finished_now.append((name, finish_time))
+        
+        # Sort finished tasks by criteria to determine order of completion?
+        # The prompt says "if several tasks start at the same time...". 
+        # It doesn't explicitly specify completion order tie-breaking.
+        # However, to be deterministic and consistent with selection logic:
+        # We will append them in the order they were processed or sorted by priority desc, duration asc, name asc.
+        # Let's sort them to ensure deterministic output for simultaneous finishes.
+        finished_now.sort(key=lambda x: (-task_info[x[0]]['priority'], task_info[x[0]]['duration'], x[0]))
+        
+        for name, _ in finished_now:
+            completed_order.append(name)
+            del active_tasks[name]
+
+        # 2. Check if we need to advance time
+        if not active_tasks and not ready_queue:
+            # All tasks done or impossible (shouldn't happen if cycle check passed)
+            break
+            
+        if active_tasks:
+            next_finish = min(active_tasks.values())
+            current_time = next_finish
+        else:
+            # No active tasks, but we have ready tasks. 
+            # We can start them immediately at current_time.
+            # But wait, if current_time is 0 and no active tasks, we stay at 0.
+            pass
+
+        # 3. Add newly available tasks to ready queue (dependencies met)
+        # Note: This logic needs to be careful. 
+        # When a task finishes, its dependents become ready.
+        # We need to track which tasks are started vs completed.
+        # Let's maintain 'started' set.
+        
+        # Actually, the standard way is:
+        # When time advances or we have free workers, check dependencies.
+        # But checking dependencies every step is expensive? No, N is small usually.
+        # Better: Maintain a list of tasks that are waiting for deps.
+        # Or simply re-evaluate readiness when active tasks finish.
+        
+        # Let's refine the loop logic:
+        # We need to know which tasks are 'waiting' (deps not met).
+        # But we can just check all tasks in ready_queue? No, ready_queue only has candidates.
+        # We need a set of 'not_started' tasks.
+        
+        # Let's restart the loop logic for clarity:
+        pass
+
+    # Re-implementation with clearer state management
+    
+    # Reset state for clean implementation
+    current_time = 0
+    active_tasks = {}
+    ready_queue = []
+    completed_order = []
+    
+    # Track started tasks to avoid re-adding
+    started_tasks = set()
+    
+    # Pre-calculate dependencies status
+    # A task is ready if all deps are in 'completed' or 'active'? 
+    # No, deps must be COMPLETED before start.
+    # So a task becomes available for the ready_queue when ALL its deps are completed.
+    
+    def get_ready_tasks():
+        candidates = []
+        for name, info in task_info.items():
+            if name not in started_tasks and name not in active_tasks:
+                # Check if all deps are completed
+                deps_completed = True
+                for dep in info['deps']:
+                    if dep not in completed_order:
+                        deps_completed = False
+                        break
+                if deps_completed:
+                    candidates.append(name)
+        return candidates
+
+    # Initial ready tasks
+    initial_ready = []
+    for name, info in task_info.items():
+        if not info['deps']:
+            initial_ready.append(name)
+    
+    heapq.heapify(initial_ready) # Store (-priority, duration, name)
+    # Wait, heap needs tuple. Let's build it properly.
+    ready_heap = []
+    for name in initial_ready:
+        info = task_info[name]
+        heapq.heappush(ready_heap, (-info['priority'], info['duration'], name))
+
+    while len(completed_order) < len(tasks):
+        # 1. Advance time if we have active tasks and no free workers or ready tasks?
+        # Actually, we always want to process completions first.
+        
+        # Check for tasks finishing at current_time
+        finished_now = []
+        for name, finish_time in list(active_tasks.items()):
+            if finish_time <= current_time:
+                finished_now.append(name)
+        
+        # Sort finished tasks by criteria (Priority desc, Duration asc, Name asc)
+        # This ensures deterministic order for simultaneous completions.
+        finished_now.sort(key=lambda x: (-task_info[x]['priority'], task_info[x]['duration'], x))
+        
+        for name in finished_now:
+            completed_order.append(name)
+            del active_tasks[name]
+
+        # 2. Check if we need to advance time (if no active tasks and no ready tasks, break? 
+        # But cycle check passed, so there must be a path).
+        # If active_tasks is empty, current_time stays same unless we start new tasks.
+        
+        # 3. Add newly available tasks to ready_heap
+        # We need to identify tasks whose deps are now satisfied (completed) but not started.
+        for name in completed_order:
+            # This task just finished. Check its dependents.
+            # But wait, we don't have reverse graph easily. 
+            # Let's iterate all tasks to check readiness? O(N^2). N is small enough usually.
+            pass
+        
+        # Optimization: Maintain a set of 'waiting' tasks?
+        # Or just re-scan ready candidates.
+        
+        # Re-evaluate ready queue candidates
+        current_ready = []
+        for name, info in task_info.items():
+            if name not in started_tasks and name not in active_tasks:
+                deps_ok = all(dep in completed_order for dep in info['deps'])
+                if deps_ok:
+                    current_ready.append(name)
+        
+        # Add new ready tasks to heap
+        for name in current_ready:
+            heapq.heappush(ready_heap, (-task_info[name]['priority'], task_info[name]['duration'], name))
+
+        # 4. Start tasks if workers available
+        slots_available = workers - len(active_tasks)
+        
+        while slots_available > 0 and ready_heap:
+            _, duration, name = heapq.heappop(ready_heap)
+            start_time = current_time
+            finish_time = start_time + duration
+            
+            active_tasks[name] = finish_time
+            started_tasks.add(name)
+            slots_available -= 1
+
+        # 5. Advance time if we have active tasks
+        if active_tasks:
+            next_finish = min(active_tasks.values())
+            current_time = next_finish
+        else:
+            # No active tasks, but loop continues only if not all completed.
+            # If ready_heap is empty and active_tasks is empty -> Cycle or error (shouldn't happen)
+            # But wait, if we just finished everything, len(completed_order) == len(tasks).
+            pass
+
+    return completed_order
+```
+
+Wait, I need to check the cycle detection logic again. The Kahn's algorithm implementation above uses `temp_in_degree`. If `processed_count < len(tasks)`, it returns `None`. This is correct for cycle detection.
+However, there is a nuance: "if in dependencies there is a cycle".
+Does dependency on a non-existent task count as a cycle? No, usually invalid input. I'll assume valid names.
+Also, the prompt says "return them in list[str] in that order" regarding simultaneous starts. This implies the output list should reflect the order of tasks *as they are processed*. Since it's a scheduler, completion order is standard.
+
+One detail: `tasks` dict keys are task names.
+The input format: `tasks: dict[str, tuple[int, list[str], int]]`.
+Tuple: `(duration, deps, priority)`.
+
+Wait, I need to make sure the cycle detection handles the case where a task depends on itself or forms a loop correctly. Kahn's algorithm does this naturally (in-degree never reaches 0).
+
+One edge case: `workers` = 0? If workers=0 and tasks exist -> infinite loop?
+The prompt implies valid inputs for scheduling. If workers=0, we can't run tasks. But usually workers >= 1. I'll assume workers >= 1.
+If `workers` is large enough, it's fine.
+
+Wait, the logic `current_ready` re-scanning every iteration is O(N^2). Given Python constraints in these problems, N is likely small (<100). It's acceptable.
+However, to be more efficient and correct:
+When a task finishes, we should check its dependents.
+But since I don't have the reverse graph explicitly built for "who depends on me", scanning all tasks is safer unless I build `dependents` map.
+I will build `dependents` map during initialization to make it O(N).
+
+Revised Plan:
+1. Parse input, store info.
+2. Build `adj` (dependency) and `dependents` (reverse dependency) maps for Kahn's and scheduling updates.
+3. Run Kahn's to check cycles. If cycle -> `None`.
+4. Simulation loop:
+   - Maintain `active_tasks` (finish times).
+   - Maintain `ready_heap`.
+   - Maintain `completed_set`.
+   - Loop until all tasks completed.
+   - At each step, advance time to next finish event if active tasks exist.
+   - Process completions at that time.
+   - Add newly ready tasks (dependents of finished tasks) to heap.
+   - Fill worker slots from heap.
+
+Wait, the prompt says "if several tasks start at the same time, return them in list[str] in that order".
+This implies the output list is constructed based on *starts*? Or does it mean "If multiple tasks finish at the same time"?
+Actually, looking at the wording: "В ответе верни только код...". The function returns `list[str]`.
+Usually, this means the sequence of task names.
+If I return completion order, and two tasks finish at T=10, they are appended to the list.
+The rule "if several tasks start at the same time..." might be a hint about how to handle parallelism in the output if the output represents the schedule log.
+But standard interpretation: Return the order of **completion**.
+Why? Because priority determines *start*, but we want to know when things are done.
+Also, the tie-breaking rule for start is given. If I return completion order, do I use the same tie-breaking for simultaneous completions?
+The prompt says: "when several tasks are ready to start, choose first with higher priority... if several tasks start at the same time, return them in list[str] in that order".
+This sentence structure suggests that the output list is populated when tasks *start*? Or does it mean "If multiple tasks finish together, put them in this order"?
+Actually, it says "if several tasks **start** at the same time... return them...". This implies the output list might contain tasks that started at the same time.
+But a scheduler usually returns completion order.
+Let's assume the standard: Return **completion order**. If multiple complete at same time, use the priority logic (Priority desc, Duration asc, Name asc) to order them in the result list. This is consistent with the "start" rule applied to "finish" events for determinism.
+
+Wait, I should check if `tasks` can be empty. `if not tasks: return []`.
+Also, `workers` could be larger than tasks.
+The cycle detection must happen before simulation.
+
+One detail: `deps` list contains names.
+I need to ensure `deps` are valid keys in `tasks`. If a dep is missing, it's effectively an infinite dependency? Or invalid input? I'll assume valid inputs (all deps exist).
+
+Let's refine the code structure.
+
+```python
+import heapq
+from collections import defaultdict
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    # Store task info
+    task_info = {}
+    for name, (duration, deps, priority) in tasks.items():
+        task_info[name] = {
+            'duration': duration,
+            'deps': deps,
+            'priority': priority
+        }
+    
+    # Build graph and check cycles using Kahn's algorithm
+    adj = defaultdict(list) # dep -> [dependents]
+    in_degree = {name: 0 for name in tasks}
+    
+    for name, info in task_info.items():
+        for dep in info['deps']:
+            if dep not in tasks:
+                # Dependency on non-existent task. 
+                # Depending on interpretation, this might be invalid or just blocking.
+                # Assuming valid input where all deps exist.
+                pass
+            adj[dep].append(name)
+            in_degree[name] += 1
+            
+    # Kahn's for cycle detection
+    queue = [name for name, deg in in_degree.items() if deg == 0]
+    processed_count = 0
+    
+    while queue:
+        u = queue.pop(0)
+        processed_count += 1
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+                
+    if processed_count < len(tasks):
+        return None
+        
+    # Simulation
+    current_time = 0
+    active_tasks = {} # {name: finish_time}
+    completed_order = []
+    started_tasks = set()
+    
+    # Ready heap: (-priority, duration, name)
+    ready_heap = []
+    
+    def add_to_ready(name):
+        if name not in started_tasks and name not in active_tasks:
+            info = task_info[name]
+            heapq.heappush(ready_heap, (-info['priority'], info['duration'], name))
+
+    # Initial ready tasks (no deps)
+    for name, info in task_info.items():
+        if not info['deps']:
+            add_to_ready(name)
+            
+    while len(completed_order) < len(tasks):
+        # 1. Process completions at current_time
+        finished_now = []
+        for name, finish_time in list(active_tasks.items()):
+            if finish_time <= current_time:
+                finished_now.append((name, finish_time))
+        
+        # Sort by priority desc, duration asc, name asc
+        finished_now.sort(key=lambda x: (-task_info[x[0]]['priority'], task_info[x[0]]['duration'], x[0]))
+        
+        for name, _ in finished_now:
+            completed_order.append(name)
+            del active_tasks[name]
+            
+        # 2. Advance time if we have active tasks
+        if active_tasks:
+            current_time = min(active_tasks.values())
+        else:
+            # If no active tasks and ready_heap is empty, we are stuck (shouldn't happen after cycle check)
+            # But if ready_heap has items, we can start them at current_time.
+            pass
+            
+        # 3. Add newly available tasks to heap
+        # We need to identify tasks whose deps are all completed.
+        # Since we don't have reverse graph for efficiency in loop (though we could build it),
+        # let's just check readiness for all non-started, non-active tasks? 
+        # Or maintain a set of 'waiting' tasks.
+        # Given N is likely small, checking all is okay, but building reverse graph is better.
+        
+        # Let's rebuild the ready queue logic efficiently.
+        # We can iterate over adj to find who depends on finished tasks.
+        for name in completed_order:
+            for dependent in adj[name]:
+                if dependent not in started_tasks and dependent not in active_tasks:
+                    add_to_ready(dependent)
+                    
+        # 4. Start tasks
+        slots = workers - len(active_tasks)
+        while slots > 0 and ready_heap:
+            _, duration, name = heapq.heappop(ready_heap)
+            finish_time = current_time + duration
+            active_tasks[name] = finish_time
+            started_tasks.add(name)
+            slots -= 1
+            
+    return completed_order
+```
+
+Wait, `add_to_ready` checks `started_tasks`. But `active_tasks` also tracks running tasks.
+When a task finishes, it is removed from `active_tasks` and added to `completed_order`.
+The logic `if dependent not in started_tasks and dependent not in active_tasks` inside the loop handles this.
+However, `add_to_ready` pushes to heap. If I push multiple times?
+I need to ensure a task is only pushed once.
+In my code: `add_to_ready` checks `started_tasks` and `active_tasks`.
+But initially I add tasks with no deps.
+When a task finishes, I iterate its dependents.
+If a dependent was already in heap (waiting for another dep), it shouldn't be added again.
+The check `dependent not in started_tasks and dependent not in active_tasks` is not enough to prevent duplicates in heap if I don't track "in_heap".
+Better: Check if task is ready. If so, push. But ensure we don't push same task multiple times.
+Actually, a task becomes ready only when its *last* dependency finishes.
+So iterating `adj[name]` where `name` just finished is correct.
+But I need to make sure I don't add it if it's already in heap?
+Wait, if I use `add_to_ready`, I should check if it's already in the heap?
+Or simply: A task enters `ready_heap` only when its *last* dependency finishes.
+So iterating `adj[name]` (dependents of finished task) is correct.
+But what if a task has multiple dependencies? It will be added to `adj` list multiple times.
+It should only be added when the *last* dependency finishes.
+My logic: Iterate all dependents of `name`. If dependent not started/active, add to ready.
+This means if Task A depends on B and C.
+B finishes -> Add A to heap? No, A still needs C.
+So I need to track how many deps are satisfied.
+Or simply check readiness condition: `all(dep in completed_order for dep in info['deps'])`.
+This is safer than relying on adjacency updates.
+Given N is small, checking all tasks for readiness every step is O(N). Total time O(N^2 * log N) or similar. Acceptable.
+
+Revised Simulation Loop with Readiness Check:
+1. Process completions.
+2. Advance time.
+3. Identify ready tasks (deps satisfied, not started/active). Add to heap.
+4. Start tasks.
+
+Wait, `current_time` logic.
+If `active_tasks` is empty, `current_time` doesn't advance automatically in the loop unless we force it?
+In my code: `if active_tasks: current_time = min(...)`.
+If `active_tasks` is empty, `current_time` stays same.
+Then we add ready tasks to heap.
+Then we start tasks (slots > 0).
+If slots > 0 and heap not empty, we start them at `current_time`.
+This works.
+
+One edge case: Cycle detection.
+Kahn's algorithm returns `None` if cycle.
+But what if a task depends on a non-existent task?
+The prompt says "if in dependencies there is a cycle". It doesn't mention invalid deps.
+I will assume valid deps (exist in tasks).
+If dep not in tasks, it effectively blocks the task forever.
+My Kahn's logic: `in_degree` counts edges from existing nodes. If dep missing, I don't increment `in_degree`.
+So task with missing dep would have `in_degree` 0 (if no other deps) and start immediately?
+That might be wrong. It should wait forever or be invalid.
+But standard problem assumption: all deps are valid task names.
+I'll stick to that.
+
+Final check on return type: `list[str] | None`.
+My code returns `completed_order` (list of str) or `None`.
+Matches signature.
+
+One detail: `tasks` dict order doesn't matter.
+The output list order is determined by completion times and tie-breakers.
+
+Wait, one more thing: "if several tasks start at the same time, return them in list[str] in that order".
+This implies that if I have a batch of tasks starting at T=0, they should appear in the result list?
+No, the result list is `completed_order`.
+If the prompt meant "return the schedule", it would be different.
+Given "plan_order", returning completion order is standard.
+The sentence about start order likely implies that if multiple tasks finish at the same time (which happens when they started at same time and have same duration), we should order them by the priority rule.
+So my sorting of `finished_now` handles this.
+
+Wait, I need to make sure I don't import unnecessary modules or add comments outside the block.
+The prompt says "В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока."
+So I must output ONLY the code block.
+
+One detail: `heapq` is standard library.
+I should ensure variable names are clean.
+
+Wait, checking the cycle detection again.
+If `tasks` is empty, return `[]`.
+My code handles `if not tasks: return []`.
+But signature says `list[str] | None`. Empty list is valid.
+
+One optimization: The loop condition `while len(completed_order) < len(tasks)` ensures we stop when done.
+Inside loop, if `active_tasks` empty and `ready_heap` empty -> break?
+If cycle check passed, this state shouldn't be reached unless all tasks done.
+But I added `if active_tasks: current_time = min(...)`.
+If `active_tasks` is empty, `current_time` remains same.
+Then we add ready tasks.
+Then we start tasks.
+So loop continues.
+Eventually `completed_order` fills up.
+
+Wait, what if `workers` is 0?
+`slots = workers - len(active_tasks)`. If workers=0, slots <= 0 (unless active_tasks negative which is impossible).
+So no tasks start.
+If there are tasks with duration > 0, they never finish. Infinite loop?
+But cycle check passed implies DAG.
+If workers=0, we can't execute any task.
+Should return `None` or empty?
+Usually `workers >= 1`. I'll assume valid input.
+If `workers` is 0 and tasks exist, it's impossible to complete.
+But standard assumption: `workers >= 1`.
+
+Wait, one more thing: The prompt says "return them in list[str] in that order" regarding start.
+Does this mean the output should be the **start** order?
+"В ответе верни только код...".
+If I return completion order, does it satisfy "if several tasks start at the same time..."?
+Maybe the output is simply the list of task names sorted by their finish time?
+Yes.
+And if multiple finish at same time, sort them by priority/duration/name.
+This matches my logic.
+
+Wait, I should check if `tasks` keys are strings. Yes `dict[str, ...]`.
+The return type is `list[str]`.
+
+One small fix: `add_to_ready` function inside loop vs inline. Inline is cleaner or helper function. Helper is fine.
+But I need to make sure I don't add duplicates to heap.
+My logic: Iterate dependents of finished tasks. Add if not started/active.
+This works because a task only becomes ready when its last dependency finishes.
+So it will be added exactly once (when the last dep finishes).
+Wait, what if a task has no dependencies? Added initially.
+What if a task has 2 deps B and C.
+B finishes -> Add to heap? No, check readiness condition `all(deps in completed)`.
+My previous logic `add_to_ready` inside loop iterated `adj[name]`.
+If I use `adj`, I need to know when *all* deps are met.
+Iterating `adj` every time a task finishes is correct for "who depends on me".
+But if A depends on B and C.
+B finishes -> Add A? No, A still needs C.
+So iterating `adj` blindly adds A too early.
+I must check readiness condition!
+Correct logic:
+When a task finishes, we don't necessarily add its dependents immediately to heap.
+We should check all tasks that are not started/active and see if they are now ready.
+OR maintain a set of "waiting" tasks and update their status.
+Given N is small, re-evaluating readiness for all non-started tasks every step is safest and easiest to implement correctly without bugs.
+Cost: O(N) per step. Total steps = sum of durations? No, time steps can be large.
+But we only advance time when active tasks finish.
+So number of iterations <= N (number of tasks finishing events).
+Wait, if workers < N, we have parallelism.
+Number of "events" (time advances) is bounded by N * something?
+Actually, each task finishes once. So at most N times we advance time significantly.
+Between finish events, we might start tasks.
+So O(N^2) total complexity for readiness check is fine.
+
+Revised loop:
+1. Process completions (remove from active).
+2. Advance time to next finish if active exists.
+3. Identify ready tasks (check all non-started/active tasks). Add to heap.
+4. Start tasks.
+
+This avoids the "add too early" bug with `adj`.
+
+Wait, one detail: `current_time` logic.
+If `active_tasks` is empty, we don't advance time. We stay at `current_time`.
+Then we add ready tasks. Then start them.
+This works.
+
+Final check on imports. `heapq`, `defaultdict`.
+Code should be inside the block.
+
+One detail: `tasks` input might have tasks with same name? No, dict keys are unique.
+Dependencies list can contain duplicates? "list of names". Assume set-like behavior or handle duplicates (ignore).
+I'll assume valid deps.
+
+```python
+import heapq
+from collections import defaultdict
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    task_info = {}
+    for name, (duration, deps, priority) in tasks.items():
+        task_info[name] = {
+            'duration': duration,
+            'deps': deps,
+            'priority': priority
+        }
+        
+    # Build graph and check cycles
+    adj = defaultdict(list)
+    in_degree = {name: 0 for name in tasks}
+    
+    for name, info in task_info.items():
+        for dep in info['deps']:
+            if dep not in tasks:
+                # Invalid dependency on non-existent task. 
+                # Depending on strictness, this might be a cycle or just invalid.
+                # Assuming valid inputs where all deps exist.
+                pass
+            adj[dep].append(name)
+            in_degree[name] += 1
+            
+    queue = [name for name, deg in in_degree.items() if deg == 0]
+    processed_count = 0
+    
+    while queue:
+        u = queue.pop(0)
+        processed_count += 1
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+                
+    if processed_count < len(tasks):
+        return None
+        
+    current_time = 0
+    active_tasks = {} # {name: finish_time}
+    completed_order = []
+    
+    ready_heap = []
+    
+    while len(completed_order) < len(tasks):
+        # 1. Process completions
+        finished_now = []
+        for name, finish_time in list(active_tasks.items()):
+            if finish_time <= current_time:
+                finished_now.append((name, finish_time))
+        
+        # Sort by priority desc, duration asc, name asc
+        finished_now.sort(key=lambda x: (-task_info[x[0]]['priority'], task_info[x[0]]['duration'], x[0]))
+        
+        for name, _ in finished_now:
+            completed_order.append(name)
+            del active_tasks[name]
+            
+        # 2. Advance time if we have active tasks
+        if active_tasks:
+            current_time = min(active_tasks.values())
+            
+        # 3. Identify ready tasks
+        ready_heap = []
+        for name, info in task_info.items():
+            if name not in completed_order and name not in active_tasks:
+                deps_ok = all(dep in completed_order for dep in info['deps'])
+                if deps_ok:
+                    heapq.heappush(ready_heap, (-info['priority'], info['duration'], name))
+                    
+        # 4. Start tasks
+        slots = workers - len(active_tasks)
+        while slots > 0 and ready_heap:
+            _, duration, name = heapq.heappop(ready_heap)
+            finish_time = current_time + duration
+            active_tasks[name] = finish_time
+            slots -= 1
+            
+    return completed_order
+```
+Wait, I re-initialized `ready_heap` inside the loop. That's fine, but I need to make sure I don't lose tasks that were already in heap from previous iteration?
+Ah! In my previous logic, I maintained `ready_heap`.
+In this revised logic, I rebuild `ready_heap` every iteration. This is O(N) per step.
+Is it correct?
+Yes, because a task is ready only if ALL deps are completed.
+So checking all tasks for readiness is correct and safe.
+It avoids the "add too early" bug.
+Complexity: N iterations (time advances). Each iter O(N log N) for heap ops + O(N) for scan. Total O(N^2 log N). Acceptable.
+
+Wait, `ready_heap` rebuild logic:
+I iterate all tasks. If not completed and not active, check deps.
+This is correct.
+But wait, if I have 100 tasks, and I do this every time a task finishes (N times), it's O(N^2).
+It's fine.
+
+One detail: `if dep not in tasks` inside cycle detection.
+If a dependency points to a non-existent task, `in_degree` won't be incremented for the dependent?
+Wait, `adj[dep].append(name)`. If `dep` is not in `tasks`, `adj` will have key `dep` (string).
+But `in_degree` only has keys from `tasks`.
+So if `dep` is missing, `in_degree[name]` increments.
+But `queue` initialization: `[name for name, deg in in_degree.items() if deg == 0]`.
+If `name` depends on missing `dep`, `in_degree[name]` > 0. So it won't be added to queue initially.
+So it will never be processed. `processed_count` < len(tasks). Returns `None`.
+This treats missing dependency as a cycle/blockage (cannot start).
+Is this correct?
+Usually, dependencies must exist. If they don't, the task can't run.
+So returning `None` is safe for invalid input.
+But if the prompt implies valid inputs, this code handles it gracefully (returns None).
+
+Wait, one edge case: `tasks` dict might be modified? No.
+The code looks solid.
+
+One small optimization/correction:
+In step 3, I rebuild `ready_heap`.
+I should ensure that tasks already in `active_tasks` are not added to heap (checked by `name not in active_tasks`).
+Tasks in `completed_order` are not added (checked).
+So it's correct.
+
+Wait, `finished_now` sorting key: `(-task_info[x[0]]['priority'], task_info[x[0]]['duration'], x[0])`.
+This matches the requirement: "choose first with higher priority, then smaller duration, then name ascending".
+Correct.
+
+Final check on imports. `heapq`, `defaultdict`.
+The function signature matches.
+Return type matches.
+
+One detail: The prompt says "В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока."
+So I will output just the code block.
+
+Wait, I should check if `tasks` can be empty. `if not tasks: return []`.
+The signature allows `list[str] | None`. Empty list is valid.
+If cycle detected -> `None`.
+Correct.
+
+One detail: `workers` could be larger than needed. Logic handles it (`slots = workers - len(active)`).
+If `workers` is 0, `slots` will be negative or zero. Loop won't start tasks.
+If tasks exist and workers=0, loop runs forever?
+Wait, `while len(completed_order) < len(tasks)`.
+If no tasks can start (workers=0), `active_tasks` stays empty (after completions).
+`current_time` doesn't advance if `active_tasks` empty.
+Loop continues indefinitely?
+Yes, infinite loop if workers=0 and tasks exist.
+But standard assumption is `workers >= 1`.
+I'll assume valid input where execution is possible.
+If I want to be safe: `if not active_tasks and not ready_heap: break`.
+But cycle check passed, so there must be a path. If workers=0, we can't execute.
+So it's an invalid configuration for scheduling.
+I will assume `workers >= 1` or that the problem guarantees solvability.
+Actually, if `workers` is 0, I should probably return `None`? Or just let it run?
+Given "limited number of workers", usually implies > 0.
+I'll leave it as is (infinite loop risk only if workers=0).
+To be safe, I can add a check: `if not active_tasks and not ready_heap: break`.
+But this would return partial order.
+Better to assume valid input.
+
+Wait, one more thing: The prompt says "return them in list[str] in that order".
+This refers to the output of the function.
+My code returns `completed_order`.
+If multiple tasks finish at same time, they are sorted and appended.
+This satisfies the requirement for simultaneous events (starts or finishes).
+
+One final check: The variable `ready_heap` is rebuilt every iteration.
+Is it efficient? Yes, O(N) scan.
+Wait, I can optimize by maintaining a set of `waiting_tasks`.
+But N is small. Rebuilding is safer logic-wise.
+
+Okay, ready to write.
+
+```python
+import heapq
+from collections import defaultdict
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    task_info = {}
+    for name, (duration, deps, priority) in tasks.items():
+        task_info[name] = {
+            'duration': duration,
+            'deps': deps,
+            'priority': priority
+        }
+        
+    # Build graph and check cycles using Kahn's algorithm
+    adj = defaultdict(list)
+    in_degree = {name: 0 for name in tasks}
+    
+    for name, info in task_info.items():
+        for dep in info['deps']:
+            if dep not in tasks:
+                # Dependency on non-existent task implies it cannot be completed 
+                # or is invalid. We treat it as a cycle/blockage to return None.
+                pass
+            adj[dep].append(name)
+            in_degree[name] += 1
+            
+    queue = [name for name, deg in in_degree.items() if deg == 0]
+    processed_count = 0
+    
+    while queue:
+        u = queue.pop(0)
+        processed_count += 1
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+                
+    if processed_count < len(tasks):
+        return None
+        
+    current_time = 0
+    active_tasks = {} # {name: finish_time}
+    completed_order = []
+    
+    while len(completed_order) < len(tasks):
+        # 1. Process completions at current_time
+        finished_now = []
+        for name, finish_time in list(active_tasks.items()):
+            if finish_time <= current_time:
+                finished_now.append((name, finish_time))
+        
+        # Sort by priority desc, duration asc, name asc
+        finished_now.sort(key=lambda x: (-task_info[x[0]]['priority'], task_info[x[0]]['duration'], x[0]))
+        
+        for name, _ in finished_now:
+            completed_order.append(name)
+            del active_tasks[name]
+            
+        # 2. Advance time if we have active tasks
+        if active_tasks:
+            current_time = min(active_tasks.values())
+            
+        # 3. Identify ready tasks (deps satisfied)
+        ready_heap = []
+        for name, info in task_info.items():
+            if name not in completed_order and name not in active_tasks:
+                deps_ok = all(dep in completed_order for dep in info['deps'])
+                if deps_ok:
+                    heapq.heappush(ready_heap, (-info['priority'], info['duration'], name))
+                    
+        # 4. Start tasks
+        slots = workers - len(active_tasks)
+        while slots > 0 and ready_heap:
+            _, duration, name = heapq.heappop(ready_heap)
+            finish_time = current_time + duration
+            active_tasks[name] = finish_time
+            slots -= 1
+            
+    return completed_order
+```
+
+Wait, I need to check if `dep not in tasks` handling is correct.
+If `dep` is missing, `in_degree` logic might be flawed?
+In my code: `adj[dep].append(name)`. If `dep` not in `tasks`, `adj` has key `dep`.
+But `in_degree` only initialized for keys in `tasks`.
+So if `name` depends on `missing_dep`, `in_degree[name]` increments.
+So `name` won't be in initial queue.
+It will never be processed. `processed_count` < len(tasks). Returns `None`.
+This is correct behavior (cannot start task with missing dependency).
+
+Wait, one detail: `adj[dep].append(name)`. If `dep` is not in `tasks`, `in_degree` doesn't track it.
+But Kahn's algorithm only processes nodes in `tasks`.
+So if `name` depends on `missing_dep`, `name` has `in_degree > 0`.
+It won't be added to queue.
+Correct.
+
+Wait, I should check if `dep` is in `tasks` before incrementing `in_degree`?
+My code: `if dep not in tasks: pass; adj[dep].append(name); in_degree[name] += 1`.
+So `in_degree` increments regardless of whether `dep` exists.
+This means `name` waits for `missing_dep`. Since `missing_dep` is never processed (not in queue), `name` never gets its degree reduced.
+So `processed_count` < len(tasks). Returns `None`.
+Correct.
+
+Wait, one edge case: `tasks` dict order.
+The loop `for name, info in task_info.items()` iterates all tasks.
+This is fine.
+
+One final check: The prompt says "В ответе верни только код одним блоком".
+I will output the code block only.
+
+Wait, I should remove comments that are too verbose? No, comments are allowed in Python files.
+But keep it clean.
+
+One thing: `finished_now` sorting key uses `task_info`.
+This is correct.
+
+Okay, generating response.
+</think>
+
+```python
+import heapq
+from collections import defaultdict
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    task_info = {}
+    for name, (duration, deps, priority) in tasks.items():
+        task_info[name] = {
+            'duration': duration,
+            'deps': deps,
+            'priority': priority
+        }
+        
+    # Build graph and check cycles using Kahn's algorithm
+    adj = defaultdict(list)
+    in_degree = {name: 0 for name in tasks}
+    
+    for name, info in task_info.items():
+        for dep in info['deps']:
+            if dep not in tasks:
+                # Dependency on non-existent task implies it cannot be completed 
+                # or is invalid. We treat it as a cycle/blockage to return None.
+                pass
+            adj[dep].append(name)
+            in_degree[name] += 1
+            
+    queue = [name for name, deg in in_degree.items() if deg == 0]
+    processed_count = 0
+    
+    while queue:
+        u = queue.pop(0)
+        processed_count += 1
+        for v in adj[u]:
+            in_degree[v] -= 1
+            if in_degree[v] == 0:
+                queue.append(v)
+                
+    if processed_count < len(tasks):
+        return None
+        
+    current_time = 0
+    active_tasks = {} # {name: finish_time}
+    completed_order = []
+    
+    while len(completed_order) < len(tasks):
+        # 1. Process completions at current_time
+        finished_now = []
+        for name, finish_time in list(active_tasks.items()):
+            if finish_time <= current_time:
+                finished_now.append((name, finish_time))
+        
+        # Sort by priority desc, duration asc, name asc
+        finished_now.sort(key=lambda x: (-task_info[x[0]]['priority'], task_info[x[0]]['duration'], x[0]))
+        
+        for name, _ in finished_now:
+            completed_order.append(name)
+            del active_tasks[name]
+            
+        # 2. Advance time if we have active tasks
+        if active_tasks:
+            current_time = min(active_tasks.values())
+            
+        # 3. Identify ready tasks (deps satisfied)
+        ready_heap = []
+        for name, info in task_info.items():
+            if name not in completed_order and name not in active_tasks:
+                deps_ok = all(dep in completed_order for dep in info['deps'])
+                if deps_ok:
+                    heapq.heappush(ready_heap, (-info['priority'], info['duration'], name))
+                    
+        # 4. Start tasks
+        slots = workers - len(active_tasks)
+        while slots > 0 and ready_heap:
+            _, duration, name = heapq.heappop(ready_heap)
+            finish_time = current_time + duration
+            active_tasks[name] = finish_time
+            slots -= 1
+            
+    return completed_order
+```

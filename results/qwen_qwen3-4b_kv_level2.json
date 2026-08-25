@@ -1,0 +1,23 @@
+{
+  "model": "qwen/qwen3-4b",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-07-11 13:55:45",
+  "passed": 12,
+  "total": 25,
+  "failures": [
+    "simple_transaction_commit: ожидалось ['10'], получено ['COMMIT', 'NULL']",
+    "simple_transaction_rollback: ожидалось ['5'], получено ['ROLLBACK', '5']",
+    "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['5', 'ROLLBACK', '5']",
+    "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', 'ROLLBACK', '20', 'ROLLBACK', 'NULL']",
+    "nested_commit_propagates_to_outer_only: ожидалось ['2', '2'], получено ['COMMIT', '2', 'COMMIT', 'NULL']",
+    "rollback_after_commit_is_no_transaction: ожидалось ['NO TRANSACTION'], получено ['COMMIT', 'NO TRANSACTION']",
+    "multiple_keys_independent: ожидалось ['2', '1', '2'], получено ['2', 'ROLLBACK', '1', '2']",
+    "set_new_key_inside_transaction: ожидалось ['100', '100'], получено ['100', 'COMMIT', 'NULL']",
+    "count_respects_transaction: ожидалось ['2', '1'], получено ['2', 'ROLLBACK', '1']",
+    "watch_set_new_key: ожидалось ['WATCH a NULL -> 10'], получено []",
+    "watch_set_change: ожидалось ['WATCH a 5 -> 10'], получено []",
+    "watch_delete: ожидалось ['WATCH a 5 -> NULL'], получено []",
+    "watch_inside_transaction_fires: ожидалось ['WATCH a NULL -> 1'], получено []"
+  ]
+}

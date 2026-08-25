@@ -2,7 +2,10 @@
   "model": "google/gemma-4-e4b",
   "benchmark": "kv",
   "level": "level1",
-  "tested_at": "2026-07-10 15:08:19",
+  "tested_at": "2026-08-17 22:41:56",
   "passed": 0,
-  "total": 15
+  "total": 15,
+  "failures": [
+    "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+  ]
 }

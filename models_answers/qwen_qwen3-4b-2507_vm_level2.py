@@ -1,0 +1,133 @@
+def run(program: str) -> list[str]:
+    lines = program.strip().split('\n')
+    stack = []
+    output = []
+    labels = {}
+    pc = 0  # program counter
+    line_num = 0
+    
+    for line in lines:
+        line_num += 1
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+            
+        parts = line.split()
+        instruction = parts[0]
+        
+        if instruction == 'LABEL':
+            if len(parts) != 2:
+                raise ValueError(f"Invalid LABEL instruction at line {line_num}")
+            label_name = parts[1]
+            labels[label_name] = pc
+            
+        elif instruction == 'JMP':
+            if len(parts) != 2:
+                raise ValueError(f"Invalid JMP instruction at line {line_num}")
+            label_name = parts[1]
+            if label_name not in labels:
+                raise ValueError(f"Unknown label '{label_name}' at line {line_num}")
+            pc = labels[label_name]
+            
+        elif instruction == 'JZ':
+            if len(parts) != 2:
+                raise ValueError(f"Invalid JZ instruction at line {line_num}")
+            label_name = parts[1]
+            if label_name not in labels:
+                raise ValueError(f"Unknown label '{label_name}' at line {line_num}")
+            # Pop value from stack
+            if len(stack) == 0:
+                raise ValueError(f"Stack underflow at line {line_num}")
+            value = stack.pop()
+            if value == 0:
+                pc = labels[label_name]
+            else:
+                pc += 1  # continue to next line
+                
+        elif instruction == 'JNZ':
+            if len(parts) != 2:
+                raise ValueError(f"Invalid JNZ instruction at line {line_num}")
+            label_name = parts[1]
+            if label_name not in labels:
+                raise ValueError(f"Unknown label '{label_name}' at line {line_num}")
+            # Pop value from stack
+            if len(stack) == 0:
+                raise ValueError(f"Stack underflow at line {line_num}")
+            value = stack.pop()
+            if value != 0:
+                pc = labels[label_name]
+            else:
+                pc += 1  # continue to next line
+                
+        else:
+            # Handle regular instructions
+            if instruction == 'PUSH':
+                if len(parts) != 2:
+                    raise ValueError(f"Invalid PUSH instruction at line {line_num}")
+                try:
+                    value = int(parts[1])
+                    stack.append(value)
+                except ValueError:
+                    raise ValueError(f"Invalid number in PUSH at line {line_num}")
+                    
+            elif instruction == 'POP':
+                if len(stack) == 0:
+                    raise ValueError(f"Stack underflow at line {line_num}")
+                stack.pop()
+                
+            elif instruction == 'ADD':
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {line_num}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+                
+            elif instruction == 'SUB':
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {line_num}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a - b)
+                
+            elif instruction == 'MUL':
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {line_num}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+                
+            elif instruction == 'DIV':
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {line_num}")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise ValueError(f"Division by zero at line {line_num}")
+                stack.append(a // b)
+                
+            elif instruction == 'DUP':
+                if len(stack) == 0:
+                    raise ValueError(f"Stack underflow at line {line_num}")
+                stack.append(stack[-1])
+                
+            elif instruction == 'SWAP':
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {line_num}")
+                a = stack.pop()
+                b = stack.pop()
+                stack.append(a)
+                stack.append(b)
+                
+            elif instruction == 'PRINT':
+                if len(stack) == 0:
+                    raise ValueError(f"Stack underflow at line {line_num}")
+                output.append(str(stack[-1]))
+                
+            else:
+                raise ValueError(f"Unknown instruction '{instruction}' at line {line_num}")
+                
+        # Move to next line unless we have a jump
+        if instruction not in ['JMP', 'JZ', 'JNZ']:
+            pc += 1
+    
+    return output

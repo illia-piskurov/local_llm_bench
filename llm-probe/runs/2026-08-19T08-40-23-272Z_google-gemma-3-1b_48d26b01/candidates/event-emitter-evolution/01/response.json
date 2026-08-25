@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-42owwdmcw415rlrophg03f",
+  "object": "chat.completion",
+  "created": 1787128959,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const result = [];\n\n  for (const operation of input) {\n    result.push({\n      log: [],\n      listenerId: operation.op,\n      event: operation.event,\n      payload: operation.payload\n    });\n  }\n\n  return result;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 431,
+    "completion_tokens": 77,
+    "total_tokens": 508,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

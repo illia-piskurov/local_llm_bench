@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-qu79y22jvmisjdsda3s2j",
+  "object": "chat.completion",
+  "created": 1787579209,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const ops = input.operations || [];\n  // Each registration: {event, id, once}\n  const listeners = [];\n  const logs = [];\n\n  for (const op of ops) {\n    switch (op.op) {\n      case 'on':\n        listeners.push({ event: op.event, id: op.listenerId, once: false });\n        break;\n      case 'once':\n        listeners.push({ event: op.event, id: op.listenerId, once: true });\n        break;\n      case 'off':\n        // remove matching listener\n        for (let i = 0; i < listeners.length; i++) {\n          const l = listeners[i];\n          if (l.event === op.event && l.id === op.listenerId) {\n            listeners.splice(i, 1);\n            break;\n          }\n        }\n        break;\n      case 'emit':\n        // iterate over a snapshot to allow removal during iteration\n        for (let i = 0; i < listeners.length; ) {\n          const l = listeners[i];\n          let match = false;\n          if (l.event === '*') {\n            match = true;\n          } else if (l.event.endsWith('.*')) {\n            const prefix = l.event.slice(0, -1); // keep trailing dot\n            if (op.event.startsWith(prefix)) match = true;\n          } else if (l.event === op.event) {\n            match = true;\n          }\n          if (match) {\n            logs.push({ listenerId: l.id, event: op.event, payload: op.payload });\n            if (l.once) {\n              listeners.splice(i, 1);\n              continue; // skip increment\n            }\n          }\n          i++;\n        }\n        break;\n      default:\n        // ignore unknown ops\n        break;\n    }\n  }\n\n  return { log: logs };\n}\n",
+        "reasoning": "We need to implement solve. Keep listeners map event-> array of {id, once}. Also a global wildcard \"*\" and prefix \"*\". For prefix: store as pattern with trailing '*', e.g., \"user.*\" match if event.startsWith(prefix.slice(0,-1)). We'll process operations in order.\n\nWhen emit: gather listeners: exact event key, plus \"*\" key, plus any prefix keys that match. Order of registration matters globally? Likely all listeners registered earlier should be invoked before later ones regardless of event type. So we need a single array of registrations preserving order with their event pattern and id and once flag. On emit, iterate through this array in order, check if listener matches current event, call log, remove if once.\n\nImplement. Return {log: logs}. Ensure not mutate input; just read operations.\n\nEdge cases: off removes specific listener from the event (pattern). So we need to find registration with that event pattern and id and remove it.\n\nLet's code.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 468,
+    "completion_tokens": 592,
+    "total_tokens": 1060,
+    "completion_tokens_details": {
+      "reasoning_tokens": 199
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

@@ -1,0 +1,55 @@
+def run(program: str) -> list[str]:
+    lines = program.strip().split('\n')
+    stack = []
+    output = []
+
+    for i, line in enumerate(lines):
+        if not line or line.startswith('#'):
+            continue
+
+        parts = line.split()
+        cmd = parts[0]
+
+        try:
+            if cmd == 'PUSH':
+                n = int(parts[1])
+                stack.append(n)
+            elif cmd == 'POP':
+                if len(stack) < 1:
+                    raise ValueError(f"Stack underflow at line {i + 1}")
+                stack.pop()
+            elif cmd in ('ADD', 'SUB', 'MUL', 'DIV'):
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {i + 1}")
+                b = stack.pop()
+                a = stack.pop()
+                if cmd == 'ADD':
+                    res = a + b
+                elif cmd == 'SUB':
+                    res = a - b
+                elif cmd == 'MUL':
+                    res = a * b
+                elif cmd == 'DIV':
+                    if b == 0:
+                        raise ZeroDivisionError(f"Division by zero at line {i + 1}")
+                    res = a // b
+                stack.append(res)
+            elif cmd == 'DUP':
+                if len(stack) < 1:
+                    raise ValueError(f"Stack underflow at line {i + 1}")
+                stack.append(stack[-1])
+            elif cmd == 'SWAP':
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {i + 1}")
+                a = stack.pop()
+                b = stack.pop()
+                stack.append(a)
+                stack.append(b)
+            elif cmd == 'PRINT':
+                if len(stack) < 1:
+                    raise ValueError(f"Stack underflow at line {i + 1}")
+                output.append(str(stack[-1]))
+        except Exception as e:
+            print(f"Error: {e}")
+
+    return output

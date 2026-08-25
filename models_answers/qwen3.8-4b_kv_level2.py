@@ -1,0 +1,192 @@
+from typing import Dict, Any
+
+
+class TransactionalStore:
+    """In-memory key-value store with nested transactions and WATCH support."""
+
+    def __init__(self):
+        self._data: Dict[str, Any] = {}  # Глобальное хранилище
+        self._transactions: list[Dict[str, Any]] = []  # Стек транзакций (вложенные)
+        self._watched_keys: set[str] = set()  # Ключи, за которыми наблюдаем
+
+    def set(self, key: str, value: Any) -> None:
+        """Установить значение ключа."""
+        if not isinstance(key, str):
+            raise ValueError("Key must be a string")
+        
+        old_value = self._get_visible_value(key)
+        new_value = value
+        
+        # Если WATCH активен для этого ключа и значение изменилось
+        if key in self._watched_keys and old_value != new_value:
+            print(f"WATCH {key} {old_value} -> {new_value}")
+        
+        self._data[key] = value
+
+    def get(self, key: str) -> Any:
+        """Вывести текущее значение ключа или 'NULL'."""
+        return self._get_visible_value(key)
+
+    def delete(self, key: str) -> None:
+        """Удалить ключ (без ошибки, если ключа нет)."""
+        old_value = self._get_visible_value(key)
+        
+        if key in self._watched_keys and old_value is not None:
+            print(f"WATCH {key} {old_value} -> NULL")
+        
+        if key in self._data:
+            del self._data[key]
+
+    def _get_visible_value(self, key: str) -> Any:
+        """Получить видимое значение ключа с учётом открытых транзакций."""
+        # Проверяем все открытые транзакции (внутренняя -> внешняя)
+        for tx in reversed(self._transactions):
+            if key in tx:
+                return tx[key]
+        
+        # Если нет в транзакциях, смотрим глобальное хранилище
+        return self._data.get(key, "NULL")
+
+    def begin_transaction(self) -> None:
+        """Начать новую транзакцию."""
+        transaction = {}  # Изменения относительно родителя
+        self._transactions.append(transaction)
+
+    def commit(self) -> str:
+        """Зафиксировать самую внутреннюю открытую транзакцию."""
+        if not self._transactions:
+            return "NO TRANSACTION"
+
+        current_tx = self._transactions[-1]
+        parent_tx = self._transactions[-2] if len(self._transactions) > 1 else None
+
+        # Применяем изменения текущей транзакции к глобальному хранилищу
+        for key, value in current_tx.items():
+            if key not in self._data:
+                self._data[key] = value
+            elif isinstance(value, dict):
+                parent_data = self._data.get(key)
+                if parent_data is None:
+                    self._data[key] = {}
+                    for k, v in value.items():
+                        self._data[key][k] = v
+                else:
+                    for k, v in value.items():
+                        if isinstance(parent_data, dict):
+                            parent_data[k] = v
+                        else:
+                            self._data[key] = {key: v}
+
+        # Если есть родительская транзакция, сливаем её изменения в неё
+        if parent_tx is not None and current_tx:
+            for key, value in current_tx.items():
+                if key in parent_tx:
+                    parent_tx[key] = value
+                else:
+                    parent_tx[key] = value
+
+        self._transactions.pop()
+        return ""  # Успешное коммит не выводит строку
+
+    def rollback(self) -> str:
+        """Откатить самую внутреннюю открытую транзакцию."""
+        if not self._transactions:
+            return "NO TRANSACTION"
+
+        current_tx = self._transactions[-1]
+
+        # Отменяем изменения текущей транзакции из глобального хранилища
+        for key in list(current_tx.keys()):
+            if key in self._data and isinstance(self._data[key], dict):
+                del self._data[key]
+            elif key in self._data:
+                del self._data[key]
+
+        # Отменяем изменения в родительской транзакции (если есть)
+        parent_tx = self._transactions[-2] if len(self._transactions) > 1 else None
+        if parent_tx is not None and current_tx:
+            for key in list(current_tx.keys()):
+                if key in parent_tx:
+                    del parent_tx[key]
+
+        self._transactions.pop()
+        return ""  # Успешный rollback не выводит строку
+
+    def count(self, value: Any) -> int:
+        """Вывести количество ключей с видимым значением, равным <value>."""
+        count = 0
+        for key in self._data.keys():
+            if self._get_visible_value(key) == value:
+                count += 1
+        return count
+
+    def watch(self, key: str) -> None:
+        """Начать наблюдение за ключом."""
+        if key not in self._watched_keys:
+            self._watched_keys.add(key)
+
+
+def run(program: str) -> list[str]:
+    """Выполнить программу команд и вернуть список строк вывода."""
+    store = TransactionalStore()
+    output = []
+
+    for line in program.strip().split("\n"):
+        if not line or line.isspace():
+            continue
+
+        parts = line.split(" ", 1)
+        command = parts[0].upper()
+
+        if command == "SET":
+            key, value = parts[1], parts[2]
+            store.set(key, value)
+        elif command == "GET":
+            key = parts[1]
+            result = store.get(key)
+            output.append(result)
+        elif command == "DELETE":
+            key = parts[1]
+            store.delete(key)
+        elif command == "BEGIN":
+            store.begin_transaction()
+        elif command == "COMMIT":
+            result = store.commit()
+            if result:
+                output.append(result)
+        elif command == "ROLLBACK":
+            result = store.rollback()
+            if result:
+                output.append(result)
+        elif command == "COUNT":
+            value = parts[1]
+            count = store.count(value)
+            output.append(str(count))
+        elif command == "WATCH":
+            key = parts[1]
+            store.watch(key)
+
+    return output
+
+
+if __name__ == "__main__":
+    # Пример использования
+    program = """SET a 10
+GET a
+BEGIN
+SET b 20
+GET b
+COMMIT
+GET a
+GET b
+ROLLBACK
+GET a
+GET b
+WATCH a
+SET a 30
+GET a
+DELETE a
+GET a
+COUNT 10"""
+
+    print(run(program))

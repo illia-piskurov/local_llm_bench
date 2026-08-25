@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-jt6owd6brfdx1m0gnt1xu",
+  "object": "chat.completion",
+  "created": 1787579065,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const { a, b } = input;\n\n  function isObject(v) {\n    return v !== null && typeof v === 'object' && !Array.isArray(v);\n  }\n\n  function deepEqual(x, y) {\n    if (x === y) return true;\n    if (x === null || y === null) return x === y;\n    const typeX = typeof x;\n    const typeY = typeof y;\n    if (typeX !== typeY) return false;\n\n    if (Array.isArray(x)) {\n      if (!Array.isArray(y)) return false;\n      if (x.length !== y.length) return false;\n      for (let i = 0; i < x.length; i++) {\n        if (!deepEqual(x[i], y[i])) return false;\n      }\n      return true;\n    }\n\n    if (isObject(x)) {\n      if (!isObject(y)) return false;\n      const keysX = Object.keys(x);\n      const keysY = Object.keys(y);\n      if (keysX.length !== keysY.length) return false;\n      for (const key of keysX) {\n        if (!deepEqual(x[key], y[key])) return false;\n      }\n      return true;\n    }\n\n    // primitives (number, string, boolean, symbol, bigint)\n    return x === y;\n  }\n\n  return deepEqual(a, b);\n}",
+        "reasoning": "Implement deep equality. Use recursion with type checks. Handle null separately. Use typeof and Array.isArray. Ensure no mutation. Return boolean.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 214,
+    "completion_tokens": 329,
+    "total_tokens": 543,
+    "completion_tokens_details": {
+      "reasoning_tokens": 28
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

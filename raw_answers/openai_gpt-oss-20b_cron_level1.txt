@@ -1,0 +1,47 @@
+```python
+import datetime
+from typing import List, Set
+
+def parse_field(field: str, min_val: int, max_val: int) -> Set[int]:
+    result = set()
+    if field == '*':
+        return set(range(min_val, max_val + 1))
+    parts = field.split(',')
+    for part in parts:
+        if '-' in part:
+            a, b = part.split('-')
+            a, b = int(a), int(b)
+            result.update(range(a, b + 1))
+        else:
+            result.add(int(part))
+    return result
+
+def parse_cron(cron: str):
+    minute_str, hour_str, dom_str, month_str, dow_str = cron.strip().split()
+    minutes = parse_field(minute_str, 0, 59)
+    hours   = parse_field(hour_str, 0, 23)
+    days_mo = parse_field(dom_str, 1, 31)
+    months  = parse_field(month_str, 1, 12)
+    days_wk = parse_field(dow_str, 0, 6)
+    return minutes, hours, days_mo, months, days_wk
+
+def next_runs(cron: str, from_time: str, count: int) -> List[str]:
+    minutes, hours, days_mo, months, days_wk = parse_cron(cron)
+    start_dt = datetime.datetime.fromisoformat(from_time.replace('Z', '+00:00'))
+    # Ensure we start after the given time
+    current = start_dt + datetime.timedelta(minutes=1)
+    current = current.replace(second=0, microsecond=0)
+
+    results = []
+    while len(results) < count:
+        if (current.minute in minutes and
+            current.hour   in hours   and
+            current.month  in months  and
+            current.day    in days_mo and
+            current.weekday() % 7 in days_wk):
+            # ISO format with milliseconds .000Z
+            iso_str = current.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+            results.append(iso_str)
+        current += datetime.timedelta(minutes=1)
+    return results
+```

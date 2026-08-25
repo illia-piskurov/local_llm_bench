@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "google/gemma-3-4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    \"\"\"\n    Выполняет топологическую сортировку задач с зависимостями.\n\n    Args:\n        tasks (dict): Словарь, где ключ - имя задачи, а значение - список зависимых задач.\n\n    Returns:\n        list[str]: Список имён задач в порядке топологической сортировки или None, если есть цикл.\n    \"\"\"\n    in_degree = {}\n    for task in tasks:\n        in_degree[task] = 0\n    for task in tasks:\n        for dependency in tasks[task]:\n            if dependency in in_degree:\n                in_degree[task] += 1\n            else:\n                return None\n\n    queue = []\n    for task in in_degree:\n        if in_degree[task] == 0:\n            queue.append(task)\n\n    result = []\n    while queue:\n        task = queue.pop(0)\n        result.append(task)\n        for dependent in tasks:\n            if task in tasks[dependent]:\n                in_degree[dependent] -= 1\n                if in_degree[dependent] == 0:\n                    queue.append(dependent)\n\n    if len(result) != len(tasks):\n        return None\n    else:\n        return result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 225,
+    "total_output_tokens": 310,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 7.311875008638626,
+    "time_to_first_token_seconds": 5.018658,
+    "model_load_time_seconds": 17.084
+  },
+  "response_id": "resp_9de108b6aa0800510fa7b835837790e07113464ab07fd3e8"
+}

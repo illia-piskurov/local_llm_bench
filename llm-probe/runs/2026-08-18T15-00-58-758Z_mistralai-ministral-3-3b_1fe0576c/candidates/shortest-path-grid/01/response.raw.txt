@@ -1,0 +1,30 @@
+```javascript
+export function solve(input) {
+    const { grid, start, end } = input;
+    const rows = grid.length;
+    if (rows === 0) return -1;
+    const cols = grid[0].length;
+
+    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    const visited = Array(rows).fill().map(() => Array(cols).fill(false));
+    const queue = [{ x: start[0], y: start[1], steps: 0 }];
+    const target = { x: end[0], y: end[1] };
+
+    while (queue.length > 0) {
+        const current = queue.shift();
+        if (current.x === target.x && current.y === target.y) return current.steps;
+
+        for (const [dx, dy] of directions) {
+            const nx = current.x + dx;
+            const ny = current.y + dy;
+            if (nx >= 0 && nx < rows && ny >= 0 && ny < cols &&
+                grid[nx][ny] === 0 && !visited[nx][ny]) {
+                visited[nx][ny] = true;
+                queue.push({ x: nx, y: ny, steps: current.steps + 1 });
+            }
+        }
+    }
+
+    return -1;
+}
+```

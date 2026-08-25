@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-yufubtvk90jq2tei7sh6gc",
+  "object": "chat.completion",
+  "created": 1787127575,
+  "model": "qwen/qwen3-4b-2507",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const query = input.query;\n    if (!query || query === '') return {};\n\n    // Strip leading '?'\n    const queryString = query.startsWith('?') ? query.substring(1) : query;\n\n    // Split by '&' to get pairs\n    const pairs = queryString.split('&');\n    \n    const result = {};\n\n    for (const pair of pairs) {\n        let [key, value] = pair.split('=');\n\n        // If no '=' found, value is true\n        if (!value) {\n            value = 'true';\n        }\n\n        // Decode key and value\n        key = decodeURIComponent(key);\n        value = decodeURIComponent(value);\n\n        // Handle nested keys with bracket notation\n        const keyParts = key.split('[');\n        const lastPart = keyParts[keyParts.length - 1];\n        \n        // Check if key ends with '[]' - indicates array collection\n        const hasArraySuffix = lastPart.endsWith('[]');\n        const isNested = keyParts.length > 1;\n        \n        // If it's a nested object (e.g. user[address][city])\n        if (isNested) {\n            const baseKey = keyParts.slice(0, -1).join('[');\n            const nestedKey = keyParts[keyParts.length - 1].replace(']', '');\n            \n            // Process the nested path\n            let current = result;\n            const parts = baseKey.split('[');\n            \n            // Traverse to the base object\n            for (let i = 0; i < parts.length - 1; i++) {\n                const part = parts[i];\n                if (!current[part]) {\n                    current[part] = {};\n                }\n                current = current[part];\n            }\n            \n            // Now handle the final key with value\n            if (hasArraySuffix) {\n                // Array collection - collect values in array\n                const arrayKey = nestedKey;\n                const arrayValue = value;\n                if (!current[arrayKey]) {\n                    current[arrayKey] = [];\n                }\n                current[arrayKey].push(arrayValue);\n            } else {\n                // Nested object - assign value\n                current[nestedKey] = parseValue(value);\n            }\n        } else {\n            // Simple key-value pair\n            if (hasArraySuffix) {\n                // Array collection - collect values in array\n                const arrayKey = key.replace('[]', '');\n                if (!result[arrayKey]) {\n                    result[arrayKey] = [];\n                }\n                result[arrayKey].push(parseValue(value));\n            } else {\n                result[key] = parseValue(value);\n            }\n        }\n    }\n\n    return result;\n}\n\nfunction parseValue(value) {\n    // Check if value is a finite number\n    if (typeof value === 'string' && /^-?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][+-]?\\d+)?$/.test(value)) {\n        const num = parseFloat(value);\n        if (!isNaN(num)) return Number.isInteger(num) ? parseInt(value) : num;\n    }\n    \n    // Check for boolean\n    if (value === 'true') return true;\n    if (value === 'false') return false;\n    \n    // Otherwise return as string\n    return value;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 336,
+    "completion_tokens": 676,
+    "total_tokens": 1012,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen/qwen3-4b-2507"
+}

@@ -1,0 +1,25 @@
+export function solve(input) {
+    return input.requests.map(request => {
+        const user = request.user;
+        const permission = request.permission;
+
+        if (!input.users[user]) return false; // User not found
+
+        let allow = input.users[user].allows || [];
+        const deny = input.users[user].denies || [];
+
+        for (const rule of allow) {
+            if (rule === '*' || rule.startsWith(permission + ':') || rule === permission) {
+                return true;
+            }
+        }
+
+        for (const rule of deny) {
+            if (rule === '*' || rule.startsWith(permission + ':') || rule === permission) {
+                return false;
+            }
+        }
+
+        return true; // Default: allow if no explicit deny found
+    });
+}

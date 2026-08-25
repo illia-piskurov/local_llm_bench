@@ -1,0 +1,81 @@
+```python
+def run(program: str) -> list[str]:
+    stack = []
+    output = []
+    lines = program.splitlines()
+
+    for line_number, line in enumerate(lines, start=1):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+
+        parts = line.split()
+        command = parts[0]
+
+        try:
+            if command == "PUSH":
+                if len(parts) != 2:
+                    raise ValueError(f"Invalid arguments for PUSH at line {line_number}")
+                stack.append(int(parts[1]))
+
+            elif command == "POP":
+                if not stack:
+                    raise ValueError(f"Stack underflow at line {line_number}")
+                stack.pop()
+
+            elif command == "ADD":
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {line_number}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+
+            elif command == "SUB":
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {line_number}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a - b)
+
+            elif command == "MUL":
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {line_number}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+
+            elif command == "DIV":
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {line_number}")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise ZeroDivisionError(f"Division by zero at line {line_number}")
+                stack.append(a // b)
+
+            elif command == "DUP":
+                if not stack:
+                    raise ValueError(f"Stack underflow at line {line_number}")
+                stack.append(stack[-1])
+
+            elif command == "SWAP":
+                if len(stack) < 2:
+                    raise ValueError(f"Stack underflow at line {line_number}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(b)
+                stack.append(a)
+
+            elif command == "PRINT":
+                if not stack:
+                    raise ValueError(f"Stack underflow at line {line_number}")
+                output.append(str(stack[-1]))
+
+            else:
+                raise ValueError(f"Unknown command '{command}' at line {line_number}")
+
+        except (ValueError, ZeroDivisionError):
+            raise
+
+    return output
+```

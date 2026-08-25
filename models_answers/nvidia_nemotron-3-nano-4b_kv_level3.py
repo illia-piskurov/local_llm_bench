@@ -1,0 +1,93 @@
+def run(program: str) -> list[str]:
+    store = {}
+    stack = []                     # each element is a dict {key: (new_val, old_val)}
+    output = []
+    observed = set()               # keys under WATCH
+
+    _snapshots = {}                # global snapshot storage
+
+    for line in program.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split()
+        cmd = parts[0]
+
+        if cmd == "SET":
+            key, value = parts[1], parts[2]
+            old_val = store.get(key)
+            new_val = value
+            # WATCH notification
+            if key in observed and old_val != new_val:
+                output.append(f"WATCH {key} {old_val or 'NULL'} -> {new_val or 'NULL'}")
+            # transaction record
+            tx = stack[-1] if stack else None
+            if tx:
+                tx[key] = (value, old_val)
+            store[key] = value
+
+        elif cmd == "GET":
+            val = store.get(parts[1])
+            output.append(val if val is not None else "NULL")
+
+        elif cmd == "DELETE":
+            key = parts[1]
+            if key in store:
+                old_val = store[key]
+                new_val = None
+                # WATCH notification
+                if key in observed and old_val != new_val:
+                    output.append(f"WATCH {key} {old_val or 'NULL'} -> NULL")
+                # transaction record
+                tx = stack[-1] if stack else None
+                if tx:
+                    tx[key] = (None, old_val)
+                del store[key]
+
+        elif cmd == "BEGIN":
+            stack.append({})
+
+        elif cmd == "COMMIT":
+            if not stack:
+                output.append("NO TRANSACTION")
+            else:
+                tx = stack.pop()
+                parent = stack[-1] if stack else None
+                for k, (new_val, old_val) in tx.items():
+                    if parent is not None:
+                        parent[k] = (new_val, old_val)
+
+        elif cmd == "ROLLBACK":
+            if not stack:
+                output.append("NO TRANSACTION")
+            else:
+                tx = stack.pop()
+                for k, (new_val, old_val) in tx.items():
+                    if new_val is not None:
+                        store[k] = old_val
+                    else:
+                        del store[k]
+
+        elif cmd == "COUNT":
+            value = int(parts[1])
+            count = sum(1 for v in store.values() if int(v) == value)
+            output.append(str(count))
+
+        elif cmd == "WATCH":
+            observed.add(parts[1])
+
+        elif cmd == "SNAPSHOT":
+            name = parts[1]
+            _snapshots[name] = (dict(store.items()), [tx.copy() for tx in stack], set(observed))
+
+        elif cmd == "RESTORE":
+            name = parts[1]
+            if name not in _snapshots:
+                # no effect per spec
+                continue
+            store.clear()
+            store.update(_snapshots[name][0])
+            stack[:] = _snapshots[name][1]
+            observed.clear()
+            observed.update(_snapshots[name][2])
+
+    return output

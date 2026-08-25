@@ -1,0 +1,4 @@
+{"at":"2026-08-18T18:37:19.335Z","type":"run_started"}
+{"at":"2026-08-18T18:37:19.372Z","type":"request_started","taskId":"flat-to-tree","attempt":1}
+{"at":"2026-08-18T18:42:23.656Z","type":"provider_error","taskId":"flat-to-tree","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
+{"at":"2026-08-18T18:42:23.660Z","type":"request_started","taskId":"paginate-and-sort","attempt":1}

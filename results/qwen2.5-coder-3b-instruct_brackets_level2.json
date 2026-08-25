@@ -1,0 +1,21 @@
+{
+  "model": "qwen2.5-coder-3b-instruct",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-08-17 16:22:30",
+  "passed": 4,
+  "total": 15,
+  "failures": [
+    "max_depth/flat: неожиданное исключение: name 'mapping' is not defined",
+    "max_depth/nested3: неожиданное исключение: name 'mapping' is not defined",
+    "max_depth/mixed_types_nested: неожиданное исключение: name 'mapping' is not defined",
+    "max_depth/stray_closing_ignored: ожидалось 3, получено -1",
+    "max_depth/mismatched_type_not_popped: неожиданное исключение: name 'mapping' is not defined",
+    "find_unmatched/all_matched: неожиданное исключение: name 'mapping' is not defined",
+    "find_unmatched/mismatch_and_unclosed: неожиданное исключение: name 'mapping' is not defined",
+    "find_unmatched/stray_close_after_valid_pair: неожиданное исключение: name 'mapping' is not defined",
+    "find_unmatched/wrong_order_classic: неожиданное исключение: name 'mapping' is not defined",
+    "find_unmatched/mixed_with_text: неожиданное исключение: name 'mapping' is not defined",
+    "find_unmatched/fully_balanced_nested: неожиданное исключение: name 'mapping' is not defined"
+  ]
+}

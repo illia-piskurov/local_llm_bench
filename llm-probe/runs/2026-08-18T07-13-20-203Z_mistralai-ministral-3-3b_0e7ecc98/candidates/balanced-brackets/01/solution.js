@@ -1,0 +1,16 @@
+export function solve(input) {
+    const text = input.text;
+    const stack = [];
+    const bracketPairs = { ')': '(', ']': '[', '}': '{' };
+
+    for (const char of text) {
+        if (char === '(' || char === '[' || char === '{') {
+            stack.push(char);
+        } else if (bracketPairs[char]) {
+            const lastOpen = stack.pop();
+            if (lastOpen !== bracketPairs[char]) return false;
+        }
+    }
+
+    return stack.length === 0;
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-sgp7ouosm8qmi2tguefbjb",
+  "object": "chat.completion",
+  "created": 1787072973,
+  "model": "google/gemma-4-e4b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const round = (num) => Math.round(num * 100) / 100;\n\n    // 1. Subtotal Calculation\n    let subtotalRaw = input.items.reduce((acc, item) => acc + (item.price * item.qty), 0);\n    const subtotal = round(subtotalRaw);\n\n    // Initialize discount\n    let discountAmount = 0;\n\n    if (input.coupon && input.coupon.type) {\n        const coupon = input.coupon;\n\n        switch (coupon.type) {\n            case 'percent':\n                const percentDiscount = subtotal * (coupon.value / 100);\n                discountAmount = Math.min(subtotal, percentDiscount);\n                break;\n\n            case 'fixed':\n                // Fixed discount cannot exceed the subtotal\n                discountAmount = Math.min(subtotal, coupon.value);\n                break;\n\n            case 'category_percent': {\n                const category = coupon.category;\n                const value = coupon.value;\n                let categoryDiscountRaw = 0;\n\n                if (category && typeof value === 'number' && value > 0) {\n                    // Calculate discount only for matching categories\n                    for (const item of input.items) {\n                        if (item.category === category) {\n                            const itemSubtotal = item.price * item.qty;\n                            const categoryDiscountForItem = itemSubtotal * (value / 100);\n                            categoryDiscountRaw += categoryDiscountForItem;\n                        }\n                    }\n                }\n\n                // Cap the discount at subtotal\n                discountAmount = Math.min(subtotal, categoryDiscountRaw);\n                break;\n            }\n        }\n    } else {\n        discountAmount = 0;\n    }\n\n    // Apply rounding to the determined discount amount\n    const finalDiscount = round(discountAmount);\n\n    // Calculate base for tax (must be non-negative)\n    const taxableBase = Math.max(0, subtotal - finalDiscount);\n\n    // 3. Tax Calculation\n    let taxRate = input.taxRate !== undefined ? input.taxRate : 0;\n    \n    // Rule: Math.round((subtotal - discount) * taxRate * 100) / 100. (0 if taxRate omitted).\n    const taxRaw = taxableBase * taxRate;\n    const tax = round(taxRaw);\n\n    // 4. Total Calculation\n    // Rule: Math.round((subtotal - discount + tax) * 100) / 100\n    const totalRaw = subtotal - finalDiscount + tax;\n    const total = round(totalRaw);\n\n\n    return {\n        subtotal: parseFloat(subtotal.toFixed(2)),\n        discount: parseFloat(finalDiscount.toFixed(2)),\n        tax: parseFloat(tax.toFixed(2)),\n        total: parseFloat(total.toFixed(2))\n    };\n}",
+        "reasoning_content": "Plan:\n1. Define the `solve` function that takes the input object.\n2. Calculate the subtotal by iterating over `input.items`.\n3. Calculate the discount based on `input.coupon` and `input.items`. This needs to handle three types: 'percent', 'fixed', and 'category_percent'.\n4. Apply capping rules for the discount (cannot exceed subtotal).\n5. Calculate tax using the remaining amount (`subtotal - discount`) and `input.taxRate`.\n6. Calculate the total.\n7. Ensure all intermediate results are rounded to 2 decimal places.\n\nStep 1 & 2: Subtotal Calculation\nIterate through items, calculate `price * qty`, and sum them up. Rounding must happen at the end for the subtotal value itself.\n\nStep 3 & 4: Discount Calculation\nA helper function or logic block is needed to handle coupon types.\n\n*   If `coupon` is missing, discount = 0.\n*   If `type` is 'percent': `discount = subtotal * (value / 100)`.\n*   If `type` is 'fixed': `discount = Math.min(subtotal, value)`.\n*   If `type` is 'category_percent': Iterate through items again. Only calculate discount for matching categories. Sum these specific discounts.\n\nStep 5: Tax Calculation\nTax base = `Math.max(0, subtotal - discount)`.\n`tax = Math.round(tax_base * taxRate * 100) / 100`. Handle missing `taxRate`.\n\nStep 6 & 7: Total Calculation and Rounding\nTotal = `subtotal - discount + tax`.\nAll results must be rounded to two decimal places. Using a dedicated rounding utility function will ensure consistency.\n\nLet's structure the implementation carefully, ensuring floating-point precision issues are handled by explicit rounding steps.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 474,
+    "completion_tokens": 1084,
+    "total_tokens": 1558,
+    "completion_tokens_details": {
+      "reasoning_tokens": 413
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-4-e4b"
+}

@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "google/gemma-4-e2b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-08-17 20:49:15",
+  "stats": {
+    "input_tokens": 329,
+    "total_output_tokens": 1959,
+    "reasoning_output_tokens": 859,
+    "tokens_per_second": 31.96559320798209,
+    "time_to_first_token_seconds": 0.7356710000000001,
+    "model_load_time_seconds": null
+  }
+}

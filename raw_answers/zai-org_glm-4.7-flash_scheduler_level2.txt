@@ -1,0 +1,63 @@
+```python
+from collections import deque
+
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    # Собираем множества всех задач
+    all_tasks = set(tasks.keys())
+    for deps in tasks.values():
+        all_tasks.update(deps)
+
+    # Вычисляем количество зависимостей (in-degree) для каждой задачи
+    indegree = {task: 0 for task in all_tasks}
+    for task, deps in tasks.items():
+        for dep in deps:
+            indegree[dep] += 1
+
+    # Инициализируем очередь задач, которые можно выполнить сразу (in-degree == 0)
+    queue = deque([task for task in all_tasks if indegree[task] == 0])
+
+    result = []
+    while queue:
+        current = queue.popleft()
+        result.append(current)
+
+        # Находим задачи, которые зависят от текущей
+        for task, deps in tasks.items():
+            if current in deps:
+                indegree[task] -= 1
+                if indegree[task] == 0:
+                    queue.append(task)
+
+    # Если количество обработанных задач не равно общему количеству,
+    # значит, есть цикл, и топологическая сортировка невозможна
+    if len(result) != len(all_tasks):
+        return None
+
+    return result
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    # Проверяем на наличие циклов
+    topo_order = topo_sort(tasks)
+    if topo_order is None:
+        return None
+
+    # Словарь для хранения длительностей задач
+    durations = {task: dur for task, (dur, _) in tasks.items()}
+    # Словарь для хранения раннего времени окончания (earliest finish)
+    earliest_finish = {task: 0 for task in tasks}
+
+    for task in topo_order:
+        dur = durations[task]
+        deps = tasks[task][1]
+
+        # Находим максимальное время окончания среди всех зависимостей
+        max_start = 0
+        for dep in deps:
+            if earliest_finish[dep] > max_start:
+                max_start = earliest_finish[dep]
+
+        earliest_finish[task] = max_start + dur
+
+    # Длина критического пути — это максимальное время окончания среди всех задач
+    return max(earliest_finish.values())
+```

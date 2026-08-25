@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-cw3xb7xcockx1yow8j6x",
+  "object": "chat.completion",
+  "created": 1787139544,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```js\nexport function solve(input) {\n    const { program } = input;\n    const lines = program.split('\\n').map(line => line.trim());\n    const output = [];\n    let stack = [];\n    let labelJumpTargets = new Map();\n    let executionStepCount = 0;\n    let lineNum = 1;\n\n    for (const line of lines) {\n        if (line.startsWith('#')) continue;\n        if (!line) break;\n\n        const parts = line.split(' ');\n        const [instruction, ...args] = parts;\n\n        switch (instruction) {\n            case 'PUSH':\n                stack.push(parseInt(args[0]));\n                break;\n            case 'POP':\n                if (stack.length === 0) return { error: \"Stack underflow at line \" + lineNum };\n                stack.pop();\n                break;\n            case 'ADD':\n                if (stack.length < 2) return { error: \"Stack underflow at line \" + lineNum };\n                const b = stack.pop();\n                const a = stack.pop();\n                stack.push(a + b);\n                break;\n            case 'SUB':\n                if (stack.length < 2) return { error: \"Stack underflow at line \" + lineNum };\n                const b = stack.pop();\n                const a = stack.pop();\n                stack.push(a - b);\n                break;\n            case 'MUL':\n                if (stack.length < 2) return { error: \"Stack underflow at line \" + lineNum };\n                const b = stack.pop();\n                const a = stack.pop();\n                stack.push(a * b);\n                break;\n            case 'DIV':\n                if (stack.length < 2 || args[0] === '0') {\n                    return { error: \"Division by zero at line \" + lineNum };\n                }\n                const b = parseInt(args[0]);\n                const a = stack.pop();\n                stack.push(Math.trunc(a / b));\n                break;\n            case 'DUP':\n                if (stack.length === 0) return { error: \"Stack underflow at line \" + lineNum };\n                stack.push(stack[stack.length - 1]);\n                break;\n            case 'SWAP':\n                if (stack.length < 2) return { error: \"Stack underflow at line \" + lineNum };\n                const temp = stack.pop();\n                stack.push(stack[stack.length - 1]);\n                stack.push(temp);\n                break;\n            case 'PRINT':\n                if (stack.length === 0) return { error: \"Stack underflow at line \" + lineNum };\n                output.push(stack.pop().toString());\n                break;\n            case 'LABEL':\n                labelJumpTargets.set(args[0], executionStepCount);\n                break;\n            case 'JMP':\n                executionStepCount = labelJumpTargets.get(args[0]) || 1001; // Default to max steps if label not found\n                break;\n            case 'JZ':\n                if (stack.length === 0) return { error: \"Stack underflow at line \" + lineNum };\n                if (stack.pop() === 0) executionStepCount = labelJumpTargets.get(args[0]) || 1001; // Default to max steps if label not found\n                break;\n            case 'JNZ':\n                if (stack.length === 0) return { error: \"Stack underflow at line \" + lineNum };\n                if (stack.pop() !== 0) executionStepCount = labelJumpTargets.get(args[0]) || 1001; // Default to max steps if label not found\n                break;\n            default:\n                return { error: `Unknown instruction '${instruction}' at line ${lineNum}` };\n        }\n\n        executionStepCount++;\n        if (executionStepCount > 1000) {\n            return { error: \"Execution step limit exceeded\" };\n        }\n    }\n\n    return { output };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 551,
+    "completion_tokens": 811,
+    "total_tokens": 1362,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

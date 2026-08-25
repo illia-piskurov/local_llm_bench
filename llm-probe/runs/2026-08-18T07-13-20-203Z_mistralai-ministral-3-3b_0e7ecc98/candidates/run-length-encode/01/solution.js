@@ -1,0 +1,17 @@
+export function solve(input) {
+    const text = input.text;
+    let result = [];
+    let count = 1;
+
+    for (let i = 1; i < text.length; i++) {
+        if (text[i] === text[i - 1]) {
+            count++;
+        } else {
+            result.push(`${count}${text[i - 1]}`);
+            count = 1;
+        }
+    }
+    result.push(`${count}${text[text.length - 1]}`);
+
+    return result.join('');
+}

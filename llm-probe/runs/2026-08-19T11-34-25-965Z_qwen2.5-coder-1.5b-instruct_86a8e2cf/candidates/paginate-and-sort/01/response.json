@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-k9i9lv2zy3gicpema52to",
+  "object": "chat.completion",
+  "created": 1787139270,
+  "model": "qwen2.5-coder-1.5b-instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const filter = input.filter || {};\n  const sort = input.sort || {};\n  const page = input.page || 1;\n  const pageSize = input.pageSize || 10;\n\n  let items = input.items.slice();\n\n  if (filter.field && filter.op) {\n    switch (filter.op.toLowerCase()) {\n      case 'eq':\n        items = items.filter(item => item[filter.field] === filter.value);\n        break;\n      case 'neq':\n        items = items.filter(item => item[filter.field] !== filter.value);\n        break;\n      case 'gt':\n        items = items.filter(item => item[filter.field] > filter.value);\n        break;\n      case 'gte':\n        items = items.filter(item => item[filter.field] >= filter.value);\n        break;\n      case 'lt':\n        items = items.filter(item => item[filter.field] < filter.value);\n        break;\n      case 'lte':\n        items = items.filter(item => item[filter.field] <= filter.value);\n        break;\n      case 'contains':\n        const regex = new RegExp(filter.value, 'i');\n        items = items.filter(item => regex.test(item[filter.field]));\n        break;\n    }\n  }\n\n  if (sort.field && sort.dir) {\n    items.sort((a, b) => {\n      if (sort.dir === 'asc') {\n        return a[sort.field] - b[sort.field];\n      } else {\n        return b[sort.field] - a[sort.field];\n      }\n    });\n  }\n\n  const total = items.length;\n  const totalPages = Math.ceil(total / pageSize);\n\n  return { items, total, page, totalPages };\n}",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 377,
+    "completion_tokens": 348,
+    "total_tokens": 725,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "qwen2.5-coder-1.5b-instruct"
+}

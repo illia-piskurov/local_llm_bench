@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "brackets",
+  "level": "level1",
+  "tested_at": "2026-07-12 20:18:03",
+  "stats": {
+    "input_tokens": 212,
+    "total_output_tokens": 128,
+    "reasoning_output_tokens": 34,
+    "tokens_per_second": 21.632686448406382,
+    "time_to_first_token_seconds": 1.068384,
+    "model_load_time_seconds": 3.097
+  }
+}

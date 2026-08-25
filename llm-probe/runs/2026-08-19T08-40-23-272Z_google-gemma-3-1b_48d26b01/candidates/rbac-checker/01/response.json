@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-n1k4n11ubkgopds69elkj",
+  "object": "chat.completion",
+  "created": 1787128868,
+  "model": "google/gemma-3-1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n  const results = [];\n\n  for (const request of input.requests) {\n    const user = request.user;\n    const permissions = request.permissions;\n\n    if (!permissions || !permissions.roles) {\n      results.push(false);\n      continue;\n    }\n\n    let grantOrDeny = false;\n\n    for (const roleName in permissions) {\n      if (permissions.hasOwnProperty(roleName)) {\n        if (permissions[roleName].includes('posts:read')) {\n          grantOrDeny = true;\n        } else if (permissions[roleName].toLowerCase().includes('*')) {\n          grantOrDeny = true;\n        } else if (permissions[roleName].toLowerCase() === 'users:delete') {\n          grantOrDeny = true;\n        }\n      }\n    }\n\n    results.push(grantOrDeny);\n  }\n\n  return results;\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 391,
+    "completion_tokens": 219,
+    "total_tokens": 610,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "google/gemma-3-1b"
+}

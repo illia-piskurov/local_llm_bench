@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "google/gemma-3-1b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    \"\"\"\n    Планировщик задач с зависимостями, приоритетами и ограниченным числом исполнителей в одном Python файле.\n\n    Каждая задача задаётся кортежем (duration, deps, priority):\n    - duration — длительность задачи в целых единицах времени;\n    - deps — список имён задач, которые должны завершиться раньше;\n    - priority — приоритет задачи, чем больше, тем раньше она должна стартовать.\n\n    Правила выполнения:\n    - задачи выполняются не прерываясь;\n    - одновременно могут идти не более workers задач;\n    - когда несколько задач готовы к запуску, выбирай сначала с большим priority,\n      затем с меньшей duration, затем по имени по возрастанию;\n    - если несколько задач стартуют в один и тот же момент, возвращай их в list[str]\n      в порядке этого же правила;\n    - если в зависимостях есть цикл, верни None.\n\n    В ответе верни только код одним блоком ```python ... ```\n    \"\"\"\n    task_map = {task: (duration, deps, priority) for task, (duration, deps, priority) in tasks.items()}\n    completed = set()\n    ready = []\n    schedule = []\n\n    while len(completed) < len(tasks):\n        for task, (duration, deps, priority) in task_map.items():\n            if task not in completed:\n                ready.append(task)\n\n        if not ready:\n            return None  # No tasks are ready to be scheduled\n\n        available_tasks = []\n        for task in ready:\n            if len(schedule) < workers:\n                available_tasks.append(task)\n\n        if not available_tasks:\n            return None\n\n        chosen_task = min(available_tasks, key=lambda x: priority_queue[0] if x in task_map else 0)\n        \n        for dep in tasks[chosen_task][1]:\n            completed.add(dep)\n        \n        schedule.append(chosen_task)\n\n        if len(schedule) == workers:\n            break\n\n    return schedule\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 264,
+    "total_output_tokens": 511,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 43.21594270800738,
+    "time_to_first_token_seconds": 0.29642
+  },
+  "response_id": "resp_8d014c487b4f48efba961141ffe092801b71fb19800bf72d"
+}

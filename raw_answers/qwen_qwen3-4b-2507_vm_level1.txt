@@ -1,0 +1,79 @@
+```python
+def run(program: str) -> list[str]:
+    lines = program.strip().split('\n')
+    stack = []
+    output = []
+    for line_num, line in enumerate(lines, 1):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        parts = line.split()
+        instruction = parts[0]
+        
+        if instruction == 'PUSH':
+            if len(parts) != 2:
+                raise ValueError(f"Invalid PUSH instruction at line {line_num}")
+            try:
+                value = int(parts[1])
+                stack.append(value)
+            except ValueError:
+                raise ValueError(f"Invalid number in PUSH at line {line_num}")
+                
+        elif instruction == 'POP':
+            if len(stack) == 0:
+                raise ValueError(f"Stack underflow at line {line_num}")
+            stack.pop()
+            
+        elif instruction == 'ADD':
+            if len(stack) < 2:
+                raise ValueError(f"Stack underflow at line {line_num}")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a + b)
+            
+        elif instruction == 'SUB':
+            if len(stack) < 2:
+                raise ValueError(f"Stack underflow at line {line_num}")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+            
+        elif instruction == 'MUL':
+            if len(stack) < 2:
+                raise ValueError(f"Stack underflow at line {line_num}")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a * b)
+            
+        elif instruction == 'DIV':
+            if len(stack) < 2:
+                raise ValueError(f"Stack underflow at line {line_num}")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise ValueError(f"Division by zero at line {line_num}")
+            stack.append(a // b)
+            
+        elif instruction == 'DUP':
+            if len(stack) == 0:
+                raise ValueError(f"Stack underflow at line {line_num}")
+            stack.append(stack[-1])
+            
+        elif instruction == 'SWAP':
+            if len(stack) < 2:
+                raise ValueError(f"Stack underflow at line {line_num}")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a)
+            stack.append(b)
+            
+        elif instruction == 'PRINT':
+            if len(stack) == 0:
+                raise ValueError(f"Stack underflow at line {line_num}")
+            output.append(str(stack[-1]))
+            
+        else:
+            raise ValueError(f"Unknown instruction '{instruction}' at line {line_num}")
+    
+    return output
+```

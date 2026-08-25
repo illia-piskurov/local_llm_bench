@@ -1,0 +1,31 @@
+```javascript
+export function solve(input) {
+  const { n, edges } = input;
+  const adjList = Array.from({ length: n }, () => []);
+  const inDegree = new Array(n).fill(0);
+
+  // Build graph and compute in-degrees
+  for (const [u, v] of edges) {
+    adjList[u].push(v);
+    inDegree[v]++;
+  }
+
+  const queue = [];
+  for (let i = 0; i < n; i++) {
+    if (inDegree[i] === 0) queue.push(i);
+  }
+
+  const result = [];
+  while (queue.length > 0) {
+    const node = queue.shift();
+    result.push(node);
+
+    for (const neighbor of adjList[node]) {
+      inDegree[neighbor]--;
+      if (inDegree[neighbor] === 0) queue.push(neighbor);
+    }
+  }
+
+  return result.length === n ? result : null;
+}
+```

@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef max_depth(s: str) -> int:\n    stack = []\n    max_depth = 0\n    \n    for char in s:\n        if char in '([{':\n            stack.append(char)\n            max_depth = max(max_depth, len(stack))\n        elif char in ')]}':\n            if not stack or stack[-1] != matching_bracket[char]:\n                continue\n            stack.pop()\n    \n    return max_depth\n\ndef find_unmatched(s: str) -> list[int]:\n    stack = []\n    unmatched_indices = []\n    matching_bracket = {')': '(', ']': '[', '}': '{'}\n    \n    for i, char in enumerate(s):\n        if char in '([{':\n            stack.append((char, i))\n        elif char in ')]}':\n            if not stack or stack[-1][0] != matching_bracket[char]:\n                unmatched_indices.append(i)\n            else:\n                stack.pop()\n    \n    unmatched_indices.extend(i for _, i in stack)\n    return sorted(unmatched_indices)\n\nmatching_bracket = {')': '(', ']': '[', '}': '{'}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 820,
+    "total_output_tokens": 229,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 42.44279998672967,
+    "time_to_first_token_seconds": 2.328799,
+    "model_load_time_seconds": 3.719
+  },
+  "response_id": "resp_45faf3fde5fc84beb05ddb1a8ab28ef739b883e01daac898"
+}

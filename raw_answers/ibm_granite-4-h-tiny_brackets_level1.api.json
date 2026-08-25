@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef is_balanced(s: str) -> bool:\n    stack = []\n    matching_bracket = {')': '(', ']': '[', '}': '{'}\n    \n    for char in s:\n        if char in '([{':\n            stack.append(char)\n        elif char in ')]}':\n            if not stack or stack[-1] != matching_bracket[char]:\n                return False\n            stack.pop()\n    \n    return len(stack) == 0\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 270,
+    "total_output_tokens": 98,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 42.84671848787809,
+    "time_to_first_token_seconds": 2.6139270000000003,
+    "model_load_time_seconds": 7.398
+  },
+  "response_id": "resp_8ccd087123a371427209d19ae4cfd6b0b7a6285396ec5fc1"
+}

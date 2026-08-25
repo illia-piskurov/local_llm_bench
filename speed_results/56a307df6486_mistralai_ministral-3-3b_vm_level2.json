@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-08-17 22:12:18",
+  "stats": {
+    "input_tokens": 1601,
+    "total_output_tokens": 840,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 22.646563096923973,
+    "time_to_first_token_seconds": 5.660972,
+    "model_load_time_seconds": 7.461
+  }
+}

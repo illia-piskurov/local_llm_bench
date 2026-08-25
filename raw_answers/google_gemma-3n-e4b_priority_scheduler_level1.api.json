@@ -1,0 +1,18 @@
+{
+  "model_instance_id": "google/gemma-3n-e4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    \"\"\"\n    Планирует выполнение задач с зависимостями, приоритетами и ограниченным числом исполнителей.\n\n    Args:\n        tasks (dict[str, tuple[int, list[str], int]]): Словарь, где ключ - имя задачи, а значение - кортеж (duration, deps, priority).\n        workers (int): Количество доступных исполнителей.\n\n    Returns:\n        list[str] | None: Список имен задач в порядке выполнения или None, если есть цикл зависимостей.\n    \"\"\"\n\n    in_degree = {}\n    graph = {}\n    for task, (duration, deps, _) in tasks.items():\n        in_degree[task] = len(deps)\n        graph[task] = []\n\n    for task, (duration, deps, _) in tasks.items():\n        for dep in deps:\n            graph[dep].append(task)\n\n    queue = [task for task in tasks if in_degree[task] == 0]\n    if not queue:\n        return []  # No tasks to execute\n\n    scheduled_tasks = []\n    running_tasks = []\n    current_time = 0\n\n    while queue or running_tasks:\n        # Sort ready tasks based on priority, duration, and name\n        ready_tasks = []\n        for task in queue:\n            if all(dep in scheduled_tasks for dep in tasks[task][1]):\n                ready_tasks.append(task)\n\n        ready_tasks.sort(key=lambda x: (-tasks[x][2], tasks[x][0], x))  # Higher priority, shorter duration, ascending name\n\n        available_workers = workers - len(running_tasks)\n        tasks_to_start = []\n\n        for task in ready_tasks:\n            if available_workers > 0:\n                tasks_to_start.append(task)\n                available_workers -= 1\n\n        if tasks_to_start:\n            for task in tasks_to_start:\n                scheduled_tasks.append(task)\n                running_tasks.append(task)\n                queue.remove(task)\n\n        # Advance time for running tasks\n        completed_tasks = []\n        for task in running_tasks:\n            duration, _, _ = tasks[task]\n            current_time += duration\n            if current_time > duration:  # Check if the task is completed\n                completed_tasks.append(task)\n\n        running_tasks = [task for task in running_tasks if task not in completed_tasks]\n\n        for task in completed_tasks:\n            for neighbor in graph[task]:\n                in_degree[neighbor] -= 1\n                if in_degree[neighbor] == 0 and neighbor not in scheduled_tasks:\n                    queue.append(neighbor)\n\n\n    if len(scheduled_tasks) != len(tasks):\n        return None  # Cycle detected\n\n    return scheduled_tasks\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 264,
+    "total_output_tokens": 684,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 4.923564823323347,
+    "time_to_first_token_seconds": 15.335385,
+    "model_load_time_seconds": 26.107
+  },
+  "response_id": "resp_f672176a1ad753b59cc4de0d1aa3ab0937c3cb4ec742bb0a"
+}

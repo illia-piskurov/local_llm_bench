@@ -1,0 +1,14 @@
+{
+  "model": "essentialai/rnj-1",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-08-04 21:14:15",
+  "passed": 23,
+  "total": 27,
+  "failures": [
+    "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+    "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно",
+    "jump_to_undefined_label: ожидалась ошибка, но выполнение прошло успешно"
+  ]
+}

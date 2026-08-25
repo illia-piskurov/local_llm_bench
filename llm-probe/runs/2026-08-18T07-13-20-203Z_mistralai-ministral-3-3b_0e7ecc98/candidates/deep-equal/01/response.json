@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-0r1p8nd23j9qgfxkndseye",
+  "object": "chat.completion",
+  "created": 1787037318,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const isEqual = (a, b) => {\n        if (a === b) return true;\n\n        // Handle primitives and null\n        if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) {\n            return false;\n        }\n\n        // Handle arrays\n        if (Array.isArray(a) && Array.isArray(b)) {\n            if (a.length !== b.length) return false;\n            for (let i = 0; i < a.length; i++) {\n                if (!isEqual(a[i], b[i])) return false;\n            }\n            return true;\n        }\n\n        // Handle plain objects\n        const keysA = new Set(Object.keys(a));\n        const keysB = new Set(Object.keys(b));\n\n        if (keysA.size !== keysB.size) return false;\n\n        for (const key of keysA) {\n            if (!keysB.has(key) || !isEqual(a[key], b[key])) {\n                return false;\n            }\n        }\n\n        return true;\n    };\n\n    return isEqual(input.a, input.b);\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 151,
+    "completion_tokens": 239,
+    "total_tokens": 390,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

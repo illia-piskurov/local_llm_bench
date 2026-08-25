@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-dpw7cd4xa8namoicvquxvf",
+  "object": "chat.completion",
+  "created": 1787065467,
+  "model": "mistralai/ministral-3-3b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\nexport function solve(input) {\n    const { query } = input;\n    const table = query.table;\n    const selectColumns = query.select.map(col => col.as ? `${col.expr} AS ${col.as}` : col).join(', ');\n    let whereClause = '';\n    const params = [];\n    const paramCounter = 1;\n\n    function buildWhere(condition) {\n        if (typeof condition === 'string') return condition;\n        if (!condition) return '';\n\n        if (Array.isArray(condition)) {\n            const clauses = condition.map(subCondition => {\n                if (subCondition.OR || subCondition.AND) {\n                    const subWhere = buildWhere(subCondition);\n                    return `(${subWhere})`;\n                }\n                return buildCondition(subCondition);\n            });\n            return clauses.join(` ${condition.AND ? 'AND' : 'OR'} `);\n        }\n\n        return buildCondition(condition);\n    }\n\n    function buildCondition({ field, op, value }) {\n        let clause;\n        if (op === 'IS NULL') clause = `${field} IS NULL`;\n        else if (op === 'IS NOT NULL') clause = `${field} IS NOT NULL`;\n        else if (op === 'LIKE') clause = `${field} LIKE $${paramCounter++}`;\n        else if (op === 'IN') {\n            const values = Array.isArray(value) ? value : [value];\n            const placeholders = values.map(() => `$${paramCounter++}`).join(', ');\n            clause = `${field} IN (${placeholders})`;\n        } else {\n            clause = `${field} ${op}`;\n            if (!isNullish(value)) params.push(value);\n        }\n\n        return clause;\n    }\n\n    const where = buildWhere(query.where || {});\n    whereClause = where ? `WHERE ${where}` : '';\n\n    let joinsClause = '';\n    if (query.joins) {\n        query.joins.forEach(join => {\n            const joinType = join.type || 'INNER';\n            const onClause = Object.entries(join.on)\n                .map(([leftCol, rightCol]) => `${leftCol} = ${rightCol}`)\n                .join(' AND ');\n            joinsClause += ` ${joinType} JOIN ${join.table} ON ${onClause}`;\n        });\n    }\n\n    let groupByClause = '';\n    if (query.groupBy) {\n        groupByClause = `GROUP BY ${query.groupBy.join(', ')}`;\n    }\n\n    let orderByClause = '';\n    if (query.orderBy) {\n        orderByClause = `ORDER BY ${query.orderBy.map(({ field, dir }) => `${field} ${dir || 'ASC'}`).join(', ')}`;\n    }\n\n    const limitClause = query.limit ? `LIMIT ${query.limit}` : '';\n    const offsetClause = query.offset ? `OFFSET ${query.offset}` : '';\n\n    return {\n        sql: `SELECT ${selectColumns} FROM ${table}${joinsClause}${whereClause}${groupByClause}${orderByClause}${limitClause}${offsetClause}`,\n        params\n    };\n}\n```",
+        "reasoning_content": "",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 512,
+    "completion_tokens": 645,
+    "total_tokens": 1157,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "mistralai/ministral-3-3b"
+}

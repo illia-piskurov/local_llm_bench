@@ -1,0 +1,9 @@
+{
+  "model": "qwen/qwen3.6-35b-a3b",
+  "benchmark": "cron",
+  "level": "level1",
+  "tested_at": "2026-08-24 21:48:56",
+  "passed": 7,
+  "total": 7,
+  "failures": []
+}

@@ -1,0 +1,615 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-18T19-04-54-866Z_google-gemma-4-e4b_55efddad",
+  "status": "completed",
+  "startedAt": "2026-08-18T19:04:54.866Z",
+  "model": "google/gemma-4-e4b",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "hardware": "AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon",
+  "temperature": 1,
+  "maxTokens": 16000,
+  "samples": 1,
+  "taskIds": [
+    "flat-to-tree",
+    "paginate-and-sort",
+    "deep-merge",
+    "csv-parse",
+    "render-template",
+    "shopping-cart",
+    "query-string-parser",
+    "schema-validator",
+    "state-reducer",
+    "rbac-checker",
+    "i18n-pluralize",
+    "sql-query-builder",
+    "json-schema-deref-validate",
+    "cron-next-runs",
+    "longest-substring-no-repeat",
+    "group-anagrams",
+    "top-k-frequent",
+    "merge-intervals",
+    "flatten-tree",
+    "shortest-path-grid",
+    "lcs-length",
+    "topological-sort",
+    "rotate-square-matrix",
+    "validate-sudoku-board",
+    "deep-equal",
+    "bytecode-vm-evolution",
+    "event-emitter-evolution"
+  ],
+  "nodeVersion": "v24.14.0",
+  "candidates": [
+    {
+      "taskId": "flat-to-tree",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 146400,
+      "generationMs": 146372,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 302,
+        "completion_tokens": 2067,
+        "total_tokens": 2369,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1668
+        }
+      },
+      "completionTokens": 2067,
+      "tokensPerSec": 14,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "paginate-and-sort",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 191975,
+      "generationMs": 191951,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 406,
+        "completion_tokens": 2691,
+        "total_tokens": 3097,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1305
+        }
+      },
+      "completionTokens": 2691,
+      "tokensPerSec": 14,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "deep-merge",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 57468,
+      "generationMs": 57442,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 234,
+        "completion_tokens": 1022,
+        "total_tokens": 1256,
+        "completion_tokens_details": {
+          "reasoning_tokens": 462
+        }
+      },
+      "completionTokens": 1022,
+      "tokensPerSec": 18,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "csv-parse",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "timeout",
+      "durationMs": 158416,
+      "generationMs": 158288,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 280,
+        "completion_tokens": 2850,
+        "total_tokens": 3130,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1923
+        }
+      },
+      "completionTokens": 2850,
+      "tokensPerSec": 18,
+      "passed": 1,
+      "total": 4,
+      "error": "interrupted"
+    },
+    {
+      "taskId": "render-template",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 143058,
+      "generationMs": 143033,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 276,
+        "completion_tokens": 2586,
+        "total_tokens": 2862,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1911
+        }
+      },
+      "completionTokens": 2586,
+      "tokensPerSec": 18,
+      "passed": 2,
+      "total": 4
+    },
+    {
+      "taskId": "shopping-cart",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 83222,
+      "generationMs": 83199,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 474,
+        "completion_tokens": 1505,
+        "total_tokens": 1979,
+        "completion_tokens_details": {
+          "reasoning_tokens": 695
+        }
+      },
+      "completionTokens": 1505,
+      "tokensPerSec": 18,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "query-string-parser",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 159455,
+      "generationMs": 159435,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 360,
+        "completion_tokens": 2922,
+        "total_tokens": 3282,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1591
+        }
+      },
+      "completionTokens": 2922,
+      "tokensPerSec": 18,
+      "passed": 4,
+      "total": 5
+    },
+    {
+      "taskId": "schema-validator",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 114339,
+      "generationMs": 114311,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 361,
+        "completion_tokens": 2098,
+        "total_tokens": 2459,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1049
+        }
+      },
+      "completionTokens": 2098,
+      "tokensPerSec": 18,
+      "passed": 2,
+      "total": 4
+    },
+    {
+      "taskId": "state-reducer",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 277444,
+      "generationMs": 277427,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 344,
+        "completion_tokens": 5021,
+        "total_tokens": 5365,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1113
+        }
+      },
+      "completionTokens": 5021,
+      "tokensPerSec": 18,
+      "passed": 0,
+      "total": 4,
+      "error": "unexpected token in expression: 'catch'"
+    },
+    {
+      "taskId": "rbac-checker",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 126586,
+      "generationMs": 126565,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 397,
+        "completion_tokens": 2316,
+        "total_tokens": 2713,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1590
+        }
+      },
+      "completionTokens": 2316,
+      "tokensPerSec": 18,
+      "passed": 3,
+      "total": 3
+    },
+    {
+      "taskId": "i18n-pluralize",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 121624,
+      "generationMs": 121602,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 356,
+        "completion_tokens": 2230,
+        "total_tokens": 2586,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1647
+        }
+      },
+      "completionTokens": 2230,
+      "tokensPerSec": 18,
+      "passed": 3,
+      "total": 3
+    },
+    {
+      "taskId": "sql-query-builder",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 148201,
+      "generationMs": 148181,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 523,
+        "completion_tokens": 2692,
+        "total_tokens": 3215,
+        "completion_tokens_details": {
+          "reasoning_tokens": 824
+        }
+      },
+      "completionTokens": 2692,
+      "tokensPerSec": 18,
+      "passed": 3,
+      "total": 3
+    },
+    {
+      "taskId": "json-schema-deref-validate",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 140204,
+      "generationMs": 140180,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 414,
+        "completion_tokens": 2557,
+        "total_tokens": 2971,
+        "completion_tokens_details": {
+          "reasoning_tokens": 750
+        }
+      },
+      "completionTokens": 2557,
+      "tokensPerSec": 18,
+      "passed": 1,
+      "total": 3
+    },
+    {
+      "taskId": "cron-next-runs",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "compile_error",
+      "durationMs": 140348,
+      "generationMs": 140332,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 425,
+        "completion_tokens": 2554,
+        "total_tokens": 2979,
+        "completion_tokens_details": {
+          "reasoning_tokens": 631
+        }
+      },
+      "completionTokens": 2554,
+      "tokensPerSec": 18,
+      "passed": 0,
+      "total": 3,
+      "error": "unexpected token in expression: '*'"
+    },
+    {
+      "taskId": "longest-substring-no-repeat",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 107410,
+      "generationMs": 107386,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 127,
+        "completion_tokens": 1972,
+        "total_tokens": 2099,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1661
+        }
+      },
+      "completionTokens": 1972,
+      "tokensPerSec": 18,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "group-anagrams",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 75456,
+      "generationMs": 75434,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 155,
+        "completion_tokens": 1372,
+        "total_tokens": 1527,
+        "completion_tokens_details": {
+          "reasoning_tokens": 942
+        }
+      },
+      "completionTokens": 1372,
+      "tokensPerSec": 18,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "top-k-frequent",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 79394,
+      "generationMs": 79373,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 147,
+        "completion_tokens": 1439,
+        "total_tokens": 1586,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1054
+        }
+      },
+      "completionTokens": 1439,
+      "tokensPerSec": 18,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "merge-intervals",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 23767,
+      "generationMs": 23746,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 172,
+        "completion_tokens": 433,
+        "total_tokens": 605,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 433,
+      "tokensPerSec": 18,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "taskId": "flatten-tree",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "failed",
+      "durationMs": 8708,
+      "generationMs": 8688,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 186,
+        "completion_tokens": 150,
+        "total_tokens": 336,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 150,
+      "tokensPerSec": 17,
+      "passed": 0,
+      "total": 4
+    },
+    {
+      "taskId": "shortest-path-grid",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 90861,
+      "generationMs": 90839,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 168,
+        "completion_tokens": 1639,
+        "total_tokens": 1807,
+        "completion_tokens_details": {
+          "reasoning_tokens": 922
+        }
+      },
+      "completionTokens": 1639,
+      "tokensPerSec": 18,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "lcs-length",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 18781,
+      "generationMs": 18760,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 131,
+        "completion_tokens": 341,
+        "total_tokens": 472,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 341,
+      "tokensPerSec": 18,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "topological-sort",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 73630,
+      "generationMs": 73605,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 176,
+        "completion_tokens": 1330,
+        "total_tokens": 1506,
+        "completion_tokens_details": {
+          "reasoning_tokens": 935
+        }
+      },
+      "completionTokens": 1330,
+      "tokensPerSec": 18,
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "taskId": "rotate-square-matrix",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 24331,
+      "generationMs": 24311,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 146,
+        "completion_tokens": 443,
+        "total_tokens": 589,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      },
+      "completionTokens": 443,
+      "tokensPerSec": 18,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "validate-sudoku-board",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 105156,
+      "generationMs": 105136,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 207,
+        "completion_tokens": 1891,
+        "total_tokens": 2098,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1329
+        }
+      },
+      "completionTokens": 1891,
+      "tokensPerSec": 18,
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "taskId": "deep-equal",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 58522,
+      "generationMs": 58499,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 165,
+        "completion_tokens": 1050,
+        "total_tokens": 1215,
+        "completion_tokens_details": {
+          "reasoning_tokens": 450
+        }
+      },
+      "completionTokens": 1050,
+      "tokensPerSec": 18,
+      "passed": 8,
+      "total": 8
+    },
+    {
+      "taskId": "bytecode-vm-evolution",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 227955,
+      "generationMs": 227929,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 587,
+        "completion_tokens": 4039,
+        "total_tokens": 4626,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1165
+        }
+      },
+      "completionTokens": 4039,
+      "tokensPerSec": 18,
+      "passed": 6,
+      "total": 6
+    },
+    {
+      "taskId": "event-emitter-evolution",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "passed",
+      "durationMs": 139194,
+      "generationMs": 139169,
+      "finishReason": "stop",
+      "usage": {
+        "prompt_tokens": 437,
+        "completion_tokens": 2492,
+        "total_tokens": 2929,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1495
+        }
+      },
+      "completionTokens": 2492,
+      "tokensPerSec": 18,
+      "passed": 3,
+      "total": 3
+    }
+  ],
+  "completedAt": "2026-08-18T19:55:38.499Z"
+}

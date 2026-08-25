@@ -1,0 +1,8 @@
+{
+  "model": "zai-org/glm-4.7-flash",
+  "benchmark": "snake",
+  "level": "level1",
+  "tested_at": "2026-07-12 19:15:08",
+  "manual_score": 9,
+  "comment": "Очень круто. Проблем делает перезапуск, хотя написано пауза"
+}

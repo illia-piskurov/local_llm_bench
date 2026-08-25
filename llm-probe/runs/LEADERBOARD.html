@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>llm-probe Leaderboard</title>
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-card: #111827;
+      --bg-panel: #0d1322;
+      --border: #1f293d;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --accent-blue: #38bdf8;
+      --accent-green: #10b981;
+      --accent-red: #f43f5e;
+      --accent-amber: #f59e0b;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 32px 24px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .page-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .page-header h1 { font-size: 1.9rem; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+    .page-header .meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+    .updated-badge {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    /* ── KPI strip ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      transition: transform .15s, border-color .15s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); border-color: #2e3d5a; }
+    .kpi-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 6px; }
+    .kpi-value { font-size: 1.8rem; font-weight: 800; }
+    .kpi-sub   { font-size: 0.78rem; color: var(--text-dim); margin-top: 2px; }
+
+    /* ── Section ── */
+    .section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .section-header h2 { font-size: 1.1rem; font-weight: 700; }
+    .section-header .hint { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+    td { padding: 12px 16px; vertical-align: middle; }
+
+    .rank-cell { font-size: 1.1rem; text-align: center; width: 52px; }
+    .model-name { font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; color: var(--accent-blue); background: transparent; }
+    .hw-cell { font-size: 0.78rem; color: var(--text-muted); max-width: 240px; }
+    .unit { font-size: 0.78rem; color: var(--text-dim); }
+    .qs-score { color: var(--accent-amber); font-size: 1rem; }
+
+    .acc-wrap { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .acc-frac { font-size: 0.78rem; color: var(--text-dim); }
+    .acc-bar { flex: 1; min-width: 60px; max-width: 120px; height: 5px; background: var(--bg-panel); border-radius: 3px; overflow: hidden; }
+    .acc-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+
+    .empty-msg { padding: 24px; color: var(--text-muted); font-style: italic; }
+
+    @media (max-width: 768px) {
+      body { padding: 16px 12px; }
+      .hw-cell { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header class="page-header">
+    <div>
+      <h1>🏆 llm-probe Leaderboard</h1>
+      <div class="meta">20 models benchmarked · best run per model shown</div>
+    </div>
+    <div class="updated-badge">Updated: 2026-08-24 13:49:45 UTC</div>
+  </header>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Models Ranked</div>
+      <div class="kpi-value" style="color:var(--accent-blue)">20</div>
+      <div class="kpi-sub">unique model × hardware</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Top Accuracy</div>
+      <div class="kpi-value" style="color:var(--accent-green)">63%</div>
+      <div class="kpi-sub">google/gemma-4-e2b</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Top Speed</div>
+      <div class="kpi-value" style="color:var(--accent-blue)">48 <span style="font-size:1rem;font-weight:400">t/s</span></div>
+      <div class="kpi-sub">liquid/lfm2.5-1.2b</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Best Q/S Score</div>
+      <div class="kpi-value" style="color:var(--accent-amber)">77.9</div>
+      <div class="kpi-sub">google/gemma-4-e2b</div>
+    </div>
+  </div>
+
+  <!-- Master Table -->
+  <div class="section">
+    <div class="section-header">
+      <h2>📊 Master Table</h2>
+      <span class="hint">All metrics · sorted by Q/S Score</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Model</th><th>Hardware</th><th>Accuracy</th><th>Speed</th><th>Mean Latency</th><th>Total Tokens</th><th>Q/S Score</th>
+        </tr></thead>
+        <tbody><tr>
+      <td class="rank-cell">🥇</td>
+      <td><code class="model-name">google/gemma-4-e2b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-green)">63%</strong><span class="acc-frac">17/27</span><div class="acc-bar"><div class="acc-fill" style="width:63%;background:var(--accent-green)"></div></div></span></td>
+      <td><strong>28.5</strong> <span class="unit">tok/s</span></td>
+      <td>62,600 ms</td>
+      <td>48,158</td>
+      <td><strong class="qs-score">77.9</strong></td>
+    </tr><tr>
+      <td class="rank-cell">🥈</td>
+      <td><code class="model-name">google/gemma-4-e4b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-green)">70.4%</strong><span class="acc-frac">19/27</span><div class="acc-bar"><div class="acc-fill" style="width:70.4%;background:var(--accent-green)"></div></div></span></td>
+      <td><strong>17.7</strong> <span class="unit">tok/s</span></td>
+      <td>112,637 ms</td>
+      <td>53,702</td>
+      <td><strong class="qs-score">65.4</strong></td>
+    </tr><tr>
+      <td class="rank-cell">🥉</td>
+      <td><code class="model-name">mistralai/ministral-3-3b</code></td>
+      <td class="hw-cell">Unspecified Hardware</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-green)">64.7%</strong><span class="acc-frac">11/17</span><div class="acc-bar"><div class="acc-fill" style="width:64.7%;background:var(--accent-green)"></div></div></span></td>
+      <td><strong>18.6</strong> <span class="unit">tok/s</span></td>
+      <td>7,613 ms</td>
+      <td>2,416</td>
+      <td><strong class="qs-score">61.9</strong></td>
+    </tr><tr>
+      <td class="rank-cell">4</td>
+      <td><code class="model-name">qwen/qwen3-4b-2507</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-amber)">59.3%</strong><span class="acc-frac">16/27</span><div class="acc-bar"><div class="acc-fill" style="width:59.3%;background:var(--accent-amber)"></div></div></span></td>
+      <td><strong>18.6</strong> <span class="unit">tok/s</span></td>
+      <td>28,856 ms</td>
+      <td>14,532</td>
+      <td><strong class="qs-score">56.8</strong></td>
+    </tr><tr>
+      <td class="rank-cell">5</td>
+      <td><code class="model-name">ibm/granite-4-h-tiny</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-amber)">40.7%</strong><span class="acc-frac">11/27</span><div class="acc-bar"><div class="acc-fill" style="width:40.7%;background:var(--accent-amber)"></div></div></span></td>
+      <td><strong>28.2</strong> <span class="unit">tok/s</span></td>
+      <td>11,786 ms</td>
+      <td>8,992</td>
+      <td><strong class="qs-score">50</strong></td>
+    </tr><tr>
+      <td class="rank-cell">6</td>
+      <td><code class="model-name">qwen2.5-coder-3b-instruct</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-amber)">40.7%</strong><span class="acc-frac">11/27</span><div class="acc-bar"><div class="acc-fill" style="width:40.7%;background:var(--accent-amber)"></div></div></span></td>
+      <td><strong>22.2</strong> <span class="unit">tok/s</span></td>
+      <td>15,828 ms</td>
+      <td>8,809</td>
+      <td><strong class="qs-score">43.3</strong></td>
+    </tr><tr>
+      <td class="rank-cell">7</td>
+      <td><code class="model-name">openai/gpt-oss-20b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-green)">66.7%</strong><span class="acc-frac">18/27</span><div class="acc-bar"><div class="acc-fill" style="width:66.7%;background:var(--accent-green)"></div></div></span></td>
+      <td><strong>9</strong> <span class="unit">tok/s</span></td>
+      <td>43,823 ms</td>
+      <td>10,659</td>
+      <td><strong class="qs-score">41.3</strong></td>
+    </tr><tr>
+      <td class="rank-cell">8</td>
+      <td><code class="model-name">mistralai/ministral-3-3b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-amber)">37%</strong><span class="acc-frac">10/27</span><div class="acc-bar"><div class="acc-fill" style="width:37%;background:var(--accent-amber)"></div></div></span></td>
+      <td><strong>18.3</strong> <span class="unit">tok/s</span></td>
+      <td>18,756 ms</td>
+      <td>9,087</td>
+      <td><strong class="qs-score">35.1</strong></td>
+    </tr><tr>
+      <td class="rank-cell">9</td>
+      <td><code class="model-name">liquid/lfm2.5-1.2b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">11.1%</strong><span class="acc-frac">3/27</span><div class="acc-bar"><div class="acc-fill" style="width:11.1%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>48</strong> <span class="unit">tok/s</span></td>
+      <td>6,177 ms</td>
+      <td>7,996</td>
+      <td><strong class="qs-score">18.8</strong></td>
+    </tr><tr>
+      <td class="rank-cell">10</td>
+      <td><code class="model-name">qwen2.5-coder-1.5b-instruct</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">7.4%</strong><span class="acc-frac">2/27</span><div class="acc-bar"><div class="acc-fill" style="width:7.4%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>25.7</strong> <span class="unit">tok/s</span></td>
+      <td>11,774 ms</td>
+      <td>7,183</td>
+      <td><strong class="qs-score">8.6</strong></td>
+    </tr><tr>
+      <td class="rank-cell">11</td>
+      <td><code class="model-name">bonsai-8b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">7.4%</strong><span class="acc-frac">2/27</span><div class="acc-bar"><div class="acc-fill" style="width:7.4%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>23.5</strong> <span class="unit">tok/s</span></td>
+      <td>16,254 ms</td>
+      <td>10,032</td>
+      <td><strong class="qs-score">8.2</strong></td>
+    </tr><tr>
+      <td class="rank-cell">12</td>
+      <td><code class="model-name">google/gemma-3-1b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">3.7%</strong><span class="acc-frac">1/27</span><div class="acc-bar"><div class="acc-fill" style="width:3.7%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>42.3</strong> <span class="unit">tok/s</span></td>
+      <td>5,054 ms</td>
+      <td>5,965</td>
+      <td><strong class="qs-score">5.8</strong></td>
+    </tr><tr>
+      <td class="rank-cell">13</td>
+      <td><code class="model-name">qwen/qwen3-1.7b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">3.7%</strong><span class="acc-frac">1/27</span><div class="acc-bar"><div class="acc-fill" style="width:3.7%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>20</strong> <span class="unit">tok/s</span></td>
+      <td>44,093 ms</td>
+      <td>9,733</td>
+      <td><strong class="qs-score">3.7</strong></td>
+    </tr><tr>
+      <td class="rank-cell">14</td>
+      <td><code class="model-name">qwen3.5-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">0%</strong><span class="acc-frac">0/27</span><div class="acc-bar"><div class="acc-fill" style="width:0%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>13</strong> <span class="unit">tok/s</span></td>
+      <td>39,188 ms</td>
+      <td>1,048</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">15</td>
+      <td><code class="model-name">qwen3.8-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">0%</strong><span class="acc-frac">0/27</span><div class="acc-bar"><div class="acc-fill" style="width:0%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>0</strong> <span class="unit">tok/s</span></td>
+      <td>—</td>
+      <td>—</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">16</td>
+      <td><code class="model-name">zai-org/glm-4.6v-flash</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">0%</strong><span class="acc-frac">0/27</span><div class="acc-bar"><div class="acc-fill" style="width:0%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>8</strong> <span class="unit">tok/s</span></td>
+      <td>115,563 ms</td>
+      <td>1,821</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">17</td>
+      <td><code class="model-name">qwen3.8-2b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">0%</strong><span class="acc-frac">0/27</span><div class="acc-bar"><div class="acc-fill" style="width:0%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>23</strong> <span class="unit">tok/s</span></td>
+      <td>72,038 ms</td>
+      <td>7,545</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">18</td>
+      <td><code class="model-name">microsoft/phi-4-mini-reasoning</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">0%</strong><span class="acc-frac">0/27</span><div class="acc-bar"><div class="acc-fill" style="width:0%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>0</strong> <span class="unit">tok/s</span></td>
+      <td>—</td>
+      <td>—</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">19</td>
+      <td><code class="model-name">nvidia/nemotron-3-nano-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">0%</strong><span class="acc-frac">0/27</span><div class="acc-bar"><div class="acc-fill" style="width:0%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>10.8</strong> <span class="unit">tok/s</span></td>
+      <td>199,568 ms</td>
+      <td>8,455</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">20</td>
+      <td><code class="model-name">google/gemma-4-12b-qat</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><span class="acc-wrap"><strong style="color:var(--accent-red)">0%</strong><span class="acc-frac">0/27</span><div class="acc-bar"><div class="acc-fill" style="width:0%;background:var(--accent-red)"></div></div></span></td>
+      <td><strong>0</strong> <span class="unit">tok/s</span></td>
+      <td>—</td>
+      <td>—</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Quality Ranking -->
+  <div class="section">
+    <div class="section-header">
+      <h2>🎯 Quality Ranking</h2>
+      <span class="hint">Accuracy / Pass Rate · higher is better</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Rank</th><th>Model</th><th>Hardware</th><th>Pass Rate</th><th>Tasks Passed</th><th>Q/S Score</th>
+        </tr></thead>
+        <tbody><tr>
+      <td class="rank-cell">🥇</td>
+      <td><code class="model-name">google/gemma-4-e4b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-green)">70.4%</strong></td>
+      <td>19/27</td>
+      <td><strong class="qs-score">65.4</strong></td>
+    </tr><tr>
+      <td class="rank-cell">🥈</td>
+      <td><code class="model-name">openai/gpt-oss-20b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-green)">66.7%</strong></td>
+      <td>18/27</td>
+      <td><strong class="qs-score">41.3</strong></td>
+    </tr><tr>
+      <td class="rank-cell">🥉</td>
+      <td><code class="model-name">mistralai/ministral-3-3b</code></td>
+      <td class="hw-cell">Unspecified Hardware</td>
+      <td><strong style="color:var(--accent-green)">64.7%</strong></td>
+      <td>11/17</td>
+      <td><strong class="qs-score">61.9</strong></td>
+    </tr><tr>
+      <td class="rank-cell">4</td>
+      <td><code class="model-name">google/gemma-4-e2b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-green)">63%</strong></td>
+      <td>17/27</td>
+      <td><strong class="qs-score">77.9</strong></td>
+    </tr><tr>
+      <td class="rank-cell">5</td>
+      <td><code class="model-name">qwen/qwen3-4b-2507</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-amber)">59.3%</strong></td>
+      <td>16/27</td>
+      <td><strong class="qs-score">56.8</strong></td>
+    </tr><tr>
+      <td class="rank-cell">6</td>
+      <td><code class="model-name">ibm/granite-4-h-tiny</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-amber)">40.7%</strong></td>
+      <td>11/27</td>
+      <td><strong class="qs-score">50</strong></td>
+    </tr><tr>
+      <td class="rank-cell">7</td>
+      <td><code class="model-name">qwen2.5-coder-3b-instruct</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-amber)">40.7%</strong></td>
+      <td>11/27</td>
+      <td><strong class="qs-score">43.3</strong></td>
+    </tr><tr>
+      <td class="rank-cell">8</td>
+      <td><code class="model-name">mistralai/ministral-3-3b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-amber)">37%</strong></td>
+      <td>10/27</td>
+      <td><strong class="qs-score">35.1</strong></td>
+    </tr><tr>
+      <td class="rank-cell">9</td>
+      <td><code class="model-name">liquid/lfm2.5-1.2b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-red)">11.1%</strong></td>
+      <td>3/27</td>
+      <td><strong class="qs-score">18.8</strong></td>
+    </tr><tr>
+      <td class="rank-cell">10</td>
+      <td><code class="model-name">qwen2.5-coder-1.5b-instruct</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-red)">7.4%</strong></td>
+      <td>2/27</td>
+      <td><strong class="qs-score">8.6</strong></td>
+    </tr><tr>
+      <td class="rank-cell">11</td>
+      <td><code class="model-name">bonsai-8b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-red)">7.4%</strong></td>
+      <td>2/27</td>
+      <td><strong class="qs-score">8.2</strong></td>
+    </tr><tr>
+      <td class="rank-cell">12</td>
+      <td><code class="model-name">google/gemma-3-1b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-red)">3.7%</strong></td>
+      <td>1/27</td>
+      <td><strong class="qs-score">5.8</strong></td>
+    </tr><tr>
+      <td class="rank-cell">13</td>
+      <td><code class="model-name">qwen/qwen3-1.7b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-red)">3.7%</strong></td>
+      <td>1/27</td>
+      <td><strong class="qs-score">3.7</strong></td>
+    </tr><tr>
+      <td class="rank-cell">14</td>
+      <td><code class="model-name">qwen3.5-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-red)">0%</strong></td>
+      <td>0/27</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">15</td>
+      <td><code class="model-name">qwen3.8-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-red)">0%</strong></td>
+      <td>0/27</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">16</td>
+      <td><code class="model-name">zai-org/glm-4.6v-flash</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-red)">0%</strong></td>
+      <td>0/27</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">17</td>
+      <td><code class="model-name">qwen3.8-2b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-red)">0%</strong></td>
+      <td>0/27</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">18</td>
+      <td><code class="model-name">microsoft/phi-4-mini-reasoning</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-red)">0%</strong></td>
+      <td>0/27</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">19</td>
+      <td><code class="model-name">nvidia/nemotron-3-nano-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-red)">0%</strong></td>
+      <td>0/27</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr><tr>
+      <td class="rank-cell">20</td>
+      <td><code class="model-name">google/gemma-4-12b-qat</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-red)">0%</strong></td>
+      <td>0/27</td>
+      <td><strong class="qs-score">0</strong></td>
+    </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Speed Ranking -->
+  <div class="section">
+    <div class="section-header">
+      <h2>⚡ Speed Ranking</h2>
+      <span class="hint">Generation throughput in tokens/sec · higher is faster</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Rank</th><th>Model</th><th>Hardware</th><th>Throughput</th><th>Median Latency</th><th>Mean Latency</th>
+        </tr></thead>
+        <tbody><tr>
+      <td class="rank-cell">🥇</td>
+      <td><code class="model-name">liquid/lfm2.5-1.2b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">48</strong> <span class="unit">tok/s</span></td>
+      <td>4,817 ms</td>
+      <td>6,177 ms</td>
+    </tr><tr>
+      <td class="rank-cell">🥈</td>
+      <td><code class="model-name">google/gemma-3-1b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">42.3</strong> <span class="unit">tok/s</span></td>
+      <td>4,393 ms</td>
+      <td>5,054 ms</td>
+    </tr><tr>
+      <td class="rank-cell">🥉</td>
+      <td><code class="model-name">google/gemma-4-e2b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">28.5</strong> <span class="unit">tok/s</span></td>
+      <td>65,117 ms</td>
+      <td>62,600 ms</td>
+    </tr><tr>
+      <td class="rank-cell">4</td>
+      <td><code class="model-name">ibm/granite-4-h-tiny</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">28.2</strong> <span class="unit">tok/s</span></td>
+      <td>7,542 ms</td>
+      <td>11,786 ms</td>
+    </tr><tr>
+      <td class="rank-cell">5</td>
+      <td><code class="model-name">qwen2.5-coder-1.5b-instruct</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">25.7</strong> <span class="unit">tok/s</span></td>
+      <td>9,364 ms</td>
+      <td>11,774 ms</td>
+    </tr><tr>
+      <td class="rank-cell">6</td>
+      <td><code class="model-name">bonsai-8b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">23.5</strong> <span class="unit">tok/s</span></td>
+      <td>14,535 ms</td>
+      <td>16,254 ms</td>
+    </tr><tr>
+      <td class="rank-cell">7</td>
+      <td><code class="model-name">qwen3.8-2b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">23</strong> <span class="unit">tok/s</span></td>
+      <td>43,041 ms</td>
+      <td>72,038 ms</td>
+    </tr><tr>
+      <td class="rank-cell">8</td>
+      <td><code class="model-name">qwen2.5-coder-3b-instruct</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">22.2</strong> <span class="unit">tok/s</span></td>
+      <td>12,467 ms</td>
+      <td>15,828 ms</td>
+    </tr><tr>
+      <td class="rank-cell">9</td>
+      <td><code class="model-name">qwen/qwen3-1.7b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">20</strong> <span class="unit">tok/s</span></td>
+      <td>—</td>
+      <td>44,093 ms</td>
+    </tr><tr>
+      <td class="rank-cell">10</td>
+      <td><code class="model-name">mistralai/ministral-3-3b</code></td>
+      <td class="hw-cell">Unspecified Hardware</td>
+      <td><strong style="color:var(--accent-blue)">18.6</strong> <span class="unit">tok/s</span></td>
+      <td>6,343 ms</td>
+      <td>7,613 ms</td>
+    </tr><tr>
+      <td class="rank-cell">11</td>
+      <td><code class="model-name">qwen/qwen3-4b-2507</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">18.6</strong> <span class="unit">tok/s</span></td>
+      <td>21,943 ms</td>
+      <td>28,856 ms</td>
+    </tr><tr>
+      <td class="rank-cell">12</td>
+      <td><code class="model-name">mistralai/ministral-3-3b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">18.3</strong> <span class="unit">tok/s</span></td>
+      <td>14,548 ms</td>
+      <td>18,756 ms</td>
+    </tr><tr>
+      <td class="rank-cell">13</td>
+      <td><code class="model-name">google/gemma-4-e4b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">17.7</strong> <span class="unit">tok/s</span></td>
+      <td>114,311 ms</td>
+      <td>112,637 ms</td>
+    </tr><tr>
+      <td class="rank-cell">14</td>
+      <td><code class="model-name">qwen3.5-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">13</strong> <span class="unit">tok/s</span></td>
+      <td>78,375 ms</td>
+      <td>39,188 ms</td>
+    </tr><tr>
+      <td class="rank-cell">15</td>
+      <td><code class="model-name">nvidia/nemotron-3-nano-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">10.8</strong> <span class="unit">tok/s</span></td>
+      <td>156,526 ms</td>
+      <td>199,568 ms</td>
+    </tr><tr>
+      <td class="rank-cell">16</td>
+      <td><code class="model-name">openai/gpt-oss-20b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">9</strong> <span class="unit">tok/s</span></td>
+      <td>36,675 ms</td>
+      <td>43,823 ms</td>
+    </tr><tr>
+      <td class="rank-cell">17</td>
+      <td><code class="model-name">zai-org/glm-4.6v-flash</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">8</strong> <span class="unit">tok/s</span></td>
+      <td>231,126 ms</td>
+      <td>115,563 ms</td>
+    </tr><tr>
+      <td class="rank-cell">18</td>
+      <td><code class="model-name">qwen3.8-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">0</strong> <span class="unit">tok/s</span></td>
+      <td>—</td>
+      <td>—</td>
+    </tr><tr>
+      <td class="rank-cell">19</td>
+      <td><code class="model-name">microsoft/phi-4-mini-reasoning</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">0</strong> <span class="unit">tok/s</span></td>
+      <td>—</td>
+      <td>—</td>
+    </tr><tr>
+      <td class="rank-cell">20</td>
+      <td><code class="model-name">google/gemma-4-12b-qat</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong style="color:var(--accent-blue)">0</strong> <span class="unit">tok/s</span></td>
+      <td>—</td>
+      <td>—</td>
+    </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Token Efficiency -->
+  <div class="section">
+    <div class="section-header">
+      <h2>💡 Token Efficiency</h2>
+      <span class="hint">Fewest tokens per task · more concise solutions rank higher</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Rank</th><th>Model</th><th>Hardware</th><th>Tokens / Task</th><th>Total Tokens</th><th>Accuracy</th>
+        </tr></thead>
+        <tbody><tr>
+      <td class="rank-cell">🥇</td>
+      <td><code class="model-name">qwen3.8-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td>—</td>
+      <td>—</td>
+      <td>0%</td>
+    </tr><tr>
+      <td class="rank-cell">🥈</td>
+      <td><code class="model-name">microsoft/phi-4-mini-reasoning</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td>—</td>
+      <td>—</td>
+      <td>0%</td>
+    </tr><tr>
+      <td class="rank-cell">🥉</td>
+      <td><code class="model-name">google/gemma-4-12b-qat</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td>—</td>
+      <td>—</td>
+      <td>0%</td>
+    </tr><tr>
+      <td class="rank-cell">4</td>
+      <td><code class="model-name">qwen3.5-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong>39</strong> <span class="unit">tok/task</span></td>
+      <td>1,048</td>
+      <td>0%</td>
+    </tr><tr>
+      <td class="rank-cell">5</td>
+      <td><code class="model-name">zai-org/glm-4.6v-flash</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong>67</strong> <span class="unit">tok/task</span></td>
+      <td>1,821</td>
+      <td>0%</td>
+    </tr><tr>
+      <td class="rank-cell">6</td>
+      <td><code class="model-name">mistralai/ministral-3-3b</code></td>
+      <td class="hw-cell">Unspecified Hardware</td>
+      <td><strong>142</strong> <span class="unit">tok/task</span></td>
+      <td>2,416</td>
+      <td>64.7%</td>
+    </tr><tr>
+      <td class="rank-cell">7</td>
+      <td><code class="model-name">google/gemma-3-1b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong>221</strong> <span class="unit">tok/task</span></td>
+      <td>5,965</td>
+      <td>3.7%</td>
+    </tr><tr>
+      <td class="rank-cell">8</td>
+      <td><code class="model-name">qwen2.5-coder-1.5b-instruct</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong>266</strong> <span class="unit">tok/task</span></td>
+      <td>7,183</td>
+      <td>7.4%</td>
+    </tr><tr>
+      <td class="rank-cell">9</td>
+      <td><code class="model-name">qwen3.8-2b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong>279</strong> <span class="unit">tok/task</span></td>
+      <td>7,545</td>
+      <td>0%</td>
+    </tr><tr>
+      <td class="rank-cell">10</td>
+      <td><code class="model-name">liquid/lfm2.5-1.2b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong>296</strong> <span class="unit">tok/task</span></td>
+      <td>7,996</td>
+      <td>11.1%</td>
+    </tr><tr>
+      <td class="rank-cell">11</td>
+      <td><code class="model-name">nvidia/nemotron-3-nano-4b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong>313</strong> <span class="unit">tok/task</span></td>
+      <td>8,455</td>
+      <td>0%</td>
+    </tr><tr>
+      <td class="rank-cell">12</td>
+      <td><code class="model-name">qwen2.5-coder-3b-instruct</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong>326</strong> <span class="unit">tok/task</span></td>
+      <td>8,809</td>
+      <td>40.7%</td>
+    </tr><tr>
+      <td class="rank-cell">13</td>
+      <td><code class="model-name">ibm/granite-4-h-tiny</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong>333</strong> <span class="unit">tok/task</span></td>
+      <td>8,992</td>
+      <td>40.7%</td>
+    </tr><tr>
+      <td class="rank-cell">14</td>
+      <td><code class="model-name">mistralai/ministral-3-3b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong>337</strong> <span class="unit">tok/task</span></td>
+      <td>9,087</td>
+      <td>37%</td>
+    </tr><tr>
+      <td class="rank-cell">15</td>
+      <td><code class="model-name">qwen/qwen3-1.7b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong>360</strong> <span class="unit">tok/task</span></td>
+      <td>9,733</td>
+      <td>3.7%</td>
+    </tr><tr>
+      <td class="rank-cell">16</td>
+      <td><code class="model-name">bonsai-8b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong>372</strong> <span class="unit">tok/task</span></td>
+      <td>10,032</td>
+      <td>7.4%</td>
+    </tr><tr>
+      <td class="rank-cell">17</td>
+      <td><code class="model-name">openai/gpt-oss-20b</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong>395</strong> <span class="unit">tok/task</span></td>
+      <td>10,659</td>
+      <td>66.7%</td>
+    </tr><tr>
+      <td class="rank-cell">18</td>
+      <td><code class="model-name">qwen/qwen3-4b-2507</code></td>
+      <td class="hw-cell">AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon</td>
+      <td><strong>538</strong> <span class="unit">tok/task</span></td>
+      <td>14,532</td>
+      <td>59.3%</td>
+    </tr><tr>
+      <td class="rank-cell">19</td>
+      <td><code class="model-name">google/gemma-4-e2b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong>1,784</strong> <span class="unit">tok/task</span></td>
+      <td>48,158</td>
+      <td>63%</td>
+    </tr><tr>
+      <td class="rank-cell">20</td>
+      <td><code class="model-name">google/gemma-4-e4b</code></td>
+      <td class="hw-cell">AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon</td>
+      <td><strong>1,989</strong> <span class="unit">tok/task</span></td>
+      <td>53,702</td>
+      <td>70.4%</td>
+    </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
