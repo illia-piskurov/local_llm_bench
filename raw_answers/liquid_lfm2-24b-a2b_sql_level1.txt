@@ -1,0 +1,50 @@
+```
+def compile_query(query: dict) -> dict:
+    table = query.get('table', '')
+    select = query.get('select', ['*'])
+    where = query.get('where', {})
+    orderBy = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    params = []
+    conditions = []
+
+    def add_condition(cond):
+        nonlocal params
+        if isinstance(cond, dict) and len(cond) == 3:
+            field, op, value = cond['field'], cond['op'], cond['value']
+            placeholder = f"${len(params) + 1}"
+            params.append(value)
+            conditions.append(f"{field} {op} {placeholder}")
+        elif isinstance(cond, dict) and 'AND' in cond:
+            inner = [f"({c})" for c in cond['AND']]
+            conditions.append(f"({' AND '.join(inner)})")
+        elif isinstance(cond, dict) and 'OR' in cond:
+            inner = [f"({c})" for c in cond['OR']]
+            conditions.append(f"({' OR '.join(inner)})")
+
+    def process_where(where_dict):
+        for k, v in where_dict.items():
+            if isinstance(v, dict) and len(v) == 3:
+                add_condition({k, v['op'], v['value']})
+            else:
+                raise ValueError(f"Unsupported condition format: {v}")
+
+    process_where(where)
+    select_clause = ', '.join(select)
+    order_by_clause = ', '.join([f"{b['field']} {b.get('dir', 'ASC')}" for b in orderBy])
+    limit_clause = f"LIMIT {limit}" if limit is not None else ""
+    offset_clause = f"OFFSET {offset}" if offset is not None else ""
+
+    sql_parts = [
+        f"SELECT {select_clause} FROM {table}",
+        *conditions,
+        f"WHERE {' AND '.join(conditions)}" if conditions else '',
+        f"ORDER BY {order_by_clause}" if orderBy else '',
+        limit_clause,
+        offset_clause
+    ]
+    sql = ' '.join([p for p in sql_parts if p])
+    return {"sql": sql, "params": params}
+```

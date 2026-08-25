@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+
+def compile_query(query):
+    """
+    Compile a simple AST query dictionary into parameterized SQL.
+    Returns {"sql": sql_string, "params": [values]}
+    """
+    params = []
+    param_counter = 1
+
+    def _add_param(value):
+        nonlocal param_counter
+        placeholder = f"${param_counter}"
+        param_counter += 1
+        params.append(value)
+        return placeholder
+
+    # SELECT clause
+    select_cols = query.get("select", ["*"])
+    if not isinstance(select_cols, list) or any(not isinstance(c, str) for c in select_cols):
+        raise ValueError("`select` must be a list of column names")
+    select_part = "SELECT " + ", ".join(select_cols)
+
+    # FROM clause
+    table = query.get("table")
+    if not table:
+        raise ValueError("`table` is required")
+    from_part = f"FROM {table}"
+
+    # JOIN clauses
+    joins = query.get("joins", [])
+    join_parts = []
+    for j in joins:
+        jt = j.get("type", "INNER").upper()
+        jt = jt if jt in ("INNER", "LEFT", "RIGHT") else "INNER"
+        jt_table = j["table"]
+        on_dict = j["on"]  # dict mapping left_col -> right_col
+        if not isinstance(on_dict, dict) or len(on_dict) != 1:
+            raise ValueError(f"Invalid join ON clause: {j}")
+        left_col, right_col = next(iter(on_dict.items()))
+        join_parts.append(f"{jt} JOIN {jt_table} ON {left_col} = {right_col}")
+    join_part = " ".join(join_parts)
+
+    # WHERE clause
+    where_tree = query.get("where")
+
+    def _compile_where(node):
+        if isinstance(node, dict):
+            if "AND" in node:
+                subconds = [_compile_where(c) for c in node["AND"]]
+                joined = " AND ".join(subconds)
+                return f"({joined})" if len(subconds) > 1 else joined
+            if "OR" in node:
+                subconds = [_compile_where(c) for c in node["OR"]]
+                joined = " OR ".join(subconds)
+                return f"({joined})" if len(subconds) > 1 else joined
+
+            # simple condition
+            field = node.get("field")
+            op = node.get("op")
+            value = node.get("value")
+
+            if field is None or not isinstance(op, str):
+                raise ValueError(f"Invalid where condition: {node}")
+
+            op_upper = op.upper()
+            if op_upper in ("=", "!=", ">", "<", ">=", "<="):
+                placeholder = _add_param(value)
+                return f"{field} {op} {placeholder}"
+            elif op_upper == "IS NULL":
+                return f"{field} IS NULL"
+            elif op_upper == "IS NOT NULL":
+                return f"{field} IS NOT NULL"
+            elif op_upper == "IN":
+                if not isinstance(value, list):
+                    raise ValueError(f"IN operator requires a list of values: {node}")
+                placeholders = [_add_param(v) for v in value]
+                return f"{field} IN ({', '.join(placeholders)})"
+            elif op_upper == "LIKE":
+                placeholder = _add_param(value)
+                return f"{field} LIKE {placeholder}"
+            else:
+                raise ValueError(f"Unsupported operator: {op}")
+        else:
+            raise ValueError(f"Unsupported where node type: {type(node)}")
+
+    if where_tree is not None:
+        where_part = "WHERE " + _compile_where(where_tree)
+    else:
+        where_part = ""
+
+    # GROUP BY clause
+    group_by = query.get("groupBy", [])
+    if isinstance(group_by, list) and group_by:
+        group_parts = [col for col in group_by if isinstance(col, str)]
+        group_part = "GROUP BY " + ", ".join(group_parts)
+    else:
+        group_part = ""
+
+    # ORDER BY clause
+    order_by = query.get("orderBy", [])
+    order_parts = []
+    if isinstance(order_by, list):
+        for ob in order_by:
+            field = ob.get("field")
+            if not field:
+                continue
+            direction = ob.get("dir", "ASC").upper()
+            if direction not in ("ASC", "DESC"):
+                direction = "ASC"
+            order_parts.append(f"{field} {direction}")
+    order_part = f"ORDER BY {', '.join(order_parts)}" if order_parts else ""
+
+    # LIMIT and OFFSET
+    limit = query.get("limit")
+    offset = query.get("offset")
+
+    limit_part = f"LIMIT {int(limit)}" if isinstance(limit, int) else ""
+    offset_part = f"OFFSET {int(offset)}" if isinstance(offset, int) else ""
+
+    sql_parts = [select_part, from_part]
+    if join_part:
+        sql_parts.append(join_part)
+    if where_part:
+        sql_parts.append(where_part)
+    if group_part:
+        sql_parts.append(group_part)
+    if order_part:
+        sql_parts.append(order_part)
+    if limit_part:
+        sql_parts.append(limit_part)
+    if offset_part:
+        sql_parts.append(offset_part)
+
+    sql = " ".join(sql_parts).strip()
+    return {"sql": sql, "params": params}
+
+# Example usage (uncomment to test):
+if __name__ == "__main__":
+    sample_query = {
+        "table": "orders",
+        "select": ["orders.id", "users.name", "SUM(items.price) as total"],
+        "joins": [
+            {"type": "LEFT", "table": "items", "on": {"orders.id": "items.order_id"}},
+            {"table": "users", "on": {"orders.user_id": "users.id"}}
+        ],
+        "where": {
+            "AND": [
+                {"field": "orders.created_at", "op": ">=", "value": "2023-01-01"},
+                {"OR": [
+                    {"field": "orders.status", "op": "IN", "value": ["shipped", "delivered"]},
+                    {"field": "orders.deleted_at", "op": "IS NULL"}
+                ]}
+            ]
+        },
+        "groupBy": ["orders.id", "users.name"],
+        "orderBy": [{"field": "total", "dir": "DESC"}],
+        "limit": 20,
+        "offset": 0
+    }
+    result = compile_query(sample_query)
+    print(result["sql"])
+    print(result["params"])

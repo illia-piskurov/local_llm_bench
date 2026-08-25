@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-gub2k33vkvls3aoyipylgg",
+  "object": "chat.completion",
+  "created": 1787578784,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const s = input.text;\n    const seen = new Map();\n    let maxLen = 0;\n    let start = 0;\n    for (let i = 0; i < s.length; i++) {\n        const ch = s[i];\n        if (seen.has(ch)) {\n            const prevIndex = seen.get(ch);\n            if (prevIndex >= start) {\n                start = prevIndex + 1;\n            }\n        }\n        seen.set(ch, i);\n        const currentLen = i - start + 1;\n        if (currentLen > maxLen) maxLen = currentLen;\n    }\n    return maxLen;\n}",
+        "reasoning": "Need sliding window. Return number. Ensure no mutation. Use let text = input.text. Compute.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 178,
+    "completion_tokens": 170,
+    "total_tokens": 348,
+    "completion_tokens_details": {
+      "reasoning_tokens": 20
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

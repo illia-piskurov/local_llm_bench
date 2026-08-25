@@ -1,0 +1,37 @@
+export function solve(input) {
+  const { locales, lang, key, params } = input;
+  // Helper to get template
+  const getTemplate = (l) => {
+    if (!locales[l]) return undefined;
+    return locales[l][key];
+  };
+  let tmpl = getTemplate(lang);
+  if (tmpl === undefined) {
+    tmpl = getTemplate('en');
+    if (tmpl === undefined) return key;
+  }
+  // Handle plural object
+  const isPluralObj = typeof tmpl === 'object' && tmpl !== null;
+  let resultString;
+  if (isPluralObj) {
+    const count = params.count;
+    if (count === 0 && tmpl.zero !== undefined) {
+      resultString = tmpl.zero;
+    } else if (count === 1 && tmpl.one !== undefined) {
+      resultString = tmpl.one;
+    } else {
+      resultString = tmpl.other;
+    }
+  } else {
+    resultString = tmpl;
+  }
+  // Replace # with count in plural strings
+  if (typeof params.count !== 'undefined' && resultString.includes('#')) {
+    resultString = resultString.replace(/#/g, String(params.count));
+  }
+  // Replace {var} placeholders
+  const replaced = resultString.replace(/{([^}]+)}/g, (_, varName) => {
+    return params[varName] !== undefined ? params[varName] : `{${varName}}`;
+  });
+  return replaced;
+}

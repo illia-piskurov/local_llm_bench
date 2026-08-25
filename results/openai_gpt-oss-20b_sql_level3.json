@@ -1,0 +1,12 @@
+{
+  "model": "openai/gpt-oss-20b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-08-24 17:03:38",
+  "passed": 13,
+  "total": 15,
+  "failures": [
+    "where_subquery_in: SQL: ожидали 'SELECT id, name FROM users WHERE id IN (SELECT user_id FROM vip_members WHERE tier = $1)', получили 'SELECT id, name FROM users WHERE id IN (sql)'; params: ожидали ['gold'], получили []",
+    "subquery_with_parent_params_order: SQL: ожидали 'SELECT * FROM posts WHERE (status = $1 AND author_id IN (SELECT id FROM banned_authors WHERE reason = $2) AND views > $3)', получили 'SELECT * FROM posts WHERE (status = $1 AND author_id IN (sql) AND views > $2)'; params: ожидали ['published', 'spam', 500], получили ['published', 500]"
+  ]
+}

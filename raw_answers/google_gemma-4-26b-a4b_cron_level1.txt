@@ -1,0 +1,283 @@
+```python
+import datetime
+
+def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+    """
+    Parses a 5-position cron expression and returns the next 'count' scheduled runs.
+    """
+    # Parse the cron string into sets of allowed values for each field
+    fields = cron.split()
+    if len(fields) != 5:
+        raise ValueError("Cron expression must have exactly 5 fields")
+
+    def parse_field(field_str, min_val, max_val):
+        allowed = set()
+        parts = field_str.split(',')
+        for part in parts:
+            if '-' in part:
+                start_str, end_str = part.split('-')
+                start, end = int(start_str), int(end_str)
+                allowed.update(range(start, end + 1))
+            else:
+                allowed.add(int(part))
+        # Filter to ensure values are within the valid range for this field
+        return {v for v in allowed if min_val <= v <= max_val}
+
+    # Define ranges based on requirements
+    # minute: 0-59, hour: 0-23, day_month: 1-31, month: 1-12, day_week: 0-6
+    allowed_min = parse_field(fields[0], 0, 59)
+    allowed_hour = parseint_field(fields[1], 0, 23) # Helper below
+    # Wait, let's just use a cleaner approach for the parsing logic inside the function scope.
+
+    def get_allowed(f_idx, min_v, max_v):
+        parts = fields[f_idx].split(',')
+        res = set()
+        for p in parts:
+            if '-' in p:
+                s, e = map(int, p.split('-'))
+                res.update(range(s, e + 1))
+            else:
+                res.add(int(p))
+        return {v for v in res if min_v <= v <= max_v}
+
+    allowed_minutes = get_allowed(0, 0, 59)
+    allowed_hours = get_allowed(1, 0, 23)
+    allowed_days_month = get_allowed(2, 1, 31)
+    allowed_months = get_allowed(3, 1, 12)
+    allowed_days_week = get_allowed(4, 0, 6)
+
+    # Parse from_time (ISO 8601 UTC: "2026-08-18T10:00:00.000Z")
+    # Replace Z with +00:00 for standard ISO parsing
+    dt_str = from_time.replace('Z', '+00:00')
+    current_dt = datetime.datetime.fromisoformat(dt_str)
+
+    results = []
+    
+    # We start searching from the next minute to ensure "strictly later"
+    # Since we only care about minutes, we can increment by 1-minute steps.
+    # For very large gaps, this is slower but robust for a single-file implementation.
+    
+    # To handle the "strictly later" requirement: if from_time matches cron, 
+    # we must skip it. The easiest way is to start checking from current_dt + 1 minute.
+    # However, if from_time is e.g. 10:00:30, the next valid minute could be 10:01:00 or even 10:00:00 (if we allow same minute).
+    # But the prompt says "strictly later than from_time". If from_time is 10:00:00.000, 
+    # then 10:00:00.000 is NOT strictly later. So we start looking at the next minute or same minute if seconds/ms are zeroed.
+    
+    # Let's normalize current_dt to the start of its minute for easier iteration
+    search_dt = current_dt.replace(second=0, microsecond=0)
+    
+    # If search_dt is exactly from_time, we must move to the next minute immediately 
+    # because we need "strictly later".
+    if search_dt <= current_dt:
+        search_dt += datetime.timedelta(minutes=1)
+
+    while len(results) < count:
+        # Check if current search_dt matches all cron fields
+        if (search_dt.minute in allowed_minutes and
+            search_dt.hour in allowed_hours and
+            search_dt.day in allowed_days_month and
+            search_dt.month in allowed_months and
+            search_dt.weekday() in allowed_days_week):
+            
+            # Format: YYYY-MM-DDTHH:MM:SS.000Z
+            res_str = search_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+            results.append(res_str)
+        
+        # Move to next minute
+        search_dt += datetime.timedelta(minutes=1)
+        
+        # Safety break for infinite loops in case of invalid cron (though ranges are checked)
+        if len(results) == 0 and search_dt.year > current_dt.year + 100:
+            break
+
+    return results
+
+# Re-defining the parsing logic slightly more robustly to ensure it's self-contained
+def parse_field_logic(field_str, min_val, max_val):
+    allowed = set()
+    for part in field_str.split(','):
+        if '-' in part:
+            start, end = map(int, part.split('-'))
+            allowed.update(range(start, end + 1))
+        else:
+            allowed.add(int(part))
+    return {v for v in allowed if min_val <= v <= max_val}
+
+def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+    fields = cron.split()
+    if len(fields) != 5: return []
+    
+    allowed_min = parse_field_logic(fields[0], 0, 59)
+    allowed_hour = parse_field_logic(fields[1], 0, 2SS) # Wait, typo in thought process. Correcting below.
+    # Let's rewrite the whole function cleanly.
+
+def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+    import datetime
+
+    def parse_f(f_str, low, high):
+        res = set()
+        for p in f_str.split(','):
+            if '-' in p:
+                s, e = map(int, p.split('-'))
+                res.update(range(s, e + 1))
+            else:
+                res.add(int(p))
+        return {v for v in res if low <= v <= high}
+
+    parts = cron.split()
+    if len(parts) != 5: return []
+    
+    a_min = parse_f(parts[0], 0, 59)
+    a_hour = parse_f(parts[1], 0, 23)
+    a_dom = parse_f(parts[2], 1, 31)
+    a_month = parse_f(parts[3], 1, 12)
+    a_dow = parse_f(parts[4], 0, 6)
+
+    # Parse input time. Handle 'Z' by replacing with +00:00 for fromisoformat
+    dt_input = datetime.datetime.fromisoformat(from_time.replace('Z', '+00:00'))
+    
+    # Start searching from the first possible minute strictly after from_time
+    # We normalize to minutes since cron granularity is minutes.
+    # If from_time is 10:00:30, the next potential match is 10:01:00 or 10:00:00 (if we could).
+    # But "strictly later" means if from_time is 10:00:00, we start checking at 10:01.
+    # If from_time is 10:00:30, the next minute is 10:01.
+    
+    # To be safe and simple: increment by 1 minute until we find a match.
+    # We start checking at the beginning of the next minute relative to from_time's minute.
+    # If from_time is 10:00:00, check 10:01, 10:02...
+    # If from_time is 10:00:30, check 10:01, 10:02...
+    # Wait, if cron is "0 * * * *" and from_time is 10:00:30, the next run is 11:00:00.
+    # If cron is "* * * * *" and from_time is 10:00:30, the next run is 10:01:00.
+    
+    current = dt_input.replace(second=0, microsecond=0)
+    if current <= dt_input:
+        current += datetime.timedelta(minutes=1)
+    else:
+        # If from_time was e.g. 10:00:30, 'current' is already 10:00:00.
+        # But we need "strictly later". 10:00:00 is not later than 10:00:30.
+        # So if the current minute matches, it's only valid if its seconds/ms are 0 and it's > from_time.
+        # Since we want to find the NEXT occurrence, let's just start at the next minute boundary.
+        pass
+
+    # Correct logic: Start checking from the very next minute boundary.
+    # If from_time is 10:00:00, check 10:01, 10:02...
+    # If from_time is 10:00:30, check 10:01, 10:02...
+    # This covers all minutes > from_time.
+    
+    check_dt = dt_input.replace(second=0, microsecond=0)
+    if check_dt <= dt_input:
+        check_dt += datetime.timedelta(minutes=1)
+    else:
+        # If from_time was 10:00:30, check_dt is 10:00:00. 
+        # But 10:00:00 is not > 10:00:30. We must move to 10:01:00.
+        check_dt += datetime.timedelta(minutes=1)
+
+    results = []
+    while len(results) < count:
+        if (check_dt.minute in a_min and
+            check_dt.hour in a_hour and
+            check_dt.day in a_dom and
+            check_dt.month in a_month and
+            check_dt.weekday() in a_dow):
+            results.append(check_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+        
+        check_dt += datetime.timedelta(minutes=1)
+        if len(results) == 0 and check_dt.year > dt_input.year + 10: # Safety
+            break
+            
+    return results
+
+# Final clean version for the output block
+```
+
+Wait, I need to provide only one code block. Let me consolidate everything into a single, clean, working function.
+
+```python
+import datetime
+
+def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+    def parse_field(f_str, low, high):
+        res = set()
+        for p in f_str.split(','):
+            if '-' in p:
+                s, e = map(int, p.split('-'))
+                res.update(range(s, e + 1))
+            else:
+                res.add(int(p))
+        return {v for v in res if low <= v <= high}
+
+    parts = cron.split()
+    if len(parts) != 5:
+        return []
+
+    a_min = parse_field(parts[0], 0, 59)
+    a_hour = parse_field(parts[1], 0, 23)
+    a_dom = parse_field(parts[2], 1, 31)
+    a_month = parse_field(parts[3], 1, 12)
+    a_dow = parse_field(parts[4], 0, 6)
+
+    # Parse from_time. Replace Z with +00:00 for ISO compatibility.
+    dt_input = datetime.datetime.fromisoformat(from_time.replace('Z', '+00:00'))
+    
+    # We need the next occurrence strictly after dt_input.
+    # The smallest granularity is 1 minute (seconds/ms are always 0).
+    # Let's find the first minute boundary that is > dt_input.
+    # If dt_input is 10:00:30, the first candidate minute is 10:01:00.
+    # If dt_input is 10:00:00, the first candidate minute is 10:01:00.
+    
+    check_dt = dt_input.replace(second=0, microsecond=0)
+    # Increment to ensure we are looking at a time strictly later than from_time.
+    # If from_time was 10:00:00, check_dt becomes 10:01:00.
+    # If from_time was 10:00:30, check_dt (10:00:00) + 1 min = 10:01:00.
+    check_dt += datetime.timedelta(minutes=1)
+
+    results = []
+    # To prevent infinite loops in case of impossible cron, we set a reasonable limit.
+    # However, for standard cron, this will eventually find a match or hit count.
+    while len(results) < count:
+        if (check_dt.minute in a_min and
+            check_dt.hour in a_hour and
+            check_dt.day in a_dom and
+            check_dt.month in a_month and
+            check_dt.weekday() in a_dow):
+            results.append(check_dt.strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+        
+        check_dt += datetime.timedelta(minutes=1)
+        
+        # Safety break: if we've searched 5 years without a match, stop.
+        if len(results) == 0 and check_dt.year > dt_input.year + 5:
+            break
+
+    return results
+```
+
+One final check on the logic: If `from_time` is `2026-08-18T10:00:00.000Z`, and cron is `* * * * *`.
+`check_dt` starts at `10:01:00`. 
+The first match will be `10:01:00`. This is strictly later than `10:00:00`. Correct.
+If `from_time` is `2026-08-18T09:59:30.000Z`, `check_dt` starts at `10:00:00`. 
+The first match will be `10:00:00`. This is strictly later than `09:59:30`. Correct.
+
+Wait, if `from_time` is `2026-08-18T10:00:00.000Z`, and the cron matches at `10:00:00`, should it be included? The prompt says "strictly later than from_time". So no. My logic handles this by starting at the next minute boundary.
+
+Final check on Day of Week: 0=Sunday, ..., 6=Saturday. Python's `weekday()` returns 0=Monday, ..., 6=Sunday.
+Ah! I must adjust for that.
+Python `weekday()`: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6.
+Requirement: Sun=0, Mon=1, ..., Sat=6.
+So, `(check_dt.weekday() + 1) % 7` will convert Python's Monday-based index to the required Sunday-based index.
+
+Let's double check:
+Python Mon (0) -> (0+1)%7 = 1 (Correct)
+Python Sun (6) -> (6+1)%7 = 0 (Correct)
+Python Sat (5) -> (5+1)%7 = 6 (Correct)
+
+One more thing: `from_time` format is `"2026-08-18T10:00:00.000Z"`. The `.000` part.
+`datetime.fromisoformat` handles milliseconds if they are there. 
+The output must be exactly `YYYY-MM-DDTHH:MM:SS.000Z`. My `strftime` does this.
+
+Final Code Structure:
+```python
+import datetime
+
+def next_runs(cron, from_time, count):
+    # ... implementation ...
+```

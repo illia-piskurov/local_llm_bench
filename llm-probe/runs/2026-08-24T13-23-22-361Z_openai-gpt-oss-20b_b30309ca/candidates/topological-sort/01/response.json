@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-qjcoiwkylxc1oij9z2drhi",
+  "object": "chat.completion",
+  "created": 1787578983,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const n = input.n;\n  const edges = input.edges;\n\n  // Build adjacency list and indegree counts\n  const adj = Array.from({ length: n }, () => []);\n  const indeg = new Int32Array(n);\n\n  for (const [u, v] of edges) {\n    adj[u].push(v);\n    indeg[v]++;\n  }\n\n  // Queue of nodes with zero indegree\n  const queue = [];\n  for (let i = 0; i < n; i++) if (indeg[i] === 0) queue.push(i);\n\n  const result = [];\n  let qIndex = 0;\n  while (qIndex < queue.length) {\n    const u = queue[qIndex++];\n    result.push(u);\n    for (const v of adj[u]) {\n      indeg[v]--;\n      if (indeg[v] === 0) queue.push(v);\n    }\n  }\n\n  return result.length === n ? result : null;\n}\n",
+        "reasoning": "Implement Kahn's algorithm. Return null if cycle. Do not modify input. Use adjacency list copy.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 227,
+    "completion_tokens": 240,
+    "total_tokens": 467,
+    "completion_tokens_details": {
+      "reasoning_tokens": 21
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-77fddpi9cszmxlu7bet5n",
+  "object": "chat.completion",
+  "created": 1787578305,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const { state, actions } = input;\n  // deep clone initial state\n  const clone = JSON.parse(JSON.stringify(state));\n\n  // helper to get or create nested object along path\n  const traverse = (obj, parts, createMissing = false) => {\n    let current = obj;\n    for (let i = 0; i < parts.length - 1; i++) {\n      const part = parts[i];\n      if (!(part in current) || typeof current[part] !== 'object' || current[part] === null) {\n        if (createMissing) current[part] = {};\n        else return undefined;\n      }\n      current = current[part];\n    }\n    return { parent: current, key: parts[parts.length - 1] };\n  };\n\n  actions.forEach(action => {\n    const pathParts = action.path.split('.');\n    switch (action.type) {\n      case 'SET': {\n        const target = traverse(clone, pathParts, true);\n        if (target) target.parent[target.key] = action.value;\n        break;\n      }\n      case 'TOGGLE': {\n        const target = traverse(clone, pathParts);\n        if (target) {\n          const val = target.parent[target.key];\n          target.parent[target.key] = typeof val === 'boolean' ? !val : true;\n        }\n        break;\n      }\n      case 'ARRAY_PUSH': {\n        const target = traverse(clone, pathParts, true);\n        if (target) {\n          let arr = target.parent[target.key];\n          if (!Array.isArray(arr)) arr = [];\n          arr.push(action.item);\n          target.parent[target.key] = arr;\n        }\n        break;\n      }\n      case 'ARRAY_REMOVE': {\n        const target = traverse(clone, pathParts);\n        if (target) {\n          const arr = target.parent[target.key];\n          if (Array.isArray(arr) && action.index >= 0 && action.index < arr.length) {\n            arr.splice(action.index, 1);\n          }\n        }\n        break;\n      }\n      case 'DELETE': {\n        const target = traverse(clone, pathParts);\n        if (target) delete target.parent[target.key];\n        break;\n      }\n    }\n  });\n\n  return clone;\n}",
+        "reasoning": "Need to implement deep clone and apply actions. Use recursion for path. Ensure immutability: copy objects along the way. Implement helper setDeep, toggleDeep, arrayPushDeep, arrayRemoveDeep, deleteDeep.\n\nReturn new state.\n\nImplement solve accordingly.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 385,
+    "completion_tokens": 533,
+    "total_tokens": 918,
+    "completion_tokens_details": {
+      "reasoning_tokens": 52
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

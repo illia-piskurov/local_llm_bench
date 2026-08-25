@@ -1,0 +1,16 @@
+{
+  "model": "openai/gpt-oss-20b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Return the minimum number of 4-directional moves from input.start to input.end through 0-cells in input.grid (1-cells are blocked). Return -1 if unreachable.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"grid\":[[0,0],[1,0]],\"start\":[0,0],\"end\":[1,1]}\noutput: 2"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 15000,
+  "stream": false
+}

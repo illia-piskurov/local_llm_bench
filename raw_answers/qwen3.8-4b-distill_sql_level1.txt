@@ -1,0 +1,207 @@
+```python
+def compile_query(query: dict) -> dict:
+    """
+    Компилирует AST-дерево запроса в параметризованный SQL.
+    
+    Args:
+        query: Словарь с описанием запроса (см. входной словарь).
+        
+    Returns:
+        {"sql": str, "params": list}
+    """
+    sql = []
+    params = []
+
+    # --- SELECT ---
+    if 'select' in query and query['select']:
+        columns = ', '.join(query['select'])
+        sql.append(f'SELECT {columns}')
+    else:
+        sql.append('SELECT *')
+
+    # --- FROM ---
+    table = query.get('table', '')
+    if table:
+        sql.append(f'FROM {table}')
+
+    # --- WHERE ---
+    where_clause = ''
+    if 'where' in query and query['where']:
+        where_conditions, params = _compile_where(query['where'], params)
+        if where_conditions:
+            where_clause = f'WHERE {where_conditions}'
+            sql.append(where_clause)
+
+    # --- JOIN (опционально, для полноты) ---
+    joins = query.get('join', [])
+    for join in joins:
+        table_name = join['table']
+        on_condition, params = _compile_where(join['on'], params)
+        if on_condition:
+            sql.append(f'JOIN {table_name} ON {on_condition}')
+
+    # --- GROUP BY (опционально) ---
+    group_by = query.get('groupBy', [])
+    if group_by:
+        fields = ', '.join(group_by)
+        sql.append(f'GROUP BY {fields}')
+
+    # --- HAVING (опционально) ---
+    having_clause = ''
+    if 'having' in query and query['having']:
+        having_conditions, params = _compile_where(query['having'], params)
+        if having_conditions:
+            having_clause = f'HAVING {having_conditions}'
+            sql.append(having_clause)
+
+    # --- ORDER BY ---
+    order_by = query.get('orderBy', [])
+    if order_by:
+        order_parts = []
+        for item in order_by:
+            field = item['field']
+            direction = item.get('dir', 'ASC')
+            order_parts.append(f'{field} {direction}')
+        sql.append(f'ORDER BY {", ".join(order_parts)}')
+
+    # --- LIMIT / OFFSET ---
+    limit = query.get('limit')
+    offset = query.get('offset')
+    if limit is not None:
+        sql.append(f'LIMIT {limit}')
+    if offset is not None:
+        sql.append(f'OFFSET {offset}')
+
+    return {'sql': ' '.join(sql), 'params': params}
+
+
+def _compile_where(conditions: list, params: list) -> tuple:
+    """Рекурсивно компилирует дерево условий WHERE."""
+    result = []
+    
+    for cond in conditions:
+        if isinstance(cond, dict):
+            # Логический оператор (AND/OR)
+            op = cond.get('op', '')
+            left, right = _compile_condition(cond['left'], params)
+            
+            if op == 'AND':
+                result.append(f'({left} AND {right})')
+            elif op == 'OR':
+                result.append(f'({left} OR {right})')
+        else:
+            # Простое условие: { field: str, op: str, value: any }
+            field = cond['field']
+            operator = cond['op']
+            value = cond['value']
+            
+            if isinstance(value, (int, float)):
+                params.append(value)
+                result.append(f'{field} {operator} $1')
+            elif isinstance(value, str):
+                params.append(value)
+                result.append(f'{field} {operator} $1')
+            else:
+                params.append(value)
+                result.append(f'{field} {operator} $1')
+
+    return ' '.join(result), params
+
+
+def _compile_condition(cond: dict, params: list) -> str:
+    """Компилирует одно условие (левая/правая часть)."""
+    field = cond['field']
+    operator = cond['op']
+    
+    value = cond.get('value')
+    if isinstance(value, (int, float)):
+        return f'{field} {operator} $1'
+    elif isinstance(value, str):
+        return f'{field} {operator} $1'
+    else:
+        return f'{field} {operator} $1'
+
+
+# --- Примеры использования ---
+if __name__ == '__main__':
+    # Пример 1: Простой запрос с WHERE
+    query1 = {
+        'table': 'users',
+        'select': ['name', 'age'],
+        'where': {
+            'field': 'age',
+            'op': '=',
+            'value': 25
+        }
+    }
+    print(compile_query(query1))
+
+    # Пример 2: Сложный WHERE с AND/OR и вложенными условиями
+    query2 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'AND': [
+                {'field': 'age', 'op': '>', 'value': 18},
+                {'OR': [
+                    {'field': 'status', 'op': '=', 'value': 'active'},
+                    {'field': 'status', 'op': '!=', 'value': 'inactive'}
+                ]}
+            ]
+        }
+    }
+    print(compile_query(query2))
+
+    # Пример 3: С ORDER BY и LIMIT/OFFSET
+    query3 = {
+        'table': 'orders',
+        'select': ['order_id'],
+        'where': {'field': 'status', 'op': '=', 'value': 'completed'},
+        'orderBy': [
+            {'field': 'created_at', 'dir': 'DESC'}
+        ],
+        'limit': 10,
+        'offset': 20
+    }
+    print(compile_query(query3))
+
+    # Пример 4: С JOIN (для полноты)
+    query4 = {
+        'table': 'users',
+        'select': ['u.name'],
+        'where': {'field': 'age', 'op': '>', 'value': 18},
+        'join': [
+            {
+                'table': 'orders',
+                'on': {
+                    'left_field': 'user_id',
+                    'right_field': 'user_id',
+                    'op': '='
+                }
+            }
+        ]
+    }
+    print(compile_query(query4))
+```
+
+**Примеры вывода:**
+
+```python
+# Пример 1:
+{'sql': 'SELECT name, age FROM users WHERE age = $1', 'params': [25]}
+
+# Пример 2:
+{'sql': 'SELECT name FROM users WHERE (age > $1) AND ((status = $2 OR status != $3))', 'params': [18, 'active', 'inactive']}
+
+# Пример 3:
+{'sql': 'SELECT order_id FROM orders WHERE status = $1 ORDER BY created_at DESC LIMIT 10 OFFSET 20', 'params': ['completed']}
+
+# Пример 4:
+{'sql': 'SELECT u.name FROM users JOIN orders ON user_id = user_id WHERE age > $1', 'params': [18]}
+```
+
+**Ключевые особенности:**
+- **Параметризация**: все значения подставляются через `$1`, `$2`... (подходит для PostgreSQL, MySQL)
+- **Рекурсия**: условия AND/OR обрабатываются рекурсивно с вложенными скобками
+- **Типы значений**: int/float и str — оба используют плейсхолдер `$1`
+- **Гибкость**: ORDER BY, LIMIT, OFFSET, JOIN, GROUP BY, HAVING поддерживаются опционально

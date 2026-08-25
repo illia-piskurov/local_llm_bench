@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "passed": 4,
+  "total": 4,
+  "tests": [
+    {
+      "id": "all-valid",
+      "passed": true
+    },
+    {
+      "id": "required-missing",
+      "passed": true
+    },
+    {
+      "id": "type-mismatch",
+      "passed": true
+    },
+    {
+      "id": "array-rules",
+      "passed": true
+    }
+  ],
+  "durationMs": 31
+}

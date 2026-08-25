@@ -1,0 +1,108 @@
+import datetime
+from typing import List, Tuple, Union, Set
+
+def parse_cron(cron: str) -> Tuple[Union[int, str], ...]:
+    parts = cron.strip().split()
+    if len(parts) != 5:
+        raise ValueError("Cron must have exactly 5 fields")
+    def parse_field(field: str) -> Union[int, List[int], Tuple[int, int], str]:
+        if field == '*':
+            return '*'
+        if '-' in field:
+            a, b = field.split('-')
+            a = int(a.strip() or 0)
+            b = int(b.strip() or 100)  # max value
+            return (a, b)
+        if ',' in field:
+            return [int(x.strip()) for x in field.split(',')]
+        if '.' in field:
+            raise ValueError("Dot not allowed in cron field")
+        if '/' in field:
+            r, step = field.split('/')
+            r = int(r.strip())
+            step = int(step.strip())
+            return (r, step)
+        try:
+            return int(field)
+        except ValueError:
+            raise ValueError(f"Invalid value in cron field: {field}")
+    return tuple(parse_field(p) for p in parts)
+
+def generate_candidates(range_type: Union[str, Tuple[int, int]], start: int, end: int) -> List[int]:
+    if range_type == '*':
+        return list(range(start, end + 1))
+    if isinstance(range_type, tuple):
+        a, b = range_type
+        return list(range(a, b + 1))
+    return []
+
+def matches(cron_parts: Tuple[Union[int, str], ...], dt: datetime.datetime) -> bool:
+    minute, hour, day_m, month, day_d = cron_parts
+    m = dt.minute
+    h = dt.hour
+    dm = dt.day
+    mo = dt.month
+    dd = dt.weekday()  # Monday=0 ... Sunday=6
+
+    def in_range(v, l, r):
+        if isinstance(v, int):
+            return l <= v <= r
+        if isinstance(v, tuple):
+            a, b = l, r
+            return a <= v <= b
+        if isinstance(v, list):
+            return any(in_range(x, l, r) for x in v)
+        return False
+
+    # Handle step and range
+    if isinstance(cron_parts[2], tuple):  # day of month
+        dm_range, dm_step = cron_parts[2]
+        if dm_range != '*':
+            if not in_range(dm, dm_range[0], dm_range[1]):
+                return False
+            if (dm - dm_range[0]) % dm_step != 0:
+                return False
+        else:
+            if not in_range(dm, 1, 31):
+                return False
+    else:
+        if not in_range(dm, day_m, month):
+            return False
+
+    # Handle day of week
+    if cron_parts[4] != '*':
+        day_d_range, day_d_step = cron_parts[4]
+        if day_d_range != '*':
+            if not in_range(day_d, day_d_range[0], day_d_range[1]):
+                return False
+            if (dd - day_d_range[0]) % day_d_step != 0:
+                return False
+        else:
+            if not in_range(dd, 0, 6):
+                return False
+    else:
+        if cron_parts[4] == '0' and day_d != 0:  # 0 means Sunday
+            return False
+
+    # Minute and hour are strict
+    if not in_range(m, minute, minute):
+        return False
+    if not in_range(h, hour, hour):
+        return False
+
+    return True
+
+def next_runs(cron: str, from_time: str, count: int) -> List[str]:
+    cron_parts = parse_cron(cron)
+    dt = datetime.datetime.fromisoformat(from_time.replace('Z', '+00:00'))
+    start = dt + datetime.timedelta(seconds=1)
+    results = []
+    current = start
+    while len(results) < count:
+        if matches(cron_parts, current):
+            results.append(current.strftime("%Y-%m-%dT%H:%M:%S.000Z"))
+        current += datetime.timedelta(seconds=1)
+        # Prevent infinite loop in case cron never matches
+        if len(results) == 0 and current > dt + datetime.timedelta(days=365):
+            break
+    return results

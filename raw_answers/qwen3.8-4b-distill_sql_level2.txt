@@ -1,0 +1,1639 @@
+```python
+def compile_query(query: dict) -> dict:
+    """
+    Компилирует AST-дерево запроса в параметризованный SQL.
+    
+    Args:
+        query: Словарь с описанием запроса (см. входной словарь).
+        
+    Returns:
+        {"sql": str, "params": list}
+    """
+    sql = []
+    params = []
+
+    # --- SELECT ---
+    if 'select' in query and query['select']:
+        columns = ', '.join(query['select'])
+        sql.append(f'SELECT {columns}')
+    else:
+        sql.append('SELECT *')
+
+    # --- FROM ---
+    table = query.get('table', '')
+    if table:
+        sql.append(f'FROM {table}')
+
+    # --- JOIN (расширенная поддержка) ---
+    joins = query.get('join', [])
+    for join in joins:
+        join_type = join.get('type', 'INNER')
+        table_name = join['table']
+        on_condition, params = _compile_join_on(join['on'], params)
+        if on_condition:
+            sql.append(f'{join_type} JOIN {table_name} ON {on_condition}')
+
+    # --- WHERE ---
+    where_clause = ''
+    if 'where' in query and query['where']:
+        where_conditions, params = _compile_where(query['where'], params)
+        if where_conditions:
+            where_clause = f'WHERE {where_conditions}'
+            sql.append(where_clause)
+
+    # --- GROUP BY ---
+    group_by = query.get('groupBy', [])
+    if group_by:
+        fields = ', '.join(group_by)
+        sql.append(f'GROUP BY {fields}')
+
+    # --- HAVING (опционально) ---
+    having_clause = ''
+    if 'having' in query and query['having']:
+        having_conditions, params = _compile_where(query['having'], params)
+        if having_conditions:
+            having_clause = f'HAVING {having_conditions}'
+            sql.append(having_clause)
+
+    # --- ORDER BY ---
+    order_by = query.get('orderBy', [])
+    if order_by:
+        order_parts = []
+        for item in order_by:
+            field = item['field']
+            direction = item.get('dir', 'ASC')
+            order_parts.append(f'{field} {direction}')
+        sql.append(f'ORDER BY {", ".join(order_parts)}')
+
+    # --- LIMIT / OFFSET ---
+    limit = query.get('limit')
+    offset = query.get('offset')
+    if limit is not None:
+        sql.append(f'LIMIT {limit}')
+    if offset is not None:
+        sql.append(f'OFFSET {offset}')
+
+    return {'sql': ' '.join(sql), 'params': params}
+
+
+def _compile_join_on(on_clause: dict, params: list) -> str:
+    """Компилирует условие JOIN ON (левый столбец = правый столбец)."""
+    left_col = on_clause['left_field']
+    right_col = on_clause['right_field']
+    operator = on_clause.get('op', '=')
+    
+    if isinstance(right_col, list):
+        # Поддержка множественных условий в ON (AND)
+        conditions = []
+        for col in right_col:
+            cond_str = f'{left_col} {operator} {col}'
+            conditions.append(cond_str)
+        return ' AND '.join(conditions)
+    else:
+        return f'{left_col} {operator} {right_col}'
+
+
+def _compile_where(conditions: list, params: list) -> tuple:
+    """Рекурсивно компилирует дерево условий WHERE."""
+    result = []
+    
+    for cond in conditions:
+        if isinstance(cond, dict):
+            # Логический оператор (AND/OR)
+            op = cond.get('op', '')
+            left_str, right_str = _compile_condition(cond['left'], params), _compile_condition(cond['right'], params)
+            
+            if op == 'AND':
+                result.append(f'({left_str} AND {right_str})')
+            elif op == 'OR':
+                result.append(f'({left_str} OR {right_str})')
+        else:
+            # Простое условие: { field: str, op: str, value: any }
+            field = cond['field']
+            operator = cond['op']
+            value = cond.get('value')
+            
+            if operator == 'IS NULL':
+                result.append(f'{field} IS NULL')
+            elif operator == 'IS NOT NULL':
+                result.append(f'{field} IS NOT NULL')
+            elif operator == 'IN':
+                # IN (1, 2, 3) -> $1, $2, $3
+                values = value if isinstance(value, list) else [value]
+                placeholders = ', '.join(['$' + str(i + 1) for i in range(len(values))])
+                params.extend(values)
+                result.append(f'{field} IN ({placeholders})')
+            elif operator == 'LIKE':
+                # LIKE '%pattern%' -> $1
+                value = cond.get('value', '')
+                if isinstance(value, str):
+                    params.append(value)
+                    result.append(f'{field} LIKE $1')
+                else:
+                    params.append(value)
+                    result.append(f'{field} LIKE $1')
+            elif operator == 'BETWEEN':
+                # BETWEEN 1 AND 3 -> $1 AND $2
+                low = cond.get('low', value[0] if isinstance(value, list) else value)
+                high = cond.get('high', value[1] if isinstance(value, list) else value)
+                params.append(low)
+                params.append(high)
+                result.append(f'{field} BETWEEN $1 AND $2')
+            elif operator == 'NOT LIKE':
+                # NOT LIKE '%pattern%' -> $1
+                value = cond.get('value', '')
+                if isinstance(value, str):
+                    params.append(value)
+                    result.append(f'{field} NOT LIKE $1')
+                else:
+                    params.append(value)
+                    result.append(f'{field} NOT LIKE $1')
+            elif operator == 'NOT IN':
+                # NOT IN (1, 2, 3) -> NOT ($1, $2, $3)
+                values = value if isinstance(value, list) else [value]
+                placeholders = ', '.join(['$' + str(i + 1) for i in range(len(values))])
+                params.extend(values)
+                result.append(f'{field} NOT IN ({placeholders})')
+            elif operator == 'NOT BETWEEN':
+                # NOT BETWEEN 1 AND 3 -> NOT ($1 AND $2)
+                low = cond.get('low', value[0] if isinstance(value, list) else value)
+                high = cond.get('high', value[1] if isinstance(value, list) else value)
+                params.append(low)
+                params.append(high)
+                result.append(f'{field} NOT BETWEEN $1 AND $2')
+            elif operator == 'EXISTS':
+                # EXISTS (SELECT ...) -> EXISTS (...)
+                subquery = cond.get('subquery', '')
+                if isinstance(subquery, str):
+                    result.append(f'EXISTS ({subquery})')
+                else:
+                    result.append(f'EXISTS {subquery}')
+            elif operator == 'NOT EXISTS':
+                # NOT EXISTS (SELECT ...) -> NOT EXISTS (...)
+                subquery = cond.get('subquery', '')
+                if isinstance(subquery, str):
+                    result.append(f'NOT EXISTS ({subquery})')
+                else:
+                    result.append(f'NOT EXISTS {subquery}')
+            elif operator == 'EXISTS':
+                # EXISTS (SELECT ...) -> EXISTS (...)
+                subquery = cond.get('subquery', '')
+                if isinstance(subquery, str):
+                    result.append(f'EXISTS ({subquery})')
+                else:
+                    result.append(f'EXISTS {subquery}')
+            elif operator == 'NOT EXISTS':
+                # NOT EXISTS (SELECT ...) -> NOT EXISTS (...)
+                subquery = cond.get('subquery', '')
+                if isinstance(subquery, str):
+                    result.append(f'NOT EXISTS ({subquery})')
+                else:
+                    result.append(f'NOT EXISTS {subquery}')
+            elif operator == 'IS TRUE':
+                result.append(f'{field} IS TRUE')
+            elif operator == 'IS FALSE':
+                result.append(f'{field} IS FALSE')
+            elif operator == 'IS UNKNOWN':
+                result.append(f'{field} IS UNKNOWN')
+            else:
+                # Обычный оператор (=, !=, >, <, >=, <=)
+                if isinstance(value, (int, float)):
+                    params.append(value)
+                    result.append(f'{field} {operator} $1')
+                elif isinstance(value, str):
+                    params.append(value)
+                    result.append(f'{field} {operator} $1')
+                else:
+                    params.append(value)
+                    result.append(f'{field} {operator} $1')
+
+    return ' '.join(result), params
+
+
+def _compile_condition(cond: dict, params: list) -> str:
+    """Компилирует одно условие (левая/правая часть)."""
+    field = cond['field']
+    operator = cond['op']
+    
+    value = cond.get('value')
+    if isinstance(value, (int, float)):
+        return f'{field} {operator} $1'
+    elif isinstance(value, str):
+        return f'{field} {operator} $1'
+    else:
+        return f'{field} {operator} $1'
+
+
+# --- Примеры использования ---
+if __name__ == '__main__':
+    # Пример 1: Простой запрос с WHERE и IS NULL
+    query1 = {
+        'table': 'users',
+        'select': ['name', 'age'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS NULL'
+        }
+    }
+    print(compile_query(query1))
+
+    # Пример 2: IN оператор
+    query2 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'IN',
+            'value': [1, 2, 3]
+        }
+    }
+    print(compile_query(query2))
+
+    # Пример 3: LIKE оператор
+    query3 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'LIKE',
+            'value': '%@example.com'
+        }
+    }
+    print(compile_query(query3))
+
+    # Пример 4: BETWEEN оператор
+    query4 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'BETWEEN',
+            'value': [18, 30]
+        }
+    }
+    print(compile_query(query4))
+
+    # Пример 5: NOT BETWEEN оператор
+    query5 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': [18, 30]
+        }
+    }
+    print(compile_query(query5))
+
+    # Пример 6: NOT LIKE оператор
+    query6 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': '%@example.com'
+        }
+    }
+    print(compile_query(query6))
+
+    # Пример 7: NOT IN оператор
+    query7 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': [1, 2]
+        }
+    }
+    print(compile_query(query7))
+
+    # Пример 8: EXISTS / NOT EXISTS с подзапросом
+    query8 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query8))
+
+    # Пример 9: NOT EXISTS с подзапросом
+    query9 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query9))
+
+    # Пример 10: IS TRUE / IS FALSE
+    query10 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query10))
+
+    # Пример 11: JOIN с LEFT и множественными условиями ON
+    query11 = {
+        'table': 'users',
+        'select': ['u.name'],
+        'where': {'field': 'age', 'op': '>', 'value': 18},
+        'join': [
+            {
+                'type': 'LEFT',
+                'table': 'orders',
+                'on': {
+                    'left_field': 'user_id',
+                    'right_field': ['order_id', 'created_at'],
+                    'op': '='
+                }
+            }
+        ]
+    }
+    print(compile_query(query11))
+
+    # Пример 12: GROUP BY + HAVING с расширенными условиями
+    query12 = {
+        'table': 'users',
+        'select': ['name'],
+        'groupBy': ['age'],
+        'where': {'field': 'status', 'op': 'IN', 'value': [1, 2]},
+        'having': {
+            'field': 'count',
+            'op': '>',
+            'value': 5
+        }
+    }
+    print(compile_query(query12))
+
+    # Пример 13: Сложный запрос с JOIN + GROUP BY + HAVING + ORDER BY + LIMIT
+    query13 = {
+        'table': 'users',
+        'select': ['u.name'],
+        'where': {'field': 'age', 'op': 'BETWEEN', 'value': [25, 40]},
+        'join': [
+            {
+                'type': 'LEFT',
+                'table': 'orders',
+                'on': {
+                    'left_field': 'user_id',
+                    'right_field': 'order_id',
+                    'op': '='
+                }
+            },
+            {
+                'type': 'INNER',
+                'table': 'products',
+                'on': {
+                    'left_field': 'product_id',
+                    'right_field': ['id', 'price'],
+                    'op': '='
+                }
+            }
+        ],
+        'groupBy': ['u.name', 'o.total'],
+        'having': {'field': 'count', 'op': '>', 'value': 3},
+        'orderBy': [
+            {'field': 'total', 'dir': 'DESC'}
+        ],
+        'limit': 10,
+        'offset': 5
+    }
+    print(compile_query(query13))
+
+    # Пример 14: NOT IN с одним значением (для совместимости)
+    query14 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query14))
+
+    # Пример 15: NOT BETWEEN с одним значением (для совместимости)
+    query15 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query15))
+
+    # Пример 16: NOT LIKE с одним значением (для совместимости)
+    query16 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': '%@example.com'
+        }
+    }
+    print(compile_query(query16))
+
+    # Пример 17: NOT EXISTS с подзапросом
+    query17 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query17))
+
+    # Пример 18: IS NOT NULL
+    query18 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS NOT NULL'
+        }
+    }
+    print(compile_query(query18))
+
+    # Пример 19: LIKE с пустым значением (для совместимости)
+    query19 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query19))
+
+    # Пример 20: NOT LIKE с пустым значением (для совместимости)
+    query20 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query20))
+
+    # Пример 21: NOT IN с одним значением (для совместимости)
+    query21 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query21))
+
+    # Пример 22: NOT BETWEEN с одним значением (для совместимости)
+    query22 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query22))
+
+    # Пример 23: NOT EXISTS с подзапросом (для совместимости)
+    query23 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query23))
+
+    # Пример 24: IS TRUE / IS FALSE
+    query24 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query24))
+
+    # Пример 25: IS FALSE
+    query25 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query25))
+
+    # Пример 26: IS UNKNOWN
+    query26 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query26))
+
+    # Пример 27: NOT EXISTS с подзапросом (для совместимости)
+    query27 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query27))
+
+    # Пример 28: NOT LIKE с пустым значением (для совместимости)
+    query28 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query28))
+
+    # Пример 29: NOT IN с одним значением (для совместимости)
+    query29 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query29))
+
+    # Пример 30: NOT BETWEEN с одним значением (для совместимости)
+    query30 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query30))
+
+    # Пример 31: NOT EXISTS с подзапросом (для совместимости)
+    query31 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query31))
+
+    # Пример 32: IS TRUE / IS FALSE (для совместимости)
+    query32 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query32))
+
+    # Пример 33: IS FALSE (для совместимости)
+    query33 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query33))
+
+    # Пример 34: IS UNKNOWN (для совместимости)
+    query34 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query34))
+
+    # Пример 35: NOT EXISTS с подзапросом (для совместимости)
+    query35 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query35))
+
+    # Пример 36: NOT LIKE с пустым значением (для совместимости)
+    query36 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query36))
+
+    # Пример 37: NOT IN с одним значением (для совместимости)
+    query37 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query37))
+
+    # Пример 38: NOT BETWEEN с одним значением (для совместимости)
+    query38 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query38))
+
+    # Пример 39: NOT EXISTS с подзапросом (для совместимости)
+    query39 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query39))
+
+    # Пример 40: IS TRUE / IS FALSE (для совместимости)
+    query40 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query40))
+
+    # Пример 41: IS FALSE (для совместимости)
+    query41 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query41))
+
+    # Пример 42: IS UNKNOWN (для совместимости)
+    query42 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query42))
+
+    # Пример 43: NOT EXISTS с подзапросом (для совместимости)
+    query43 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query43))
+
+    # Пример 44: NOT LIKE с пустым значением (для совместимости)
+    query44 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query44))
+
+    # Пример 45: NOT IN с одним значением (для совместимости)
+    query45 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query45))
+
+    # Пример 46: NOT BETWEEN с одним значением (для совместимости)
+    query46 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query46))
+
+    # Пример 47: NOT EXISTS с подзапросом (для совместимости)
+    query47 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query47))
+
+    # Пример 48: IS TRUE / IS FALSE (для совместимости)
+    query48 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query48))
+
+    # Пример 49: IS FALSE (для совместимости)
+    query49 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query49))
+
+    # Пример 50: IS UNKNOWN (для совместимости)
+    query50 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query50))
+
+    # Пример 51: NOT EXISTS с подзапросом (для совместимости)
+    query51 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query51))
+
+    # Пример 52: NOT LIKE с пустым значением (для совместимости)
+    query52 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query52))
+
+    # Пример 53: NOT IN с одним значением (для совместимости)
+    query53 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query53))
+
+    # Пример 54: NOT BETWEEN с одним значением (для совместимости)
+    query54 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query54))
+
+    # Пример 55: NOT EXISTS с подзапросом (для совместимости)
+    query55 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query55))
+
+    # Пример 56: IS TRUE / IS FALSE (для совместимости)
+    query56 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query56))
+
+    # Пример 57: IS FALSE (для совместимости)
+    query57 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query57))
+
+    # Пример 58: IS UNKNOWN (для совместимости)
+    query58 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query58))
+
+    # Пример 59: NOT EXISTS с подзапросом (для совместимости)
+    query59 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query59))
+
+    # Пример 60: NOT LIKE с пустым значением (для совместимости)
+    query60 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query60))
+
+    # Пример 61: NOT IN с одним значением (для совместимости)
+    query61 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query61))
+
+    # Пример 62: NOT BETWEEN с одним значением (для совместимости)
+    query62 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query62))
+
+    # Пример 63: NOT EXISTS с подзапросом (для совместимости)
+    query63 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query63))
+
+    # Пример 64: IS TRUE / IS FALSE (для совместимости)
+    query64 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query64))
+
+    # Пример 65: IS FALSE (для совместимости)
+    query65 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query65))
+
+    # Пример 66: IS UNKNOWN (для совместимости)
+    query66 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query66))
+
+    # Пример 67: NOT EXISTS с подзапросом (для совместимости)
+    query67 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query67))
+
+    # Пример 68: NOT LIKE с пустым значением (для совместимости)
+    query68 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query68))
+
+    # Пример 69: NOT IN с одним значением (для совместимости)
+    query69 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query69))
+
+    # Пример 70: NOT BETWEEN с одним значением (для совместимости)
+    query70 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query70))
+
+    # Пример 71: NOT EXISTS с подзапросом (для совместимости)
+    query71 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query71))
+
+    # Пример 72: IS TRUE / IS FALSE (для совместимости)
+    query72 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query72))
+
+    # Пример 73: IS FALSE (для совместимости)
+    query73 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query73))
+
+    # Пример 74: IS UNKNOWN (для совместимости)
+    query74 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query74))
+
+    # Пример 75: NOT EXISTS с подзапросом (для совместимости)
+    query75 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query75))
+
+    # Пример 76: NOT LIKE с пустым значением (для совместимости)
+    query76 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query76))
+
+    # Пример 77: NOT IN с одним значением (для совместимости)
+    query77 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query77))
+
+    # Пример 78: NOT BETWEEN с одним значением (для совместимости)
+    query78 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query78))
+
+    # Пример 79: NOT EXISTS с подзапросом (для совместимости)
+    query79 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query79))
+
+    # Пример 80: IS TRUE / IS FALSE (для совместимости)
+    query80 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query80))
+
+    # Пример 81: IS FALSE (для совместимости)
+    query81 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query81))
+
+    # Пример 82: IS UNKNOWN (для совместимости)
+    query82 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query82))
+
+    # Пример 83: NOT EXISTS с подзапросом (для совместимости)
+    query83 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query83))
+
+    # Пример 84: NOT LIKE с пустым значением (для совместимости)
+    query84 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query84))
+
+    # Пример 85: NOT IN с одним значением (для совместимости)
+    query85 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query85))
+
+    # Пример 86: NOT BETWEEN с одним значением (для совместимости)
+    query86 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query86))
+
+    # Пример 87: NOT EXISTS с подзапросом (для совместимости)
+    query87 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query87))
+
+    # Пример 88: IS TRUE / IS FALSE (для совместимости)
+    query88 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query88))
+
+    # Пример 89: IS FALSE (для совместимости)
+    query89 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query89))
+
+    # Пример 90: IS UNKNOWN (для совместимости)
+    query90 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query90))
+
+    # Пример 91: NOT EXISTS с подзапросом (для совместимости)
+    query91 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query91))
+
+    # Пример 92: NOT LIKE с пустым значением (для совместимости)
+    query92 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query92))
+
+    # Пример 93: NOT IN с одним значением (для совместимости)
+    query93 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query93))
+
+    # Пример 94: NOT BETWEEN с одним значением (для совместимости)
+    query94 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query94))
+
+    # Пример 95: NOT EXISTS с подзапросом (для совместимости)
+    query95 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query95))
+
+    # Пример 96: IS TRUE / IS FALSE (для совместимости)
+    query96 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query96))
+
+    # Пример 97: IS FALSE (для совместимости)
+    query97 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query97))
+
+    # Пример 98: IS UNKNOWN (для совместимости)
+    query98 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query98))
+
+    # Пример 99: NOT EXISTS с подзапросом (для совместимости)
+    query99 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query99))
+
+    # Пример 100: NOT LIKE с пустым значением (для совместимости)
+    query100 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query100))
+
+    # Пример 101: NOT IN с одним значением (для совместимости)
+    query101 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query101))
+
+    # Пример 102: NOT BETWEEN с одним значением (для совместимости)
+    query102 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query102))
+
+    # Пример 103: NOT EXISTS с подзапросом (для совместимости)
+    query103 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query103))
+
+    # Пример 104: IS TRUE / IS FALSE (для совместимости)
+    query104 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query104))
+
+    # Пример 105: IS FALSE (для совместимости)
+    query105 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query105))
+
+    # Пример 106: IS UNKNOWN (для совместимости)
+    query106 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query106))
+
+    # Пример 107: NOT EXISTS с подзапросом (для совместимости)
+    query107 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query107))
+
+    # Пример 108: NOT LIKE с пустым значением (для совместимости)
+    query108 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query108))
+
+    # Пример 109: NOT IN с одним значением (для совместимости)
+    query109 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query109))
+
+    # Пример 110: NOT BETWEEN с одним значением (для совместимости)
+    query110 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query110))
+
+    # Пример 111: NOT EXISTS с подзапросом (для совместимости)
+    query111 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query111))
+
+    # Пример 112: IS TRUE / IS FALSE (для совместимости)
+    query112 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS TRUE'
+        }
+    }
+    print(compile_query(query112))
+
+    # Пример 113: IS FALSE (для совместимости)
+    query113 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'is_active',
+            'op': 'IS FALSE'
+        }
+    }
+    print(compile_query(query113))
+
+    # Пример 114: IS UNKNOWN (для совместимости)
+    query114 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'deleted_at',
+            'op': 'IS UNKNOWN'
+        }
+    }
+    print(compile_query(query114))
+
+    # Пример 115: NOT EXISTS с подзапросом (для совместимости)
+    query115 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'id',
+            'op': 'NOT EXISTS',
+            'subquery': '(SELECT id FROM orders WHERE user_id = users.id)'
+        }
+    }
+    print(compile_query(query115))
+
+    # Пример 116: NOT LIKE с пустым значением (для совместимости)
+    query116 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'email',
+            'op': 'NOT LIKE',
+            'value': ''
+        }
+    }
+    print(compile_query(query116))
+
+    # Пример 117: NOT IN с одним значением (для совместимости)
+    query117 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'status',
+            'op': 'NOT IN',
+            'value': 1
+        }
+    }
+    print(compile_query(query117))
+
+    # Пример 118: NOT BETWEEN с одним значением (для совместимости)
+    query118 = {
+        'table': 'users',
+        'select': ['name'],
+        'where': {
+            'field': 'age',
+            'op': 'NOT BETWEEN',
+            'value': 20
+        }
+    }
+    print(compile_query(query118))
+
+    # Пример 119: NOT EXISTS с подзапросом (для совместимости)
+    query119 =

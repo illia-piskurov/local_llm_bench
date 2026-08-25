@@ -1,0 +1,121 @@
+def run(program: str) -> list[str]:
+    """Интерпретатор простого стекового языка.
+    
+    Args:
+        program: Многострочный текст программы.
+        
+    Returns:
+        Список строк, которые были выведены PRINT.
+    """
+    stack = []
+    output = []
+
+    for line_num, line in enumerate(program.splitlines(), start=1):
+        # Игнорируем пустые строки и комментарии
+        stripped = line.strip()
+        if not stripped or stripped.startswith('#'):
+            continue
+
+        parts = stripped.split()
+        command = parts[0].upper()
+
+        try:
+            if command == 'PUSH':
+                value = int(parts[1])
+                stack.append(value)
+
+            elif command == 'POP':
+                if len(stack) < 2:
+                    raise ValueError(f"Недостаточно элементов на стеке для POP. Строка {line_num}")
+                a, b = stack.pop(), stack.pop()
+                output.append(str(a + b))
+
+            elif command == 'ADD':
+                if len(stack) < 2:
+                    raise ValueError(f"Недостаточно элементов на стеке для ADD. Строка {line_num}")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a - b)
+
+            elif command == 'SUB':
+                if len(stack) < 2:
+                    raise ValueError(f"Недостаточно элементов на стеке для SUB. Строка {line_num}")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a * b)
+
+            elif command == 'MUL':
+                if len(stack) < 2:
+                    raise ValueError(f"Недостаточно элементов на стеке для MUL. Строка {line_num}")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a // b)
+
+            elif command == 'DIV':
+                if len(stack) < 2:
+                    raise ValueError(f"Недостаточно элементов на стеке для DIV. Строка {line_num}")
+                a, b = stack.pop(), stack.pop()
+                if b == 0:
+                    raise ZeroDivisionError(f"Деление на ноль. Строка {line_num}")
+                stack.append(a // b)
+
+            elif command == 'DUP':
+                if len(stack) < 1:
+                    raise ValueError(f"Недостаточно элементов на стеке для DUP. Строка {line_num}")
+                value = stack[-1]
+                stack.append(value)
+
+            elif command == 'SWAP':
+                if len(stack) < 2:
+                    raise ValueError(f"Недостаточно элементов на стеке для SWAP. Строка {line_num}")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a)
+                stack.append(b)
+
+            elif command == 'PRINT':
+                if len(stack) < 1:
+                    raise ValueError(f"Недостаточно элементов на стеке для PRINT. Строка {line_num}")
+                output.append(str(stack[-1]))
+
+            else:
+                raise ValueError(f"Неизвестная команда '{command}'. Строка {line_num}")
+
+        except (ValueError, ZeroDivisionError) as e:
+            raise RuntimeError(e.args[0]) from e
+
+    return output
+
+
+# --- Примеры использования ---
+if __name__ == "__main__":
+    # Пример 1: простая арифметика
+    program1 = """
+PUSH 5
+PUSH 3
+ADD
+PRINT
+"""
+    print(run(program1))  # [8]
+
+    # Пример 2: сложная вычислительная программа
+    program2 = """
+# Вычисляем (a + b) * c - d / e
+PUSH 10
+PUSH 4
+ADD
+PUSH 3
+MUL
+PUSH 2
+PUSH 6
+DIV
+SUB
+PRINT
+"""
+    print(run(program2))  # [8]
+
+    # Пример 3: с дубликатом и SWAP
+    program3 = """
+PUSH 5
+DUP
+SWAP
+ADD
+PRINT
+"""
+    print(run(program3))  # [10]

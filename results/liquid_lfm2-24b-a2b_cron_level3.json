@@ -1,0 +1,29 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "cron",
+  "level": "level3",
+  "tested_at": "2026-08-25 10:30:38",
+  "passed": 0,
+  "total": 19,
+  "failures": [
+    "hourly_zero_minute: исключение/таймаут: 'str' object cannot be interpreted as an integer",
+    "exact_daily_time: исключение/таймаут: 'str' object cannot be interpreted as an integer",
+    "minute_list: исключение/таймаут: 'str' object cannot be interpreted as an integer",
+    "hour_range: исключение/таймаут: 'str' object cannot be interpreted as an integer",
+    "first_of_month: исключение/таймаут: 'str' object cannot be interpreted as an integer",
+    "specific_day_of_week: исключение/таймаут: Value after * must be an iterable, not int",
+    "strictly_after_exact_match: исключение/таймаут: 'str' object cannot be interpreted as an integer",
+    "every_15_minutes_in_work_hours: исключение/таймаут: Cannot mix * with other specifiers",
+    "step_with_range: исключение/таймаут: invalid literal for int() with base 10: '20/5'",
+    "dom_and_dow_or_rule: исключение/таймаут: Value after * must be an iterable, not int",
+    "every_two_months: исключение/таймаут: Cannot mix * with other specifiers",
+    "cross_year_boundary: исключение/таймаут: 'str' object cannot be interpreted as an integer",
+    "alias_hourly: исключение/таймаут: Cron must have exactly 5 fields",
+    "alias_daily: исключение/таймаут: Cron must have exactly 5 fields",
+    "alias_monthly: исключение/таймаут: Cron must have exactly 5 fields",
+    "alias_weekly: исключение/таймаут: Cron must have exactly 5 fields",
+    "leap_year_feb_29: исключение/таймаут: 'str' object cannot be interpreted as an integer",
+    "leap_year_next: исключение/таймаут: 'str' object cannot be interpreted as an integer",
+    "end_of_year_minute_transition: исключение/таймаут: 'str' object cannot be interpreted as an integer"
+  ]
+}

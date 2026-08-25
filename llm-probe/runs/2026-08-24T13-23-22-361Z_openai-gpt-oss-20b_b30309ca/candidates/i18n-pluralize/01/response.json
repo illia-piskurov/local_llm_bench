@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-bkj0vycyft70fjfydadoeav",
+  "object": "chat.completion",
+  "created": 1787578405,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const { locales, lang, key, params } = input;\n  // Helper to get template\n  const getTemplate = (l) => {\n    if (!locales[l]) return undefined;\n    return locales[l][key];\n  };\n  let tmpl = getTemplate(lang);\n  if (tmpl === undefined) {\n    tmpl = getTemplate('en');\n    if (tmpl === undefined) return key;\n  }\n  // Handle plural object\n  const isPluralObj = typeof tmpl === 'object' && tmpl !== null;\n  let resultString;\n  if (isPluralObj) {\n    const count = params.count;\n    if (count === 0 && tmpl.zero !== undefined) {\n      resultString = tmpl.zero;\n    } else if (count === 1 && tmpl.one !== undefined) {\n      resultString = tmpl.one;\n    } else {\n      resultString = tmpl.other;\n    }\n  } else {\n    resultString = tmpl;\n  }\n  // Replace # with count in plural strings\n  if (typeof params.count !== 'undefined' && resultString.includes('#')) {\n    resultString = resultString.replace(/#/g, String(params.count));\n  }\n  // Replace {var} placeholders\n  const replaced = resultString.replace(/{([^}]+)}/g, (_, varName) => {\n    return params[varName] !== undefined ? params[varName] : `{${varName}}`;\n  });\n  return replaced;\n}\n",
+        "reasoning": "Implement function. Handle plural selection and placeholder replacement. Use regex /{([^}]+)}/g. Also replace # with count in plural strings. Ensure fallback. Don't mutate input. Return string.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 391,
+    "completion_tokens": 355,
+    "total_tokens": 746,
+    "completion_tokens_details": {
+      "reasoning_tokens": 40
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

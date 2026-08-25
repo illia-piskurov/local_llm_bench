@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-ix6m2o58p4qlwv5ximy2ys",
+  "object": "chat.completion",
+  "created": 1787578444,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const query = JSON.parse(JSON.stringify(input.query));\n  let params = [];\n  let placeholderIndex = 1;\n  const nextPlaceholder = () => `$${placeholderIndex++}`;\n\n  // SELECT clause\n  let selectClause;\n  if (!query.select || query.select.length === 0) {\n    selectClause = '*';\n  } else {\n    selectClause = query.select.map(sel => {\n      if (typeof sel === 'string') return sel;\n      if (sel && typeof sel === 'object' && 'expr' in sel && 'as' in sel)\n        return `${sel.expr} AS ${sel.as}`;\n      throw new Error('Invalid select item');\n    }).join(', ');\n  }\n\n  // FROM clause\n  const fromClause = query.table;\n\n  // JOIN clauses\n  let joinClauses = '';\n  if (Array.isArray(query.joins)) {\n    joinClauses = query.joins.map(j => {\n      const type = j.type ? `${j.type.toUpperCase()} ` : '';\n      const onParts = Object.entries(j.on).map(\n        ([leftCol, rightCol]) => `${leftCol} = ${rightCol}`\n      );\n      return `${type}JOIN ${j.table} ON ${onParts.join(' AND ')}`;\n    }).join(' ');\n  }\n\n  // WHERE clause\n  function buildCondition(cond) {\n    if (cond.AND || cond.OR) {\n      const key = cond.AND ? 'AND' : 'OR';\n      const subconds = Array.isArray(cond[key]) ? cond[key] : [cond[key]];\n      const parts = subconds.map(buildCondition);\n      return `(${parts.join(` ${key} `)})`;\n    }\n    if (typeof cond === 'object' && cond.field && cond.op !== undefined) {\n      const field = cond.field;\n      const op = cond.op.toUpperCase();\n      if (op === 'IS NULL' || op === 'IS NOT NULL') {\n        return `${field} ${op}`;\n      } else if (op === 'IN') {\n        const values = Array.isArray(cond.value) ? cond.value : [];\n        if (values.length === 0) {\n          // Handle empty IN as false condition\n          return '1=0';\n        }\n        const placeholders = values.map(() => nextPlaceholder());\n        params.push(...values);\n        return `${field} IN (${placeholders.join(', ')})`;\n      } else {\n        const placeholder = nextPlaceholder();\n        params.push(cond.value);\n        return `${field} ${op} ${placeholder}`;\n      }\n    }\n    throw new Error('Invalid condition');\n  }\n\n  let whereClause = '';\n  if (query.where) {\n    const condStr = buildCondition(query.where);\n    whereClause = `WHERE ${condStr}`;\n  }\n\n  // GROUP BY\n  let groupByClause = '';\n  if (Array.isArray(query.groupBy) && query.groupBy.length > 0) {\n    groupByClause = 'GROUP BY ' + query.groupBy.join(', ');\n  }\n\n  // ORDER BY\n  let orderByClause = '';\n  if (Array.isArray(query.orderBy) && query.orderBy.length > 0) {\n    const parts = query.orderBy.map(o => `${o.field} ${((o.dir || 'ASC').toUpperCase() === 'DESC' ? 'DESC' : 'ASC')}`);\n    orderByClause = 'ORDER BY ' + parts.join(', ');\n  }\n\n  // LIMIT\n  let limitClause = '';\n  if (typeof query.limit === 'number' && query.limit >= 0) {\n    limitClause = `LIMIT ${query.limit}`;\n  }\n\n  // OFFSET\n  let offsetClause = '';\n  if (typeof query.offset === 'number' && query.offset >= 0) {\n    offsetClause = `OFFSET ${query.offset}`;\n  }\n\n  const sqlParts = [\n    'SELECT', selectClause,\n    'FROM', fromClause,\n    joinClauses,\n    whereClause,\n    groupByClause,\n    orderByClause,\n    limitClause,\n    offsetClause\n  ].filter(Boolean).join(' ');\n  return { sql: sqlParts, params };\n}",
+        "reasoning": "Need to build SQL string. Handle select array or alias objects. Joins: each join produce JOIN type? e.g., `${type} JOIN ${table} ON leftCol = rightCol` but on mapping: {leftCol: rightCol}. Should support multiple keys.\n\nWhere: recursive AND/OR arrays; need parentheses.\n\nImplement helper to process condition, increment param index.\n\nReturn object. Ensure not mutate input. Use deep copy? Just read.\n\nLet's code.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 562,
+    "completion_tokens": 970,
+    "total_tokens": 1532,
+    "completion_tokens_details": {
+      "reasoning_tokens": 94
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}
