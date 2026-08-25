@@ -1,4 +1,83 @@
 import datetime
 
-def next_runs(cron, from_time, count):
-    # ... implementation ...
+def parse_cron_field(field: str, min_val: int, max_val: int) -> set[int]:
+    """Parses a single cron field into a set of allowed integers."""
+    allowed = set()
+    parts = field.split(',')
+    for part in parts:
+        if part == '*':
+            allowed.update(range(min_val, max_val + 1))
+        elif '-' in part:
+            start_str, end_str = part.split('-')
+            start, end = int(start_str), int(end_str)
+            allowed.update(range(start, end + 1))
+        else:
+            allowed.add(int(part))
+    return allowed
+
+def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+    """
+    Calculates the next 'count' occurrences of a 5-position cron expression
+    strictly after 'from_time'.
+    """
+    # Parse cron expression
+    fields = cron.split()
+    if len(fields) != 5:
+        raise ValueError("Cron expression must have exactly 5 fields.")
+
+    m_set = parse_cron_field(fields[0], 0, 59)
+    h_set = parse_cron_field(fields[1], 0, 23)
+    dom_set = parse_cron_field(fields[2], 1, 31)
+    mon_set = parse_cron_field(fields[3], 1, 12)
+    dow_set = parse_cron_field(fields[4], 0, 6)
+
+    # Parse from_time (ISO 8601 UTC: "YYYY-MM-DDTHH:MM:SS.000Z")
+    # We strip the 'Z' and handle it as UTC
+    base_str = from_time.replace('Z', '')
+    dt = datetime.datetime.strptime(base_str, "%Y-%m-%dT%H:%M:%S.%f")
+    
+    results = []
+    # Start checking from the very next minute to ensure "strictly later"
+    # We increment by 1 minute because cron granularity is minutes.
+    current_dt = dt + datetime.timedelta(minutes=1)
+
+    # Safety limit to prevent infinite loop in case of impossible cron (e.g., Feb 31st)
+    # In a real-world scenario, we'd check for logical validity, but here we iterate.
+    max_iterations = 1000000 # Limit search to ~2 years of minutes
+    iterations = 0
+
+    while len(results) < count and iterations < max_iterations:
+        iterations += 1
+        
+        # Check if current components match the cron sets
+        # Note: datetime.weekday() returns 0 for Monday, but prompt says 0=Sunday.
+        # Standard Python: Mon=0...Sat=5, Sun=6. 
+        # Prompt requirement: 0=Sun, 1=Mon, ..., 6=Sat.
+        # We must adjust the weekday check.
+        py_weekday = current_dt.weekday() # Mon=0, Tue=1... Sun=6
+        cron_weekday = (py_weekday + 1) % 7 # Convert to Sun=0, Mon=1... Sat=6
+
+        if (current_dt.minute in m_set and
+            current_dt.hour in h_set and
+            current_dt.day in dom_set and
+            current_dt.month in mon_set and
+            cron_weekday in dow_set):
+            
+            # Format: YYYY-MM-DDTHH:MM:SS.000Z
+            formatted = current_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+            results.append(formatted)
+
+        # Move to the next minute
+        current_dt += datetime.timedelta(minutes=1)
+
+    return results
+
+if __name__ == "__main__":
+    # Example usage:
+    cron_expr = "0 9 * * 1"  # Every Monday at 09:00
+    start_time = "2026-08-18T10:00:00.000Z"
+    try:
+        next_occurrences = next_runs(cron_expr, start_time, 3)
+        print(next_occurrences)
+    except Exception as e:
+        print(f"Error: {e}")
