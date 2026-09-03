@@ -1,0 +1,21 @@
+{
+  "model_instance_id": "minicpm5-1b-claude-opus-fable5-thinking",
+  "output": [
+    {
+      "type": "reasoning",
+      "content": "Хорошо, пользователь просит реализовать planner задач с зависимостями в одном Python файле. Требуется: функция topo_sort, которая принимает словарь tasks и возвращает список задач в порядке выполнения, или None если цикл.\n\nОграничение: один блок кода, без внешних модулей (no networkx). Порядок любым, но нужно быть осторожным с циклами.\n\nФункция должна работать следующим образом: построить граф зависимостей из input_tasks, затем выполнить DFS или Kahn's алгоритм для топологического сортировки. Если есть цикл, вернуть None.\n\nРеализация: создаем граф как dict: dependency -> список задач. Затем проверяем циклы (DFS) и применяем Kahn's алгоритм. Выводим результат в виде списка.\n"
+    },
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    if not tasks:\n        return []\n    graph = {task: [] for task in tasks}\n    for dep, sub_tasks in tasks.items():\n        for sub_task in sub_tasks:\n            graph[dep].append(sub_task)\n\n    visited = set()\n    order = []\n\n    def dfs(node):\n        if node in visited:\n            return\n        visited.add(node)\n        for child in graph[node]:\n            dfs(child)\n        order.append(node)\n\n    for task in tasks:\n        if task not in visited:\n            dfs(task)\n\n    return order[::-1]\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 248,
+    "total_output_tokens": 351,
+    "reasoning_output_tokens": 193,
+    "tokens_per_second": 50.559250313214555,
+    "time_to_first_token_seconds": 0.235464
+  },
+  "response_id": "resp_9f6aa7877dac703614bd7cb61df8ad34740017fd82814458"
+}

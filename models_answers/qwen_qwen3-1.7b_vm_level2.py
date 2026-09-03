@@ -1,0 +1,111 @@
+def run(program: str) -> list[str]:
+    lines = []
+    for i, line in enumerate(program.split('\n')):
+        stripped = line.strip()
+        if not stripped or stripped.startswith('#'):
+            continue
+        lines.append(stripped)
+    
+    stack = []
+    output = []
+    labels = {}
+    current_line = 0
+    
+    while current_line < len(lines):
+        line = lines[current_line]
+        tokens = line.split()
+        if not tokens:
+            current_line += 1
+            continue
+        
+        cmd = tokens[0]
+        
+        if cmd == 'LABEL':
+            if len(tokens) > 1:
+                name = tokens[1]
+                labels[name] = current_line + 1  # Line numbers are 1-based
+            current_line += 1
+        elif cmd == 'JMP':
+            if len(tokens) < 2:
+                raise ValueError(f"Line {current_line+1}: Invalid JMP command")
+            name = tokens[1]
+            target_line = labels[name]
+            current_line = target_line
+        elif cmd == 'JZ':
+            if len(tokens) < 3:
+                raise ValueError(f"Line {current_line+1}: Invalid JZ command")
+            val = stack.pop()
+            if val == 0:
+                current_line = tokens[2]  # Jump to the line number of the label
+        elif cmd == 'JNZ':
+            if len(tokens) < 3:
+                raise ValueError(f"Line {current_line+1}: Invalid JNZ command")
+            val = stack.pop()
+            if val != 0:
+                current_line = tokens[2]  # Jump to the line number of the label
+        elif cmd == 'PUSH':
+            if len(tokens) < 2:
+                raise ValueError(f"Line {current_line+1}: Invalid PUSH command")
+            n = int(tokens[1])
+            stack.append(n)
+        elif cmd == 'POP':
+            if len(stack) < 1:
+                raise ValueError(f"Line {current_line+1}: Stack is empty")
+            val = stack.pop()
+            output.append(str(val))
+        elif cmd == 'ADD':
+            if len(stack) < 2:
+                raise ValueError(f"Line {current_line+1}: Stack has less than two elements")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a + b)
+            output.append(str(b + a))
+        elif cmd == 'SUB':
+            if len(stack) < 2:
+                raise ValueError(f"Line {current_line+1}: Stack has less than two elements")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a - b)
+            output.append(str(a - b))
+        elif cmd == 'MUL':
+            if len(stack) < 2:
+                raise ValueError(f"Line {current_line+1}: Stack has less than two elements")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a * b)
+            output.append(str(b * a))
+        elif cmd == 'DIV':
+            if len(stack) < 2:
+                raise ValueError(f"Line {current_line+1}: Stack has less than two elements")
+            a = stack.pop()
+            b = stack.pop()
+            if b == 0:
+                raise ValueError(f"Line {current_line+1}: Division by zero")
+            stack.append(a // b)
+            output.append(str(a // b))
+        elif cmd == 'DUP':
+            if len(stack) < 1:
+                raise ValueError(f"Line {current_line+1}: Stack is empty")
+            stack.append(stack[-1])
+            output.append(str(stack[-1]))
+        elif cmd == 'SWAP':
+            if len(stack) < 2:
+                raise ValueError(f"Line {current_line+1}: Stack has less than two elements")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a)
+            stack.append(b)
+            output.append(str(b))
+        elif cmd == 'PRINT':
+            if not stack:
+                raise ValueError(f"Line {current_line+1}: Stack is empty")
+            val = stack[-1]
+            output.append(str(val))
+            # Keep the value on the stack
+            stack.pop()
+        else:
+            current_line += 1
+        
+        current_line += 1
+    
+    return output

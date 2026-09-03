@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "minicpm5-1b-claude-opus-fable5-thinking",
+  "output": [
+    {
+      "type": "reasoning",
+      "content": "Вот реализация двух функций:\n\nmax_depth: вычисляет максимальную глубину скобок при сканировании строки слева направо.\nfind_unmatched: возвращает отсортированный список индексов несовпавших скобок — закрывающих и остатков открытых.\n\n```python\nimport re\n\ndef is_balanced(s: str) -> bool:\n    stack = []\n    pairs = re.findall(r'\\([^()]*\\)', s)\n    for pair in pairs:\n        if not pair or pair[0] != '(' or pair[-1] != ')':\n            return False\n        stack.append(pair[0])\n        if len(stack) > 1:\n            return False\n    return len(stack) == 0\n\ndef max_depth(s: str) -> int:\n    depth = 0\n    open_stack = []\n    for ch in s:\n        if ch == '(':\n            open_stack.append(ch)\n            depth += 1\n        elif ch == ')':\n            if not open_stack or open_stack[-1] != '(':  # корректное закрытие\n                return -1  # не сбалансированное, но это не влияет на max_depth\n    return max(depth, 0)  # depth может быть отрицательным, но мы хотим максимум\n\ndef find_unmatched(s: str) -> list[int]:\n    unmatched = []\n    open_stack = []\n    for i, ch in enumerate(s):\n        if ch == '(':\n            open_stack.append(i)\n        elif ch == ')':\n            if open_stack and open_stack[-1] == i:\n                open_stack.pop()\n            else:\n                unmatched.append(i)  # закрывающий не корректный\n    unmatched = sorted(unmatched)\n    return unmatched\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 649,
+    "total_output_tokens": 397,
+    "reasoning_output_tokens": 396,
+    "tokens_per_second": 50.56726640381053,
+    "time_to_first_token_seconds": 0.42256099999999996
+  },
+  "response_id": "resp_dfc95e192d353c3de5c2a02d76525c7bf2d63865efb605d0"
+}

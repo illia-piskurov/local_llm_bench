@@ -1,0 +1,16 @@
+{
+  "model": "minicpm5-1b-claude-opus-fable5-thinking",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-09-02 12:07:02",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "simple_select_all: исключение/таймаут: name 'd' is not defined",
+    "select_specific_columns: исключение/таймаут: name 'd' is not defined",
+    "simple_where_equality: исключение/таймаут: name 'd' is not defined",
+    "where_and_or_nested: исключение/таймаут: name 'd' is not defined",
+    "order_by_limit_offset: исключение/таймаут: name 'd' is not defined",
+    "multiple_and_conditions: исключение/таймаут: name 'd' is not defined"
+  ]
+}

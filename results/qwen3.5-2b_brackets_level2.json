@@ -1,0 +1,25 @@
+{
+  "model": "qwen3.5-2b",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-09-03 10:28:36",
+  "passed": 0,
+  "total": 15,
+  "failures": [
+    "max_depth/empty: неожиданное исключение: подпроцесс не вернул результат (возможно, аварийно завершился)",
+    "max_depth/flat: неожиданное исключение: name 'close_to_open' is not defined",
+    "max_depth/nested3: неожиданное исключение: name 'close_to_open' is not defined",
+    "max_depth/mixed_types_nested: неожиданное исключение: name 'close_to_open' is not defined",
+    "max_depth/unclosed_counts: неожиданное исключение: name 'close_to_open' is not defined",
+    "max_depth/stray_closing_ignored: неожиданное исключение: name 'close_to_open' is not defined",
+    "max_depth/mismatched_type_not_popped: неожиданное исключение: name 'close_to_open' is not defined",
+    "find_unmatched/all_matched: неожиданное исключение: name 'close_to_open' is not defined",
+    "find_unmatched/single_unclosed_open: неожиданное исключение: name 'close_to_open' is not defined",
+    "find_unmatched/single_stray_close: неожиданное исключение: name 'close_to_open' is not defined",
+    "find_unmatched/mismatch_and_unclosed: неожиданное исключение: name 'close_to_open' is not defined",
+    "find_unmatched/stray_close_after_valid_pair: неожиданное исключение: name 'close_to_open' is not defined",
+    "find_unmatched/wrong_order_classic: неожиданное исключение: name 'close_to_open' is not defined",
+    "find_unmatched/mixed_with_text: неожиданное исключение: name 'close_to_open' is not defined",
+    "find_unmatched/fully_balanced_nested: неожиданное исключение: name 'close_to_open' is not defined"
+  ]
+}

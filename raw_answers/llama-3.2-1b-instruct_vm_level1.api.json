@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "llama-3.2-1b-instruct",
+  "output": [
+    {
+      "type": "message",
+      "content": " ```python\nstack = []\nlines = program.split('\\n')\nfor i, line in enumerate(lines):\n    if line.lstrip().startswith('PUSH'):\n        try:\n            stack.append(int(line[4:]))\n        except ValueError:\n            print(f\"Error on line {i+1}\")\n    elif line.lstrip().startswith('POP'):\n        if not stack:\n            print(f\"Error on line {i+1}\")\n        else:\n            stack.pop()\n    elif line.lstrip().startswith('ADD'):\n        try:\n            a = stack[-2]\n            b = stack[-1]\n            stack.append(a + b)\n        except IndexError:\n            print(f\"Error on line {i+1}\")\n    elif line.lstrip().startswith('SUB'):\n        try:\n            a = stack[-2]\n            b = stack[-1]\n            if b == 0:\n                raise ZeroDivisionError\n            stack.append(a - b)\n        except ValueError:\n            print(f\"Error on line {i+1}\")\n    elif line.lstrip().startswith('MUL'):\n        try:\n            a = stack[-2]\n            b = stack[-1]\n            stack.append(a * b)\n        except IndexError:\n            print(f\"Error on line {i+1}\")\n    elif line.lstrip().startswith('DIV'):\n        try:\n            b, a = map(int, line.split())\n            if a == 0:\n                raise ZeroDivisionError\n            stack.append(a // b)\n        except ValueError:\n            print(f\"Error on line {i+1}\")\n    elif line.lstrip().startswith('DUP'):\n        if not stack:\n            print(f\"Error on line {i+1}\")\n        else:\n            stack.append(stack[-1])\n    elif line.lstrip().startswith('SWAP'):\n        try:\n            a, b = map(int, line.split())\n            stack.append(b)\n            stack.append(a)\n        except ValueError:\n            print(f\"Error on line {i+1}\")\n    elif line.lstrip().startswith('PRINT'):\n        if not stack:\n            print(f\"Error on line {i+1}\")\n        else:\n            return [f'PRINT {stack.pop()}']\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 360,
+    "total_output_tokens": 450,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 41.98007190092404,
+    "time_to_first_token_seconds": 0.9143819999999999
+  },
+  "response_id": "resp_13a00ba4be39078694357b737797c25ccdc9881ee278d84f"
+}

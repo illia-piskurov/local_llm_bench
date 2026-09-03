@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "qwen/qwen3-1.7b",
+  "benchmark": "cron",
+  "level": "level1",
+  "tested_at": "2026-09-03 11:51:03",
+  "stats": {
+    "input_tokens": 533,
+    "total_output_tokens": 2548,
+    "reasoning_output_tokens": 2047,
+    "tokens_per_second": 34.15509343831843,
+    "time_to_first_token_seconds": 0.952653,
+    "model_load_time_seconds": null
+  }
+}

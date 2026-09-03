@@ -1,0 +1,11 @@
+{
+  "model": "llama-3.2-1b-instruct",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-09-02 11:58:16",
+  "passed": 0,
+  "total": 27,
+  "failures": [
+    "не удалось загрузить решение: 'return' outside function (llama-3.2-1b-instruct_vm_level2.py, line 61)"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "model": "qwen3.5-2b",
+  "benchmark": "brackets",
+  "level": "level1",
+  "tested_at": "2026-09-03 10:27:33",
+  "passed": 8,
+  "total": 12,
+  "failures": [
+    "simple_pairs: ожидалось True, получено False",
+    "nested: ожидалось True, получено False",
+    "ignore_non_bracket: ожидалось True, получено False",
+    "deep_nesting: ожидалось True, получено False"
+  ]
+}

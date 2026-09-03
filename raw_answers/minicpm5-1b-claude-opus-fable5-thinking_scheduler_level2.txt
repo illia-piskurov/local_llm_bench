@@ -1,0 +1,32 @@
+```python
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    if not tasks:
+        return 0
+    
+    # Построить граф зависимостей: ключ — время выполнения, значение — список зависимостей
+    graph = {}
+    for duration, sub_tasks in tasks.items():
+        graph[duration] = sub_tasks
+    
+    # Найти топологическую сортировку (в порядке выполнения)
+    visited = set()
+    order = []
+    
+    def dfs(node):
+        if node in visited:
+            return
+        visited.add(node)
+        for child in graph.get(node, []):
+            dfs(child)
+        order.append(node)
+    
+    for task in tasks:
+        if task not in visited:
+            dfs(task)
+    
+    # Получаем порядок от корней (последний в order) и вычисляем критический путь
+    if not order:
+        return 0
+    critical_path_length = sum(graph[order[i]][0] for i in range(len(order)-1))
+    return critical_path_length
+```

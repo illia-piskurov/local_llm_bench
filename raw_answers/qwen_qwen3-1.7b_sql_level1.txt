@@ -1,0 +1,88 @@
+```python
+def compile_query(query: dict) -> dict:
+    if not query:
+        return {"sql": "", "params": []}
+    
+    table = query["table"]
+    select = query.get("select", ["*"])
+    where = query.get("where")
+    order_by = query.get("orderBy", [])
+    limit = query.get("limit")
+    offset = query.get("offset")
+    
+    # Build SELECT part
+    select_sql = ", ".join(select)
+    select_sql += " FROM " + table
+    
+    # Process WHERE clause
+    where_clause = ""
+    params = []
+    
+    if where:
+        # Parse the where AST into conditions
+        if isinstance(where, dict) and where.get("AND"):
+            conditions = where["AND"]
+            parts = []
+            for i, cond in enumerate(conditions):
+                part = build_condition_part(cond, params)
+                if i > 0:
+                    parts.append(" AND ")
+                parts.append(part)
+            where_clause = f"({parts.join('')})"
+        elif isinstance(where, dict) and where.get("OR"):
+            conditions = where["OR"]
+            parts = []
+            for i, cond in enumerate(conditions):
+                part = build_condition_part(cond, params)
+                if i > 0:
+                    parts.append(" OR ")
+                parts.append(part)
+            where_clause = f"({parts.join('')})"
+        else:
+            # Single condition
+            part = build_condition_part(where, params)
+            where_clause = part
+    
+    # Build ORDER BY
+    order_sql = ""
+    if order_by:
+        order_sql = "ORDER BY "
+        for cond in order_by:
+            field = cond["field"]
+            dir = cond.get("dir", "ASC")
+            order_sql += f"{field} {dir}, "
+        order_sql = order_sql.rstrip(", ")
+    
+    # Add LIMIT and OFFSET
+    if limit is not None:
+        limit_str = f"LIMIT {limit}"
+    else:
+        limit_str = ""
+    if offset is not None:
+        offset_str = f"OFFSET {offset}"
+    else:
+        offset_str = ""
+    
+    full_sql = (
+        f"{select_sql} {where_clause} {order_sql} {limit_str} {offset_str}"
+    )
+    
+    return {"sql": full_sql, "params": params}
+
+def build_condition_part(condition: dict, params) -> str:
+    if not condition:
+        return ""
+    
+    field = condition["field"]
+    op = condition["op"]
+    value = condition["value"]
+    
+    # Replace value with parameter placeholder
+    param_placeholder = f"${len(params)+1}"
+    params.append(value)
+    
+    # Build the condition string
+    cond_str = f"{field} {op} {param_placeholder}"
+    
+    return cond_str
+```

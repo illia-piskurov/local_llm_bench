@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Змейка</title>
+    <style>
+        body {
+            background-color: #2c3e50;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            text-shadow: 2px 2px #000;
+        }
+
+        .game-container {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 4px solid white;
+            background-color: #34495e;
+        }
+
+        canvas {
+            display: block;
+            background-color: #000;
+            cursor: pointer; /* Indicates clickable area */
+        }
+
+        .ui-panel {
+            margin-top: 15px;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .controls-hint {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #bdc3c7;
+        }
+
+        /* Overlay for Game Over */
+        #gameOverOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #gameOverOverlay h2 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #e74c3c;
+            text-shadow: 2px 2px #fff;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            font-family: inherit;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2ecc71;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Змейка</h1>
+
+    <div class="game-container">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        
+        <!-- Game Over Overlay -->
+        <div id="gameOverOverlay">
+            <h2>GAME OVER</h2>
+            <button onclick="resetGame()">Играть снова</button>
+        </div>
+    </div>
+
+    <div class="ui-panel">Счет: <span id="score">0</span></div>
+    
+    <div class="controls-hint">Управление: Стрелки или WASD</div>
+
+<script>
+    // --- Configuration ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreElement = document.getElementById('score');
+    const gameOverOverlay = document.getElementById('gameOverOverlay');
+
+    const gridSize = 20; // Size of one square (snake part or food)
+    const tileCountX = canvas.width / gridSize;
+    const tileCountY = canvas.height / gridSize;
+
+    let score = 0;
+    let gameInterval;
+    
+    // Snake State
+    let snake = [];
+    let velocity = { x: 0, y: 0 };
+    let foodX = 5;
+    let foodY = 5;
+    
+    // Input buffering to prevent rapid key presses causing self-collision
+    let changingDirection = false;
+
+    // --- Initialization ---
+    function initGame() {
+        snake = [
+            { x: 10, y: 10 },
+            { x: 10, y: 11 },
+            { x: 10, y: 12 }
+        ];
+        score = 0;
+        scoreElement.innerText = score;
+        
+        // Start moving up initially
+        velocity = { x: 0, y: -1 }; 
+        
+        placeFood();
+        
+        gameInterval = setInterval(gameLoop, 100); // Game speed (lower is faster)
+    }
+
+    function resetGame() {
+        initGame();
+    }
+
+    // --- Core Logic ---
+    function gameLoop() {
+        if (changingDirection) return; // Prevent multiple updates in one tick
+        
+        changingDirection = true;
+        
+        const head = { x: snake[0].x + velocity.x, y: snake[0].y + velocity.y };
+
+        // 1. Check Wall Collision
+        if (head.x < 0 || head.x >= tileCountX || head.y < 0 || head.y >= tileCountY) {
+            gameOver();
+            return;
+        }
+
+        // 2. Check Self Collision
+        for (let i = 0; i < snake.length; i++) {
+            if (head.x === snake[i].x && head.y === snake[i].y) {
+                gameOver();
+                return;
+            }
+        }
+
+        // Move Snake: Add new head, remove tail unless eating food
+        snake.unshift(head);
+
+        // 3. Check Food Collision
+        if (head.x === foodX && head.y === foodY) {
+            score++;
+            scoreElement.innerText = score;
+            placeFood();
+        } else {
+            snake.pop(); // Remove tail to maintain size
+        }
+
+        changingDirection = false;
+    }
+
+    function gameOver() {
+        clearInterval(gameInterval);
+        gameInterval = null;
+        
+        // Show overlay
+        gameOverOverlay.style.display = 'flex';
+    }
+
+    function placeFood() {
+        foodX = Math.floor(Math.random() * tileCountX);
+        foodY = Math.floor(Math.random() * tileCountY);
+
+        // Ensure food doesn't spawn on snake body
+        for (let part of snake) {
+            if (part.x === foodX && part.y === foodY) {
+                placeFood();
+            }
+        }
+    }
+
+    // --- Input Handling ---
+    document.addEventListener('keydown', (e) => {
+        switch(e.key) {
+            case 'ArrowUp':
+            case 'w':
+            case 'W':
+                if (velocity.y === 0) velocity = { x: 0, y: -1 }; // Prevent reversing directly
+                break;
+            case 'ArrowDown':
+            case 's':
+            case 'S':
+                if (velocity.y === 0) velocity = { x: 0, y: 1 };
+                break;
+            case 'ArrowLeft':
+            case 'a':
+            case 'A':
+                if (velocity.x === 0) velocity = { x: -1, y: 0 };
+                break;
+            case 'ArrowRight':
+            case 'd':
+            case 'D':
+                if (velocity.x === 0) velocity = { x: 1, y: 0 };
+                break;
+        }
+    });
+
+    // --- Rendering ---
+    function draw() {
+        // Clear canvas
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Food (Red)
+        ctx.fillStyle = '#e74c3c';
+        ctx.beginPath();
+        const foodXInt = Math.floor(foodX / gridSize);
+        const foodYInt = Math.floor(foodY / gridSize);
+        ctx.fillRect(foodXInt * gridSize + 1, foodYInt * gridSize + 1, gridSize - 2, gridSize - 2);
+
+        // Draw Snake (Green)
+        snake.forEach((part, index) => {
+            if (index === 0) {
+                // Head is slightly lighter green
+                ctx.fillStyle = '#2ecc71';
+            } else {
+                // Body is darker green
+                ctx.fillStyle = '#27ae60';
+            }
+            
+            // Draw rounded rects for style
+            const padding = 1;
+            ctx.fillRect(
+                part.x * gridSize + padding, 
+                part.y * gridSize + padding, 
+                gridSize - (padding*2), 
+                gridSize - (padding*2)
+            );
+        });
+
+        requestAnimationFrame(draw); // Use requestAnimationFrame for smooth rendering loop
+    }
+
+    // Start the game on load
+    initGame();
+</script>
+</body>
+</html>

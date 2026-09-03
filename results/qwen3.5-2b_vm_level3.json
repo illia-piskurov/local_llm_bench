@@ -1,0 +1,11 @@
+{
+  "model": "qwen3.5-2b",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-09-03 10:25:57",
+  "passed": 0,
+  "total": 37,
+  "failures": [
+    "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+  ]
+}

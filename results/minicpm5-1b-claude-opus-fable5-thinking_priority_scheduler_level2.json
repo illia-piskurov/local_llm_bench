@@ -1,0 +1,15 @@
+{
+  "model": "minicpm5-1b-claude-opus-fable5-thinking",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-09-02 12:04:16",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: not enough values to unpack (expected 2, got 1)",
+    "parallel_tasks_reduce_makespan: неожиданное исключение: not enough values to unpack (expected 2, got 1)",
+    "dependencies_and_workers: неожиданное исключение: not enough values to unpack (expected 2, got 1)",
+    "critical_path_longer_than_worker_parallelism: неожиданное исключение: not enough values to unpack (expected 2, got 1)",
+    "wide_graph_with_unlocks: неожиданное исключение: too many values to unpack (expected 2)"
+  ]
+}

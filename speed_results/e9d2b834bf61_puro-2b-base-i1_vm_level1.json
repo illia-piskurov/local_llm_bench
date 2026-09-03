@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "puro-2b-base-i1",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-09-02 12:10:01",
+  "stats": {
+    "input_tokens": 379,
+    "total_output_tokens": 3717,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 29.64452292070476,
+    "time_to_first_token_seconds": 0.7376889999999999,
+    "model_load_time_seconds": null
+  }
+}

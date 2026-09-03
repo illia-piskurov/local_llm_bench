@@ -1,0 +1,20 @@
+{
+  "model": "qwen3.5-2b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-09-03 10:29:21",
+  "passed": 0,
+  "total": 10,
+  "failures": [
+    "no_dependencies: неожиданное исключение: name 'dfs_cycle' is not defined",
+    "simple_chain: неожиданное исключение: name 'dfs_cycle' is not defined",
+    "diamond: неожиданное исключение: name 'dfs_cycle' is not defined",
+    "multiple_roots: неожиданное исключение: name 'dfs_cycle' is not defined",
+    "single_task: неожиданное исключение: name 'dfs_cycle' is not defined",
+    "self_cycle: неожиданное исключение: name 'dfs_cycle' is not defined",
+    "two_node_cycle: неожиданное исключение: name 'dfs_cycle' is not defined",
+    "long_cycle: неожиданное исключение: name 'dfs_cycle' is not defined",
+    "cycle_with_extra_nodes: неожиданное исключение: name 'dfs_cycle' is not defined",
+    "wide_graph: неожиданное исключение: name 'dfs_cycle' is not defined"
+  ]
+}
