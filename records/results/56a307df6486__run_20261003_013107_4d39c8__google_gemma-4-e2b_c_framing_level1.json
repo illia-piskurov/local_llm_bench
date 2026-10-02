@@ -1,0 +1,17 @@
+{
+  "run_id": "run_20261003_013107_4d39c8",
+  "host_id": "56a307df6486",
+  "model": "google/gemma-4-e2b",
+  "benchmark": "c_framing",
+  "level": "level1",
+  "tested_at": "2026-10-03 01:32:03",
+  "passed": 1,
+  "total": 4,
+  "failures": [
+    "basic_push_pop: assertion returned False",
+    "pointer_wrap_around: assertion returned False",
+    "full_overflow_check: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

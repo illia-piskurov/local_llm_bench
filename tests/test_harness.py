@@ -220,6 +220,92 @@ def test_ask_model_reasoning_only_empty_content(monkeypatch):
     assert "Drafting thoughts" in res.reasoning
 
 
+def _fake_post(monkeypatch, responses: list[dict], sent: list[dict]):
+    import requests
+
+    class MockResponse:
+        def __init__(self, data):
+            self._data = data
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return self._data
+
+    queue = list(responses)
+
+    def post(*args, **kwargs):
+        sent.append(kwargs["json"])
+        return MockResponse(queue.pop(0))
+
+    monkeypatch.setattr(requests, "post", post)
+
+
+def test_detect_truncation_signals():
+    import lmstudio
+
+    ok = "Done:\n```python\nx = 1\n```\n"
+    assert lmstudio.detect_truncation({}, ok, 100) is None
+    assert "token limit" in lmstudio.detect_truncation({"stats": {"total_output_tokens": 100}}, ok, 100)
+    assert "finish_reason" in lmstudio.detect_truncation({"finish_reason": "length"}, ok, 100)
+    assert "fence" in lmstudio.detect_truncation({}, "```python\nx = 1\n", 100)
+    assert "reasoning tag" in lmstudio.detect_truncation({}, "<think>still thinking", 100)
+    assert lmstudio.detect_truncation({}, "<think>a</think>\n```python\nx\n```", 100) is None
+
+
+def test_ask_model_flags_truncated_and_does_not_mutate_config(monkeypatch):
+    import lmstudio
+
+    sent: list[dict] = []
+    data = {
+        "output": [{"type": "message", "content": "```python\ndef f():\n"}],
+        "stats": {"total_output_tokens": 50},
+    }
+    _fake_post(monkeypatch, [data], sent)
+    cfg = lmstudio.GenerationConfig(max_tokens=50)
+    res = lmstudio.ask_model("m", [{"role": "user", "content": "x"}], temperature=0.7, config=cfg)
+    assert res.truncated
+    assert cfg.temperature == 0.0
+
+
+def test_generate_with_retry_doubles_budget(monkeypatch):
+    import lmstudio
+    import runner
+
+    sent: list[dict] = []
+    truncated = {"output": [{"type": "message", "content": "```python\nx"}], "stats": {"total_output_tokens": 100}}
+    complete = {
+        "output": [{"type": "message", "content": "```python\nx = 1\n```"}],
+        "stats": {"total_output_tokens": 40},
+    }
+    _fake_post(monkeypatch, [truncated, complete], sent)
+
+    cfg = lmstudio.GenerationConfig(max_tokens=100)
+    messages = [{"role": "user", "content": "x"}]
+    res = runner._generate_with_retry("m", messages, cfg, runner._default_console)
+    assert not res.truncated
+    assert [p["max_output_tokens"] for p in sent] == [100, 200]
+    assert cfg.max_tokens == 100
+
+
+def test_generate_with_retry_gives_up_at_cap(monkeypatch):
+    import pytest
+
+    import lmstudio
+    import runner
+
+    sent: list[dict] = []
+    budget = runner.MAX_TOKENS_RETRY_CAP
+    truncated = {"output": [{"type": "message", "content": "```python\nx"}], "stats": {}}
+    _fake_post(monkeypatch, [truncated], sent)
+
+    cfg = lmstudio.GenerationConfig(max_tokens=budget)
+    with pytest.raises(runner.GenerationTruncatedError):
+        runner._generate_with_retry("m", [{"role": "user", "content": "x"}], cfg, runner._default_console)
+    assert len(sent) == 1
+
+
 def test_wasm_fuel_infinite_loop_trap(tmp_path):
     import pytest
     from wasmtime import Trap

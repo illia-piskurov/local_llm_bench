@@ -5,6 +5,7 @@ sandboxed test execution, and run session tracking.
 """
 
 import json
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 
@@ -17,6 +18,8 @@ from host_configs import HostConfig
 from html_report import generate_html_report
 from lmstudio import GenerationConfig, Model, get_model_artifact_info
 from storage import (
+    GENERATION_FAILED_PREFIX,
+    TRUNCATED_PREFIX,
     ResultStore,
     RunStore,
     SpeedResultStore,
@@ -26,6 +29,9 @@ from storage import (
     get_suite_version,
 )
 
+# A truncated generation is retried with a doubled token budget, up to this cap.
+MAX_TOKENS_RETRY_CAP = 65536
+
 ROOT = Path(__file__).parent
 _default_console = Console(legacy_windows=False)
 _default_db = Database(ROOT / "bench.db")
@@ -34,8 +40,45 @@ _default_speed_store = SpeedResultStore(_default_db)
 _default_run_store = RunStore(_default_db)
 
 
+class GenerationTruncatedError(Exception):
+    """The model output was cut off even after retrying with a larger token budget.
+
+    This is a harness/budget limitation, not a code defect, so no tests are run on the output.
+    """
+
+    def __init__(self, message: str, response: lmstudio.ModelResponse | None = None) -> None:
+        super().__init__(message)
+        self.response = response
+
+
 def now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _generate_with_retry(
+    model_key: str,
+    messages: list[dict],
+    gen_config: GenerationConfig | None,
+    console: Console,
+) -> lmstudio.ModelResponse:
+    """Queries the model, retrying with a doubled token budget while the output is truncated."""
+    cfg = replace(gen_config) if gen_config else GenerationConfig()
+    while True:
+        response = lmstudio.ask_model(model_key, messages, config=cfg)
+        if not response.truncated:
+            return response
+        next_budget = cfg.max_tokens * 2
+        if next_budget > MAX_TOKENS_RETRY_CAP:
+            raise GenerationTruncatedError(
+                f"{response.truncated_reason}; still truncated at max_tokens={cfg.max_tokens} "
+                f"(retry cap {MAX_TOKENS_RETRY_CAP})",
+                response,
+            )
+        console.print(
+            f"    [yellow]Output truncated ({response.truncated_reason}); "
+            f"retrying with max_tokens={next_budget}[/yellow]"
+        )
+        cfg = replace(cfg, max_tokens=next_budget, timeout_seconds=cfg.timeout_seconds * 2)
 
 
 def ensure_level_answer(
@@ -50,6 +93,12 @@ def ensure_level_answer(
     speed_store: SpeedResultStore | None = None,
     console: Console | None = None,
 ) -> Path | None:
+    """Returns the path of the extracted answer for a level, generating it when needed.
+
+    An existing answer is reused when it already has a scored result (from any run of this model).
+    ``force`` applies only to the requested level: prerequisite levels are always reused when available,
+    so a single-level rerun does not regenerate (and silently overwrite) earlier levels.
+    """
     store = store or _default_store
     speed_store = speed_store or _default_speed_store
     console = console or _default_console
@@ -57,7 +106,12 @@ def ensure_level_answer(
     level = benchmark.level_by_id(level_id)
     answer_path, raw_path = store.paths_for(benchmark, model.key, level_id)
 
-    if not force and answer_path.exists() and store.has_result(benchmark, model.key, level_id, run_id=run_id):
+    if (
+        not force
+        and answer_path.exists()
+        and raw_path.exists()
+        and store.has_scored_result(benchmark, model.key, level_id)
+    ):
         return answer_path
 
     messages = []
@@ -84,7 +138,15 @@ def ensure_level_answer(
     messages.append({"role": "user", "content": level.prompt})
 
     try:
-        response = lmstudio.ask_model(model.key, messages, config=gen_config)
+        response = _generate_with_retry(model.key, messages, gen_config, console)
+    except GenerationTruncatedError as e:
+        # Keep the partial output for inspection, but never leave it behind as a runnable answer.
+        if e.response is not None:
+            raw_path.write_text(e.response.content, encoding="utf-8")
+            if e.response.reasoning:
+                raw_path.with_suffix(".reasoning.txt").write_text(e.response.reasoning, encoding="utf-8")
+        answer_path.unlink(missing_ok=True)
+        raise GenerationTruncatedError(f"{benchmark.id}/{level_id}: {e}", e.response) from e
     except TimeoutError as e:
         console.print(f"    [bold red]Inference timeout error:[/bold red] {e}")
         return None
@@ -141,34 +203,50 @@ def execute_test(
     level = benchmark.level_by_id(level_id)
     tag = f"[bold cyan]{benchmark.short}[/bold cyan] / [bold]{level.name}[/bold]"
 
-    if not force and store.has_result(benchmark, model.key, level_id, run_id=run_id):
-        res = store.load(benchmark, model.key, level_id, run_id=run_id)
-        pct = res.percent() if res else 0
-        pct_color = "green" if pct >= 80 else "yellow" if pct >= 50 else "red"
-        console.print(
-            f"  ⏭  {tag} -> [dim]skipped (already passed:[/dim] [{pct_color}]{res.format()}[/{pct_color}][dim])[/dim]"
-        )
+    # A run always starts empty, so "already done" must be looked up across earlier runs of this model.
+    if not force and store.has_scored_result(benchmark, model.key, level_id):
+        res = store.load(benchmark, model.key, level_id)
+        if res is not None:
+            pct = res.percent()
+            pct_color = "green" if pct >= 80 else "yellow" if pct >= 50 else "red"
+            done = f"[{pct_color}]{res.format()}[/{pct_color}]"
+        else:
+            done = "scored"
+        console.print(f"  ⏭  {tag} -> [dim]skipped (already scored:[/dim] {done}[dim])[/dim]")
         return True
 
     console.print(f"  ⏳ {tag} ... waiting for generation...", end="\r")
 
-    answer_path = ensure_level_answer(
-        model,
-        benchmark,
-        level_id,
-        host,
-        run_id=run_id,
-        force=force,
-        gen_config=gen_config,
-        store=store,
-        speed_store=speed_store,
-        console=console,
-    )
+    try:
+        answer_path = ensure_level_answer(
+            model,
+            benchmark,
+            level_id,
+            host,
+            run_id=run_id,
+            force=force,
+            gen_config=gen_config,
+            store=store,
+            speed_store=speed_store,
+            console=console,
+        )
+    except GenerationTruncatedError as e:
+        console.print(f"  ✂️  {tag} -> [yellow]Output truncated, not scored as code failure:[/yellow] {e}")
+        if run_id:
+            truncated = StoredResult(
+                model=model.key,
+                benchmark=benchmark.id,
+                level=level_id,
+                tested_at=now_str(),
+                evaluation=TestResult(0, 1, [f"{TRUNCATED_PREFIX} {e}"]),
+            )
+            store.save(benchmark, model.key, level_id, truncated, run_id=run_id)
+        return False
 
     if answer_path is None or not answer_path.exists():
         console.print(f"  ❌ {tag} -> [red]Failed to get response from model (timeout or error)[/red]")
         if run_id:
-            test_result = TestResult(0, 1, ["Model generation failed or timed out"])
+            test_result = TestResult(0, 1, [f"{GENERATION_FAILED_PREFIX} Model generation failed or timed out"])
             stored = StoredResult(
                 model=model.key,
                 benchmark=benchmark.id,

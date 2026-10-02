@@ -1,0 +1,63 @@
+{
+  "id": "run_20261003_013107_4d39c8",
+  "host_id": "56a307df6486",
+  "model_key": "google/gemma-4-e2b",
+  "model_name": "Gemma 4 E2B",
+  "quantization": "Q4_K_M",
+  "backend": "LM Studio (69d945a)",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "google/gemma-4-e2b",
+      "display_name": "Gemma 4 E2B",
+      "architecture": "gemma4",
+      "quantization": "Q4_K_M",
+      "quantization_bits": 4,
+      "size_bytes": 4414788475,
+      "params_string": "4.6B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": "google"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "6cf6634 (051cb8695784)",
+  "started_at": "2026-10-03 01:31:07",
+  "completed_at": "2026-10-03 01:32:03",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-10-03 01:32:03",
+      "passed": 1,
+      "total": 4,
+      "failures": [
+        "basic_push_pop: assertion returned False",
+        "pointer_wrap_around: assertion returned False",
+        "full_overflow_check: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-10-03 01:32:03",
+      "stats": {
+        "input_tokens": 286,
+        "total_output_tokens": 1404,
+        "reasoning_output_tokens": 841,
+        "tokens_per_second": 33.084057653321146,
+        "time_to_first_token_seconds": 3.55748,
+        "model_load_time_seconds": 9.367
+      }
+    }
+  ]
+}

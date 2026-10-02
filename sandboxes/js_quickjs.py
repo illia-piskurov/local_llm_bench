@@ -12,9 +12,11 @@ PRELUDE = """
 // Virtual timer system for deterministic, zero-latency async testing
 const __timers = [];
 let __currentTime = 0;
+// Monotonic id source: ids must stay unique after fired timers are removed from the queue.
+let __timerSeq = 0;
 
 function setTimeout(fn, delay = 0, ...args) {
-    const id = __timers.length + 1;
+    const id = ++__timerSeq;
     __timers.push({
         id,
         fn,

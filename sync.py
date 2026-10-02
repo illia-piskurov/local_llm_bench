@@ -13,8 +13,11 @@ import re
 from pathlib import Path
 
 from database import Database
+from storage import result_record_name, speed_record_name
 
 logger = logging.getLogger(__name__)
+
+LEGACY_RUN_PREFIX = "legacy_"
 
 ROOT = Path(__file__).parent
 RECORDS_DIR = ROOT / "records"
@@ -111,12 +114,17 @@ def export_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
         path.write_text(json.dumps(run_data, ensure_ascii=False, indent=2), encoding="utf-8")
         runs_count += 1
 
-    # 3. Legacy snapshot: results/
+    # 3. Per-result snapshots: results/ (one file per host + run + test, so machines never share a file)
     results_count = 0
-    # Export latest result per (model, benchmark, level)
+    run_hosts = {r["id"]: r["host_id"] for r in conn.execute("SELECT id, host_id FROM runs").fetchall()}
     for row in conn.execute("SELECT * FROM results ORDER BY tested_at ASC").fetchall():
+        if row["run_id"].startswith(LEGACY_RUN_PREFIX):
+            continue  # pre-runs data lives only in runs/; a snapshot would just duplicate it
         failures = json.loads(row["failures"]) if row["failures"] else []
+        host_id = run_hosts.get(row["run_id"], "unknown")
         data = {
+            "run_id": row["run_id"],
+            "host_id": host_id,
             "model": row["model"],
             "benchmark": row["benchmark"],
             "level": row["level"],
@@ -127,15 +135,17 @@ def export_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
             "manual_score": row["manual_score"],
             "comment": row["comment"] or "",
         }
-        m_slug = safe_filename(row["model"])
-        path = results_dir / f"{m_slug}_{row['benchmark']}_{row['level']}.json"
+        path = results_dir / result_record_name(host_id, row["run_id"], row["model"], row["benchmark"], row["level"])
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         results_count += 1
 
-    # 4. Legacy snapshot: speeds/
+    # 4. Per-sample snapshots: speeds/
     speeds_count = 0
     for row in conn.execute("SELECT * FROM speed_results ORDER BY tested_at ASC").fetchall():
+        if row["run_id"].startswith(LEGACY_RUN_PREFIX):
+            continue
         data = {
+            "run_id": row["run_id"],
             "host_id": row["host_id"],
             "model": row["model"],
             "benchmark": row["benchmark"],
@@ -150,8 +160,9 @@ def export_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
                 "model_load_time_seconds": row["model_load_time_seconds"],
             },
         }
-        m_slug = safe_filename(row["model"])
-        path = speeds_dir / f"{row['host_id']}_{m_slug}_{row['benchmark']}_{row['level']}.json"
+        path = speeds_dir / speed_record_name(
+            row["host_id"], row["run_id"], row["model"], row["benchmark"], row["level"]
+        )
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         speeds_count += 1
 
@@ -292,10 +303,25 @@ def import_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
                 continue
 
         # Create runs for each (model, host_id)
+        known_hosts = {row[0] for row in conn.execute("SELECT id FROM hosts").fetchall()}
+
+        def ensure_stub_run(rid: str, hid: str | None, model: str, ts: str) -> None:
+            # INSERT OR IGNORE: never replace an existing run (REPLACE would cascade-delete its results).
+            host = hid if hid in known_hosts else default_host
+            conn.execute(
+                """INSERT OR IGNORE INTO runs
+                   (id, host_id, model_key, model_name, started_at, completed_at, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (rid, host, model, model, ts, ts, "completed"),
+            )
+
         legacy_runs = {}
         for s in speed_records:
             hid = s["host_id"]
             m = s["model"]
+            if s.get("run_id"):
+                ensure_stub_run(s["run_id"], hid, m, s["tested_at"])
+                continue
             rid = f"legacy_{hid}_{safe_filename(m)}"
             if rid not in legacy_runs:
                 legacy_runs[rid] = (hid, m)
@@ -309,8 +335,13 @@ def import_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
 
         for r in result_records:
             m = r["model"]
-            # find matching run
-            matching_rids = [rid for rid, (hid, m_key) in legacy_runs.items() if m_key == m]
+            if r.get("run_id"):
+                # New-format snapshot: it names its own run, so attribute it exactly.
+                ensure_stub_run(r["run_id"], r.get("host_id"), m, r["tested_at"])
+                matching_rids = [r["run_id"]]
+            else:
+                # Old-format snapshot without run info: match by model.
+                matching_rids = [rid for rid, (hid, m_key) in legacy_runs.items() if m_key == m]
             if not matching_rids:
                 rid = f"legacy_{default_host}_{safe_filename(m)}"
                 legacy_runs[rid] = (default_host, m)
@@ -347,7 +378,7 @@ def import_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
         for s in speed_records:
             hid = s["host_id"]
             m = s["model"]
-            rid = f"legacy_{hid}_{safe_filename(m)}"
+            rid = s.get("run_id") or f"legacy_{hid}_{safe_filename(m)}"
             stats = s.get("stats", {})
             conn.execute(
                 """INSERT OR REPLACE INTO speed_results

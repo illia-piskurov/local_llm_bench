@@ -18,6 +18,35 @@ def safe_filename(key: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_.-]", "_", key)
 
 
+def result_record_name(host_id: str, run_id: str, model: str, benchmark: str, level: str) -> str:
+    """File name of a per-result snapshot in records/results.
+
+    Host and run are part of the name so two machines (or two runs) never write the same file,
+    which keeps Git merges conflict-free.
+    """
+    return f"{safe_filename(host_id)}__{safe_filename(run_id)}__{safe_filename(model)}_{benchmark}_{level}.json"
+
+
+def speed_record_name(host_id: str, run_id: str, model: str, benchmark: str, level: str) -> str:
+    """File name of a per-sample snapshot in records/speeds (same scheme as results)."""
+    return result_record_name(host_id, run_id, model, benchmark, level)
+
+
+# Failure messages that describe a harness problem (not a wrong answer from the model).
+# Results carrying them are stored for visibility but are not treated as completed tests.
+TRUNCATED_PREFIX = "[TRUNCATED]"
+GENERATION_FAILED_PREFIX = "[GENERATION FAILED]"
+INFRA_FAILURE_PREFIXES = (
+    TRUNCATED_PREFIX,
+    GENERATION_FAILED_PREFIX,
+    "Model generation failed or timed out",  # format used before the prefixes were introduced
+)
+
+
+def is_infra_failure(failures: list[str]) -> bool:
+    return bool(failures) and failures[0].startswith(INFRA_FAILURE_PREFIXES)
+
+
 def detect_quantization(model_key: str) -> str | None:
     match = re.search(
         r"(?i)\b(q[0-9]_[a-z0-9_]+|qat|awq|gptq|exl2|fp16|bf16|int8|int4|f32|fp32)\b",
@@ -356,6 +385,27 @@ class ResultStore:
             ).fetchone()
         return row is not None
 
+    def has_scored_result(
+        self,
+        benchmark: Benchmark,
+        model_key: str,
+        level_id: str,
+        run_id: str | None = None,
+    ) -> bool:
+        """True if a genuinely scored result exists (truncated/failed generations do not count)."""
+        query = "SELECT manual_score, failures FROM results WHERE model = ? AND benchmark = ? AND level = ?"
+        params: list[str] = [model_key, benchmark.id, level_id]
+        if run_id:
+            query += " AND run_id = ?"
+            params.append(run_id)
+        for row in self.db.conn.execute(query, params).fetchall():
+            if row["manual_score"] is not None:
+                return True
+            failures = json.loads(row["failures"]) if row["failures"] else []
+            if not is_infra_failure(failures):
+                return True
+        return False
+
     def _ensure_active_run_id(self, model_key: str) -> str:
         active = self.run_store.get_active_run_id(model_key)
         if active:
@@ -415,15 +465,19 @@ class ResultStore:
             )
         self.db.conn.commit()
 
-        # Persist legacy format to records/results for Git versioning compatibility
+        # Persist a per-run snapshot to records/results for Git versioning compatibility
+        records_dir = self.answers_root / "records" / "results"
         try:
-            records_dir = self.answers_root / "records" / "results"
+            run = self.run_store.get(target_run_id)
+            host_id = run.host_id if run else "unknown"
             records_dir.mkdir(parents=True, exist_ok=True)
-            m_slug = safe_filename(result.model)
-            path = records_dir / f"{m_slug}_{result.benchmark}_{result.level}.json"
-            path.write_text(json.dumps(result.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+            path = records_dir / result_record_name(
+                host_id, target_run_id, result.model, result.benchmark, result.level
+            )
+            data = {**result.to_dict(), "run_id": target_run_id, "host_id": host_id}
+            path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception as e:
-            logger.warning("Failed to persist legacy result record to %s: %s", path, e)
+            logger.warning("Failed to persist result record in %s: %s", records_dir, e)
 
     def clear(self, benchmark: Benchmark, model_key: str, level_id: str) -> int:
         count = 0
@@ -541,15 +595,17 @@ class SpeedResultStore:
         )
         self.db.conn.commit()
 
-        # Persist to records/speeds for Git versioning compatibility
+        # Persist a per-run snapshot to records/speeds for Git versioning compatibility
+        records_dir = self.records_speeds_dir
         try:
-            records_dir = self.records_speeds_dir
             records_dir.mkdir(parents=True, exist_ok=True)
-            m_slug = safe_filename(sample.model)
-            path = records_dir / f"{sample.host_id}_{m_slug}_{sample.benchmark}_{sample.level}.json"
-            path.write_text(json.dumps(sample.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+            path = records_dir / speed_record_name(
+                sample.host_id, target_run_id, sample.model, sample.benchmark, sample.level
+            )
+            data = {**sample.to_dict(), "run_id": target_run_id}
+            path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception as e:
-            logger.warning("Failed to persist speed record to %s: %s", path, e)
+            logger.warning("Failed to persist speed record in %s: %s", records_dir, e)
 
     def clear_level(self, model_key: str, benchmark_id: str, level_id: str) -> int:
         cursor = self.db.conn.execute(

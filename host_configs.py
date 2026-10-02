@@ -1,5 +1,6 @@
 import logging
 import platform
+import re
 import socket
 import subprocess
 import sys
@@ -118,33 +119,75 @@ def build_hardware_label(info: dict) -> str:
     return " | ".join(parts) if parts else info.get("hostname", "Local Machine")
 
 
+# Vendor boilerplate that carries no information about the exact CPU model.
+_CPU_NOISE_RE = re.compile(
+    r"\(r\)|\(tm\)|®|™|@\s*[\d.]+\s*ghz|\b\d+-core\b|\bwith\s+radeon\s+graphics\b|\b(?:cpu|processor)\b"
+)
+# Tokens that contain digits but describe a CPU generation or clock, not a specific model.
+_GENERIC_ID_RE = re.compile(r"^(?:\d+(?:st|nd|rd|th)|\d*ghz|\d+mhz|\d+nm|\d+cores?|\d+threads?)$")
+_APPLE_CHIP_RE = re.compile(r"\bm([1-9])(?:\s+(pro|max|ultra))?\b")
+_RAM_RE = re.compile(r"(\d+)\s*gb\b")
+
+
+def _cpu_model_ids(text: str) -> set[str]:
+    """Extracts distinctive CPU model identifiers (e.g. ``i71235u``, ``1235u``, ``7735hs``) from free text.
+
+    Only whole identifiers that contain a digit and are at least 4 characters long are kept, so generic
+    words (``intel``, ``core``, ``ryzen``) and short family markers (``i7``, ``7``) never produce a match.
+    """
+    cleaned = _CPU_NOISE_RE.sub(" ", text.lower())
+    ids: set[str] = set()
+    for token in re.findall(r"[a-z0-9]+(?:-[a-z0-9]+)*", cleaned):
+        for part in (token, *token.split("-")):
+            part = part.replace("-", "")
+            if len(part) >= 4 and any(ch.isdigit() for ch in part) and not _GENERIC_ID_RE.match(part):
+                ids.add(part)
+    return ids
+
+
+def _apple_chip(text: str) -> str | None:
+    """Returns the full Apple Silicon chip name (``m3``, ``m3 max``) or None."""
+    match = _APPLE_CHIP_RE.search(text.lower())
+    if not match:
+        return None
+    return f"m{match.group(1)}" + (f" {match.group(2)}" if match.group(2) else "")
+
+
 def match_existing_host(info: dict, existing_hosts: list["HostConfig"]) -> "HostConfig | None":
-    """Intelligently matches existing profile in database for current hardware."""
-    cpu = info.get("cpu", "").lower()
-    system = info.get("system", "").lower()
+    """Finds the single existing profile that describes the current hardware.
 
-    for h in existing_hosts:
-        lbl = h.label.lower()
+    The match is deliberately conservative because a wrong link silently mixes speed metrics from
+    different machines: a profile matches only when it names the exact CPU model (whole identifier,
+    not a substring) and, if it states a RAM size, that size agrees. When several profiles match,
+    the result is ambiguous and None is returned so the caller creates a new profile or asks the user.
+    """
+    cpu = info.get("cpu", "") or ""
+    system = (info.get("system", "") or "").lower()
+    ram = info.get("ram", 0) or 0
 
-        # 1. Apple Silicon (M4, M3, M2, M1)
-        if "darwin" in system:
-            for m in ["m4", "m3", "m2", "m1"]:
-                if m in cpu and m in lbl:
-                    return h
+    is_apple = "darwin" in system
+    cpu_chip = _apple_chip(cpu) if is_apple else None
+    cpu_ids = _cpu_model_ids(cpu)
+    if not cpu_chip and not cpu_ids:
+        return None
 
-        # 2. AMD Ryzen and Intel Core models (250, 7735hs, 1235u, etc.)
-        for token in ["250", "7735hs", "1235u", "7735", "7840", "8840", "13700", "14700", "9950"]:
-            if token in cpu and token in lbl:
-                return h
+    matches: list[HostConfig] = []
+    for host in existing_hosts:
+        label = host.label.lower()
 
-        # 3. Full CPU name match
-        if cpu and (
-            cpu in lbl
-            or any(part in lbl for part in cpu.split() if len(part) >= 4 and part not in ("intel", "amd", "core"))
-        ):
-            return h
+        if cpu_chip:
+            if _apple_chip(label) != cpu_chip:
+                continue
+        elif not (cpu_ids & _cpu_model_ids(label)):
+            continue
 
-    return None
+        stated_ram = _RAM_RE.search(label)
+        if stated_ram and ram and int(stated_ram.group(1)) != ram:
+            continue
+
+        matches.append(host)
+
+    return matches[0] if len(matches) == 1 else None
 
 
 @dataclass
@@ -174,10 +217,10 @@ class HostConfigStore:
         self.db.conn.commit()
 
         # Persist to records/ for Git versioning
+        records_dir = Path(__file__).parent / "records" / "hosts"
         try:
             import json
 
-            records_dir = Path(__file__).parent / "records" / "hosts"
             records_dir.mkdir(parents=True, exist_ok=True)
             path = records_dir / f"{host.id}.json"
             path.write_text(
@@ -187,7 +230,7 @@ class HostConfigStore:
                 encoding="utf-8",
             )
         except Exception as e:
-            logger.warning("Failed to persist host config record to %s: %s", path, e)
+            logger.warning("Failed to persist host config record in %s: %s", records_dir, e)
 
         return host
 

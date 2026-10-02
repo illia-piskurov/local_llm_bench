@@ -1,6 +1,7 @@
 import os
+import re
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import requests
@@ -50,6 +51,16 @@ class ModelResponse:
     stats: dict | None
     raw: dict
     reasoning: str | None = None
+    truncated_reason: str | None = None
+
+    @property
+    def truncated(self) -> bool:
+        return self.truncated_reason is not None
+
+
+# Reasoning models spend a large share of the budget on thoughts, so the defaults are generous.
+DEFAULT_MAX_TOKENS = 16384
+DEFAULT_TIMEOUT_SECONDS = 600.0
 
 
 @dataclass
@@ -57,8 +68,8 @@ class GenerationConfig:
     temperature: float = 0.0
     seed: int = 42
     top_p: float = 1.0
-    max_tokens: int = 4096
-    timeout_seconds: float = 180.0
+    max_tokens: int = DEFAULT_MAX_TOKENS
+    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS
     context_length: int | None = None
     repeat_penalty: float | None = None
 
@@ -84,8 +95,8 @@ class GenerationConfig:
             temperature=float(data.get("temperature", 0.0)),
             seed=int(data.get("seed", 42)),
             top_p=float(data.get("top_p", 1.0)),
-            max_tokens=int(data.get("max_tokens", 4096)),
-            timeout_seconds=float(data.get("timeout_seconds", 180.0)),
+            max_tokens=int(data.get("max_tokens", DEFAULT_MAX_TOKENS)),
+            timeout_seconds=float(data.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)),
             context_length=data.get("context_length"),
             repeat_penalty=data.get("repeat_penalty"),
         )
@@ -189,13 +200,44 @@ def list_llm_models() -> list[Model]:
     return [Model.from_dict(m) for m in models["models"] if m["type"] == "llm"]
 
 
+_FENCE_LINE_RE = re.compile(r"^[ \t]*```", re.MULTILINE)
+_OPEN_THINK_RE = re.compile(r"<(think|thought|reasoning|reflection)>", re.IGNORECASE)
+_CLOSE_THINK_RE = re.compile(r"</(think|thought|reasoning|reflection)>", re.IGNORECASE)
+
+
+def detect_truncation(payload: dict, raw_content: str, max_tokens: int) -> str | None:
+    """Returns a human-readable reason if the generation was cut off, otherwise None.
+
+    LM Studio's native API does not always report a finish reason, so several signals are combined:
+    an explicit server-side status, the output token count reaching the budget, and structural
+    damage in the text (unclosed reasoning tag or unclosed code fence).
+    """
+    finish = payload.get("finish_reason") or payload.get("stop_reason")
+    if isinstance(finish, str) and finish.lower() in {"length", "max_tokens", "max_output_tokens"}:
+        return f"server reported finish_reason={finish}"
+    if payload.get("status") == "incomplete":
+        return "server reported status=incomplete"
+
+    stats = payload.get("stats") or {}
+    total = stats.get("total_output_tokens")
+    if isinstance(total, int) and max_tokens > 0 and total >= max_tokens:
+        return f"output reached the token limit ({total}/{max_tokens})"
+
+    if len(_OPEN_THINK_RE.findall(raw_content)) > len(_CLOSE_THINK_RE.findall(raw_content)):
+        return "unclosed reasoning tag in the response"
+    if len(_FENCE_LINE_RE.findall(raw_content)) % 2 == 1:
+        return "unclosed code fence in the response"
+    return None
+
+
 def ask_model(
     model_key: str,
     messages: list[dict],
     temperature: float | None = None,
     config: GenerationConfig | None = None,
 ) -> ModelResponse:
-    cfg = config or GenerationConfig()
+    # Work on a copy so the caller's shared config is never mutated.
+    cfg = replace(config) if config is not None else GenerationConfig()
     if temperature is not None:
         cfg.temperature = temperature
 
@@ -265,6 +307,7 @@ def ask_model(
         stats=stats,
         raw=payload,
         reasoning=reasoning_text,
+        truncated_reason=detect_truncation(payload, raw_content, cfg.max_tokens),
     )
 
 

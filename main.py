@@ -141,7 +141,7 @@ def main_menu(model: Model, host: HostConfig) -> None:
         total_count = sum(len(b.levels) for b in REGISTRY)
         for b in REGISTRY:
             for level in b.levels:
-                if store.has_result(b, model.key, level.id):
+                if store.has_scored_result(b, model.key, level.id):
                     tested_count += 1
 
         pct_done = (tested_count / total_count * 100) if total_count else 0
@@ -202,7 +202,7 @@ def main_menu(model: Model, host: HostConfig) -> None:
             queue = []
             for b in REGISTRY:
                 for level in b.levels:
-                    if not store.has_result(b, model.key, level.id):
+                    if not store.has_scored_result(b, model.key, level.id):
                         queue.append((b, level.id))
             run_queue(model, queue, host, force=False)
 

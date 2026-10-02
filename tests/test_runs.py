@@ -374,13 +374,13 @@ def test_generation_config():
     assert cfg.temperature == 0.0
     assert cfg.seed == 42
     assert cfg.top_p == 1.0
-    assert cfg.max_tokens == 4096
-    assert cfg.timeout_seconds == 180.0
+    assert cfg.max_tokens == 16384
+    assert cfg.timeout_seconds == 600.0
 
     d = cfg.to_dict()
     assert d["temperature"] == 0.0
     assert d["seed"] == 42
-    assert d["max_tokens"] == 4096
+    assert d["max_tokens"] == 16384
 
     restored = GenerationConfig.from_dict(d)
     assert restored.seed == 42
