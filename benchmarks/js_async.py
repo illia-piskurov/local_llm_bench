@@ -1,11 +1,11 @@
-"""JavaScript: Concurrency Pool, Retries & AbortSignal (QuickJS) бенчмарк.
+"""JavaScript: Concurrency Pool, Retries & AbortSignal (QuickJS) benchmark.
 
-Тестирует написание надежного асинхронного JavaScript-кода (ES2020+):
-- Level 1: Конкурентный маппер pMap с пулом воркеров и сохранением исходного порядка элементов.
-- Level 2: Повторные попытки с экспоненциальной задержкой (exponential backoff) и таймаут на задачу.
-- Level 3: Отмена пула через AbortSignal и режим settled (Promise.allSettled стиль).
+Tests reliable asynchronous JavaScript (ES2020+) programming capabilities:
+- Level 1: Concurrent mapper pMap with worker pool and strict in-order result preservation.
+- Level 2: Exponential backoff retries and per-task timeouts.
+- Level 3: Early and mid-flight cancellation via AbortSignal and settled mode (Promise.allSettled style).
 
-Код исполняется в изолированной песочнице QuickJS с детерминированным таймером без задержек ОС.
+Code executes inside an isolated QuickJS sandbox with a deterministic virtual timer system.
 """
 
 import json
@@ -20,60 +20,60 @@ from sandboxes.js_quickjs import create_js_context as _create_context
 from sandboxes.js_quickjs import drain_js_jobs as _drain
 
 LEVEL1_PROMPT = """\
-Реализуй асинхронную функцию конкурентного маппинга pMap на JavaScript (ES2020+).
+Implement an asynchronous concurrent mapping function pMap in JavaScript (ES2020+).
 
-Сигнатура:
+Signature:
 async function pMap(items, mapper, options)
 
-Параметры:
-- items: массив элементов для обработки.
-- mapper: асинхронная функция вида async (item, index) => result.
-- options: число (например, 2), задающее concurrency, либо объект { concurrency: 2 }. Если options не передан или опущен, concurrency по умолчанию равен 1.
+Parameters:
+- items: array of items to process.
+- mapper: async function of form async (item, index) => result.
+- options: number (e.g. 2) defining concurrency, or options object { concurrency: 2 }. If options is omitted or undefined, default concurrency is 1.
 
-Требования:
-- Если items пуст (длина 0), возвращается пустой массив [].
-- Ограничение конкурентности: в любой момент времени выполняется не более concurrency асинхронных вызовов mapper. Как только один завершается, сразу запускается следующий.
-- Сохранение порядка: итоговый массив результатов должен строго соответствовать исходному порядку элементов items (индексы 0..n-1), вне зависимости от того, в каком порядке завершались промисы.
-- При возникновении ошибки в mapper (исключение или rejection), pMap должен сразу реджектиться с этой ошибкой.
+Requirements:
+- If items is empty (length 0), return an empty array [].
+- Concurrency limit: at most concurrency async calls to mapper may run concurrently. As soon as one finishes, the next task starts.
+- Order preservation: the returned array of results must strictly match the initial order of items (indices 0..n-1), regardless of completion order.
+- On mapper rejection or uncaught exception, pMap must immediately reject with that error.
 
-В ответе верни только JavaScript код одним блоком ```javascript ... ```, без пояснений вне блока.
+Return only the JavaScript code in a single ```javascript ... ``` code block, with no explanations outside the block.
 """
 
 LEVEL2_PROMPT = """\
-Дополни свою реализацию pMap поддержкой повторных попыток (retries), экспоненциальной задержки (exponential backoff) и таймаута на задачу:
+Extend your pMap implementation with retries, exponential backoff, and per-task timeouts:
 
-Новые опции в объекте options:
-- options.retries: число повторных попыток при ошибке задачи (по умолчанию 0).
-  Например, retries: 2 означает: 1 исходная попытка + до 2 повторных попыток (всего до 3 вызовов mapper).
-- options.backoffMs: базовая задержка между попытками в миллисекундах (по умолчанию 0).
-  Задержка перед 1-й повторной попыткой: backoffMs * (2 ** 0).
-  Задержка перед 2-й повторной попыткой: backoffMs * (2 ** 1) и т.д.
-  Ожидание осуществляется через new Promise(resolve => setTimeout(resolve, delay)).
-- options.timeoutMs: максимальное время выполнения одной попытки mapper в миллисекундах (по умолчанию 0 — без таймаута).
-  Если попытка mapper длится дольше timeoutMs, она прерывается ошибкой new Error("Timeout"), что приводит к retry (если остались попытки) или провалу задачи.
+New options in the options object:
+- options.retries: number of retry attempts on task failure (default 0).
+  For example, retries: 2 means 1 initial attempt + up to 2 retries (up to 3 mapper calls total).
+- options.backoffMs: base delay between retries in milliseconds (default 0).
+  Delay before 1st retry: backoffMs * (2 ** 0).
+  Delay before 2nd retry: backoffMs * (2 ** 1), etc.
+  Delay is waited via new Promise(resolve => setTimeout(resolve, delay)).
+- options.timeoutMs: maximum execution time for a single mapper attempt in milliseconds (default 0 — no timeout).
+  If a mapper attempt exceeds timeoutMs, abort it with new Error("Timeout"), triggering a retry (if attempts remain) or task failure.
 
-Сохрани поведение Level 1 (поддержка options как числа или объекта, сохранение порядка, concurrency).
+Preserve Level 1 behavior (options as number or object, order preservation, concurrency).
 
-В ответе верни только JavaScript код одним блоком ```javascript ... ```, без пояснений вне блока.
+Return only the JavaScript code in a single ```javascript ... ``` code block, with no explanations outside the block.
 """
 
 LEVEL3_PROMPT = """\
-Дополни свою реализацию pMap поддержкой отмены через AbortSignal и режима settled:
+Extend your pMap implementation with AbortSignal cancellation and settled mode:
 
-Новые опции в объекте options:
-- options.signal: экземпляр AbortSignal (из стандартного AbortController).
-  - Если signal уже отменён на момент вызова (signal.aborted === true), pMap должен немедленно реджектиться с ошибкой signal.reason (или new Error("Aborted")), не запуская mapper.
-  - Если отмена происходит во время работы: не запускать оставшиеся задачи в очереди и немедленно реджектить pMap с signal.reason (или new Error("Aborted")).
-- options.settled: boolean (по умолчанию false).
-  - По аналогии с Promise.allSettled: ошибки отдельных задач не приводят к прерыванию pMap.
-  - Вместо исходных значений элементов, возвращаемый массив содержит объекты результатов:
-    - Для успешных задач: { status: 'fulfilled', value: <результат> }
-    - Для задач, завершившихся ошибкой (после исчерпания всех retries): { status: 'rejected', reason: <сообщение или объект ошибки> }
-  - Важно: отмена через signal всё равно прерывает весь pMap и реджектит его.
+New options in the options object:
+- options.signal: instance of AbortSignal (from standard AbortController).
+  - If signal is already aborted at invocation time (signal.aborted === true), immediately reject pMap with signal.reason (or new Error("Aborted")) without calling mapper.
+  - If cancellation occurs mid-flight: do not start remaining tasks in the queue and immediately reject pMap with signal.reason (or new Error("Aborted")).
+- options.settled: boolean (default false).
+  - Similar to Promise.allSettled: individual task errors do not abort pMap.
+  - Instead of raw values, the returned array contains result objects:
+    - For fulfilled tasks: { status: 'fulfilled', value: <result> }
+    - For failed tasks (after exhausting all retries): { status: 'rejected', reason: <error message or error object> }
+  - Important: cancellation via signal still interrupts the entire pMap and rejects it.
 
-Сохрани поведение Level 1 и Level 2.
+Preserve Level 1 and Level 2 behavior.
 
-В ответе верни только JavaScript код одним блоком ```javascript ... ```, без пояснений вне блока.
+Return only the JavaScript code in a single ```javascript ... ``` code block, with no explanations outside the block.
 """
 
 
@@ -392,21 +392,21 @@ LEVEL3_CASES: list[tuple[str, Callable[[str], bool]]] = [
 
 def run_js_suite(cases: list[tuple[str, Callable[[str], bool]]], js_path: Path) -> tuple[int, int, list[str]]:
     if not js_path.exists():
-        return 0, len(cases), [f"Файл {js_path} не найден"]
+        return 0, len(cases), [f"File {js_path} not found"]
 
     try:
         solution_js = js_path.read_text(encoding="utf-8")
     except Exception as e:
-        return 0, len(cases), [f"Ошибка чтения файла {js_path}: {e}"]
+        return 0, len(cases), [f"Error reading file {js_path}: {e}"]
 
-    # Проверка синтаксиса
+    # Syntax check
     try:
         test_ctx = quickjs.Context()
         test_ctx.set_time_limit(2)
         test_ctx.eval(PRELUDE)
         test_ctx.eval(solution_js)
     except Exception as e:
-        return 0, len(cases), [f"Синтаксическая ошибка JavaScript: {e}"]
+        return 0, len(cases), [f"JavaScript syntax error: {e}"]
 
     passed = 0
     failures: list[str] = []
@@ -416,9 +416,9 @@ def run_js_suite(cases: list[tuple[str, Callable[[str], bool]]], js_path: Path) 
             if ok:
                 passed += 1
             else:
-                failures.append(f"{test_name}: проверка вернула False")
+                failures.append(f"{test_name}: assertion returned False")
         except Exception as e:
-            failures.append(f"{test_name}: исключение {e}")
+            failures.append(f"{test_name}: exception {e}")
 
     return passed, len(cases), failures
 

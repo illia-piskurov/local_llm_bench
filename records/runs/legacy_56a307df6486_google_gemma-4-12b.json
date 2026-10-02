@@ -1,0 +1,188 @@
+{
+  "id": "legacy_56a307df6486_google_gemma-4-12b",
+  "host_id": "56a307df6486",
+  "model_key": "google/gemma-4-12b",
+  "model_name": "google/gemma-4-12b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-07-11 23:11:51",
+  "completed_at": "2026-07-11 23:11:51",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-07-11 01:48:00",
+      "passed": 15,
+      "total": 15,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-07-11 02:23:35",
+      "passed": 25,
+      "total": 25,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-07-11 23:53:24",
+      "passed": 30,
+      "total": 30,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-11 15:08:33",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-12 15:39:36",
+      "passed": 4,
+      "total": 6,
+      "failures": [
+        "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=2, cp=3",
+        "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=8, cp=8"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-11 11:14:43",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-11 11:26:32",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-07-11 12:20:54",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-07-12 15:12:56",
+      "passed": 27,
+      "total": 27,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-07-11 23:11:51",
+      "stats": {
+        "input_tokens": 412,
+        "total_output_tokens": 16823,
+        "reasoning_output_tokens": 15855,
+        "tokens_per_second": 7.601473705022645,
+        "time_to_first_token_seconds": 8.726582,
+        "model_load_time_seconds": 19.5
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-07-11 23:34:26",
+      "stats": {
+        "input_tokens": 1614,
+        "total_output_tokens": 10192,
+        "reasoning_output_tokens": 8795,
+        "tokens_per_second": 7.6213619048140995,
+        "time_to_first_token_seconds": 17.824809000000002,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-07-11 23:53:22",
+      "stats": {
+        "input_tokens": 1939,
+        "total_output_tokens": 8327,
+        "reasoning_output_tokens": 6614,
+        "tokens_per_second": 7.471608513497985,
+        "time_to_first_token_seconds": 20.409101,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-11 15:08:33",
+      "stats": {
+        "input_tokens": 271,
+        "total_output_tokens": 8385,
+        "reasoning_output_tokens": 7712,
+        "tokens_per_second": 7.261458106971162,
+        "time_to_first_token_seconds": 4.722,
+        "model_load_time_seconds": 21.191
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-12 15:39:29",
+      "stats": {
+        "input_tokens": 1151,
+        "total_output_tokens": 11175,
+        "reasoning_output_tokens": 9611,
+        "tokens_per_second": 7.472939523031139,
+        "time_to_first_token_seconds": 16.178108,
+        "model_load_time_seconds": 10.038
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-07-12 15:12:54",
+      "stats": {
+        "input_tokens": 1132,
+        "total_output_tokens": 4578,
+        "reasoning_output_tokens": 3656,
+        "tokens_per_second": 7.674814405326218,
+        "time_to_first_token_seconds": 16.124714,
+        "model_load_time_seconds": 16.667
+      }
+    }
+  ]
+}

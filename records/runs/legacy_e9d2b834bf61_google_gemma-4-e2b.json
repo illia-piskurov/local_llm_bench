@@ -1,0 +1,187 @@
+{
+  "id": "legacy_e9d2b834bf61_google_gemma-4-e2b",
+  "host_id": "e9d2b834bf61",
+  "model_key": "google/gemma-4-e2b",
+  "model_name": "google/gemma-4-e2b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-08-19 14:05:56",
+  "completed_at": "2026-08-19 14:05:56",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-17 22:02:39",
+      "passed": 0,
+      "total": 15,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:04:47",
+      "passed": 0,
+      "total": 25,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-07-11 23:58:50",
+      "passed": 0,
+      "total": 30,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 21:09:41",
+      "passed": 5,
+      "total": 6,
+      "failures": [
+        "resource_limit_and_priority: ожидалось ['compile', 'lint', 'test', 'package', 'deploy'], получено ['lint', 'compile', 'test', 'package', 'deploy']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 21:35:20",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: неожиданное исключение: 'status'",
+        "parallel_tasks_reduce_makespan: неожиданное исключение: 'status'",
+        "dependencies_and_workers: неожиданное исключение: 'status'",
+        "critical_path_longer_than_worker_parallelism: неожиданное исключение: 'status'",
+        "wide_graph_with_unlocks: неожиданное исключение: 'status'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-11 00:31:21",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-11 00:32:55",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-19 14:06:01",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "simple_select_all: SQL: ожидали 'SELECT * FROM products', получили 'SELECT * FROM products;'",
+        "select_specific_columns: SQL: ожидали 'SELECT id, email, created_at FROM users', получили 'SELECT id, email, created_at FROM users;'",
+        "simple_where_equality: SQL: ожидали 'SELECT * FROM users WHERE status = $1', получили 'SELECT * FROM users status = $1;'",
+        "where_and_or_nested: SQL: ожидали 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', получили 'SELECT id, email FROM users;'; params: ожидали ['active', 'admin', 21], получили []",
+        "order_by_limit_offset: SQL: ожидали 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', получили 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20;'",
+        "multiple_and_conditions: SQL: ожидали 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', получили 'SELECT * FROM logs;'; params: ожидали ['error', 404, 1000], получили []"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-08-17 20:49:25",
+      "passed": 15,
+      "total": 18,
+      "failures": [
+        "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+        "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+        "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-07-13 16:31:19",
+      "passed": 24,
+      "total": 27,
+      "failures": [
+        "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+        "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+        "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-08-19 14:09:42",
+      "passed": 33,
+      "total": 37,
+      "failures": [
+        "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+        "stack_underflow_add: ожидалась ошибка, но выполнение прошло успешно",
+        "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно",
+        "load_undefined_variable_error: ожидалась ошибка, но выполнение прошло успешно"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-19 14:05:56",
+      "stats": {
+        "input_tokens": 426,
+        "total_output_tokens": 2268,
+        "reasoning_output_tokens": 777,
+        "tokens_per_second": 21.478749798115853,
+        "time_to_first_token_seconds": 1.7724449999999998,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-08-19 14:08:58",
+      "stats": {
+        "input_tokens": 2183,
+        "total_output_tokens": 3146,
+        "reasoning_output_tokens": 741,
+        "tokens_per_second": 20.60983735706888,
+        "time_to_first_token_seconds": 11.582375,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

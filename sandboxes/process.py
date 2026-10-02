@@ -1,8 +1,8 @@
-"""Безопасная проверка и WASM-only запуск Python-решений.
+"""Safe validation and WASM-only execution of Python solutions.
 
-Код, сгенерированный моделью, никогда не импортируется и не исполняется
-нативным Python-процессом. Несовместимые с MicroPython/WASM решения получают
-ошибку выполнения, а не небезопасный fallback.
+Model-generated code is never imported or executed by the host native Python process.
+Solutions incompatible with MicroPython/WASM receive an execution error rather than
+an unsafe fallback.
 """
 
 import ast
@@ -12,23 +12,23 @@ from sandboxes.python_wasm import WASM_AVAILABLE, run_function_in_wasm
 
 
 def verify_function_exists(path: str | Path, func_name: str) -> None:
-    """Проверяет синтаксис и наличие функции через AST, без выполнения кода."""
+    """Verifies syntax and function presence via AST without code execution."""
     content = Path(path).read_text(encoding="utf-8")
     try:
         tree = ast.parse(content)
     except SyntaxError as error:
-        raise SyntaxError(f"Синтаксическая ошибка в решении: {error}") from error
+        raise SyntaxError(f"Syntax error in solution: {error}") from error
 
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == func_name:
             return
 
-    raise AttributeError(f"В решении не найдена функция {func_name}(...)")
+    raise AttributeError(f"Function {func_name}(...) not found in solution")
 
 
 def call_with_timeout(path: str | Path, func_name: str, args: tuple) -> tuple[bool, object]:
-    """Запускает ``func_name(*args)`` только в изолированной WASM-песочнице."""
+    """Runs ``func_name(*args)`` exclusively inside isolated WASM sandbox."""
     if not WASM_AVAILABLE:
-        return False, RuntimeError("WASM-рантайм недоступен; нативное исполнение отключено")
+        return False, RuntimeError("WASM runtime unavailable; native execution is disabled")
 
     return run_function_in_wasm(str(path), func_name, args)

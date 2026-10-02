@@ -1,0 +1,74 @@
+{
+  "id": "legacy_56a307df6486_ibm_granite-3.2-8b",
+  "host_id": "56a307df6486",
+  "model_key": "ibm/granite-3.2-8b",
+  "model_name": "ibm/granite-3.2-8b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-08-04 23:12:08",
+  "completed_at": "2026-08-04 23:12:08",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-04 23:12:11",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: ожидалось ['b', 'c', 'a'], получено ['a', 'c', 'b']",
+        "dependency_unlocks_later: ожидалось ['a', 'b', 'c'], получено ['a', 'c', 'b']",
+        "single_worker_duration_tiebreak: ожидалось ['b', 'c', 'a'], получено ['a', 'c', 'b']",
+        "resource_limit_and_priority: ожидалось ['compile', 'lint', 'test', 'package', 'deploy'], получено ['lint', 'compile', 'test', 'package', 'deploy']",
+        "simultaneous_unlocks: ожидалось ['root', 'c', 'd', 'b'], получено ['root', 'b', 'd', 'c']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-06 20:25:35",
+      "passed": 6,
+      "total": 10,
+      "failures": [
+        "simple_chain: невалидный топологический порядок: None",
+        "diamond: невалидный топологический порядок: None",
+        "multiple_roots: невалидный топологический порядок: None",
+        "wide_graph: невалидный топологический порядок: None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-04 23:12:08",
+      "stats": {
+        "input_tokens": 451,
+        "total_output_tokens": 354,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 13.092571060669124,
+        "time_to_first_token_seconds": 5.946689,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-06 20:25:28",
+      "stats": {
+        "input_tokens": 389,
+        "total_output_tokens": 174,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 8.66858850270161,
+        "time_to_first_token_seconds": 8.627229999999999,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

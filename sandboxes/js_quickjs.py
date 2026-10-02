@@ -1,9 +1,9 @@
-"""JavaScript Sandbox на базе QuickJS.
+"""JavaScript Sandbox powered by QuickJS.
 
-Предоставляет безопасное окружение с виртуальным таймером и полифиллами:
-- Виртуальный таймер (setTimeout/clearTimeout) для детерминированного выполнения асинхронного кода без задержек ОС.
-- Полифиллы AbortController и AbortSignal.
-- Лимит времени и памяти QuickJS.
+Provides a safe execution environment with virtual timers and polyfills:
+- Virtual timer (setTimeout/clearTimeout) for deterministic, zero-latency async testing.
+- AbortController and AbortSignal polyfills.
+- Configurable QuickJS memory and execution limits.
 """
 
 import quickjs
@@ -84,7 +84,7 @@ class AbortController {
 
 
 def create_js_context(solution_js: str, time_limit: int = 5, memory_limit_mb: int = 64) -> quickjs.Context:
-    """Создаёт изолированный контекст QuickJS с внедрёнными полифиллами и кодом решения."""
+    """Creates an isolated QuickJS context with embedded polyfills and solution code."""
     ctx = quickjs.Context()
     ctx.set_time_limit(time_limit)
     ctx.set_memory_limit(memory_limit_mb * 1024 * 1024)
@@ -94,7 +94,7 @@ def create_js_context(solution_js: str, time_limit: int = 5, memory_limit_mb: in
 
 
 def drain_js_jobs(ctx: quickjs.Context, max_steps: int = 1000) -> None:
-    """Отрабатывает очередь микротасок и виртуальных таймеров до полного завершения."""
+    """Processes microtask and virtual timer queues until completion."""
     for _ in range(max_steps):
         while ctx.execute_pending_job():
             pass

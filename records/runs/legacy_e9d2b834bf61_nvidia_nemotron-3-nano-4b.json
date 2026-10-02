@@ -1,0 +1,278 @@
+{
+  "id": "legacy_e9d2b834bf61_nvidia_nemotron-3-nano-4b",
+  "host_id": "e9d2b834bf61",
+  "model_key": "nvidia/nemotron-3-nano-4b",
+  "model_name": "nvidia/nemotron-3-nano-4b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-08-17 12:15:37",
+  "completed_at": "2026-08-17 12:15:37",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-17 12:15:44",
+      "passed": 11,
+      "total": 15,
+      "failures": [
+        "simple_transaction_rollback: ожидалось ['5'], получено ['10']",
+        "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+        "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', '20', '20']",
+        "multiple_keys_independent: ожидалось ['2', '1', '2'], получено ['2', '99', '2']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-17 12:59:52",
+      "passed": 20,
+      "total": 25,
+      "failures": [
+        "simple_transaction_rollback: ожидалось ['5'], получено ['10']",
+        "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+        "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', '20', '20']",
+        "multiple_keys_independent: ожидалось ['2', '1', '2'], получено ['2', '99', '2']",
+        "count_respects_transaction: ожидалось ['2', '1'], получено ['2', '2']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-08-17 13:58:07",
+      "passed": 25,
+      "total": 30,
+      "failures": [
+        "simple_transaction_rollback: ожидалось ['5'], получено ['10']",
+        "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+        "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', '20', '20']",
+        "multiple_keys_independent: ожидалось ['2', '1', '2'], получено ['2', '99', '2']",
+        "count_respects_transaction: ожидалось ['2', '1'], получено ['2', '2']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 14:01:18",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+        "dependency_unlocks_later: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+        "single_worker_duration_tiebreak: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+        "resource_limit_and_priority: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+        "simultaneous_unlocks: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+        "cycle_returns_none: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 14:07:19",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+        "parallel_tasks_reduce_makespan: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+        "dependencies_and_workers: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+        "critical_path_longer_than_worker_parallelism: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence",
+        "wide_graph_with_unlocks: неожиданное исключение: cannot convert dictionary update sequence element #0 to a sequence"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 11:51:48",
+      "passed": 6,
+      "total": 10,
+      "failures": [
+        "simple_chain: невалидный топологический порядок: ['c', 'b', 'a']",
+        "diamond: невалидный топологический порядок: ['d', 'b', 'c', 'a']",
+        "multiple_roots: невалидный топологический порядок: ['d', 'c', 'a', 'b']",
+        "wide_graph: невалидный топологический порядок: ['deploy', 'package', 'test', 'lint', 'compile']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-12 20:17:39",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: неожиданное исключение: name 'topo_sort' is not defined",
+        "simple_chain: неожиданное исключение: name 'topo_sort' is not defined",
+        "diamond_pick_longer_branch: неожиданное исключение: name 'topo_sort' is not defined",
+        "independent_tasks: неожиданное исключение: name 'topo_sort' is not defined",
+        "wide_graph: неожиданное исключение: name 'topo_sort' is not defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-08-17 11:45:49",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-08-17 11:50:03",
+      "passed": 24,
+      "total": 27,
+      "failures": [
+        "unconditional_jump_skips_code: ожидалось ['3'], получено ['1001']",
+        "jz_not_taken_when_nonzero: ожидалось ['1'], получено ['1', '1']",
+        "jnz_not_taken_when_zero: ожидалось ['0'], получено ['0', '0']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-09-30 23:21:57",
+      "passed": 26,
+      "total": 37,
+      "failures": [
+        "unconditional_jump_skips_code: неожиданное исключение: Unknown command \"JMP\" at line 1",
+        "jz_taken_when_zero: неожиданное исключение: Unknown command \"JZ\" at line 1",
+        "jz_not_taken_when_nonzero: неожиданное исключение: Unknown command \"JZ\" at line 1",
+        "jnz_taken_when_nonzero: неожиданное исключение: Unknown command \"JNZ\" at line 1",
+        "jnz_not_taken_when_zero: неожиданное исключение: Unknown command \"JNZ\" at line 1",
+        "countdown_loop: неожиданное исключение: Unknown command \"JNZ\" at line 7",
+        "count_up_loop: неожиданное исключение: Unknown command \"JNZ\" at line 9",
+        "call_ret_basic: неожиданное исключение: Unknown command \"JMP\" at line 3",
+        "call_ret_nested: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "recursive_factorial: неожиданное исключение: Unknown command \"JMP\" at line 3",
+        "recursive_fibonacci: неожиданное исключение: Unknown command \"JMP\" at line 3"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-17 12:15:37",
+      "stats": {
+        "input_tokens": 461,
+        "total_output_tokens": 3287,
+        "reasoning_output_tokens": 2889,
+        "tokens_per_second": 11.081545489309333,
+        "time_to_first_token_seconds": 6.196324,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-17 12:59:41",
+      "stats": {
+        "input_tokens": 1113,
+        "total_output_tokens": 2141,
+        "reasoning_output_tokens": 1575,
+        "tokens_per_second": 17.72633558210239,
+        "time_to_first_token_seconds": 6.201365,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-08-17 13:57:52",
+      "stats": {
+        "input_tokens": 1145,
+        "total_output_tokens": 1320,
+        "reasoning_output_tokens": 619,
+        "tokens_per_second": 17.652937865443395,
+        "time_to_first_token_seconds": 5.743515,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 14:01:16",
+      "stats": {
+        "input_tokens": 283,
+        "total_output_tokens": 2742,
+        "reasoning_output_tokens": 2387,
+        "tokens_per_second": 16.938398442428397,
+        "time_to_first_token_seconds": 1.353469,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 14:07:13",
+      "stats": {
+        "input_tokens": 853,
+        "total_output_tokens": 3849,
+        "reasoning_output_tokens": 3008,
+        "tokens_per_second": 11.289334211588198,
+        "time_to_first_token_seconds": 8.06935,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 11:51:42",
+      "stats": {
+        "input_tokens": 250,
+        "total_output_tokens": 457,
+        "reasoning_output_tokens": 246,
+        "tokens_per_second": 7.126096448175767,
+        "time_to_first_token_seconds": 4.992770999999999,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-08-17 11:45:41",
+      "stats": {
+        "input_tokens": 370,
+        "total_output_tokens": 1404,
+        "reasoning_output_tokens": 937,
+        "tokens_per_second": 9.248880679577715,
+        "time_to_first_token_seconds": 7.938241,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-08-17 11:49:46",
+      "stats": {
+        "input_tokens": 1012,
+        "total_output_tokens": 2078,
+        "reasoning_output_tokens": 1188,
+        "tokens_per_second": 9.558223201374334,
+        "time_to_first_token_seconds": 11.69525,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

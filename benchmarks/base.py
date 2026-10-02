@@ -153,10 +153,10 @@ class StoredResult:
 
 
 def strip_reasoning_blocks(raw_text: str) -> tuple[str, str | None]:
-    """Удаляет теги рассуждений (<think>, <thought>, <reasoning>, <reflection>) из текста.
+    """Strips reasoning tags (<think>, <thought>, <reasoning>, <reflection>) from text.
 
-    Возвращает:
-        (очищенный_текст, извлеченный_текст_рассуждений)
+    Returns:
+        (cleaned_text, extracted_reasoning_text)
     """
     if not raw_text:
         return "", None
@@ -173,7 +173,7 @@ def strip_reasoning_blocks(raw_text: str) -> tuple[str, str | None]:
                 reasoning_parts.append(text)
         cleaned = re.sub(pat, "", cleaned, flags=re.DOTALL | re.IGNORECASE)
 
-    # Если открывающий тег остался без закрывающего (генерация оборвалась посреди мыслей)
+    # If opening tag remains unclosed (generation truncated mid-thought)
     tag_union = "|".join(tags)
     unclosed_pat = rf"<(?:{tag_union})>(.*)"
     unclosed = re.search(unclosed_pat, cleaned, re.DOTALL | re.IGNORECASE)
@@ -209,13 +209,12 @@ class Benchmark(ABC):
         raise KeyError(f"Unknown level '{level_id}' for benchmark '{self.id}'")
 
     def extract_code(self, raw_text: str) -> str:
-        """Достаёт код из ```<code_lang> ... ``` блока (последнего, если их несколько —
-        модель могла сначала показать черновик/другой язык, а затем финальный вариант).
-        Если явного блока с этой меткой языка нет — берёт последний блок без метки языка.
-        Если открывающий блок есть, а закрывающего нет (генерация оборвалась) — берёт всё
-        после открывающего маркера, отбрасывая сам маркер.
-        Если блоков нет вообще — возвращает текст как есть."""
-        # 1. Сначала отсекаем блоки рассуждений (<think>...</think>), чтобы не зацепить черновики из мыслей
+        """Extracts source code from ```<code_lang> ... ``` block (takes the last block if
+        multiple are present, as the model may output drafts or preamble before final code).
+        If no block with matching language label is found, falls back to the last generic block.
+        If an opening block is present without a closing fence, captures all content after the marker.
+        If no fences exist, returns the text as is."""
+        # 1. First strip reasoning blocks (<think>...</think>) to avoid extracting drafts from thought chains
         cleaned, _ = strip_reasoning_blocks(raw_text)
         text_to_parse = cleaned if cleaned.strip() else raw_text
 
@@ -241,6 +240,5 @@ class Benchmark(ABC):
 
     @abstractmethod
     def run_tests(self, level_id: str, answer_path: Path) -> TestResult:
-        """Прогоняет тесты для данного уровня. Вызывается фреймворком только когда
-        level_id NOT IN self.manual_levels — реализация для manual-уровней не нужна."""
+        """Runs test suite for given level. Invoked only when level_id is not manual."""
         raise NotImplementedError

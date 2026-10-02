@@ -1,11 +1,11 @@
-"""C99 Кольцевой буфер и бинарный протокол (WASM) бенчмарк.
+"""C99 Ring Buffer and Binary Protocol (WASM) benchmark.
 
-Тестирует написание низкоуровневого системного кода на C99:
-- Level 1: Статический кольцевой буфер (ringbuf_init, push, pop, available, free_space).
-- Level 2: Декодер пакетов со сканированием мусора и контрольной суммой XOR.
-- Level 3: Потоковый сетевой парсер с фрагментацией данных.
+Tests low-level C99 systems programming capabilities:
+- Level 1: Static ring buffer (ringbuf_init, push, pop, available, free_space).
+- Level 2: Binary packet decoder with noise scanning and XOR checksum verification.
+- Level 3: Streaming network parser with fragmented data handling.
 
-Код компилируется на лету через Zig CC в WASM и безопасно исполняется в песочнице Wasmtime.
+Code is compiled on the fly via Zig CC to WASM and safely executed in Wasmtime sandbox.
 """
 
 import tempfile
@@ -19,66 +19,66 @@ from benchmarks.base import Benchmark, Level, TestResult
 from sandboxes import compile_c_to_wasm, load_wasm
 
 LEVEL1_PROMPT = """\
-Реализуй кольцевой буфер (ring buffer) фиксированного размера на языке C99.
+Implement a fixed-size ring buffer in C99.
 
-Требования к буферу:
-- Размер буфера: 512 байт (#define BUFFER_SIZE 512 или статический массив на 512 элементов).
-- Без динамического выделения памяти (никакого malloc/free), используй статическую память.
-- Чистый C99 (#include <stdint.h>).
+Buffer requirements:
+- Buffer size: 512 bytes (#define BUFFER_SIZE 512 or static array of 512 elements).
+- No dynamic memory allocation (no malloc/free), use static memory only.
+- Pure C99 (#include <stdint.h>).
 
-Функции для реализации:
-- void ringbuf_init(void) — инициализирует или сбрасывает буфер в начальное пустое состояние.
-- int ringbuf_push(uint8_t byte) — добавляет один байт в буфер. Возвращает 0 при успехе, или -1 если буфер полон (в буфере уже 512 байт).
-- int ringbuf_pop(void) — извлекает один байт из буфера по принципу FIFO. Возвращает значение байта (0..255) при успехе, или -1 если буфер пуст.
-- int ringbuf_available(void) — возвращает текущее количество байт, находящихся в буфере (от 0 до 512).
-- int ringbuf_free_space(void) — возвращает оставшееся свободное место в буфере (512 - available).
+Functions to implement:
+- void ringbuf_init(void) — initializes or resets the buffer to an empty initial state.
+- int ringbuf_push(uint8_t byte) — pushes one byte into the buffer. Returns 0 on success, or -1 if the buffer is full (already contains 512 bytes).
+- int ringbuf_pop(void) — pops one byte from the buffer following FIFO ordering. Returns byte value (0..255) on success, or -1 if the buffer is empty.
+- int ringbuf_available(void) — returns the current number of bytes stored in the buffer (0 to 512).
+- int ringbuf_free_space(void) — returns remaining free space in the buffer (512 - available).
 
-В ответе верни только C код одним блоком ```c ... ```, без пояснений вне блока.
+Return only the C code in a single ```c ... ``` code block, with no explanations outside the block.
 """
 
 LEVEL2_PROMPT = """\
-Дополни свою реализацию декодером бинарных пакетов.
+Extend your implementation with a binary packet decoder.
 
-Формат пакета:
+Packet format:
 [0xAA (Magic, 1B)] [type (1B)] [len (1B)] [payload (len B)] [checksum (1B)]
-- Magic byte: всегда 0xAA.
-- type: uint8_t — тип сообщения (0..255).
-- len: uint8_t — длина полезной нагрузки (0..255 байт).
-- payload: len байт полезной нагрузки.
-- checksum: uint8_t — контрольная сумма, вычисляемая как XOR всех байт payload (если len == 0, checksum равен 0).
-Полный размер корректного пакета = 3 + len + 1 = len + 4 байт.
+- Magic byte: always 0xAA.
+- type: uint8_t — message type identifier (0..255).
+- len: uint8_t — payload length (0..255 bytes).
+- payload: len bytes of payload data.
+- checksum: uint8_t — checksum calculated as XOR of all payload bytes (if len == 0, checksum is 0).
+Total valid packet length = 3 + len + 1 = len + 4 bytes.
 
-Функция для реализации:
+Function to implement:
 int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type);
 
-Требования:
-- Функция сканирует stream и ищет первый валидный пакет.
-- Если перед пакетом идёт мусор или ложные байты 0xAA (у которых повреждена длина или контрольная сумма), функция должна пропускать мусор и находить валидный пакет.
-- При успешном обнаружении пакета:
-  - Копирует байты payload в out_payload.
-  - Записывает тип сообщения в *out_type.
-  - Возвращает длину payload (>= 0).
-- Если валидный пакет не найден или данных недостаточно — возвращает -1.
-- Сохрани функции кольцевого буфера из Level 1.
+Requirements:
+- Scan stream and locate the first valid packet.
+- If preceded by noise bytes or false 0xAA markers (corrupted length or checksum), skip the noise and find the valid packet.
+- Upon valid packet discovery:
+  - Copy payload bytes into out_payload.
+  - Write message type to *out_type.
+  - Return payload length (>= 0).
+- If no valid packet found or insufficient data, return -1.
+- Preserve all ring buffer functions from Level 1.
 
-В ответе верни только C код одним блоком ```c ... ```, без пояснений вне блока.
+Return only the C code in a single ```c ... ``` code block, with no explanations outside the block.
 """
 
 LEVEL3_PROMPT = """\
-Дополни свою реализацию потоковым парсером (streaming parser) с поддержкой фрагментации по сети.
+Extend your implementation with a streaming parser supporting network data fragmentation.
 
-Данные поступают произвольными кусками в кольцевой буфер и извлекаются по мере готовности пакетов.
+Data arrives in arbitrary chunks into the ring buffer and is extracted as packets complete.
 
-Функции для реализации:
-- void feed_bytes(const uint8_t *data, int len) — помещает входящие байты в кольцевой буфер. Если буфер переполнен, отбрасывает то, что не поместилось.
-- int get_next_packet(uint8_t *out_payload, int *out_type) — проверяет кольцевой буфер на наличие завершённого пакета (формат из Level 2: 0xAA, type, len, payload, checksum):
-  - Если полный валидный пакет найден: извлекает его из кольцевого буфера (продвигая буфер вперед), копирует payload в out_payload, записывает type в *out_type и возвращает длину payload.
-  - Если в буфере встретились мусорные байты перед пакетом или ложный 0xAA с битой контрольной суммой — мусор удаляется из буфера до следующего кандидата.
-  - Если пакет ещё не полон (ждёт следующих фрагментов) или буфер пуст — возвращает -1, не удаляя незавершённый пакет из буфера.
+Functions to implement:
+- void feed_bytes(const uint8_t *data, int len) — feeds incoming bytes into the ring buffer. If buffer overflows, discard bytes that do not fit.
+- int get_next_packet(uint8_t *out_payload, int *out_type) — checks the ring buffer for a completed packet (format from Level 2: 0xAA, type, len, payload, checksum):
+  - If a full valid packet is found: pop it from the ring buffer (advancing the buffer), copy payload to out_payload, write type to *out_type, and return payload length.
+  - If noise bytes or false 0xAA headers precede the packet, discard noise up to the next candidate.
+  - If packet is incomplete (awaiting future chunks) or buffer is empty, return -1 without discarding incomplete packet data.
 
-Сохрани функции из Level 1 и Level 2.
+Preserve all functions from Level 1 and Level 2.
 
-В ответе верни только C код одним блоком ```c ... ```, без пояснений вне блока.
+Return only the C code in a single ```c ... ``` code block, with no explanations outside the block.
 """
 
 
@@ -271,7 +271,7 @@ LEVEL3_CASES: list[tuple[str, Callable]] = [
 
 def run_c_suite(cases: list[tuple[str, Callable]], c_path: Path) -> tuple[int, int, list[str]]:
     if not c_path.exists():
-        return 0, len(cases), [f"Файл {c_path} не найден"]
+        return 0, len(cases), [f"File {c_path} not found"]
 
     with tempfile.NamedTemporaryFile(suffix=".wasm", delete=False) as tmp:
         wasm_path = Path(tmp.name)
@@ -279,7 +279,7 @@ def run_c_suite(cases: list[tuple[str, Callable]], c_path: Path) -> tuple[int, i
     try:
         ok, err = compile_c_to_wasm(c_path, wasm_path)
         if not ok:
-            return 0, len(cases), [f"Ошибка компиляции C99 -> WASM: {err}"]
+            return 0, len(cases), [f"C99 -> WASM compilation error: {err}"]
 
         store, exports = load_wasm(wasm_path)
 
@@ -291,9 +291,9 @@ def run_c_suite(cases: list[tuple[str, Callable]], c_path: Path) -> tuple[int, i
                 if res:
                     passed += 1
                 else:
-                    failures.append(f"{test_name}: проверка вернула False")
+                    failures.append(f"{test_name}: assertion returned False")
             except Exception as e:
-                failures.append(f"{test_name}: исключение {e}")
+                failures.append(f"{test_name}: exception {e}")
 
         return passed, len(cases), failures
     finally:
@@ -306,7 +306,7 @@ def run_c_suite(cases: list[tuple[str, Callable]], c_path: Path) -> tuple[int, i
 
 class CFramingBenchmark(Benchmark):
     id = "c_framing"
-    name = "C99: Кольцевой буфер и бинарный протокол (WASM)"
+    name = "C99: Ring Buffer & Binary Protocol (WASM)"
     short = "C Framing"
     file_ext = "c"
     code_lang = "c"

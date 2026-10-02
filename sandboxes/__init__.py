@@ -1,11 +1,11 @@
-"""Модуль песочниц (Sandbox Engines) для безопасного и изолированного запуска решений.
+"""Sandbox Engines module for safe and isolated code execution.
 
-Поддерживаемые рантаймы:
-- python_wasm: MicroPython WASI с детерминированным учетом инструкций (fuel metering).
-- process: безопасная AST-проверка и запуск Python-кода только в WASM.
-- c_wasm: Zig CC компилятор C99 в WebAssembly + Wasmtime рантайм.
-- js_quickjs: QuickJS с виртуальным таймером и полифиллами AbortController/Signal.
-- lua_runtime: Lupa песочница с отключенным доступом к ОС, диску и пакетам.
+Supported runtimes:
+- python_wasm: MicroPython WASI with deterministic fuel metering.
+- process: Safe AST validation and dispatch to WASM execution.
+- c_wasm: Zig CC C99 to WebAssembly compiler + Wasmtime runtime.
+- js_quickjs: QuickJS engine with virtual timers and AbortController/Signal polyfills.
+- lua_runtime: Lupa Lua sandbox with revoked OS, IO, and package privileges.
 """
 
 from sandboxes.c_wasm import compile_c_to_wasm, load_wasm

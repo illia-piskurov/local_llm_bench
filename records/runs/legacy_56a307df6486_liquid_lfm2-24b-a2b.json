@@ -1,0 +1,238 @@
+{
+  "id": "legacy_56a307df6486_liquid_lfm2-24b-a2b",
+  "host_id": "56a307df6486",
+  "model_key": "liquid/lfm2-24b-a2b",
+  "model_name": "liquid/lfm2-24b-a2b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-07-12 00:04:38",
+  "completed_at": "2026-07-12 00:04:38",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-07-11 12:42:26",
+      "passed": 8,
+      "total": 15,
+      "failures": [
+        "delete_then_get: неожиданное исключение: 1",
+        "overwrite_set: неожиданное исключение: 1",
+        "simple_transaction_rollback: неожиданное исключение: 2",
+        "rollback_restores_delete: неожиданное исключение: 2",
+        "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', '10', '10']",
+        "rollback_after_commit_is_no_transaction: ожидалось ['NO TRANSACTION'], получено []",
+        "multiple_keys_independent: неожиданное исключение: 1"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-07-11 12:43:37",
+      "passed": 9,
+      "total": 25,
+      "failures": [
+        "delete_then_get: неожиданное исключение: 1",
+        "overwrite_set: неожиданное исключение: 1",
+        "simple_transaction_rollback: неожиданное исключение: 2",
+        "rollback_restores_delete: неожиданное исключение: 2",
+        "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['20', '10', '10']",
+        "rollback_after_commit_is_no_transaction: ожидалось ['NO TRANSACTION'], получено []",
+        "multiple_keys_independent: неожиданное исключение: 1",
+        "count_basic: неожиданное исключение: 1",
+        "count_respects_transaction: неожиданное исключение: 2",
+        "count_after_delete: неожиданное исключение: 1",
+        "watch_set_new_key: ожидалось ['WATCH a NULL -> 10'], получено ['WATCH a NULL -> NULL']",
+        "watch_set_change: неожиданное исключение: 1",
+        "watch_no_change_no_notification: неожиданное исключение: 1",
+        "watch_delete: неожиданное исключение: 1",
+        "watch_unrelated_key_silent: ожидалось [], получено ['WATCH a NULL -> NULL']",
+        "watch_inside_transaction_fires: ожидалось ['WATCH a NULL -> 1'], получено ['WATCH a NULL -> NULL']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-12 00:14:52",
+      "passed": 2,
+      "total": 6,
+      "failures": [
+        "dependency_unlocks_later: ожидалось ['a', 'b', 'c'], получено ['b', 'a', 'c']",
+        "single_worker_duration_tiebreak: неожиданное исключение: превышен таймаут 5с",
+        "resource_limit_and_priority: ожидалось ['compile', 'lint', 'test', 'package', 'deploy'], получено None",
+        "simultaneous_unlocks: неожиданное исключение: превышен таймаут 5с"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-12 00:16:50",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: ожидалось order=['a'], ms=5, cp=5; получено order=['a'], ms=1, cp=0",
+        "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=3, cp=0",
+        "dependencies_and_workers: ожидалось order=['a', 'c', 'b', 'd'], ms=11, cp=11; получено order=['a', 'c', 'b', 'd'], ms=None, cp=7",
+        "critical_path_longer_than_worker_parallelism: ожидалось order=['a', 'b', 'c', 'd'], ms=16, cp=4; получено order=['a', 'b', 'c', 'd'], ms=3, cp=0",
+        "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=None, cp=7"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-11 12:40:28",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-11 12:41:17",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-25 10:22:38",
+      "passed": 3,
+      "total": 6,
+      "failures": [
+        "simple_where_equality: исключение/таймаут: Unsupported condition format: status",
+        "where_and_or_nested: исключение/таймаут: Unsupported condition format: [{'field': 'status', 'op': '=', 'value': 'active'}, {'OR': [{'field': 'role', 'op': '=', 'value': 'admin'}, {'field': 'age', 'op': '>=', 'value': 21}]}]",
+        "multiple_and_conditions: исключение/таймаут: Unsupported condition format: [{'field': 'level', 'op': '=', 'value': 'error'}, {'field': 'code', 'op': '!=', 'value': 404}, {'field': 'timestamp', 'op': '>', 'value': 1000}]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-08-25 10:22:45",
+      "passed": 3,
+      "total": 11,
+      "failures": [
+        "simple_where_equality: исключение/таймаут: Unsupported condition format: status",
+        "where_and_or_nested: исключение/таймаут: Unsupported condition format: [{'field': 'status', 'op': '=', 'value': 'active'}, {'OR': [{'field': 'role', 'op': '=', 'value': 'admin'}, {'field': 'age', 'op': '>=', 'value': 21}]}]",
+        "multiple_and_conditions: исключение/таймаут: Unsupported condition format: [{'field': 'level', 'op': '=', 'value': 'error'}, {'field': 'code', 'op': '!=', 'value': 404}, {'field': 'timestamp', 'op': '>', 'value': 1000}]",
+        "left_join_with_group_by: SQL: ожидали 'SELECT orders.id, orders.total FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id, orders.total', получили 'SELECT orders.id, orders.total FROM orders JOIN items ON orders LEFT ['items', 'order_id'] WHERE JOIN items ON orders LEFT ['items', 'order_id'] GROUP BY orders.id, orders.total'",
+        "multiple_joins_inner_and_left: SQL: ожидали 'SELECT posts.title, users.name FROM posts INNER JOIN users ON posts.author_id = users.id LEFT JOIN comments ON posts.id = comments.post_id', получили 'SELECT posts.title, users.name FROM posts JOIN users ON posts INNER ['users', 'id'] JOIN comments ON posts LEFT ['comments', 'post_id'] WHERE JOIN users ON posts INNER ['users', 'id'] AND JOIN comments ON posts LEFT ['comments', 'post_id']'",
+        "where_in_operator: исключение/таймаут: Unsupported condition format: id",
+        "where_is_null_and_like: исключение/таймаут: Unsupported condition format: [{'field': 'deleted_at', 'op': 'IS NULL'}, {'field': 'email', 'op': 'LIKE', 'value': '%@example.com'}]",
+        "where_is_not_null: исключение/таймаут: Unsupported condition format: completed_at"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-08-25 10:22:25",
+      "passed": 0,
+      "total": 15,
+      "failures": [
+        "не удалось загрузить решение: closing parenthesis ')' does not match opening parenthesis '[' (liquid_lfm2-24b-a2b_sql_level3.py, line 65)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-07-11 12:48:53",
+      "passed": 17,
+      "total": 18,
+      "failures": [
+        "pop: ожидалось ['1'], получено ['2', '1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-07-11 12:58:15",
+      "passed": 19,
+      "total": 27,
+      "failures": [
+        "pop: ожидалось ['1'], получено ['2', '1']",
+        "unconditional_jump_skips_code: неожиданное исключение: Label skip not found at line 2",
+        "jz_taken_when_zero: неожиданное исключение: Label zero not found at line 2",
+        "jz_not_taken_when_nonzero: неожиданное исключение: Label end not found at line 5",
+        "jnz_taken_when_nonzero: неожиданное исключение: Label nz not found at line 2",
+        "jnz_not_taken_when_zero: неожиданное исключение: Label end not found at line 5",
+        "countdown_loop: ожидалось ['5', '4', '3', '2', '1'], получено ['5', '4']",
+        "count_up_loop: ожидалось ['1', '2', '3', '4', '5'], получено ['1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-08-25 10:46:44",
+      "passed": 25,
+      "total": 37,
+      "failures": [
+        "pop: ожидалось ['1'], получено ['2', '1']",
+        "unconditional_jump_skips_code: неожиданное исключение: Label skip not found at line 2",
+        "jz_taken_when_zero: неожиданное исключение: Label zero not found at line 2",
+        "jz_not_taken_when_nonzero: неожиданное исключение: Label end not found at line 5",
+        "jnz_taken_when_nonzero: неожиданное исключение: Label nz not found at line 2",
+        "jnz_not_taken_when_zero: неожиданное исключение: Label end not found at line 5",
+        "countdown_loop: ожидалось ['5', '4', '3', '2', '1'], получено ['5', '4']",
+        "count_up_loop: ожидалось ['1', '2', '3', '4', '5'], получено ['1']",
+        "call_ret_basic: неожиданное исключение: Subroutine double not found at line 2",
+        "call_ret_nested: неожиданное исключение: Subroutine func_a not found at line 1",
+        "recursive_factorial: неожиданное исключение: Subroutine fact not found at line 2",
+        "recursive_fibonacci: неожиданное исключение: Subroutine fib not found at line 2"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-12 00:04:38",
+      "stats": {
+        "input_tokens": 319,
+        "total_output_tokens": 817,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 22.23721336415696,
+        "time_to_first_token_seconds": 3.2768919999999997,
+        "model_load_time_seconds": 49.505
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-12 00:16:42",
+      "stats": {
+        "input_tokens": 1390,
+        "total_output_tokens": 1103,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 21.400256209377467,
+        "time_to_first_token_seconds": 8.027904000000001,
+        "model_load_time_seconds": 41.33
+      }
+    }
+  ]
+}

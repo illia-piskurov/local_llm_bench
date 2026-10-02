@@ -1,0 +1,170 @@
+{
+  "id": "legacy_56a307df6486_google_gemma-4-12b-qat",
+  "host_id": "56a307df6486",
+  "model_key": "google/gemma-4-12b-qat",
+  "model_name": "google/gemma-4-12b-qat",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-08-15 23:34:35",
+  "completed_at": "2026-08-15 23:34:35",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-15 23:34:42",
+      "passed": 15,
+      "total": 15,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-15 23:45:41",
+      "passed": 25,
+      "total": 25,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-08-15 23:59:00",
+      "passed": 30,
+      "total": 30,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-16 00:09:19",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-16 00:25:49",
+      "passed": 5,
+      "total": 6,
+      "failures": [
+        "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=8, cp=8"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-02 11:37:29",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-15 23:34:35",
+      "stats": {
+        "input_tokens": 412,
+        "total_output_tokens": 4711,
+        "reasoning_output_tokens": 4095,
+        "tokens_per_second": 8.63022373121335,
+        "time_to_first_token_seconds": 6.731002,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-15 23:45:28",
+      "stats": {
+        "input_tokens": 1262,
+        "total_output_tokens": 5103,
+        "reasoning_output_tokens": 4095,
+        "tokens_per_second": 8.070499761309,
+        "time_to_first_token_seconds": 9.550277,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-08-15 23:58:44",
+      "stats": {
+        "input_tokens": 1550,
+        "total_output_tokens": 5231,
+        "reasoning_output_tokens": 4095,
+        "tokens_per_second": 8.108332932980197,
+        "time_to_first_token_seconds": 14.961853,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-16 00:09:16",
+      "stats": {
+        "input_tokens": 271,
+        "total_output_tokens": 4972,
+        "reasoning_output_tokens": 4095,
+        "tokens_per_second": 8.32098947235508,
+        "time_to_first_token_seconds": 3.0496399999999997,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-16 00:25:43",
+      "stats": {
+        "input_tokens": 1354,
+        "total_output_tokens": 5478,
+        "reasoning_output_tokens": 4095,
+        "tokens_per_second": 8.29545018438228,
+        "time_to_first_token_seconds": 10.045774,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-25 17:09:28",
+      "stats": {
+        "input_tokens": 426,
+        "total_output_tokens": 2644,
+        "reasoning_output_tokens": 2047,
+        "tokens_per_second": 5.85303431515143,
+        "time_to_first_token_seconds": 7.567054,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-08-25 17:18:29",
+      "stats": {
+        "input_tokens": 1349,
+        "total_output_tokens": 2971,
+        "reasoning_output_tokens": 2047,
+        "tokens_per_second": 5.694285386340656,
+        "time_to_first_token_seconds": 18.830887999999998,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

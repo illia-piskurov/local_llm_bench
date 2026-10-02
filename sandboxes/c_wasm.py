@@ -1,8 +1,8 @@
 """C99 to WebAssembly Sandbox (Zig CC + Wasmtime/WASI).
 
-Компилирует C код на лету с минимальными флагами WASI и запускает в песочнице Wasmtime:
-- Нулевой доступ к диску хоста и сокетам.
-- Изолированная линейная память WebAssembly.
+Compiles C code on the fly with minimal WASI flags and executes inside Wasmtime sandbox:
+- Zero disk or socket access to host.
+- Isolated WebAssembly linear memory.
 """
 
 import subprocess
@@ -14,7 +14,7 @@ from wasmtime import Engine, Linker, Module, Store, WasiConfig
 
 
 def compile_c_to_wasm(c_path: Path, wasm_output_path: Path) -> tuple[bool, str]:
-    """Компилирует C файл в WebAssembly через встроенный ziglang."""
+    """Compiles C file to WebAssembly via embedded ziglang compiler."""
     exports = [
         "ringbuf_init",
         "ringbuf_push",
@@ -54,7 +54,7 @@ def compile_c_to_wasm(c_path: Path, wasm_output_path: Path) -> tuple[bool, str]:
 
 
 def load_wasm(wasm_path: Path) -> tuple[Store, Any]:
-    """Загружает скомпилированный WASM модуль в изолированный рантайм Wasmtime."""
+    """Loads compiled WASM module into an isolated Wasmtime runtime."""
     engine = Engine()
     store = Store(engine)
     linker = Linker(engine)

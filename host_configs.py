@@ -1,3 +1,4 @@
+import logging
 import platform
 import socket
 import subprocess
@@ -9,6 +10,8 @@ from pathlib import Path
 
 from database import Database
 
+logger = logging.getLogger(__name__)
+
 LOCAL_HOST_FILE = Path(__file__).parent / ".local_host"
 
 
@@ -17,7 +20,7 @@ def now_str() -> str:
 
 
 def detect_system_hardware() -> dict:
-    """Определяет характеристики текущего компьютера без внешних зависимостей."""
+    """Detects current machine hardware without external dependencies."""
     system = platform.system()
     hostname = socket.gethostname()
     cpu_name = ""
@@ -116,7 +119,7 @@ def build_hardware_label(info: dict) -> str:
 
 
 def match_existing_host(info: dict, existing_hosts: list["HostConfig"]) -> "HostConfig | None":
-    """Интеллектуальный поиск существующего профиля в базе под текущее железо."""
+    """Intelligently matches existing profile in database for current hardware."""
     cpu = info.get("cpu", "").lower()
     system = info.get("system", "").lower()
 
@@ -129,12 +132,12 @@ def match_existing_host(info: dict, existing_hosts: list["HostConfig"]) -> "Host
                 if m in cpu and m in lbl:
                     return h
 
-        # 2. Модели AMD Ryzen и Intel Core (250, 7735hs, 1235u и др.)
+        # 2. AMD Ryzen and Intel Core models (250, 7735hs, 1235u, etc.)
         for token in ["250", "7735hs", "1235u", "7735", "7840", "8840", "13700", "14700", "9950"]:
             if token in cpu and token in lbl:
                 return h
 
-        # 3. Полное вхождение названия процессора
+        # 3. Full CPU name match
         if cpu and (
             cpu in lbl
             or any(part in lbl for part in cpu.split() if len(part) >= 4 and part not in ("intel", "amd", "core"))
@@ -170,7 +173,7 @@ class HostConfigStore:
         )
         self.db.conn.commit()
 
-        # Сохранение в records/ для версионирования в Git
+        # Persist to records/ for Git versioning
         try:
             import json
 
@@ -183,8 +186,8 @@ class HostConfigStore:
                 ),
                 encoding="utf-8",
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Failed to persist host config record to %s: %s", path, e)
 
         return host
 
@@ -195,10 +198,10 @@ class HostConfigStore:
         return HostConfig(id=row["id"], label=row["label"], created_at=row["created_at"])
 
     def setup_local_device(self) -> HostConfig:
-        """Первичная настройка хоста для нового устройства.
+        """Initial host setup for a new machine.
 
-        Определяет реальное железо и спрашивает пользователя только ОДИН раз.
-        Результат сохраняется в .local_host и никогда больше не запрашивается.
+        Detects system hardware and prompts the user only ONCE.
+        The choice is persisted to .local_host and will not be asked again.
         """
         import questionary
         from questionary import Choice
@@ -209,7 +212,7 @@ class HostConfigStore:
 
         exact_match = match_existing_host(info, existing)
 
-        # Если скрипт запущен в неинтерактивном окружении (CI / headless)
+        # Non-interactive environment (CI / headless)
         if not sys.stdin.isatty():
             if exact_match:
                 host = exact_match
@@ -220,27 +223,27 @@ class HostConfigStore:
             return host
 
         print("\n" + "=" * 62)
-        print("🔍 Обнаружено новое устройство (первый запуск на этом ПК)")
-        print(f"   Железо:   {detected_label}")
+        print("🔍 New device detected (first run on this machine)")
+        print(f"   Hardware: {detected_label}")
         print(f"   Hostname: {info.get('hostname')}")
         print("=" * 62)
 
         choices = []
         if exact_match:
-            choices.append(Choice(f"🔗 Привязать к найденному профилю: «{exact_match.label}»", value=exact_match.id))
+            choices.append(Choice(f"🔗 Link to detected profile: '{exact_match.label}'", value=exact_match.id))
 
-        choices.append(Choice(f"✨ Создать новый профиль: «{detected_label}»", value="new"))
+        choices.append(Choice(f"✨ Create new profile: '{detected_label}'", value="new"))
 
-        # Другие профили
+        # Other profiles
         for h in existing:
             if exact_match and h.id == exact_match.id:
                 continue
-            choices.append(Choice(f"🔗 Привязать к существующему: «{h.label}»", value=h.id))
+            choices.append(Choice(f"🔗 Link to existing profile: '{h.label}'", value=h.id))
 
-        choices.append(Choice("✏️  Ввести своё название профиля", value="custom"))
+        choices.append(Choice("✏️  Enter custom profile name", value="custom"))
 
         chosen = questionary.select(
-            "Как сохранять результаты скорости с этого устройства?",
+            "How should speed benchmark results be recorded from this machine?",
             choices=choices,
         ).ask()
 
@@ -248,7 +251,7 @@ class HostConfigStore:
             host = HostConfig.create(detected_label)
             self.add(host)
         elif chosen == "custom":
-            custom_lbl = questionary.text("Введи название профиля:").ask()
+            custom_lbl = questionary.text("Enter profile name:").ask()
             label = custom_lbl.strip() if custom_lbl and custom_lbl.strip() else detected_label
             host = HostConfig.create(label)
             self.add(host)
@@ -262,15 +265,15 @@ class HostConfigStore:
                 self.add(host)
 
         LOCAL_HOST_FILE.write_text(host.id, encoding="utf-8")
-        print(f"✔ Профиль устройства привязан: {host.label}")
-        print("✔ Сохранено в .local_host (больше запрашиваться не будет).\n")
+        print(f"✔ Device profile bound: {host.label}")
+        print("✔ Saved to .local_host (will not be prompted again).\n")
         return host
 
     def get_active(self) -> HostConfig:
-        """Возвращает активный хост для ТЕКУЩЕГО устройства.
+        """Returns the active host for the CURRENT machine.
 
-        Использует локальный файл .local_host (не коммитится в git),
-        гарантируя, что при git pull с другого ноутбука конфигурация не собьётся.
+        Uses the local .local_host file (not committed to git),
+        guaranteeing that git pull from another laptop will not overwrite configuration.
         """
         if LOCAL_HOST_FILE.exists():
             try:
@@ -282,13 +285,13 @@ class HostConfigStore:
             except Exception:
                 pass
 
-        # Если файл отсутствует — настраиваем устройство 1 раз
+        # If file is missing, configure device once
         return self.setup_local_device()
 
     def set_active(self, host_id: str) -> None:
-        """Переключает активный хост ТОЛЬКО на текущей локальной машине."""
+        """Switches active host ONLY on the current local machine."""
         LOCAL_HOST_FILE.write_text(host_id, encoding="utf-8")
-        # Также обновляем в БД для обратной совместимости
+        # Also update in DB for backward compatibility
         try:
             self.db.conn.execute("UPDATE hosts SET is_active = 0")
             self.db.conn.execute("UPDATE hosts SET is_active = 1 WHERE id = ?", (host_id,))

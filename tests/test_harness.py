@@ -90,6 +90,7 @@ def test_fresh_database_rebuilt_from_records(tmp_path):
     fresh_db_path = tmp_path / "fresh_bench.db"
     fresh_db = Database(fresh_db_path)
     res = import_all(fresh_db, Path(__file__).parent.parent / "records")
+    assert res["runs"] > 0
     assert res["results"] > 0
     assert res["speeds"] > 0
     assert res["hosts"] > 0

@@ -1,11 +1,11 @@
-"""Lua: Игровой AI (Behavior Trees & Корутины) бенчмарк.
+"""Lua: Game AI (Behavior Trees & Coroutines) benchmark.
 
-Тестирует написание игрового AI на языке Lua (5.3+ / 5.4+):
-- Level 1: Ядро дерева поведения (Action, Condition, Sequence, Selector).
-- Level 2: Реактивная доска общей памяти (Blackboard с watchers) и декораторы (Inverter, Cooldown).
-- Level 3: Асинхронные действия на корутинах (AsyncAction с паузами WAIT_TICKS) и сброс дерева.
+Tests game AI development capabilities in Lua (5.3+ / 5.4+):
+- Level 1: Core behavior tree nodes (Action, Condition, Sequence, Selector).
+- Level 2: Reactive shared memory (Blackboard with watchers) and decorators (Inverter, Cooldown).
+- Level 3: Asynchronous actions on coroutines (AsyncAction with WAIT_TICKS pauses) and cascading tree reset.
 
-Код исполняется в изолированной песочнице Lupa Lua без доступа к ОС и диску.
+Code executes inside an isolated Lupa Lua sandbox with revoked OS and file system access.
 """
 
 from collections.abc import Callable
@@ -17,89 +17,89 @@ from benchmarks.base import Benchmark, Level, TestResult
 from sandboxes.lua_runtime import create_lua_sandbox as _create_sandbox
 
 LEVEL1_PROMPT = """\
-Реализуй ядро дерева поведения (Behavior Tree) для игрового AI на языке Lua (5.3+ / 5.4+).
+Implement the core of a Behavior Tree engine for game AI in Lua (5.3+ / 5.4+).
 
-Определи глобальную таблицу `BT = {}`:
-- Статусы выполнения:
+Define a global table `BT = {}`:
+- Execution statuses:
   BT.SUCCESS = "SUCCESS"
   BT.FAILURE = "FAILURE"
   BT.RUNNING = "RUNNING"
 
-Узлы для реализации:
-1. `BT.Action(fn)` — узел действия:
-   - При вызове `node:tick(ctx)` вызывает `fn(ctx)`.
-   - Если `fn` возвращает `true` или `BT.SUCCESS` — возвращает `BT.SUCCESS`.
-   - Если `fn` возвращает `false` или `BT.FAILURE` — возвращает `BT.FAILURE`.
-   - Если `fn` возвращает `BT.RUNNING` — возвращает `BT.RUNNING`.
-   - Метод `node:reset()`.
+Nodes to implement:
+1. `BT.Action(fn)` — action node:
+   - When calling `node:tick(ctx)`, invokes `fn(ctx)`.
+   - If `fn` returns `true` or `BT.SUCCESS` — returns `BT.SUCCESS`.
+   - If `fn` returns `false` or `BT.FAILURE` — returns `BT.FAILURE`.
+   - If `fn` returns `BT.RUNNING` — returns `BT.RUNNING`.
+   - Method `node:reset()`.
 
-2. `BT.Condition(predicate)` — узел проверки условия:
-   - При вызове `node:tick(ctx)` вызывает `predicate(ctx)`.
-   - Если предикат истинен — возвращает `BT.SUCCESS`, иначе `BT.FAILURE`.
-   - Метод `node:reset()`.
+2. `BT.Condition(predicate)` — condition check node:
+   - When calling `node:tick(ctx)`, invokes `predicate(ctx)`.
+   - If predicate evaluates to true — returns `BT.SUCCESS`, otherwise `BT.FAILURE`.
+   - Method `node:reset()`.
 
-3. `BT.Sequence(children)` — композитный узел (логическое И):
-   - Выполняет дочерние узлы по порядку.
-   - Если ребёнок возвращает `BT.FAILURE` — прерывает выполнение и возвращает `BT.FAILURE`.
-   - Если ребёнок возвращает `BT.RUNNING` — запоминает текущий узел и возвращает `BT.RUNNING`. При следующем вызове `tick` выполнение продолжается с этого узла, не перезапуская предыдущие успешные узлы!
-   - Если все дети вернули `BT.SUCCESS` — возвращает `BT.SUCCESS`.
-   - Метод `node:reset()` сбрасывает запомненный индекс в начало.
+3. `BT.Sequence(children)` — composite sequence node (logical AND):
+   - Executes child nodes in order.
+   - If a child returns `BT.FAILURE` — halts execution and returns `BT.FAILURE`.
+   - If a child returns `BT.RUNNING` — remembers current node index and returns `BT.RUNNING`. On next `tick`, resumes from that node without re-executing previously succeeded children!
+   - If all children return `BT.SUCCESS` — returns `BT.SUCCESS`.
+   - Method `node:reset()` resets remembered child index to 1.
 
-4. `BT.Selector(children)` — композитный узел (логическое ИЛИ / Fallback):
-   - Выполняет дочерние узлы по порядку.
-   - Если ребёнок возвращает `BT.SUCCESS` — прерывает выполнение и возвращает `BT.SUCCESS`.
-   - Если ребёнок возвращает `BT.RUNNING` — запоминает узел и возвращает `BT.RUNNING`. При следующем `tick` продолжает с него.
-   - Если все дети вернули `BT.FAILURE` — возвращает `BT.FAILURE`.
-   - Метод `node:reset()` сбрасывает запомненный индекс в начало.
+4. `BT.Selector(children)` — composite selector node (logical OR / Fallback):
+   - Executes child nodes in order.
+   - If a child returns `BT.SUCCESS` — halts execution and returns `BT.SUCCESS`.
+   - If a child returns `BT.RUNNING` — remembers node index and returns `BT.RUNNING`. On next `tick`, resumes from it.
+   - If all children return `BT.FAILURE` — returns `BT.FAILURE`.
+   - Method `node:reset()` resets remembered child index to 1.
 
-В ответе верни только чистый Lua-код одним блоком ```lua ... ```, без пояснений вне блока.
+Return only clean Lua code in a single ```lua ... ``` code block, with no explanations outside the block.
 """
 
 LEVEL2_PROMPT = """\
-Дополни свою реализацию Behavior Tree доской общей памяти (Blackboard) и декораторами:
+Extend your Behavior Tree implementation with a shared memory Blackboard and decorators:
 
-1. Реактивная доска памяти `BT.Blackboard`:
-   - `BT.Blackboard.new()` — создает новый экземпляр доски:
-     - `bb:get(key, default)` — возвращает значение по ключу, или `default`, если значение отсутствует (nil).
-     - `bb:set(key, value)` — сохраняет значение. Если значение изменилось, вызывает всех зарегистрированных наблюдателей для этого ключа.
-     - `bb:watch(key, callback)` — регистрирует функцию обратного вызова `callback(key, new_value, old_value)`, которая срабатывает при изменении значения ключа.
+1. Reactive memory board `BT.Blackboard`:
+   - `BT.Blackboard.new()` — creates a new blackboard instance:
+     - `bb:get(key, default)` — returns value for key, or `default` if nil.
+     - `bb:set(key, value)` — stores value. If value changed, invokes all registered watchers for this key.
+     - `bb:watch(key, callback)` — registers callback `callback(key, new_value, old_value)` triggered when value changes.
 
-2. Декораторы (узлы с одним ребёнком):
+2. Decorators (single-child nodes):
    - `BT.Inverter(child)`:
-     - Инвертирует результат ребёнка: `BT.SUCCESS` -> `BT.FAILURE`, `BT.FAILURE` -> `BT.SUCCESS`.
-     - Статус `BT.RUNNING` возвращается без изменений.
-     - Метод `reset()` делегирует ребёнку.
+     - Inverts child result: `BT.SUCCESS` -> `BT.FAILURE`, `BT.FAILURE` -> `BT.SUCCESS`.
+     - Status `BT.RUNNING` is passed through unchanged.
+     - Method `reset()` delegates to child.
    - `BT.Cooldown(child, ticks)`:
-     - После успешного выполнения ребёнка (`BT.SUCCESS`), узел уходит на кулдаун на заданное количество тиков (`ticks`).
-     - В течение кулдауна узел сразу возвращает `BT.FAILURE`, не вызывая ребёнка.
-     - Как только кулдаун истекает, ребёнок снова может выполняться.
-     - Метод `reset()` сбрасывает кулдаун и вызывает `child:reset()`.
+     - After successful child execution (`BT.SUCCESS`), enters cooldown for `ticks` ticks.
+     - During cooldown, immediately returns `BT.FAILURE` without invoking child.
+     - Once cooldown expires, child can execute again.
+     - Method `reset()` resets cooldown counter and calls `child:reset()`.
 
-Сохрани реализацию узлов из Level 1.
+Preserve Level 1 node behavior.
 
-В ответе верни только чистый Lua-код одним блоком ```lua ... ```, без пояснений вне блока.
+Return only clean Lua code in a single ```lua ... ``` code block, with no explanations outside the block.
 """
 
 LEVEL3_PROMPT = """\
-Дополни свою реализацию поддержкой асинхронных действий на корутинах (Coroutines / Fibers) и каскадным сбросом дерева:
+Extend your implementation with coroutine-based async actions and cascading tree resets:
 
-1. Асинхронное действие `BT.AsyncAction(coroutine_fn)`:
-   - Позволяет действию выполняться в течение нескольких тиков без блокировки основного цикла игры, используя корутины Lua (`coroutine.create`, `coroutine.resume`, `coroutine.yield`).
-   - Функция `coroutine_fn(ctx)` может вызывать `coroutine.yield("WAIT_TICKS", n)` для ожидания `n` тиков.
-   - При вызове `node:tick(ctx)`:
-     - Если корутина ещё не создана или умерла — создает новую корутину.
-     - Если узел находится в режиме ожидания тиков — уменьшает счетчик тиков и возвращает `BT.RUNNING`.
-     - Возобновляет корутину (`coroutine.resume(co, ctx)`).
-     - Если корутина сделала `yield("WAIT_TICKS", n)` — узел взводит ожидание на `n` тиков и возвращает `BT.RUNNING`.
-     - Если корутина завершилась — узел возвращает её финальный результат (`BT.SUCCESS`, `BT.FAILURE` или `true`/`false`).
-   - Метод `node:reset()`: обнуляет корутину и таймер ожидания.
+1. Asynchronous action `BT.AsyncAction(coroutine_fn)`:
+   - Enables multi-tick actions without blocking the main game loop, using Lua coroutines (`coroutine.create`, `coroutine.resume`, `coroutine.yield`).
+   - Function `coroutine_fn(ctx)` may yield `coroutine.yield("WAIT_TICKS", n)` to wait for `n` ticks.
+   - When calling `node:tick(ctx)`:
+     - If coroutine is not yet created or dead — create new coroutine.
+     - If node is in wait ticks mode — decrement ticks counter and return `BT.RUNNING`.
+     - Resume coroutine (`coroutine.resume(co, ctx)`).
+     - If coroutine yields `("WAIT_TICKS", n)` — set wait ticks to `n` and return `BT.RUNNING`.
+     - When coroutine finishes — return its final result (`BT.SUCCESS`, `BT.FAILURE` or `true`/`false`).
+   - Method `node:reset()`: clears coroutine and wait timer.
 
-2. Каскадный сброс дерева:
-   - При вызове `node:reset()` у композитных узлов (`Sequence`, `Selector`), они должны вызывать `reset()` у всех своих дочерних узлов (чтобы прерывать выполняющиеся корутины при переключении веток).
+2. Cascading tree reset:
+   - When calling `node:reset()` on composite nodes (`Sequence`, `Selector`), recursively call `reset()` on all child nodes.
 
-Сохрани функционал Level 1 и Level 2.
+Preserve Level 1 and Level 2 functionality.
 
-В ответе верни только чистый Lua-код одним блоком ```lua ... ```, без пояснений вне блока.
+Return only clean Lua code in a single ```lua ... ``` code block, with no explanations outside the block.
 """
 
 
@@ -507,18 +507,18 @@ LEVEL3_CASES: list[tuple[str, Callable[[LuaRuntime], bool]]] = [
 
 def run_lua_suite(cases: list[tuple[str, Callable[[LuaRuntime], bool]]], lua_path: Path) -> tuple[int, int, list[str]]:
     if not lua_path.exists():
-        return 0, len(cases), [f"Файл {lua_path} не найден"]
+        return 0, len(cases), [f"File {lua_path} not found"]
 
     try:
         solution_lua = lua_path.read_text(encoding="utf-8")
     except Exception as e:
-        return 0, len(cases), [f"Ошибка чтения файла {lua_path}: {e}"]
+        return 0, len(cases), [f"Error reading file {lua_path}: {e}"]
 
     rt = _create_sandbox()
     try:
         _load_solution(rt, solution_lua)
     except LuaError as e:
-        return 0, len(cases), [f"Синтаксическая ошибка Lua: {e}"]
+        return 0, len(cases), [f"Lua syntax error: {e}"]
 
     passed = 0
     failures: list[str] = []
@@ -530,16 +530,16 @@ def run_lua_suite(cases: list[tuple[str, Callable[[LuaRuntime], bool]]], lua_pat
             if ok:
                 passed += 1
             else:
-                failures.append(f"{test_name}: проверка вернула false")
+                failures.append(f"{test_name}: assertion returned false")
         except Exception as e:
-            failures.append(f"{test_name}: исключение {e}")
+            failures.append(f"{test_name}: exception {e}")
 
     return passed, len(cases), failures
 
 
 class LuaGameAIBenchmark(Benchmark):
     id = "lua_game_ai"
-    name = "Lua: Игровой AI (Behavior Trees & Корутины)"
+    name = "Lua: Game AI (Behavior Trees & Coroutines)"
     short = "Lua BT"
     file_ext = "lua"
     code_lang = "lua"

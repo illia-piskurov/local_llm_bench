@@ -1,0 +1,50 @@
+{
+  "id": "legacy_70ccb4981862_google_gemma-4-26b-a4b",
+  "host_id": "70ccb4981862",
+  "model_key": "google/gemma-4-26b-a4b",
+  "model_name": "google/gemma-4-26b-a4b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-09-28 17:23:36",
+  "completed_at": "2026-09-28 17:23:36",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-09-28 17:23:38",
+      "passed": 15,
+      "total": 15,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-24 21:55:05",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-09-28 17:23:36",
+      "stats": {
+        "input_tokens": 412,
+        "total_output_tokens": 7065,
+        "reasoning_output_tokens": 6457,
+        "tokens_per_second": 19.632901395270153,
+        "time_to_first_token_seconds": 3.558,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

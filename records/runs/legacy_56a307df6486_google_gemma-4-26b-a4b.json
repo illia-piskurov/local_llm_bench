@@ -1,0 +1,50 @@
+{
+  "id": "legacy_56a307df6486_google_gemma-4-26b-a4b",
+  "host_id": "56a307df6486",
+  "model_key": "google/gemma-4-26b-a4b",
+  "model_name": "google/gemma-4-26b-a4b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-08-24 21:55:03",
+  "completed_at": "2026-08-24 21:55:03",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-09-28 17:23:38",
+      "passed": 15,
+      "total": 15,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-24 21:55:05",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-24 21:55:03",
+      "stats": {
+        "input_tokens": 426,
+        "total_output_tokens": 2936,
+        "reasoning_output_tokens": 2047,
+        "tokens_per_second": 11.102774660154033,
+        "time_to_first_token_seconds": 6.433501000000001,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

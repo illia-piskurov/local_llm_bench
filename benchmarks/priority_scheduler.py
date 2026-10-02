@@ -1,8 +1,8 @@
-"""Планировщик с приоритетами и ресурсами бенчмарк.
+"""Priority and Resource Task Scheduler benchmark.
 
-Тестирует способность модели реализовать планировщик задач с учетом ограничений:
-- Level 1: Порядок выполнения задач (plan_order) с учетом приоритетов, длительности, имен и пула воркеров.
-- Level 2: Расчет критического пути (critical_path) и общего времени выполнения (makespan).
+Tests task scheduling with constraints and resource limits:
+- Level 1: Deterministic execution order (plan_order) with task priorities, durations, and worker pools.
+- Level 2: Critical path analysis (critical_path) and total completion makespan calculation (makespan).
 """
 
 import heapq
@@ -12,45 +12,45 @@ from benchmarks.base import Benchmark, Level, TestResult
 from sandboxes import call_with_timeout, verify_function_exists
 
 LEVEL1_PROMPT = """\
-Реализуй планировщик задач с зависимостями, приоритетами и ограниченным числом исполнителей в одном Python файле.
+Implement a task scheduler with dependencies, priorities, and a limited worker pool in a single Python file.
 
 def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None
 
-Каждая задача задаётся кортежем (duration, deps, priority):
-- duration — длительность задачи в целых единицах времени;
-- deps — список имён задач, которые должны завершиться раньше;
-- priority — приоритет задачи, чем больше, тем раньше она должна стартовать.
+Each task is defined by a tuple (duration, deps, priority):
+- duration: task duration in integer time units;
+- deps: list of task names that must finish before this task can start;
+- priority: task priority; higher priority tasks must start earlier.
 
-Правила выполнения:
-- задачи выполняются не прерываясь;
-- одновременно могут идти не более workers задач;
-- когда несколько задач готовы к запуску, выбирай сначала с большим priority,
-  затем с меньшей duration, затем по имени по возрастанию;
-- если несколько задач стартуют в один и тот же момент, возвращай их в list[str]
-  в порядке этого же правила;
-- если в зависимостях есть цикл, верни None.
+Execution rules:
+- Tasks run non-preemptively;
+- At most workers tasks can run simultaneously;
+- When multiple tasks are ready to run, select first by highest priority,
+  then shortest duration, then alphabetical task name;
+- If multiple tasks start at the exact same timestamp, append them to the returned list[str]
+  following the same priority tie-breaking rule;
+- If there is a cyclic dependency in tasks, return None.
 
-В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока.
+Return only the Python code in a single ```python ... ``` code block, with no explanations outside the block.
 """
 
 LEVEL2_PROMPT = """\
-Дополни свою реализацию двумя функциями:
+Extend your implementation with two functions:
 
 def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None
 
-Верни длину самого длинного зависимого пути по сумме duration, игнорируя priority.
-Если в графе зависимостей есть цикл — верни None.
+Return the length of the longest dependency path by sum of durations, ignoring priority.
+If there is a cycle in the dependency graph, return None.
 
 def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None
 
-Верни общее время завершения всех задач при тех же правилах выбора задач, что и в plan_order.
-Используй тот же детерминированный порядок выбора готовых задач:
-priority по убыванию, duration по возрастанию, name по возрастанию.
-Если в графе зависимостей есть цикл — верни None.
+Return the total completion time of all tasks using the same scheduling rules as plan_order.
+Use the same deterministic tie-breaking for ready tasks:
+descending priority, ascending duration, alphabetical name.
+If there is a cycle in the dependency graph, return None.
 
-Не меняй сигнатуру plan_order.
+Do not alter the signature or behavior of plan_order.
 
-В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока.
+Return only the Python code in a single ```python ... ``` code block, with no explanations outside the block.
 """
 
 
@@ -236,8 +236,8 @@ LEVEL2_TESTS = [
         },
         2,
         ["compile", "fetch", "test", "package"],
-        7,
-        9,
+        8,
+        8,
     ),
     (
         "cycle_returns_none",
@@ -260,7 +260,7 @@ def run_priority_level1(solution_path: str | Path) -> tuple[int, int, list[str]]
     for name, tasks, workers, expected in LEVEL1_TESTS:
         success, payload = call_with_timeout(str(solution_path), "plan_order", (tasks, workers))
         if not success:
-            failures.append(f"{name}: неожиданное исключение: {payload}")
+            failures.append(f"{name}: unexpected exception: {payload}")
             continue
 
         result = payload
@@ -268,12 +268,12 @@ def run_priority_level1(solution_path: str | Path) -> tuple[int, int, list[str]]
             if result is None:
                 passed += 1
             else:
-                failures.append(f"{name}: ожидался None (цикл), получено {result}")
+                failures.append(f"{name}: expected None (cycle), got {result}")
         else:
             if result == expected:
                 passed += 1
             else:
-                failures.append(f"{name}: ожидалось {expected}, получено {result}")
+                failures.append(f"{name}: expected {expected}, got {result}")
 
     return passed, len(LEVEL1_TESTS), failures
 
@@ -283,31 +283,31 @@ def run_priority_level2(solution_path: str | Path) -> tuple[int, int, list[str]]
     failures: list[str] = []
 
     for name, tasks, workers, expected_order, expected_makespan, expected_cp in LEVEL2_TESTS:
+        success_order, order = call_with_timeout(str(solution_path), "plan_order", (tasks, workers))
         success_cp, cp = call_with_timeout(str(solution_path), "critical_path", (tasks,))
         success_ms, ms = call_with_timeout(str(solution_path), "makespan", (tasks, workers))
-        if not success_cp or not success_ms:
-            if expected_order is None:
-                passed += 1
-            else:
-                reason = cp if not success_cp else ms
-                failures.append(f"{name}: неожиданное исключение: {reason}")
+        if not success_order or not success_cp or not success_ms:
+            failed_result = next(
+                result
+                for success, result in ((success_order, order), (success_cp, cp), (success_ms, ms))
+                if not success
+            )
+            failures.append(f"{name}: unexpected exception: {failed_result}")
             continue
-
-        order = simulate_order(tasks, workers)
 
         if expected_order is None:
             if cp is None and ms is None and order is None:
                 passed += 1
             else:
-                failures.append(f"{name}: ожидались None, получено order={order}, ms={ms}, cp={cp}")
+                failures.append(f"{name}: expected None, got order={order}, ms={ms}, cp={cp}")
             continue
 
         if order == expected_order and ms == expected_makespan and cp == expected_cp:
             passed += 1
         else:
             failures.append(
-                f"{name}: ожидалось order={expected_order}, ms={expected_makespan}, cp={expected_cp}; "
-                f"получено order={order}, ms={ms}, cp={cp}"
+                f"{name}: expected order={expected_order}, ms={expected_makespan}, cp={expected_cp}; "
+                f"got order={order}, ms={ms}, cp={cp}"
             )
 
     return passed, len(LEVEL2_TESTS), failures
@@ -315,7 +315,7 @@ def run_priority_level2(solution_path: str | Path) -> tuple[int, int, list[str]]
 
 class PrioritySchedulerBenchmark(Benchmark):
     id = "priority_scheduler"
-    name = "Планировщик с приоритетами и ресурсами"
+    name = "Priority & Resource Task Scheduler"
     short = "PrioSched"
     levels = [
         Level(id="level1", name="Level 1 (plan_order)", prompt=LEVEL1_PROMPT, requires=None),
@@ -329,7 +329,7 @@ class PrioritySchedulerBenchmark(Benchmark):
         try:
             verify_function_exists(answer_path, func_name)
         except Exception as e:
-            return TestResult(0, tests_count, [f"не удалось загрузить решение: {e}"])
+            return TestResult(0, tests_count, [f"failed to load solution: {e}"])
 
         if level_id == "level1":
             passed, total, failures = run_priority_level1(answer_path)

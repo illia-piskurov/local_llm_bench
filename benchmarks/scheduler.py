@@ -1,8 +1,8 @@
-"""Планировщик задач с зависимостями бенчмарк.
+"""Task Scheduler with Dependencies benchmark.
 
-Тестирует способность модели работать с графами задач и зависимостями:
-- Level 1: Топологическая сортировка графа (topo_sort) и обнаружение циклов (возврат None).
-- Level 2: Расчёт критического пути (critical_path - самая длинная зависимая цепочка).
+Tests task dependency graph analysis and ordering:
+- Level 1: Directed acyclic graph topological sorting (topo_sort) and cycle detection (return None).
+- Level 2: Critical path method analysis (critical_path - longest dependent task chain).
 """
 
 from pathlib import Path
@@ -12,38 +12,38 @@ from benchmarks.base import Benchmark, Level, TestResult
 from sandboxes import call_with_timeout, verify_function_exists
 
 LEVEL1_PROMPT = """\
-Реализуй планировщик задач с зависимостями в одном Python файле.
+Implement a task dependency scheduler in a single Python file.
 
 def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None
 
-tasks — словарь, где ключ — имя задачи (строка), а значение — список имён задач,
-от которых она зависит (эти задачи должны быть выполнены раньше).
+tasks is a dictionary where the key is the task name (str), and the value is a list of
+dependency task names that must complete prior to this task.
 
-Функция должна вернуть список имён всех задач в порядке, при котором каждая задача
-идёт строго после всех своих зависимостей (топологическая сортировка).
-Если в графе зависимостей есть цикл — верни None.
+The function must return a list of all task names in an order where every task appears
+strictly after all of its dependencies (topological sort).
+If the dependency graph contains a cycle, return None.
 
-Требования:
-- Один файл, без внешних зависимостей (никаких networkx и т.п.).
-- Порядок среди задач, не зависящих друг от друга, может быть любым — важно только,
-  чтобы зависимости шли раньше зависимых от них задач.
+Requirements:
+- Single file, no external dependencies (no networkx, etc.).
+- The relative order between independent tasks is arbitrary — only the dependency
+  ordering guarantee is required.
 
-В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока.
+Return only the Python code in a single ```python ... ``` code block, with no explanations outside the block.
 """
 
 LEVEL2_PROMPT = """\
-Дополни свою реализацию функцией расчёта критического пути:
+Extend your implementation with a critical path calculation function:
 
 def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None
 
-tasks — словарь, где значение — кортеж (длительность_задачи, список_зависимостей).
-Функция должна вернуть длину критического пути — суммарную длительность самой долгой
-по времени цепочки зависимых друг от друга задач (classic critical path method).
-Если в графе зависимостей есть цикл — верни None.
+tasks is a dictionary where each value is a tuple of (duration, dependencies_list).
+The function must return the length of the critical path — the total duration of the
+longest dependent sequence of tasks (classic critical path method).
+If the dependency graph contains a cycle, return None.
 
-Не меняй сигнатуру и поведение topo_sort.
+Preserve the signature and behavior of topo_sort.
 
-В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока.
+Return only the Python code in a single ```python ... ``` code block, with no explanations outside the block.
 """
 
 
@@ -119,19 +119,19 @@ def run_scheduler_level1(solution_path: str | Path) -> tuple[int, int, list[str]
     for name, tasks, expected in LEVEL1_TESTS:
         success, result = call_with_timeout(str(solution_path), "topo_sort", (tasks,))
         if not success:
-            failures.append(f"{name}: неожиданное исключение/таймаут: {result}")
+            failures.append(f"{name}: unexpected exception/timeout: {result}")
             continue
 
         if expected is None:
             if result is None:
                 passed += 1
             else:
-                failures.append(f"{name}: ожидался None (цикл), получено {result}")
+                failures.append(f"{name}: expected None (cycle), got {result}")
         else:
             if is_valid_topo_order(tasks, result):
                 passed += 1
             else:
-                failures.append(f"{name}: невалидный топологический порядок: {result}")
+                failures.append(f"{name}: invalid topological order: {result}")
 
     return passed, len(LEVEL1_TESTS), failures
 
@@ -146,23 +146,23 @@ def run_scheduler_level2(solution_path: str | Path) -> tuple[int, int, list[str]
             if expected is None:
                 passed += 1
             else:
-                failures.append(f"{name}: неожиданное исключение/таймаут: {result}")
+                failures.append(f"{name}: unexpected exception/timeout: {result}")
             continue
 
         if result == expected:
             passed += 1
         else:
-            failures.append(f"{name}: ожидалось {expected}, получено {result}")
+            failures.append(f"{name}: expected {expected}, got {result}")
 
     return passed, len(LEVEL2_TESTS), failures
 
 
 class SchedulerBenchmark(Benchmark):
     id = "scheduler"
-    name = "Планировщик задач (topo sort + critical path)"
+    name = "Task Scheduler (topo sort + critical path)"
     short = "Scheduler"
     levels = [
-        Level(id="level1", name="Level 1 (topo_sort + циклы)", prompt=LEVEL1_PROMPT, requires=None),
+        Level(id="level1", name="Level 1 (topo_sort + cycles)", prompt=LEVEL1_PROMPT, requires=None),
         Level(id="level2", name="Level 2 (critical_path)", prompt=LEVEL2_PROMPT, requires="level1"),
     ]
 
@@ -173,7 +173,7 @@ class SchedulerBenchmark(Benchmark):
         try:
             verify_function_exists(answer_path, func_name)
         except Exception as e:
-            return TestResult(0, tests_count, [f"не удалось загрузить решение: {e}"])
+            return TestResult(0, tests_count, [f"failed to load solution: {e}"])
 
         if level_id == "level1":
             passed, total, failures = run_scheduler_level1(answer_path)

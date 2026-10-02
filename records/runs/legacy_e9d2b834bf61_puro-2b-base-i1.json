@@ -1,0 +1,42 @@
+{
+  "id": "legacy_e9d2b834bf61_puro-2b-base-i1",
+  "host_id": "e9d2b834bf61",
+  "model_key": "puro-2b-base-i1",
+  "model_name": "puro-2b-base-i1",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-09-02 12:10:01",
+  "completed_at": "2026-09-02 12:10:01",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-09-02 12:10:01",
+      "passed": 0,
+      "total": 18,
+      "failures": [
+        "не удалось загрузить решение: invalid syntax (puro-2b-base-i1_vm_level1.py, line 1)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-09-02 12:10:01",
+      "stats": {
+        "input_tokens": 379,
+        "total_output_tokens": 3717,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 29.64452292070476,
+        "time_to_first_token_seconds": 0.7376889999999999,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,258 @@
+{
+  "id": "legacy_56a307df6486_mistralai_ministral-3-3b",
+  "host_id": "56a307df6486",
+  "model_key": "mistralai/ministral-3-3b",
+  "model_name": "mistralai/ministral-3-3b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-08-17 19:20:23",
+  "completed_at": "2026-08-17 19:20:23",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-17 19:20:23",
+      "passed": 0,
+      "total": 15,
+      "failures": [
+        "не удалось загрузить решение: invalid syntax (mistralai_ministral-3-3b_kv_level1.py, line 72)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-17 19:26:07",
+      "passed": 0,
+      "total": 25,
+      "failures": [
+        "не удалось загрузить решение: invalid syntax (mistralai_ministral-3-3b_kv_level2.py, line 78)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 19:42:08",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: ожидалось ['b', 'c', 'a'], получено None",
+        "dependency_unlocks_later: ожидалось ['a', 'b', 'c'], получено None",
+        "single_worker_duration_tiebreak: ожидалось ['b', 'c', 'a'], получено None",
+        "resource_limit_and_priority: ожидалось ['compile', 'lint', 'test', 'package', 'deploy'], получено None",
+        "simultaneous_unlocks: ожидалось ['root', 'c', 'd', 'b'], получено None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 19:46:31",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: ожидалось order=['a'], ms=5, cp=5; получено order=['a'], ms=None, cp=5",
+        "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=None, cp=3",
+        "dependencies_and_workers: неожиданное исключение: name 'visited' is not defined",
+        "critical_path_longer_than_worker_parallelism: ожидалось order=['a', 'b', 'c', 'd'], ms=16, cp=4; получено order=['a', 'b', 'c', 'd'], ms=None, cp=4",
+        "wide_graph_with_unlocks: неожиданное исключение: name 'visited' is not defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 17:09:58",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 19:04:01",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: неожиданное исключение: name 'graph' is not defined",
+        "simple_chain: неожиданное исключение: name 'graph' is not defined",
+        "diamond_pick_longer_branch: неожиданное исключение: name 'graph' is not defined",
+        "independent_tasks: неожиданное исключение: name 'graph' is not defined",
+        "wide_graph: неожиданное исключение: name 'graph' is not defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-19 14:22:30",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "simple_select_all: SQL: ожидали 'SELECT * FROM products', получили 'SELECT *'",
+        "select_specific_columns: SQL: ожидали 'SELECT id, email, created_at FROM users', получили 'SELECT id, email, created_at'",
+        "simple_where_equality: SQL: ожидали 'SELECT * FROM users WHERE status = $1', получили 'SELECT * WHERE status = $1'",
+        "where_and_or_nested: исключение/таймаут: 'field'",
+        "order_by_limit_offset: SQL: ожидали 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', получили 'SELECT * ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20'",
+        "multiple_and_conditions: исключение/таймаут: 'field'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-07-11 13:30:16",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:12:30",
+      "passed": 21,
+      "total": 27,
+      "failures": [
+        "comments_and_blank_lines: ожидалось ['7'], получено []",
+        "unconditional_jump_skips_code: неожиданное исключение: Error at line 2: Undefined label 'skip' at line 2",
+        "jz_taken_when_zero: неожиданное исключение: Error at line 2: Undefined label 'zero' at line 2",
+        "jz_not_taken_when_nonzero: неожиданное исключение: Error at line 2: Undefined label 'zero' at line 2",
+        "jnz_taken_when_nonzero: неожиданное исключение: Error at line 2: Undefined label 'nz' at line 2",
+        "jnz_not_taken_when_zero: неожиданное исключение: Error at line 2: Undefined label 'nz' at line 2"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-08-19 14:21:38",
+      "passed": 24,
+      "total": 37,
+      "failures": [
+        "comments_and_blank_lines: ожидалось ['7'], получено []",
+        "unconditional_jump_skips_code: неожиданное исключение: Error at line 2: Undefined label 'skip' at line 2",
+        "jz_taken_when_zero: неожиданное исключение: Error at line 2: Undefined label 'zero' at line 2",
+        "jz_not_taken_when_nonzero: неожиданное исключение: Error at line 2: Undefined label 'zero' at line 2",
+        "jnz_taken_when_nonzero: неожиданное исключение: Error at line 2: Undefined label 'nz' at line 2",
+        "jnz_not_taken_when_zero: неожиданное исключение: Error at line 2: Undefined label 'nz' at line 2",
+        "call_ret_basic: неожиданное исключение: Error at line 2: Undefined label 'double' at line 2",
+        "call_ret_nested: неожиданное исключение: Error at line 1: Undefined label 'func_a' at line 1",
+        "comparison_eq_gt_lt: неожиданное исключение: Error at line 3: Not enough values on stack for comparison at line 3",
+        "store_and_load: неожиданное исключение: Error at line 2: No value to store in variable 'x' at line 2",
+        "store_overwrite: неожиданное исключение: Error at line 2: No value to store in variable 'val' at line 2",
+        "recursive_factorial: неожиданное исключение: Error at line 2: Undefined label 'fact' at line 2",
+        "recursive_fibonacci: неожиданное исключение: Error at line 2: Undefined label 'fib' at line 2"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-17 19:20:23",
+      "stats": {
+        "input_tokens": 979,
+        "total_output_tokens": 581,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 26.290850200391937,
+        "time_to_first_token_seconds": 0.055206000000000005,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-17 19:26:07",
+      "stats": {
+        "input_tokens": 1816,
+        "total_output_tokens": 1101,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 24.554870489784914,
+        "time_to_first_token_seconds": 2.2285619999999997,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 19:42:05",
+      "stats": {
+        "input_tokens": 801,
+        "total_output_tokens": 490,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 26.60112583564858,
+        "time_to_first_token_seconds": 0.6376470000000001,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 19:46:27",
+      "stats": {
+        "input_tokens": 1508,
+        "total_output_tokens": 1036,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 25.026591357240605,
+        "time_to_first_token_seconds": 1.8488040000000001,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 19:03:59",
+      "stats": {
+        "input_tokens": 1171,
+        "total_output_tokens": 636,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 25.75646870066634,
+        "time_to_first_token_seconds": 1.536211,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-07-11 13:30:16",
+      "stats": {
+        "input_tokens": 888,
+        "total_output_tokens": 544,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 27.32329088546247,
+        "time_to_first_token_seconds": 2.205,
+        "model_load_time_seconds": 3.21
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:12:18",
+      "stats": {
+        "input_tokens": 1601,
+        "total_output_tokens": 840,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 22.646563096923973,
+        "time_to_first_token_seconds": 5.660972,
+        "model_load_time_seconds": 7.461
+      }
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "id": "legacy_e9d2b834bf61_qwen3.5-2b",
+  "host_id": "e9d2b834bf61",
+  "model_key": "qwen3.5-2b",
+  "model_name": "qwen3.5-2b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-09-03 10:29:17",
+  "completed_at": "2026-09-03 10:29:17",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-09-03 10:29:21",
+      "passed": 0,
+      "total": 10,
+      "failures": [
+        "no_dependencies: неожиданное исключение: name 'dfs_cycle' is not defined",
+        "simple_chain: неожиданное исключение: name 'dfs_cycle' is not defined",
+        "diamond: неожиданное исключение: name 'dfs_cycle' is not defined",
+        "multiple_roots: неожиданное исключение: name 'dfs_cycle' is not defined",
+        "single_task: неожиданное исключение: name 'dfs_cycle' is not defined",
+        "self_cycle: неожиданное исключение: name 'dfs_cycle' is not defined",
+        "two_node_cycle: неожиданное исключение: name 'dfs_cycle' is not defined",
+        "long_cycle: неожиданное исключение: name 'dfs_cycle' is not defined",
+        "cycle_with_extra_nodes: неожиданное исключение: name 'dfs_cycle' is not defined",
+        "wide_graph: неожиданное исключение: name 'dfs_cycle' is not defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-09-03 11:06:21",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: неожиданное исключение: unhashable type: 'list'",
+        "simple_chain: неожиданное исключение: unhashable type: 'list'",
+        "diamond_pick_longer_branch: неожиданное исключение: unhashable type: 'list'",
+        "independent_tasks: неожиданное исключение: unhashable type: 'list'",
+        "wide_graph: неожиданное исключение: unhashable type: 'list'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-09-03 10:15:55",
+      "passed": 15,
+      "total": 18,
+      "failures": [
+        "dup: ожидалось ['18'], получено ['27']",
+        "swap: ожидалось ['1'], получено ['-1']",
+        "stack_underflow_pop: ожидалась ошибка, но выполнение прошло успешно"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-09-03 10:24:24",
+      "passed": 0,
+      "total": 27,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-09-03 10:25:57",
+      "passed": 0,
+      "total": 37,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-09-03 10:29:17",
+      "stats": {
+        "input_tokens": 214,
+        "total_output_tokens": 1069,
+        "reasoning_output_tokens": 733,
+        "tokens_per_second": 37.67457163606378,
+        "time_to_first_token_seconds": 1.2815429999999999,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-09-03 11:06:19",
+      "stats": {
+        "input_tokens": 700,
+        "total_output_tokens": 10052,
+        "reasoning_output_tokens": 613,
+        "tokens_per_second": 25.070038343963905,
+        "time_to_first_token_seconds": 2.595558,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-09-03 10:15:47",
+      "stats": {
+        "input_tokens": 335,
+        "total_output_tokens": 10417,
+        "reasoning_output_tokens": 2047,
+        "tokens_per_second": 35.19566447802752,
+        "time_to_first_token_seconds": 2.0486619999999998,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-09-03 10:24:24",
+      "stats": {
+        "input_tokens": 8858,
+        "total_output_tokens": 1894,
+        "reasoning_output_tokens": 1894,
+        "tokens_per_second": 33.24000553543547,
+        "time_to_first_token_seconds": 26.354516,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-09-03 10:25:57",
+      "stats": {
+        "input_tokens": 505,
+        "total_output_tokens": 1724,
+        "reasoning_output_tokens": 744,
+        "tokens_per_second": 32.980000070439004,
+        "time_to_first_token_seconds": 1.971996,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

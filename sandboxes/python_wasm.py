@@ -1,9 +1,9 @@
-"""WASM Sandbox Runner для безопасного запуска кода локальных LLM.
+"""WASM Sandbox Runner for secure execution of local LLM-generated code.
 
-Использует WebAssembly (WASI) через MicroPython/Wasmtime:
-1. Абсолютная изоляция: у гостевого кода 0 байт доступа к диску, сети и процессам хоста.
-2. Детерминированное прерывание: учет инструкций (fuel) вместо убийства процессов ОС.
-3. Мгновенный запуск (<1ms) без накладных расходов виртуализации.
+Uses WebAssembly (WASI) via MicroPython/Wasmtime:
+1. Strict isolation: guest code has zero access to host disk, network, or OS processes.
+2. Deterministic fuel metering: instruction counting instead of OS process killing.
+3. Sub-millisecond startup (<1ms) without virtualization overhead.
 """
 
 import json
@@ -17,7 +17,7 @@ except ImportError:
     WASM_AVAILABLE = False
 
 
-DEFAULT_FUEL = 50_000_000  # 50M инструкций на один тест-кейс
+DEFAULT_FUEL = 50_000_000  # 50M instructions per test case
 
 
 def _indent(text: str, prefix: str = "    ") -> str:
@@ -30,14 +30,14 @@ def run_function_in_wasm(
     args: tuple,
     fuel: int = DEFAULT_FUEL,
 ) -> tuple[bool, object]:
-    """Выполняет функцию func_name(*args) из решения в изолированной песочнице WASM.
+    """Executes function func_name(*args) from solution in isolated WASM sandbox.
 
-    Возвращает:
-        (True, result) при успешном выполнении
-        (False, exception) при ошибке, синтаксическом сбое или превышении fuel
+    Returns:
+        (True, result) on successful execution
+        (False, exception) on runtime error, syntax failure, or fuel exhaustion
     """
     if not WASM_AVAILABLE:
-        return False, RuntimeError("micropython_wasm не установлен")
+        return False, RuntimeError("micropython_wasm is not installed")
 
     if isinstance(code_or_path, (str, Path)) and Path(code_or_path).exists():
         code = Path(code_or_path).read_text(encoding="utf-8")
@@ -61,7 +61,7 @@ def run_function_in_wasm(
     except Exception as e:
         err_str = str(e).lower()
         if "fuel consumed" in err_str or "out of fuel" in err_str:
-            return False, TimeoutError("превышен лимит вычислений WASM (бесконечный цикл)")
+            return False, TimeoutError("WASM computation fuel limit exceeded (infinite loop)")
         return False, RuntimeError(f"WASM trap: {e}")
 
     for line in res.stdout.splitlines():
@@ -70,7 +70,7 @@ def run_function_in_wasm(
                 val = json.loads(line[len("__WASM_RES__:") :])
                 return True, val
             except json.JSONDecodeError as je:
-                return False, RuntimeError(f"Ошибка декодирования ответа WASM: {je}")
+                return False, RuntimeError(f"Error decoding WASM response: {je}")
         elif line.startswith("__WASM_EXC__:"):
             try:
                 exc_msg = json.loads(line[len("__WASM_EXC__:") :])
@@ -80,6 +80,6 @@ def run_function_in_wasm(
 
     if res.stderr and res.stderr.strip():
         err_clean = res.stderr.strip().splitlines()[-1]
-        return False, RuntimeError(f"Синтаксическая ошибка: {err_clean}")
+        return False, RuntimeError(f"Syntax error: {err_clean}")
 
-    return False, RuntimeError("WASM песочница завершилась без возврата результата")
+    return False, RuntimeError("WASM sandbox exited without returning a result")

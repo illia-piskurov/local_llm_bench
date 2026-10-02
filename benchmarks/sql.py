@@ -1,9 +1,9 @@
-"""SQL AST Compiler бенчмарк.
+"""SQL AST Compiler benchmark.
 
-Тестирует способность модели реализовать компилятор AST-дерева запроса в параметризованный SQL:
-- Level 1: Базовый SELECT, WHERE (AND, OR), ORDER BY, LIMIT, OFFSET, плейсхолдеры $1, $2...
-- Level 2: JOINS (INNER, LEFT, RIGHT), GROUP BY, операторы IN, IS NULL, IS NOT NULL, LIKE.
-- Level 3: Выражения с алиасами (COUNT(...) AS c), HAVING, вложенные подзапросы (WHERE IN (SELECT...)).
+Tests the model's ability to implement a compiler from a query AST tree to parameterized SQL:
+- Level 1: Basic SELECT, WHERE (AND, OR), ORDER BY, LIMIT, OFFSET, placeholders $1, $2...
+- Level 2: JOINS (INNER, LEFT, RIGHT), GROUP BY, operators IN, IS NULL, IS NOT NULL, LIKE.
+- Level 3: Expressions with aliases (COUNT(...) AS c), HAVING, subqueries (WHERE IN (SELECT...)).
 """
 
 import re
@@ -13,72 +13,72 @@ from benchmarks.base import Benchmark, Level, TestResult
 from sandboxes import call_with_timeout, verify_function_exists
 
 LEVEL1_PROMPT = """\
-Реализуй компилятор AST-дерева запроса в параметризованный SQL в одном Python файле.
+Implement a compiler from a query AST tree to parameterized SQL in a single Python file.
 
-Входной словарь AST запроса:
-- table (str): имя таблицы (например, 'users')
-- select (list, опционально): список колонок (list[str], по умолчанию ['*'])
-- where (dict, опционально): дерево условий:
-  - { field: str, op: str, value: any } — поддерживаемые операторы: '=', '!=', '>', '<', '>=', '<='
-  - { AND: [cond1, cond2, ...] } — логическое И (если условий > 1, оборачивается в скобки (cond1 AND cond2))
-  - { OR: [cond1, cond2, ...] } — логическое ИЛИ (если условий > 1, оборачивается в скобки (cond1 OR cond2))
-- orderBy (list[dict], опционально): список { field: str, dir?: 'ASC'|'DESC' } (по умолчанию dir 'ASC')
-- limit (int, опционально): LIMIT <limit>
-- offset (int, опционально): OFFSET <offset>
+Input AST query dictionary:
+- table (str): table name (e.g., 'users')
+- select (list, optional): list of columns (list[str], defaults to ['*'])
+- where (dict, optional): condition tree:
+  - { field: str, op: str, value: any } — supported operators: '=', '!=', '>', '<', '>=', '<='
+  - { AND: [cond1, cond2, ...] } — logical AND (if conditions > 1, wrap in parentheses (cond1 AND cond2))
+  - { OR: [cond1, cond2, ...] } — logical OR (if conditions > 1, wrap in parentheses (cond1 OR cond2))
+- orderBy (list[dict], optional): list of { field: str, dir?: 'ASC'|'DESC' } (defaults to dir 'ASC')
+- limit (int, optional): LIMIT <limit>
+- offset (int, optional): OFFSET <offset>
 
-Правила параметризации:
-- Значения из условий where заменяются на плейсхолдеры $1, $2, $3... в порядке их обхода слева направо.
-- Сами значения собираются в список params.
+Parameterization rules:
+- Values from where conditions are replaced with placeholders $1, $2, $3... in left-to-right traversal order.
+- The actual values are collected into the params list.
 
-Требования:
-- Один файл, без внешних зависимостей.
-- Добавь функцию compile_query(query: dict) -> dict, возвращающую:
+Requirements:
+- Single file, no external dependencies.
+- Add a function compile_query(query: dict) -> dict, returning:
   {"sql": str, "params": list}
-  где sql — собранная строка SQL, params — список подставленных параметров.
+  where sql is the compiled SQL string, and params is the list of bound parameters.
 
-В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока.
+Return only the code in a single ```python ... ``` block, without any explanations outside the block.
 """
 
 LEVEL2_PROMPT = """\
-Дополни свой SQL-компилятор поддержкой JOIN, GROUP BY и расширенных операторов:
+Extend your SQL compiler with support for JOIN, GROUP BY, and extended operators:
 
-1. Связи (JOINS):
-   - joins: список { type?: 'INNER'|'LEFT'|'RIGHT', table: str, on: { <left_col>: <right_col> } }
-     (по умолчанию type 'INNER'). Пример: LEFT JOIN items ON orders.id = items.order_id
+1. Joins (JOINS):
+   - joins: list of { type?: 'INNER'|'LEFT'|'RIGHT', table: str, on: { <left_col>: <right_col> } }
+     (defaults to type 'INNER'). Example: LEFT JOIN items ON orders.id = items.order_id
 
-2. Группировка:
-   - groupBy: список колонок (list[str]). Пример: GROUP BY orders.id, orders.status
+2. Grouping:
+   - groupBy: list of columns (list[str]). Example: GROUP BY orders.id, orders.status
 
-3. Расширенные операторы в where:
-   - op: 'IN', value: list — генерирует field IN ($1, $2, ...)
-   - op: 'IS NULL' — генерирует field IS NULL (без плейсхолдера и без добавления в params)
-   - op: 'IS NOT NULL' — генерирует field IS NOT NULL (без плейсхолдера и без добавления в params)
-   - op: 'LIKE', value: str — генерирует field LIKE $1
+3. Extended operators in where:
+   - op: 'IN', value: list — generates field IN ($1, $2, ...)
+   - op: 'IS NULL' — generates field IS NULL (no placeholder and not added to params)
+   - op: 'IS NOT NULL' — generates field IS NOT NULL (no placeholder and not added to params)
+   - op: 'LIKE', value: str — generates field LIKE $1
 
-Не меняй поведение Level 1 и сохрани сигнатуру compile_query(query: dict) -> dict.
+Do not change Level 1 behavior and preserve the compile_query(query: dict) -> dict signature.
 
-В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока.
+Return only the code in a single ```python ... ``` block, without any explanations outside the block.
 """
 
 LEVEL3_PROMPT = """\
-Дополни свой SQL-компилятор поддержкой вычисляемых выражений в SELECT, HAVING и подзапросов:
+Extend your SQL compiler with support for computed expressions in SELECT, HAVING, and subqueries:
 
-1. Выражения с псевдонимами в select:
-   - элемент списка select может быть объектом: { expr: str, as: str }
-     Пример: { expr: 'COUNT(items.id)', as: 'item_count' } -> SELECT orders.id, COUNT(items.id) AS item_count
+1. Expressions with aliases in select:
+   - select list element can be an object: { expr: str, as: str }
+     Example: { expr: 'COUNT(items.id)', as: 'item_count' } -> SELECT orders.id, COUNT(items.id) AS item_count
 
-2. Условие HAVING:
-   - having (dict, опционально): дерево условий в том же формате, что и where.
-     Пример: HAVING SUM(sales.amount) > $1. Параметры из having нумеруются дальше после where.
+2. HAVING clause:
+   - having (dict, optional): condition tree in the same format as where.
+     Example: HAVING SUM(sales.amount) > $1. Parameters from having continue numbering after where.
 
-3. Подзапросы в WHERE:
-   - { field: str, op: 'IN', query: dict } — условие с вложенным AST подзапроса.
-     Пример: field IN (SELECT user_id FROM vip_members WHERE tier = $1)
-     Параметры подзапроса корректно встраиваются в общий список params с правильной сквозной нумерацией плейсхолдеров.
+3. Subqueries in WHERE:
+   - { field: str, op: 'IN', query: dict } — condition with nested query AST.
+     Example: field IN (SELECT user_id FROM vip_members WHERE tier = $1)
+     Subquery parameters are correctly appended to the overall params list with proper sequential placeholder numbering.
 
-Не меняй поведение Level 1 и Level 2 и сохрани сигнатуру compile_query(query: dict) -> dict.
+Do not change Level 1 and Level 2 behavior and preserve the compile_query(query: dict) -> dict signature.
 
-В ответе верни только код одним блоком ```python ... ```, без дополнительных пояснений вне блока.
+Return only the code in a single ```python ... ``` block, without any explanations outside the block.
 """
 
 LEVEL1_TESTS: list[tuple[str, dict, dict]] = [
@@ -278,23 +278,23 @@ LEVEL3_TESTS: list[tuple[str, dict, dict]] = [
 
 
 def _norm_sql(s: str) -> str:
-    """Убирает лишние пробелы из SQL строки."""
+    """Removes extra whitespace from an SQL string."""
     return re.sub(r"\s+", " ", str(s)).strip()
 
 
 def run_sql_suite(tests: list[tuple[str, dict, dict]], solution_path: str | Path) -> tuple[int, int, list[str]]:
-    """Выполняет тестовый набор SQL компилятора и возвращает (passed, total, failures)."""
+    """Runs SQL compiler test suite and returns (passed, total, failures)."""
     passed = 0
     failures: list[str] = []
 
     for test_name, query, expected in tests:
         success, result = call_with_timeout(str(solution_path), "compile_query", (query,))
         if not success:
-            failures.append(f"{test_name}: исключение/таймаут: {result}")
+            failures.append(f"{test_name}: exception/timeout: {result}")
             continue
 
         if not isinstance(result, dict) or "sql" not in result or "params" not in result:
-            failures.append(f"{test_name}: ожидался dict с ключами 'sql' и 'params', получено {result}")
+            failures.append(f"{test_name}: expected dict with 'sql' and 'params' keys, got {result}")
             continue
 
         res_sql = _norm_sql(result["sql"])
@@ -307,9 +307,9 @@ def run_sql_suite(tests: list[tuple[str, dict, dict]], solution_path: str | Path
         else:
             diffs = []
             if res_sql != exp_sql:
-                diffs.append(f"SQL: ожидали '{exp_sql}', получили '{res_sql}'")
+                diffs.append(f"SQL: expected '{exp_sql}', got '{res_sql}'")
             if res_params != exp_params:
-                diffs.append(f"params: ожидали {exp_params}, получили {res_params}")
+                diffs.append(f"params: expected {exp_params}, got {res_params}")
             failures.append(f"{test_name}: {'; '.join(diffs)}")
 
     return passed, len(tests), failures
@@ -317,7 +317,7 @@ def run_sql_suite(tests: list[tuple[str, dict, dict]], solution_path: str | Path
 
 class SQLBenchmark(Benchmark):
     id = "sql"
-    name = "Компилятор SQL AST (SELECT/WHERE/JOIN/GROUP BY/HAVING)"
+    name = "SQL AST Compiler (SELECT/WHERE/JOIN/GROUP BY/HAVING)"
     short = "SQL"
     levels = [
         Level(id="level1", name="Level 1 (SELECT/WHERE/ORDER/LIMIT)", prompt=LEVEL1_PROMPT, requires=None),
@@ -336,7 +336,7 @@ class SQLBenchmark(Benchmark):
         try:
             verify_function_exists(answer_path, "compile_query")
         except Exception as e:
-            return TestResult(0, len(tests), [f"не удалось загрузить решение: {e}"])
+            return TestResult(0, len(tests), [f"failed to load solution: {e}"])
 
         passed, total, failures = run_sql_suite(tests, answer_path)
         return TestResult(passed, total, failures)

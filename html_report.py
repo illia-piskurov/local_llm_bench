@@ -1,21 +1,20 @@
-"""Единый интерактивный HTML-дашборд бенчмарка локальных LLM.
+"""Unified interactive HTML dashboard for local LLM benchmark.
 
-Объединяет:
-1. 🏆 Общий лидерборд качества (точность, средний балл, тесты).
-2. ⚡ Сравнение скорости на разных устройствах (Hardware Matrix: M4 vs ThinkPad vs i5).
-3. 🔍 Детализацию по моделям (карточки 8 бенчмарков, сгенерированный код, ошибки).
+Combines:
+1. 🏆 General quality leaderboard (accuracy, average score, tests).
+2. ⚡ Speed comparison across devices (Hardware Matrix: M4 vs ThinkPad vs i5).
+3. 🔍 Model deep-dive (cards for 8 benchmarks, generated code, errors).
 
-Работает полностью автономно в любом браузере, без внешних CDN или npm.
+Works fully offline in any browser, without external CDN or npm.
 """
 
 import html
-import json
 import webbrowser
 from datetime import datetime
 from pathlib import Path
 
-from benchmarks import BY_ID, REGISTRY
 from database import Database
+from report_data import load_report_data
 
 ROOT = Path(__file__).parent
 
@@ -28,187 +27,20 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
     except Exception:
         pass
 
-    conn = db.conn
-
-    # 1. Загрузка данных результатов
-    rows = conn.execute("""
-        SELECT r.model, r.benchmark, r.level, r.tested_at, r.passed, r.total, r.failures,
-               s.tokens_per_second, s.time_to_first_token_seconds, s.reasoning_output_tokens, s.host_id
-        FROM results r
-        LEFT JOIN speed_results s
-          ON r.model = s.model AND r.benchmark = s.benchmark AND r.level = s.level
-        ORDER BY r.model, r.benchmark, r.level
-    """).fetchall()
-
-    # 2. Агрегация лидерборда
-    models_data: dict[str, dict] = {}
-    for r in rows:
-        m = r["model"]
-        if m not in models_data:
-            models_data[m] = {
-                "results": {},
-                "total_passed": 0,
-                "total_tests": 0,
-                "speeds": [],
-                "total_reasoning_tokens": 0,
-                "latest_test": r["tested_at"],
-            }
-        key = (r["benchmark"], r["level"])
-        pct = (r["passed"] / r["total"] * 100) if r["total"] and r["total"] > 0 else 0.0
-        failures = json.loads(r["failures"]) if r["failures"] else []
-
-        models_data[m]["results"][key] = {
-            "benchmark": r["benchmark"],
-            "level": r["level"],
-            "passed": r["passed"],
-            "total": r["total"],
-            "percent": pct,
-            "failures": failures,
-            "tok_per_sec": r["tokens_per_second"],
-            "ttft": r["time_to_first_token_seconds"],
-            "reasoning_tokens": r["reasoning_output_tokens"],
-            "tested_at": r["tested_at"],
-        }
-        models_data[m]["total_passed"] += r["passed"]
-        models_data[m]["total_tests"] += r["total"]
-        if r["tokens_per_second"]:
-            models_data[m]["speeds"].append(r["tokens_per_second"])
-        if r["reasoning_output_tokens"]:
-            models_data[m]["total_reasoning_tokens"] += r["reasoning_output_tokens"]
-
-    leaderboard = []
-    for m, d in models_data.items():
-        avg_pct = (d["total_passed"] / d["total_tests"] * 100) if d["total_tests"] > 0 else 0.0
-        avg_speed = (sum(d["speeds"]) / len(d["speeds"])) if d["speeds"] else None
-        leaderboard.append(
-            {
-                "model": m,
-                "avg_pct": avg_pct,
-                "passed": d["total_passed"],
-                "total": d["total_tests"],
-                "tests_count": len(d["results"]),
-                "avg_speed": avg_speed,
-                "total_reasoning_tokens": d["total_reasoning_tokens"],
-                "data": d,
-            }
-        )
-    leaderboard.sort(key=lambda x: (x["avg_pct"], x["tests_count"]), reverse=True)
-
-    # 3. Загрузка данных по хостам (устройствам)
-    hosts_rows = conn.execute("SELECT id, label, created_at FROM hosts ORDER BY created_at").fetchall()
-
-    # Матрица скорости: Модель x Хост
-    speed_matrix_rows = conn.execute("""
-        SELECT s.model, s.host_id,
-               AVG(s.tokens_per_second) AS avg_tps,
-               AVG(s.time_to_first_token_seconds) AS avg_ttft,
-               COUNT(*) AS cnt
-        FROM speed_results s
-        GROUP BY s.model, s.host_id
-    """).fetchall()
-
-    device_stats = {}
-    for h in hosts_rows:
-        device_stats[h["id"]] = {"label": h["label"], "tps_list": [], "count": 0}
-
-    model_host_matrix = {}
-    for r in speed_matrix_rows:
-        m = r["model"]
-        hid = r["host_id"]
-        if m not in model_host_matrix:
-            model_host_matrix[m] = {}
-        model_host_matrix[m][hid] = {
-            "tps": r["avg_tps"],
-            "ttft": r["avg_ttft"],
-            "count": r["cnt"],
-        }
-        if hid in device_stats and r["avg_tps"]:
-            device_stats[hid]["tps_list"].append(r["avg_tps"])
-            device_stats[hid]["count"] += r["cnt"]
-
-    # Активные хосты (где есть хотя бы 1 замер)
-    active_hosts = [h for h in hosts_rows if h["id"] in device_stats and device_stats[h["id"]]["count"] > 0]
-
-    # 4. Чтение сохранённых файлов решений и рассуждений
-    def get_code_and_meta(model: str, bench_id: str, level_id: str) -> tuple[str | None, str, int, str | None]:
-        b = BY_ID.get(bench_id)
-        ext = b.file_ext if b else "txt"
-        key_safe = model.replace("/", "_").replace(":", "_").replace("@", "_")
-        filename = f"{key_safe}_{bench_id}_{level_id}.{ext}"
-        p = ROOT / "models_answers" / filename
-        code = None
-        if p.exists():
-            try:
-                code = p.read_text(encoding="utf-8")
-            except Exception:
-                pass
-
-        reasoning_path = ROOT / "raw_answers" / f"{key_safe}_{bench_id}_{level_id}.reasoning.txt"
-        reasoning_text = None
-        if reasoning_path.exists():
-            try:
-                reasoning_text = reasoning_path.read_text(encoding="utf-8")
-            except Exception:
-                pass
-
-        return code, ext, len(code.splitlines()) if code else 0, reasoning_text
-
-    # 5. Подготовка JSON для клиентской части
-    client_models_payload = {}
-    for entry in leaderboard:
-        m = entry["model"]
-        res_dict = {}
-        for (b_id, l_id), res in entry["data"]["results"].items():
-            code, ext, lines_count, reasoning_text = get_code_and_meta(m, b_id, l_id)
-            res_dict[f"{b_id}/{l_id}"] = {
-                "passed": res["passed"],
-                "total": res["total"],
-                "percent": round(res["percent"], 1),
-                "failures": res["failures"],
-                "tok_per_sec": round(res["tok_per_sec"], 1) if res["tok_per_sec"] else None,
-                "ttft": round(res["ttft"], 2) if res["ttft"] else None,
-                "reasoning_tokens": res.get("reasoning_tokens"),
-                "reasoning_text": reasoning_text,
-                "code": code,
-                "ext": ext,
-                "lines": lines_count,
-            }
-        client_models_payload[m] = {
-            "avg_pct": round(entry["avg_pct"], 1),
-            "passed": entry["passed"],
-            "total": entry["total"],
-            "tests_count": entry["tests_count"],
-            "avg_speed": round(entry["avg_speed"], 1) if entry["avg_speed"] else None,
-            "total_reasoning_tokens": entry.get("total_reasoning_tokens", 0),
-            "results": res_dict,
-        }
-
-    benchmarks_metadata = []
-    for b in REGISTRY:
-        benchmarks_metadata.append(
-            {
-                "id": b.id,
-                "short": b.short,
-                "name": b.name,
-                "lang": b.code_lang,
-                "ext": b.file_ext,
-                "levels": [{"id": level.id, "name": level.name} for level in b.levels],
-            }
-        )
-
-    client_json = json.dumps(
-        {
-            "models": client_models_payload,
-            "benchmarks": benchmarks_metadata,
-        },
-        ensure_ascii=False,
-    )
-
+    data = load_report_data(db)
+    leaderboard = data.leaderboard
+    runs_data = data.runs_data
+    active_hosts = data.active_hosts
+    device_stats = data.device_stats
+    model_host_matrix = data.model_host_matrix
+    client_json = data.client_json
+    runs_table_rows = data.runs_table_rows
+    total_tests_count = data.total_tests_count
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Формирование HTML
+    # Build HTML
     html_content = f"""<!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Local LLM Benchmark Unified Dashboard</title>
@@ -394,39 +226,40 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
     <header>
       <div>
         <h1>🚀 Local LLM Unified Dashboard</h1>
-        <div class="subtitle">Качество, скорость и сравнение устройств | Обновлено: {now_str}</div>
+        <div class="subtitle">Quality, speed, and hardware comparison | Updated: {now_str}</div>
       </div>
       <div>
         <span class="badge" style="background:#238636; color:#fff; padding:6px 12px; font-size:13px;">
-          Моделей: {len(leaderboard)} | Устройств: {len(active_hosts)} | Тестов: {len(rows)}
+          Models: {len(leaderboard)} | Devices: {len(active_hosts)} | Tests: {total_tests_count}
         </span>
       </div>
     </header>
 
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('leaderboard')">🏆 1. Общий Лидерборд</button>
-      <button class="tab-btn" onclick="switchTab('devices')">⚡ 2. Сравнение Устройств (Hardware Matrix)</button>
-      <button class="tab-btn" onclick="switchTab('model-view')">🔍 3. Детализация Модели и Код</button>
-      <button class="tab-btn" onclick="switchTab('diff-view')">🔀 4. Сравнение Моделей (Diff)</button>
+      <button class="tab-btn active" onclick="switchTab('leaderboard')">🏆 1. Leaderboard</button>
+      <button class="tab-btn" onclick="switchTab('devices')">⚡ 2. Hardware Matrix</button>
+      <button class="tab-btn" onclick="switchTab('model-view')">🔍 3. Model Deep-Dive & Code</button>
+      <button class="tab-btn" onclick="switchTab('diff-view')">🔀 4. Model Comparison (Diff)</button>
+      <button class="tab-btn" onclick="switchTab('runs-view')">📜 5. Run History</button>
     </div>
 
 
     <!-- TAB 1: LEADERBOARD -->
     <div id="tab-leaderboard" class="section">
       <div class="section-title">
-        <span>Рейтинг моделей по качеству генерации</span>
-        <input type="text" id="search-input" placeholder="Поиск модели..." oninput="filterTable('leaderboard-table', 1)" style="background:#161b22; border:1px solid #30363d; color:#fff; padding:6px 12px; border-radius:6px; font-size:13px; width: 240px;">
+        <span>Model ranking by generation quality</span>
+        <input type="text" id="search-input" placeholder="Search model..." oninput="filterTable('leaderboard-table', 1)" style="background:#161b22; border:1px solid #30363d; color:#fff; padding:6px 12px; border-radius:6px; font-size:13px; width: 240px;">
       </div>
       <table id="leaderboard-table">
         <thead>
           <tr>
             <th style="width: 45px;">#</th>
-            <th>Модель</th>
-            <th>Средний балл</th>
-            <th>Пройдено проверок</th>
-            <th>Пройдено тестов</th>
-            <th>Скорость (avg)</th>
-            <th>Детали</th>
+            <th>Model</th>
+            <th>Average Score</th>
+            <th>Checks Passed</th>
+            <th>Tasks Completed</th>
+            <th>Speed (avg)</th>
+            <th>Details</th>
           </tr>
         </thead>
         <tbody>"""
@@ -439,7 +272,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
 
         think_badge = ""
         if entry.get("total_reasoning_tokens") and entry["total_reasoning_tokens"] > 0:
-            think_badge = f' <span class="badge" style="background:rgba(137,87,229,0.2); color:#d2a8ff; border:1px solid rgba(137,87,229,0.4);" title="{entry["total_reasoning_tokens"]} токенов рассуждений">🧠 Thinker</span>'
+            think_badge = f' <span class="badge" style="background:rgba(137,87,229,0.2); color:#d2a8ff; border:1px solid rgba(137,87,229,0.4);" title="{entry["total_reasoning_tokens"]} reasoning tokens">🧠 Thinker</span>'
 
         html_content += f"""
           <tr>
@@ -447,9 +280,9 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
             <td style="font-weight:600; color:#f0f6fc;">{html.escape(m)}{think_badge}</td>
             <td><span class="score-pill {pill_cls}">{avg_pct:.1f}%</span></td>
             <td>{entry["passed"]} / {entry["total"]}</td>
-            <td>{entry["tests_count"]} заданий</td>
+            <td>{entry["tests_count"]} tasks</td>
             <td style="color:var(--text-muted); font-weight:500;">{speed_str}</td>
-            <td><a href="#model-view" onclick="selectModel('{html.escape(m)}')" style="color:var(--accent); text-decoration:none; font-size:13px; font-weight:500;">Подробнее →</a></td>
+            <td><a href="#model-view" onclick="selectModel('{html.escape(m)}')" style="color:var(--accent); text-decoration:none; font-size:13px; font-weight:500;">Details →</a></td>
           </tr>"""
 
     html_content += """
@@ -460,7 +293,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
     <!-- TAB 2: HARDWARE SPEED MATRIX -->
     <div id="tab-devices" class="section" style="display:none;">
       <div class="section-title">
-        <span>Профиль производительности устройств (Скорость генерации tok/s)</span>
+        <span>Device Performance Profile (Generation Speed tok/s)</span>
       </div>
 
       <div class="device-grid">"""
@@ -475,10 +308,10 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
           <div style="display:flex; justify-content:space-between; align-items:flex-end;">
             <div>
               <div style="font-size:26px; font-weight:700; color:#58a6ff;">{avg_dev_speed:.1f} <span style="font-size:14px; font-weight:400; color:var(--text-muted);">tok/s</span></div>
-              <div style="font-size:12px; color:var(--text-muted);">средняя скорость</div>
+              <div style="font-size:12px; color:var(--text-muted);">average speed</div>
             </div>
             <div style="font-size:12px; color:var(--text-muted); text-align:right;">
-              <strong>{d_info["count"]}</strong> замеров
+              <strong>{d_info["count"]}</strong> samples
             </div>
           </div>
         </div>"""
@@ -487,14 +320,14 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
       </div>
 
       <div class="section-title" style="margin-top:28px;">
-        <span>Сравнение моделей по разным ноутбукам и ПК (Матрица: Модель × Устройство)</span>
-        <input type="text" id="device-search-input" placeholder="Фильтр моделей..." oninput="filterTable('devices-table', 0)" style="background:#161b22; border:1px solid #30363d; color:#fff; padding:6px 12px; border-radius:6px; font-size:13px; width: 240px;">
+        <span>Model comparison across laptops and PCs (Matrix: Model × Device)</span>
+        <input type="text" id="device-search-input" placeholder="Filter models..." oninput="filterTable('devices-table', 0)" style="background:#161b22; border:1px solid #30363d; color:#fff; padding:6px 12px; border-radius:6px; font-size:13px; width: 240px;">
       </div>
 
       <table id="devices-table">
         <thead>
           <tr>
-            <th>Модель</th>"""
+            <th>Model</th>"""
 
     for h in active_hosts:
         html_content += f"<th>{html.escape(h['label'])}</th>"
@@ -507,7 +340,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
     for m in sorted(model_host_matrix.keys()):
         html_content += f"<tr><td style='font-weight:600; color:#f0f6fc;'>{html.escape(m)}</td>"
 
-        # Найдём максимальную скорость для этой модели для подсветки
+        # Find max speed for this model for highlighting
         max_tps = 0.0
         for h in active_hosts:
             v = model_host_matrix[m].get(h["id"])
@@ -525,7 +358,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
                 html_content += f"""
                   <td>
                     <span class="{cls}">{tps:.1f} tok/s{badge_fast}</span>
-                    <span style="font-size:12px; color:var(--text-muted); display:block;">TTFT: {ttft:.2f}s ({val["count"]} зам.)</span>
+                    <span style="font-size:12px; color:var(--text-muted); display:block;">TTFT: {ttft:.2f}s ({val["count"]} runs)</span>
                   </td>"""
             else:
                 html_content += "<td><span style='color:var(--text-muted);'>—</span></td>"
@@ -541,7 +374,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
     <div id="tab-model-view" class="section" style="display:none;">
       <div class="section-title">
         <div style="display:flex; align-items:center; gap:12px;">
-          <span>Инженерный профиль модели:</span>
+          <span>Model Engineering Profile:</span>
           <select id="model-select" class="model-picker" onchange="onModelSelectChange()">
           </select>
         </div>
@@ -558,17 +391,17 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
       <div class="card" style="margin-bottom:20px; border-left: 4px solid var(--accent);">
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px; align-items:center;">
           <div>
-            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px; font-weight:600;">МОДЕЛЬ A (Слева):</label>
+            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px; font-weight:600;">MODEL A (Left):</label>
             <select id="diff-model-a" class="model-picker" style="width:100%;" onchange="renderDiff()">
             </select>
           </div>
           <div>
-            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px; font-weight:600;">МОДЕЛЬ B (Справа):</label>
+            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px; font-weight:600;">MODEL B (Right):</label>
             <select id="diff-model-b" class="model-picker" style="width:100%;" onchange="renderDiff()">
             </select>
           </div>
           <div>
-            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px; font-weight:600;">ЗАДАНИЕ / УРОВЕНЬ:</label>
+            <label style="display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px; font-weight:600;">TASK / LEVEL:</label>
             <select id="diff-task" class="model-picker" style="width:100%;" onchange="renderDiff()">
             </select>
           </div>
@@ -578,6 +411,34 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
       <div id="diff-container" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap:16px;">
         <!-- Left: Model A | Right: Model B -->
       </div>
+    </div>
+
+    <!-- TAB 5: RUN HISTORY -->
+    <div id="tab-runs-view" class="section" style="display:none;">
+      <div class="section-title">
+        <span>Execution Sessions & Benchmark Runs ({len(runs_data)} total runs)</span>
+        <input type="text" id="runs-search-input" placeholder="Search by model, host, quant..." oninput="filterRunsTable()" style="background:#161b22; border:1px solid #30363d; color:#fff; padding:6px 12px; border-radius:6px; font-size:13px; width: 280px;">
+      </div>
+      <table id="runs-table">
+        <thead>
+          <tr>
+            <th>Run ID</th>
+            <th>Started At</th>
+            <th>Model</th>
+            <th>Quantization</th>
+            <th>Host (Hardware)</th>
+            <th>Backend</th>
+            <th>Hyperparameters & Artifact</th>
+            <th>Tests</th>
+            <th>Avg Score</th>
+            <th>Avg Speed</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {runs_table_rows}
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -590,6 +451,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
       document.getElementById('tab-devices').style.display = 'none';
       document.getElementById('tab-model-view').style.display = 'none';
       document.getElementById('tab-diff-view').style.display = 'none';
+      document.getElementById('tab-runs-view').style.display = 'none';
 
       if (tab === 'leaderboard') {{
         document.querySelector("button[onclick*='leaderboard']").classList.add('active');
@@ -604,7 +466,19 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
         document.querySelector("button[onclick*='diff-view']").classList.add('active');
         document.getElementById('tab-diff-view').style.display = 'block';
         renderDiff();
+      }} else if (tab === 'runs-view') {{
+        document.querySelector("button[onclick*='runs-view']").classList.add('active');
+        document.getElementById('tab-runs-view').style.display = 'block';
       }}
+    }}
+
+    function filterRunsTable() {{
+      const query = document.getElementById('runs-search-input').value.toLowerCase();
+      const rows = document.querySelectorAll('#runs-table tbody tr');
+      rows.forEach(r => {{
+        const text = r.innerText.toLowerCase();
+        r.style.display = text.includes(query) ? '' : 'none';
+      }});
     }}
 
 
@@ -649,7 +523,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
       grid.innerHTML = '';
 
       if (!mData) {{
-        grid.innerHTML = '<p style="color:var(--text-muted);">Данные отсутствуют</p>';
+        grid.innerHTML = '<p style="color:var(--text-muted);">No data available</p>';
         return;
       }}
 
@@ -657,8 +531,8 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
       const summaryDiv = document.getElementById('model-summary-badges');
       const pillCls = mData.avg_pct >= 80 ? 'score-green' : mData.avg_pct >= 40 ? 'score-yellow' : 'score-red';
       summaryDiv.innerHTML = `
-        <span class="score-pill ${{pillCls}}">${{mData.avg_pct}}% средний балл</span>
-        <span style="font-size:13px; color:var(--text-muted); margin-left:8px;">${{mData.passed}}/${{mData.total}} проверок</span>
+        <span class="score-pill ${{pillCls}}">${{mData.avg_pct}}% average score</span>
+        <span style="font-size:13px; color:var(--text-muted); margin-left:8px;">${{mData.passed}}/${{mData.total}} checks</span>
         ${{mData.avg_speed ? `<span style="font-size:13px; color:var(--text-muted); margin-left:8px;">• ${{mData.avg_speed}} tok/s</span>` : ''}}
       `;
 
@@ -691,19 +565,19 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
             if (r.reasoning_text) {{
               reasoningHtml = `
                 <details class="code-box" style="border-color: rgba(137, 87, 229, 0.4); margin-top: 6px;">
-                  <summary style="color:#d2a8ff; font-weight:600;">🧠 Ход рассуждений (Reasoning${{r.reasoning_tokens ? ' • ' + r.reasoning_tokens + ' токенов' : ''}})</summary>
+                  <summary style="color:#d2a8ff; font-weight:600;">🧠 Reasoning trace (Reasoning${{r.reasoning_tokens ? ' • ' + r.reasoning_tokens + ' tokens' : ''}})</summary>
                   <pre style="color:#e1d9f5; font-size:12px;"><code>${{escapeHtml(r.reasoning_text)}}</code></pre>
                 </details>
               `;
             }} else if (r.reasoning_tokens) {{
-              reasoningHtml = `<div style="font-size:12px; color:#d2a8ff; margin-top:4px;">🧠 ${{r.reasoning_tokens}} токенов размышлений</div>`;
+              reasoningHtml = `<div style="font-size:12px; color:#d2a8ff; margin-top:4px;">🧠 ${{r.reasoning_tokens}} reasoning tokens</div>`;
             }}
 
             let codeHtml = '';
             if (r.code) {{
               codeHtml = `
                 <details class="code-box">
-                  <summary>📄 Код (${{r.lines}} строк) ${{r.tok_per_sec ? '• ' + r.tok_per_sec + ' tok/s' : ''}}</summary>
+                  <summary>📄 Code (${{r.lines}} lines) ${{r.tok_per_sec ? '• ' + r.tok_per_sec + ' tok/s' : ''}}</summary>
                   <pre><code>${{escapeHtml(r.code)}}</code></pre>
                 </details>
               `;
@@ -729,7 +603,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
               <div class="level-row" style="opacity: 0.5;">
                 <div class="level-meta">
                   <span>${{l.name}}</span>
-                  <span style="color:var(--text-muted);">не тестировался</span>
+                  <span style="color:var(--text-muted);">not tested</span>
                 </div>
               </div>
             `;
@@ -807,7 +681,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
       const container = document.getElementById('diff-container');
 
       if (!modelA || !modelB || !taskKey) {{
-        container.innerHTML = '<p style="color:var(--text-muted); padding:20px;">Выберите модели и задание для сравнения.</p>';
+        container.innerHTML = '<p style="color:var(--text-muted); padding:20px;">Select models and task to compare.</p>';
         return;
       }}
 
@@ -820,10 +694,10 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
                   <span class="badge" style="background:#21262d; color:#8b949e; margin-bottom:4px; display:inline-block;">${{label}}</span>
                   <div class="card-title">${{escapeHtml(modelKey)}}</div>
                 </div>
-                <span class="score-pill" style="background:#21262d; color:#8b949e;">не запускался</span>
+                <span class="score-pill" style="background:#21262d; color:#8b949e;">not tested</span>
               </div>
               <p style="color:var(--text-muted); font-size:13px; margin:30px 0; text-align:center;">
-                Этот уровень не запускался для модели ${{escapeHtml(modelKey)}}.
+                This level was not run for model ${{escapeHtml(modelKey)}}.
               </p>
             </div>
           `;
@@ -848,7 +722,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
         if (res.failures && res.failures.length > 0) {{
           failuresHtml = `
             <div style="background:rgba(248,81,73,0.08); border:1px solid rgba(248,81,73,0.3); border-radius:6px; padding:10px 14px; margin: 12px 0;">
-              <strong style="color:var(--red); font-size:13px;">❌ Провалено тестов (${{res.failures.length}}):</strong>
+              <strong style="color:var(--red); font-size:13px;">❌ Failed tests (${{res.failures.length}}):</strong>
               <ul class="failures-list" style="margin-top:6px;">
                 ${{res.failures.map(f => '<li>' + escapeHtml(f) + '</li>').join('')}}
               </ul>
@@ -860,7 +734,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
         if (res.reasoning_text) {{
           reasoningHtml = `
             <details class="code-box" style="border-color: rgba(137,87,229,0.4); margin-bottom:12px;" open>
-              <summary style="color:#d2a8ff; font-weight:600;">🧠 Ход рассуждений (Reasoning${{res.reasoning_tokens ? ' • ' + res.reasoning_tokens + ' токенов' : ''}})</summary>
+              <summary style="color:#d2a8ff; font-weight:600;">🧠 Reasoning trace (Reasoning${{res.reasoning_tokens ? ' • ' + res.reasoning_tokens + ' tokens' : ''}})</summary>
               <pre style="color:#e1d9f5; font-size:12px; max-height:260px;"><code>${{escapeHtml(res.reasoning_text)}}</code></pre>
             </details>
           `;
@@ -871,14 +745,14 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
           codeHtml = `
             <div style="margin-top:10px;">
               <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-bottom:6px;">
-                <span>📄 Сгенерированный код (${{res.lines}} строк)</span>
-                <span>Язык: ${{res.ext}}</span>
+                <span>📄 Generated code (${{res.lines}} lines)</span>
+                <span>Language: ${{res.ext}}</span>
               </div>
               <pre style="background:#090d12; border:1px solid var(--card-border); border-radius:6px; padding:12px; max-height:480px; overflow-y:auto; color:#e6edf3; font-family:Consolas, monospace; font-size:12px; white-space:pre-wrap;"><code>${{escapeHtml(res.code)}}</code></pre>
             </div>
           `;
         }} else {{
-          codeHtml = `<p style="color:var(--text-muted); font-size:13px; margin:16px 0;">Код не сохранён.</p>`;
+          codeHtml = `<p style="color:var(--text-muted); font-size:13px; margin:16px 0;">Code not saved.</p>`;
         }}
 
         return `
@@ -908,7 +782,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
       const resA = data.models[modelA] ? data.models[modelA].results[taskKey] : null;
       const resB = data.models[modelB] ? data.models[modelB].results[taskKey] : null;
 
-      container.innerHTML = renderSide(modelA, resA, 'МОДЕЛЬ A') + renderSide(modelB, resB, 'МОДЕЛЬ B');
+      container.innerHTML = renderSide(modelA, resA, 'MODEL A') + renderSide(modelB, resB, 'MODEL B');
     }}
   </script>
 
