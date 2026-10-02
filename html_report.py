@@ -19,13 +19,14 @@ from report_data import load_report_data
 ROOT = Path(__file__).parent
 
 
-def generate_html_report(db: Database, output_path: Path = ROOT / "report.html") -> Path:
-    try:
-        from sync import sync_db_and_records
+def generate_html_report(db: Database, output_path: Path = ROOT / "report.html", sync_records: bool = True) -> Path:
+    if sync_records:
+        try:
+            from sync import sync_db_and_records
 
-        sync_db_and_records(db)
-    except Exception:
-        pass
+            sync_db_and_records(db)
+        except Exception:
+            pass
 
     data = load_report_data(db)
     leaderboard = data.leaderboard
@@ -282,7 +283,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html")
             <td>{entry["passed"]} / {entry["total"]}</td>
             <td>{entry["tests_count"]} tasks</td>
             <td style="color:var(--text-muted); font-weight:500;">{speed_str}</td>
-            <td><a href="#model-view" onclick="selectModel('{html.escape(m)}')" style="color:var(--accent); text-decoration:none; font-size:13px; font-weight:500;">Details →</a></td>
+            <td><a href="#model-view" data-model="{html.escape(m)}" onclick="selectModel(this.dataset.model)" style="color:var(--accent); text-decoration:none; font-size:13px; font-weight:500;">Details →</a></td>
           </tr>"""
 
     html_content += """

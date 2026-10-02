@@ -71,6 +71,18 @@ def test_lua_sandbox_security_isolation():
         rt.execute("load('return 1')()")
 
 
+def test_lua_sandbox_infinite_loop_timeout():
+    import pytest
+    from lupa import LuaError
+
+    from sandboxes import create_lua_sandbox
+
+    # Create sandbox with small instruction budget to verify rapid timeout
+    rt = create_lua_sandbox(max_instructions=100_000)
+    with pytest.raises(LuaError, match="instruction limit exceeded"):
+        rt.execute("while true do end")
+
+
 def test_zig_c_compilation_and_wasm(tmp_path):
     from sandboxes import compile_c_to_wasm, load_wasm
 
@@ -96,7 +108,7 @@ def test_html_report_generation(tmp_path):
     # Using existing or temp db
     db = Database(Path(__file__).parent.parent / "bench.db")
     out_file = tmp_path / "test_report.html"
-    res = generate_html_report(db, output_path=out_file)
+    res = generate_html_report(db, output_path=out_file, sync_records=False)
     assert res.exists()
     content = res.read_text(encoding="utf-8")
     assert "<!DOCTYPE html>" in content
@@ -162,3 +174,85 @@ def test_reasoning_code_extraction_shields_drafts():
     code = bench.extract_code(raw)
     assert "correct_final" in code
     assert "wrong_draft" not in code
+
+
+def test_wasm_fuel_infinite_loop_trap(tmp_path):
+    import pytest
+    from wasmtime import Trap
+
+    from sandboxes.c_wasm import compile_c_to_wasm, load_wasm
+
+    loop_c = """
+    #define WASM_EXPORT __attribute__((visibility("default")))
+    WASM_EXPORT int ringbuf_push(int x) {
+        volatile int val = x;
+        while (1) {
+            val++;
+        }
+        return val;
+    }
+    """
+    c_file = tmp_path / "loop.c"
+    wasm_file = tmp_path / "loop.wasm"
+    c_file.write_text(loop_c, encoding="utf-8")
+    ok, err = compile_c_to_wasm(c_file, wasm_file)
+    assert ok, f"Compilation error: {err}"
+
+    # Load with small fuel allocation to trigger fast trap
+    store, exports = load_wasm(wasm_file, fuel=10_000)
+    with pytest.raises(Trap, match="all fuel consumed"):
+        exports["ringbuf_push"](store, 1)
+
+
+def test_report_script_tag_sanitization(tmp_path):
+    from database import Database
+    from report_data import load_report_data
+
+    db = Database(tmp_path / "test_sec.db")
+    # Insert run and result containing </script> and <!-- in model and failure messages
+    run_id = "test_sec_run"
+    db.conn.execute("INSERT INTO hosts (id, label, created_at, is_active) VALUES ('h1', 'Host 1', '2026-01-01', 1)")
+    db.conn.execute(
+        "INSERT INTO runs (id, host_id, model_key, model_name, quantization, backend, generation_params, started_at, status) "
+        "VALUES (?, 'h1', 'model_xss', 'Model XSS', 'Q4', 'test', '{}', '2026-01-01', 'completed')",
+        (run_id,),
+    )
+    db.conn.execute(
+        "INSERT INTO results (run_id, model, benchmark, level, tested_at, passed, total, failures) "
+        "VALUES (?, 'model_xss', 'js_async', 'level1', '2026-01-01', 0, 1, ?)",
+        (run_id, '["Malicious </script><script>alert(1)</script><!-- comment -->"]'),
+    )
+    db.conn.commit()
+
+    report_data = load_report_data(db)
+    # The JSON string must have < replaced by \\u003c
+    assert "</script>" not in report_data.client_json
+    assert "<!--" not in report_data.client_json
+    assert "\\u003c/script>" in report_data.client_json or "\\u003c" in report_data.client_json
+
+
+def test_report_model_name_with_single_quote(tmp_path):
+    from database import Database
+    from html_report import generate_html_report
+
+    db = Database(tmp_path / "test_quote.db")
+    run_id = "test_quote_run"
+    quote_model = "test'model/with\"quotes"
+    db.conn.execute("INSERT INTO hosts (id, label, created_at, is_active) VALUES ('h1', 'Host 1', '2026-01-01', 1)")
+    db.conn.execute(
+        "INSERT INTO runs (id, host_id, model_key, model_name, quantization, backend, generation_params, started_at, status) "
+        "VALUES (?, 'h1', ?, 'Model Quote', 'Q4', 'test', '{}', '2026-01-01', 'completed')",
+        (run_id, quote_model),
+    )
+    db.conn.execute(
+        "INSERT INTO results (run_id, model, benchmark, level, tested_at, passed, total, failures) "
+        "VALUES (?, ?, 'vm', 'level1', '2026-01-01', 1, 1, '[]')",
+        (run_id, quote_model),
+    )
+    db.conn.commit()
+
+    out_file = tmp_path / "report.html"
+    generate_html_report(db, out_file, sync_records=False)
+    content = out_file.read_text(encoding="utf-8")
+    assert 'data-model="test&#x27;model/with&quot;quotes"' in content
+    assert 'onclick="selectModel(this.dataset.model)"' in content

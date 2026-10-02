@@ -16,7 +16,7 @@ from typing import Any
 from wasmtime import Store
 
 from benchmarks.base import Benchmark, Level, TestResult
-from sandboxes import compile_c_to_wasm, load_wasm
+from sandboxes.c_wasm import DEFAULT_WASM_FUEL, compile_c_to_wasm, load_wasm
 
 LEVEL1_PROMPT = """\
 Implement a fixed-size ring buffer in C99.
@@ -287,6 +287,7 @@ def run_c_suite(cases: list[tuple[str, Callable]], c_path: Path) -> tuple[int, i
         failures: list[str] = []
         for test_name, test_fn in cases:
             try:
+                store.set_fuel(DEFAULT_WASM_FUEL)
                 res = test_fn(store, exports)
                 if res:
                     passed += 1

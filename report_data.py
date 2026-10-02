@@ -321,6 +321,8 @@ def load_report_data(db: Database) -> ReportData:
         },
         ensure_ascii=False,
     )
+    # Sanitize < to \u003c to prevent premature </script> closing or inline HTML injection in <script> blocks
+    client_json = client_json.replace("<", "\\u003c")
 
     return ReportData(
         leaderboard=leaderboard,
