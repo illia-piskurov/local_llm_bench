@@ -41,6 +41,36 @@ def test_lua_sandbox_execution():
     assert res == 42
 
 
+def test_lua_sandbox_security_isolation():
+    import pytest
+    from lupa import LuaError
+
+    from sandboxes import create_lua_sandbox
+
+    rt = create_lua_sandbox()
+
+    # Verify dangerous globals are completely revoked
+    assert rt.eval("python == nil") is True
+    assert rt.eval("os == nil") is True
+    assert rt.eval("io == nil") is True
+    assert rt.eval("package == nil") is True
+    assert rt.eval("debug == nil") is True
+    assert rt.eval("load == nil") is True
+    assert rt.eval("loadfile == nil") is True
+    assert rt.eval("dofile == nil") is True
+    assert rt.eval("require == nil") is True
+
+    # Verify execution of python reflection or dynamic code loading is blocked
+    with pytest.raises(LuaError):
+        rt.execute("python.eval('1+1')")
+
+    with pytest.raises(LuaError):
+        rt.execute("require('os')")
+
+    with pytest.raises(LuaError):
+        rt.execute("load('return 1')()")
+
+
 def test_zig_c_compilation_and_wasm(tmp_path):
     from sandboxes import compile_c_to_wasm, load_wasm
 
