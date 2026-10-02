@@ -176,6 +176,50 @@ def test_reasoning_code_extraction_shields_drafts():
     assert "wrong_draft" not in code
 
 
+def test_reasoning_only_response_yields_empty_code():
+    from benchmarks.vm import VMBenchmark
+
+    bench = VMBenchmark()
+    # Model produces only reasoning tags with a code draft, but no final answer
+    raw = """
+    <think>
+    ```python
+    def run_vm():
+        return 'draft'
+    ```
+    </think>
+    """
+    code = bench.extract_code(raw)
+    assert code == ""
+
+
+def test_ask_model_reasoning_only_empty_content(monkeypatch):
+    import requests
+
+    import lmstudio
+
+    class MockResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "output": [
+                    {"type": "reasoning", "content": "Just thinking, no answer..."},
+                    {"type": "message", "content": "<think>Drafting thoughts</think>"},
+                ],
+                "stats": {"tokens_per_second": 20.0},
+            }
+
+    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResponse())
+
+    res = lmstudio.ask_model("test-model", [{"role": "user", "content": "solve"}])
+    assert res.content == ""
+    assert res.reasoning is not None
+    assert "Just thinking" in res.reasoning
+    assert "Drafting thoughts" in res.reasoning
+
+
 def test_wasm_fuel_infinite_loop_trap(tmp_path):
     import pytest
     from wasmtime import Trap

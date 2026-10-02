@@ -216,7 +216,10 @@ class Benchmark(ABC):
         If no fences exist, returns the text as is."""
         # 1. First strip reasoning blocks (<think>...</think>) to avoid extracting drafts from thought chains
         cleaned, _ = strip_reasoning_blocks(raw_text)
-        text_to_parse = cleaned if cleaned.strip() else raw_text
+        if not cleaned:
+            return ""
+
+        text_to_parse = cleaned
 
         langs = [self.code_lang] + list(self.code_lang_aliases)
         pattern = "|".join(re.escape(language) for language in langs)

@@ -253,10 +253,8 @@ def ask_model(
     else:
         content = raw_content
 
-    # 3. If content is empty (model output everything inside reasoning), fall back to reasoning
-    if not content.strip() and reasoning_text:
-        content = reasoning_text
-
+    # 3. If content is empty (e.g. model output only reasoning), do not fall back to reasoning
+    # This prevents extracting draft code from thought chains (draft shielding)
     stats = payload.get("stats") or {}
     # If reasoning_output_tokens not reported by API but thoughts occurred, estimate tokens (~3.8 chars/tok)
     if reasoning_text and not stats.get("reasoning_output_tokens"):
