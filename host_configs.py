@@ -1,12 +1,147 @@
-import json
+import platform
+import socket
+import subprocess
+import sys
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from database import Database
+
+LOCAL_HOST_FILE = Path(__file__).parent / ".local_host"
+
 
 def now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def detect_system_hardware() -> dict:
+    """Определяет характеристики текущего компьютера без внешних зависимостей."""
+    system = platform.system()
+    hostname = socket.gethostname()
+    cpu_name = ""
+    ram_gb = 0
+
+    if system == "Windows":
+        try:
+            import winreg
+
+            key = winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"HARDWARE\DESCRIPTION\System\CentralProcessor\0",
+            )
+            cpu_name, _ = winreg.QueryValueEx(key, "ProcessorNameString")
+            cpu_name = cpu_name.strip()
+        except Exception:
+            cpu_name = platform.processor()
+
+        try:
+            import ctypes
+
+            class MEMORYSTATUSEX(ctypes.Structure):
+                _fields_ = [
+                    ("dwLength", ctypes.c_ulong),
+                    ("dwMemoryLoad", ctypes.c_ulong),
+                    ("ullTotalPhys", ctypes.c_ulonglong),
+                    ("ullAvailPhys", ctypes.c_ulonglong),
+                    ("ullTotalPageFile", ctypes.c_ulonglong),
+                    ("ullAvailPageFile", ctypes.c_ulonglong),
+                    ("ullTotalVirtual", ctypes.c_ulonglong),
+                    ("ullAvailVirtual", ctypes.c_ulonglong),
+                    ("sullAvailExtendedVirtual", ctypes.c_ulonglong),
+                ]
+
+            stat = MEMORYSTATUSEX()
+            stat.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+            ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat))
+            raw_gb = stat.ullTotalPhys / (1024**3)
+            ram_gb = round(raw_gb)
+            if 28 <= ram_gb <= 31:
+                ram_gb = 32
+            elif 14 <= ram_gb <= 15:
+                ram_gb = 16
+        except Exception:
+            pass
+
+    elif system == "Darwin":
+        try:
+            cpu_name = subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"]).decode().strip()
+        except Exception:
+            cpu_name = "Apple Silicon"
+
+        try:
+            mem_bytes = int(subprocess.check_output(["sysctl", "-n", "hw.memsize"]).decode().strip())
+            ram_gb = round(mem_bytes / (1024**3))
+        except Exception:
+            pass
+
+    elif system == "Linux":
+        try:
+            with open("/proc/cpuinfo") as f:
+                for line in f:
+                    if "model name" in line:
+                        cpu_name = line.split(":", 1)[1].strip()
+                        break
+        except Exception:
+            cpu_name = platform.processor()
+
+        try:
+            with open("/proc/meminfo") as f:
+                for line in f:
+                    if "MemTotal" in line:
+                        kb = int(line.split()[1])
+                        ram_gb = round(kb / (1024 * 1024))
+                        break
+        except Exception:
+            pass
+
+    return {
+        "system": system,
+        "hostname": hostname,
+        "cpu": cpu_name or platform.processor(),
+        "ram": ram_gb,
+    }
+
+
+def build_hardware_label(info: dict) -> str:
+    parts = []
+    cpu = info.get("cpu", "")
+    if cpu:
+        parts.append(cpu.replace("with Radeon Graphics", "Radeon iGPU"))
+    if info.get("ram", 0) > 0:
+        parts.append(f"{info['ram']} GB")
+    parts.append(info.get("system", ""))
+    return " | ".join(parts) if parts else info.get("hostname", "Local Machine")
+
+
+def match_existing_host(info: dict, existing_hosts: list["HostConfig"]) -> "HostConfig | None":
+    """Интеллектуальный поиск существующего профиля в базе под текущее железо."""
+    cpu = info.get("cpu", "").lower()
+    system = info.get("system", "").lower()
+
+    for h in existing_hosts:
+        lbl = h.label.lower()
+
+        # 1. Apple Silicon (M4, M3, M2, M1)
+        if "darwin" in system:
+            for m in ["m4", "m3", "m2", "m1"]:
+                if m in cpu and m in lbl:
+                    return h
+
+        # 2. Модели AMD Ryzen и Intel Core (250, 7735hs, 1235u и др.)
+        for token in ["250", "7735hs", "1235u", "7735", "7840", "8840", "13700", "14700", "9950"]:
+            if token in cpu and token in lbl:
+                return h
+
+        # 3. Полное вхождение названия процессора
+        if cpu and (
+            cpu in lbl
+            or any(part in lbl for part in cpu.split() if len(part) >= 4 and part not in ("intel", "amd", "core"))
+        ):
+            return h
+
+    return None
 
 
 @dataclass
@@ -19,66 +154,144 @@ class HostConfig:
     def create(cls, label: str) -> "HostConfig":
         return cls(id=uuid.uuid4().hex[:12], label=label.strip(), created_at=now_str())
 
-    def to_dict(self) -> dict:
-        return {"id": self.id, "label": self.label, "created_at": self.created_at}
-
-    @classmethod
-    def from_dict(cls, data: dict) -> "HostConfig":
-        return cls(id=data["id"], label=data.get("label", ""), created_at=data.get("created_at", ""))
-
 
 class HostConfigStore:
-    def __init__(self, hosts_path: Path, active_path: Path):
-        self.hosts_path = hosts_path
-        self.active_path = active_path
+    def __init__(self, db: Database):
+        self.db = db
 
     def load_all(self) -> list[HostConfig]:
-        if not self.hosts_path.exists():
-            return []
-        try:
-            data = json.loads(self.hosts_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            return []
-        hosts = []
-        for item in data:
-            try:
-                hosts.append(HostConfig.from_dict(item))
-            except (KeyError, TypeError):
-                continue
-        return hosts
-
-    def save_all(self, hosts: list[HostConfig]) -> None:
-        self.hosts_path.write_text(
-            json.dumps([host.to_dict() for host in hosts], ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+        rows = self.db.conn.execute("SELECT id, label, created_at FROM hosts ORDER BY created_at").fetchall()
+        return [HostConfig(id=row["id"], label=row["label"], created_at=row["created_at"]) for row in rows]
 
     def add(self, host: HostConfig) -> HostConfig:
-        hosts = [item for item in self.load_all() if item.id != host.id]
-        hosts.append(host)
-        self.save_all(hosts)
+        self.db.conn.execute(
+            "INSERT OR REPLACE INTO hosts (id, label, created_at) VALUES (?, ?, ?)",
+            (host.id, host.label, host.created_at),
+        )
+        self.db.conn.commit()
+
+        # Сохранение в records/ для версионирования в Git
+        try:
+            import json
+
+            records_dir = Path(__file__).parent / "records" / "hosts"
+            records_dir.mkdir(parents=True, exist_ok=True)
+            path = records_dir / f"{host.id}.json"
+            path.write_text(
+                json.dumps(
+                    {"id": host.id, "label": host.label, "created_at": host.created_at}, ensure_ascii=False, indent=2
+                ),
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
+
         return host
 
     def get(self, host_id: str) -> HostConfig | None:
-        for host in self.load_all():
-            if host.id == host_id:
-                return host
-        return None
+        row = self.db.conn.execute("SELECT id, label, created_at FROM hosts WHERE id = ?", (host_id,)).fetchone()
+        if row is None:
+            return None
+        return HostConfig(id=row["id"], label=row["label"], created_at=row["created_at"])
 
-    def load_active_id(self) -> str | None:
-        if not self.active_path.exists():
-            return None
-        try:
-            data = json.loads(self.active_path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            return None
-        return data.get("host_id")
+    def setup_local_device(self) -> HostConfig:
+        """Первичная настройка хоста для нового устройства.
+
+        Определяет реальное железо и спрашивает пользователя только ОДИН раз.
+        Результат сохраняется в .local_host и никогда больше не запрашивается.
+        """
+        import questionary
+        from questionary import Choice
+
+        info = detect_system_hardware()
+        detected_label = build_hardware_label(info)
+        existing = self.load_all()
+
+        exact_match = match_existing_host(info, existing)
+
+        # Если скрипт запущен в неинтерактивном окружении (CI / headless)
+        if not sys.stdin.isatty():
+            if exact_match:
+                host = exact_match
+            else:
+                host = HostConfig.create(detected_label)
+                self.add(host)
+            LOCAL_HOST_FILE.write_text(host.id, encoding="utf-8")
+            return host
+
+        print("\n" + "=" * 62)
+        print("🔍 Обнаружено новое устройство (первый запуск на этом ПК)")
+        print(f"   Железо:   {detected_label}")
+        print(f"   Hostname: {info.get('hostname')}")
+        print("=" * 62)
+
+        choices = []
+        if exact_match:
+            choices.append(Choice(f"🔗 Привязать к найденному профилю: «{exact_match.label}»", value=exact_match.id))
+
+        choices.append(Choice(f"✨ Создать новый профиль: «{detected_label}»", value="new"))
+
+        # Другие профили
+        for h in existing:
+            if exact_match and h.id == exact_match.id:
+                continue
+            choices.append(Choice(f"🔗 Привязать к существующему: «{h.label}»", value=h.id))
+
+        choices.append(Choice("✏️  Ввести своё название профиля", value="custom"))
+
+        chosen = questionary.select(
+            "Как сохранять результаты скорости с этого устройства?",
+            choices=choices,
+        ).ask()
+
+        if chosen == "new":
+            host = HostConfig.create(detected_label)
+            self.add(host)
+        elif chosen == "custom":
+            custom_lbl = questionary.text("Введи название профиля:").ask()
+            label = custom_lbl.strip() if custom_lbl and custom_lbl.strip() else detected_label
+            host = HostConfig.create(label)
+            self.add(host)
+        elif chosen:
+            host = self.get(chosen) or HostConfig.create(detected_label)
+            if not self.get(host.id):
+                self.add(host)
+        else:
+            host = exact_match or HostConfig.create(detected_label)
+            if not self.get(host.id):
+                self.add(host)
+
+        LOCAL_HOST_FILE.write_text(host.id, encoding="utf-8")
+        print(f"✔ Профиль устройства привязан: {host.label}")
+        print("✔ Сохранено в .local_host (больше запрашиваться не будет).\n")
+        return host
+
+    def get_active(self) -> HostConfig:
+        """Возвращает активный хост для ТЕКУЩЕГО устройства.
+
+        Использует локальный файл .local_host (не коммитится в git),
+        гарантируя, что при git pull с другого ноутбука конфигурация не собьётся.
+        """
+        if LOCAL_HOST_FILE.exists():
+            try:
+                host_id = LOCAL_HOST_FILE.read_text(encoding="utf-8").strip()
+                if host_id:
+                    host = self.get(host_id)
+                    if host:
+                        return host
+            except Exception:
+                pass
+
+        # Если файл отсутствует — настраиваем устройство 1 раз
+        return self.setup_local_device()
 
     def set_active(self, host_id: str) -> None:
-        self.active_path.write_text(json.dumps({"host_id": host_id}, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    def get_active(self) -> HostConfig | None:
-        active_id = self.load_active_id()
-        if not active_id:
-            return None
-        return self.get(active_id)
+        """Переключает активный хост ТОЛЬКО на текущей локальной машине."""
+        LOCAL_HOST_FILE.write_text(host_id, encoding="utf-8")
+        # Также обновляем в БД для обратной совместимости
+        try:
+            self.db.conn.execute("UPDATE hosts SET is_active = 0")
+            self.db.conn.execute("UPDATE hosts SET is_active = 1 WHERE id = ?", (host_id,))
+            self.db.conn.commit()
+        except Exception:
+            pass

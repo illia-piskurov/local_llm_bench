@@ -1,10 +1,29 @@
 # Python-generated files
+**/__pycache__/
 __pycache__/
 *.py[oc]
 build/
 dist/
 wheels/
 *.egg-info
+.pytest_cache/
+
+# Local machine & agent configs
+.agents/
+scratch/
 
 # Virtual environments
-.venv
+.venv/
+
+# SQLite database (local cache, auto-rebuilt from records/)
+bench.db
+*.db
+*.db-wal
+*.db-shm
+
+# Machine-local host and server bindings
+.local_host
+.local_server
+
+# Generated dashboard
+report.html

@@ -1,0 +1,11 @@
+{
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-08-17 11:45:49",
+  "passed": 18,
+  "total": 18,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

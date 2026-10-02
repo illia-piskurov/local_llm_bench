@@ -1,0 +1,15 @@
+{
+  "host_id": "56a307df6486",
+  "model": "granite-4.1-8b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-08-07 21:49:50",
+  "stats": {
+    "input_tokens": 405,
+    "total_output_tokens": 409,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.409966208196643,
+    "time_to_first_token_seconds": 2.9607829999999997,
+    "model_load_time_seconds": null
+  }
+}

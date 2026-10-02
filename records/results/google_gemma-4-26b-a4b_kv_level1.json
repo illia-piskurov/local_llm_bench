@@ -1,0 +1,11 @@
+{
+  "model": "google/gemma-4-26b-a4b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-09-28 17:23:38",
+  "passed": 15,
+  "total": 15,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

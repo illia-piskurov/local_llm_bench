@@ -4,7 +4,49 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
+    "componentize-py>=0.25.1",
+    "mcp[cli]>=2.2.0",
+    "micropython-wasm>=0.1a2",
     "questionary>=2.1.1",
+    "quickjs>=1.19.4",
     "requests>=2.34.2",
     "rich>=15.0.0",
+    "lupa>=2.8",
+    "wasmtime>=49.0.0",
+    "ziglang>=0.16.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = [
+    ".venv",
+    "llm-probe",
+    "models_answers",
+    "raw_answers",
+    ".agents",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line length handled by formatter
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+
+

@@ -1,0 +1,15 @@
+{
+  "host_id": "70ccb4981862",
+  "model": "openai/gpt-oss-20b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-09-28 17:34:07",
+  "stats": {
+    "input_tokens": 2100,
+    "total_output_tokens": 2051,
+    "reasoning_output_tokens": 427,
+    "tokens_per_second": 30.09242627935567,
+    "time_to_first_token_seconds": 8.782,
+    "model_load_time_seconds": null
+  }
+}

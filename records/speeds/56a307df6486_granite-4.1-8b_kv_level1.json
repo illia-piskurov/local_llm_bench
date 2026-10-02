@@ -1,0 +1,15 @@
+{
+  "host_id": "56a307df6486",
+  "model": "granite-4.1-8b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-08-07 21:55:08",
+  "stats": {
+    "input_tokens": 585,
+    "total_output_tokens": 366,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 13.316898485610308,
+    "time_to_first_token_seconds": 4.2557730000000005,
+    "model_load_time_seconds": null
+  }
+}

@@ -1,7 +1,15 @@
-from pathlib import Path
+"""Планировщик задач с зависимостями бенчмарк.
 
-import scheduler_bench
+Тестирует способность модели работать с графами задач и зависимостями:
+- Level 1: Топологическая сортировка графа (topo_sort) и обнаружение циклов (возврат None).
+- Level 2: Расчёт критического пути (critical_path - самая длинная зависимая цепочка).
+"""
+
+from pathlib import Path
+from typing import Any
+
 from benchmarks.base import Benchmark, Level, TestResult
+from sandboxes import call_with_timeout, verify_function_exists
 
 LEVEL1_PROMPT = """\
 Реализуй планировщик задач с зависимостями в одном Python файле.
@@ -39,6 +47,116 @@ tasks — словарь, где значение — кортеж (длител
 """
 
 
+def is_valid_topo_order(tasks: dict[str, list[str]], order: list[str] | None) -> bool:
+    if order is None:
+        return False
+    if set(order) != set(tasks.keys()):
+        return False
+    position = {name: i for i, name in enumerate(order)}
+    for name, deps in tasks.items():
+        for dep in deps:
+            if dep not in position or position[dep] >= position[name]:
+                return False
+    return True
+
+
+LEVEL1_TESTS: list[tuple[str, dict[str, list[str]], Any]] = [
+    ("no_dependencies", {"a": [], "b": [], "c": []}, "VALID_ORDER"),
+    ("simple_chain", {"a": [], "b": ["a"], "c": ["b"]}, "VALID_ORDER"),
+    ("diamond", {"a": [], "b": ["a"], "c": ["a"], "d": ["b", "c"]}, "VALID_ORDER"),
+    ("multiple_roots", {"a": [], "b": [], "c": ["a", "b"], "d": ["c"]}, "VALID_ORDER"),
+    ("single_task", {"a": []}, "VALID_ORDER"),
+    ("self_cycle", {"a": ["a"]}, None),
+    ("two_node_cycle", {"a": ["b"], "b": ["a"]}, None),
+    ("long_cycle", {"a": ["b"], "b": ["c"], "c": ["d"], "d": ["a"]}, None),
+    ("cycle_with_extra_nodes", {"a": [], "b": ["a"], "c": ["b", "d"], "d": ["c"]}, None),
+    (
+        "wide_graph",
+        {
+            "compile": [],
+            "lint": [],
+            "test": ["compile"],
+            "package": ["test", "lint"],
+            "deploy": ["package"],
+        },
+        "VALID_ORDER",
+    ),
+]
+
+LEVEL2_TESTS: list[tuple[str, dict[str, tuple[int, list[str]]], Any]] = [
+    ("single_task", {"a": (5, [])}, 5),
+    ("simple_chain", {"a": (2, []), "b": (3, ["a"]), "c": (4, ["b"])}, 9),
+    (
+        "diamond_pick_longer_branch",
+        {
+            "a": (1, []),
+            "b": (10, ["a"]),
+            "c": (1, ["a"]),
+            "d": (1, ["b", "c"]),
+        },
+        12,
+    ),
+    ("independent_tasks", {"a": (3, []), "b": (7, []), "c": (2, [])}, 7),
+    (
+        "wide_graph",
+        {
+            "compile": (10, []),
+            "lint": (2, []),
+            "test": (5, ["compile"]),
+            "package": (3, ["test", "lint"]),
+            "deploy": (1, ["package"]),
+        },
+        19,
+    ),
+    ("cycle_returns_none", {"a": (1, ["b"]), "b": (1, ["a"])}, None),
+]
+
+
+def run_scheduler_level1(solution_path: str | Path) -> tuple[int, int, list[str]]:
+    passed = 0
+    failures: list[str] = []
+
+    for name, tasks, expected in LEVEL1_TESTS:
+        success, result = call_with_timeout(str(solution_path), "topo_sort", (tasks,))
+        if not success:
+            failures.append(f"{name}: неожиданное исключение/таймаут: {result}")
+            continue
+
+        if expected is None:
+            if result is None:
+                passed += 1
+            else:
+                failures.append(f"{name}: ожидался None (цикл), получено {result}")
+        else:
+            if is_valid_topo_order(tasks, result):
+                passed += 1
+            else:
+                failures.append(f"{name}: невалидный топологический порядок: {result}")
+
+    return passed, len(LEVEL1_TESTS), failures
+
+
+def run_scheduler_level2(solution_path: str | Path) -> tuple[int, int, list[str]]:
+    passed = 0
+    failures: list[str] = []
+
+    for name, tasks, expected in LEVEL2_TESTS:
+        success, result = call_with_timeout(str(solution_path), "critical_path", (tasks,))
+        if not success:
+            if expected is None:
+                passed += 1
+            else:
+                failures.append(f"{name}: неожиданное исключение/таймаут: {result}")
+            continue
+
+        if result == expected:
+            passed += 1
+        else:
+            failures.append(f"{name}: ожидалось {expected}, получено {result}")
+
+    return passed, len(LEVEL2_TESTS), failures
+
+
 class SchedulerBenchmark(Benchmark):
     id = "scheduler"
     name = "Планировщик задач (topo sort + critical path)"
@@ -50,14 +168,16 @@ class SchedulerBenchmark(Benchmark):
 
     def run_tests(self, level_id: str, answer_path: Path) -> TestResult:
         func_name = "topo_sort" if level_id == "level1" else "critical_path"
-        tests = scheduler_bench.LEVEL1_TESTS if level_id == "level1" else scheduler_bench.LEVEL2_TESTS
+        tests_count = len(LEVEL1_TESTS) if level_id == "level1" else len(LEVEL2_TESTS)
+
         try:
-            scheduler_bench.load_function(str(answer_path), func_name)
+            verify_function_exists(answer_path, func_name)
         except Exception as e:
-            return TestResult(0, len(tests), [f"не удалось загрузить решение: {e}"])
+            return TestResult(0, tests_count, [f"не удалось загрузить решение: {e}"])
 
         if level_id == "level1":
-            passed, total, failures = scheduler_bench.run_level1_suite(str(answer_path))
+            passed, total, failures = run_scheduler_level1(answer_path)
         else:
-            passed, total, failures = scheduler_bench.run_level2_suite(str(answer_path))
+            passed, total, failures = run_scheduler_level2(answer_path)
+
         return TestResult(passed, total, failures)
