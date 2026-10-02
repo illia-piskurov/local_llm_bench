@@ -1,0 +1,199 @@
+def compile_query(query: dict) -> dict:
+    """
+    Компилирует AST-дерево запроса в параметризованный SQL.
+    
+    Args:
+        query: Словарь с описанием запроса (см. входной словарь).
+        
+    Returns:
+        {"sql": str, "params": list}
+    """
+    sql = []
+    params = []
+
+    # --- SELECT ---
+    if 'select' in query and query['select']:
+        columns = []
+        for col in query['select']:
+            if isinstance(col, dict):
+                expr = col.get('expr', '')
+                alias = col.get('as')
+                if alias:
+                    columns.append(f'{expr} AS {alias}')
+                else:
+                    columns.append(expr)
+            else:
+                columns.append(str(col))
+        sql.append(f'SELECT {", ".join(columns)}')
+    else:
+        sql.append('SELECT *')
+
+    # --- FROM ---
+    table = query.get('table', '')
+    if table:
+        sql.append(f'FROM {table}')
+
+    # --- JOIN (расширенная поддержка) ---
+    joins = query.get('join', [])
+    for join in joins:
+        join_type = join.get('type', 'INNER')
+        table_name = join['table']
+        on_condition, params = _compile_join_on(join['on'], params)
+        if on_condition:
+            sql.append(f'{join_type} JOIN {table_name} ON {on_condition}')
+
+    # --- WHERE ---
+    where_clause = ''
+    if 'where' in query and query['where']:
+        where_conditions, params = _compile_where(query['where'], params)
+        if where_conditions:
+            where_clause = f'WHERE {where_conditions}'
+            sql.append(where_clause)
+
+    # --- HAVING (расширенная поддержка) ---
+    having_clause = ''
+    if 'having' in query and query['having']:
+        having_conditions, params = _compile_where(query['having'], params)
+        if having_conditions:
+            having_clause = f'HAVING {having_conditions}'
+            sql.append(having_clause)
+
+    # --- GROUP BY ---
+    group_by = query.get('groupBy', [])
+    if group_by:
+        fields = ', '.join(group_by)
+        sql.append(f'GROUP BY {fields}')
+
+    # --- ORDER BY ---
+    order_by = query.get('orderBy', [])
+    if order_by:
+        order_parts = []
+        for item in order_by:
+            field = item['field']
+            direction = item.get('dir', 'ASC')
+            order_parts.append(f'{field} {direction}')
+        sql.append(f'ORDER BY {", ".join(order_parts)}')
+
+    # --- LIMIT / OFFSET ---
+    limit = query.get('limit')
+    offset = query.get('offset')
+    if limit is not None:
+        sql.append(f'LIMIT {limit}')
+    if offset is not None:
+        sql.append(f'OFFSET {offset}')
+
+    return {'sql': ' '.join(sql), 'params': params}
+
+
+def _compile_join_on(on_clause: dict, params: list) -> tuple:
+    """Компилирует условие JOIN ON (левый столбец = правый столбец)."""
+    left_col = on_clause['left_field']
+    right_col = on_clause.get('right_field', '')
+
+    if isinstance(right_col, list):
+        # Поддержка множественных условий в ON (AND)
+        conditions = []
+        for col in right_col:
+            cond_str = f'{left_col} {on_clause["op"]} {col}'
+            conditions.append(cond_str)
+        return ' AND '.join(conditions), params
+    else:
+        return f'{left_col} {on_clause["op"]} {right_col}', params
+
+
+def _compile_where(conditions: list, params: list) -> tuple:
+    """Рекурсивно компилирует дерево условий WHERE."""
+    result = []
+
+    for cond in conditions:
+        if isinstance(cond, dict):
+            # Логический оператор (AND/OR)
+            op = cond.get('op', '')
+            left_str, right_str = _compile_condition(cond['left'], params), _compile_condition(cond['right'], params)
+
+            if op == 'AND':
+                result.append(f'({left_str} AND {right_str})')
+            elif op == 'OR':
+                result.append(f'({left_str} OR {right_str})')
+        else:
+            # Простое условие: { field: str, op: str, value: any }
+            field = cond['field']
+            operator = cond['op']
+            value = cond.get('value')
+
+            if operator == 'IS NULL':
+                result.append(f'{field} IS NULL')
+            elif operator == 'IS NOT NULL':
+                result.append(f'{field} IS NOT NULL')
+            elif operator == 'IN':
+                # IN (1, 2, 3) -> $1, $2, $3
+                values = value if isinstance(value, list) else [value]
+                placeholders = ', '.join(['$' + str(i + 1) for i in range(len(values))])
+                params.extend(values)
+                result.append(f'{field} IN ({placeholders})')
+            elif operator == 'LIKE':
+                # LIKE '%pattern%' -> $1
+                value = cond.get('value', '')
+                if isinstance(value, str):
+                    params.append(value)
+                    result.append(f'{field} LIKE $1')
+                else:
+                    params.append(value)
+                    result.append(f'{field} LIKE $1')
+            elif operator == 'BETWEEN':
+                # BETWEEN 1 AND 3 -> $1 AND $2
+                low = cond.get('low', value[0] if isinstance(value, list) else value)
+                high = cond.get('high', value[1] if isinstance(value, list) else value)
+                params.append(low)
+                params.append(high)
+                result.append(f'{field} BETWEEN $1 AND $2')
+            elif operator == 'NOT LIKE':
+                # NOT LIKE '%pattern%' -> $1
+                value = cond.get('value', '')
+                if isinstance(value, str):
+                    params.append(value)
+                    result.append(f'{field} NOT LIKE $1')
+                else:
+                    params.append(value)
+                    result.append(f'{field} NOT LIKE $1')
+            elif operator == 'NOT IN':
+                # NOT IN (1, 2, 3) -> NOT ($1, $2, $3)
+                values = value if isinstance(value, list) else [value]
+                placeholders = ', '.join(['$' + str(i + 1) for i in range(len(values))])
+                params.extend(values)
+                result.append(f'{field} NOT IN ({placeholders})')
+            elif operator == 'NOT BETWEEN':
+                # NOT BETWEEN 1 AND 3 -> NOT ($1 AND $2)
+                low = cond.get('low', value[0] if isinstance(value, list) else value)
+                high = cond.get('high', value[1] if isinstance(value, list) else value)
+                params.append(low)
+                params.append(high)
+                result.append(f'{field} NOT BETWEEN $1 AND $2')
+            elif operator == 'EXISTS':
+                # EXISTS (SELECT ...) -> EXISTS (...)
+                subquery = cond.get('subquery', '')
+                if isinstance(subquery, str):
+                    result.append(f'EXISTS ({subquery})')
+                else:
+                    result.append(f'EXISTS {subquery}')
+            elif operator == 'NOT EXISTS':
+                # NOT EXISTS (SELECT ...) -> NOT EXISTS (...)
+                subquery = cond.get('subquery', '')
+                if isinstance(subquery, str):
+                    result.append(f'NOT EXISTS ({subquery})')
+                else:
+                    result.append(f'NOT EXISTS {subquery}')
+            elif operator == 'IS TRUE':
+                result.append(f'{field} IS TRUE')
+            elif operator == 'IS FALSE':
+                result.append(f'{field} IS FALSE')
+            elif operator == 'IS UNKNOWN':
+                result.append(f'{field} IS UNKNOWN')
+            else:
+                # Обычный оператор (=, !=, >, <, >=, <=)
+                if isinstance(value, (int, float)):
+                    params.append(value)
+                    result.append(f'{field} {operator} $1')
+                elif isinstance(value, str):
+                    params.append(value)
+                    result.append(f'{field} {

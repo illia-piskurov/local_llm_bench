@@ -1,0 +1,13 @@
+{
+  "model": "qwen/qwen3-1.7b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-09-03 11:33:21",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "dependency_unlocks_later: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+    "resource_limit_and_priority: ожидалось ['compile', 'lint', 'test', 'package', 'deploy'], получено ['deploy']",
+    "simultaneous_unlocks: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)"
+  ]
+}

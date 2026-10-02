@@ -1,0 +1,10 @@
+Given input.n nodes (0..n-1) and input.edges as [from, to] directed pairs, return one valid topological ordering as an array. Return null if a cycle exists.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"n":4,"edges":[[0,1],[0,2],[1,3],[2,3]]}
+output: [0,1,2,3]

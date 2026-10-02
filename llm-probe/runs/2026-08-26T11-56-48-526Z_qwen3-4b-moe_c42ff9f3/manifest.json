@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "2026-08-26T11-56-48-526Z_qwen3-4b-moe_c42ff9f3",
+  "status": "running",
+  "startedAt": "2026-08-26T11:56:48.526Z",
+  "model": "qwen3-4b-moe",
+  "baseUrl": "http://127.0.0.1:1234/v1",
+  "hardware": "AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon",
+  "temperature": 0.8,
+  "maxTokens": 16000,
+  "samples": 1,
+  "taskIds": [
+    "flat-to-tree",
+    "paginate-and-sort",
+    "deep-merge",
+    "csv-parse",
+    "render-template",
+    "shopping-cart",
+    "query-string-parser",
+    "schema-validator",
+    "state-reducer",
+    "rbac-checker",
+    "i18n-pluralize",
+    "sql-query-builder",
+    "json-schema-deref-validate",
+    "cron-next-runs",
+    "longest-substring-no-repeat",
+    "group-anagrams",
+    "top-k-frequent",
+    "merge-intervals",
+    "flatten-tree",
+    "shortest-path-grid",
+    "lcs-length",
+    "topological-sort",
+    "rotate-square-matrix",
+    "validate-sudoku-board",
+    "deep-equal",
+    "bytecode-vm-evolution",
+    "event-emitter-evolution"
+  ],
+  "nodeVersion": "v24.19.0",
+  "candidates": [
+    {
+      "taskId": "flat-to-tree",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Cannot connect to http://127.0.0.1:1234/v1: fetch failed"
+    },
+    {
+      "taskId": "paginate-and-sort",
+      "attempt": 1,
+      "repairAttempt": 0,
+      "status": "provider_error",
+      "durationMs": 0,
+      "generationMs": 0,
+      "error": "Cannot connect to http://127.0.0.1:1234/v1: fetch failed"
+    }
+  ]
+}

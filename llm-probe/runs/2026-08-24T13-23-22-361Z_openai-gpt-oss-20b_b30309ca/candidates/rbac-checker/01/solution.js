@@ -1,0 +1,56 @@
+export function solve(input) {
+  const roles = input.roles || {};
+  const users = input.users || {};
+
+  const matchRule = (rule, perm) => {
+    if (rule === '*') return true;
+    if (rule.endsWith(':*')) {
+      const prefix = rule.slice(0, -2);
+      return perm.startsWith(prefix + ':');
+    }
+    return rule === perm;
+  };
+
+  const userHasPermission = (userObj, perm) => {
+    // denies
+    if (Array.isArray(userObj.denies)) {
+      for (const d of userObj.denies) {
+        if (matchRule(d, perm)) return false;
+      }
+    }
+
+    // allows
+    let allowed = false;
+    if (Array.isArray(userObj.allows)) {
+      for (const a of userObj.allows) {
+        if (matchRule(a, perm)) {
+          allowed = true;
+          break;
+        }
+      }
+    }
+
+    // roles
+    const roleNames = Array.isArray(userObj.roles) ? userObj.roles : [];
+    for (const rn of roleNames) {
+      const rules = roles[rn] || [];
+      for (const r of rules) {
+        if (matchRule(r, perm)) {
+          allowed = true;
+          break;
+        }
+      }
+      if (allowed) break;
+    }
+
+    return allowed;
+  };
+
+  const results = input.requests.map(req => {
+    const userObj = users[req.user];
+    if (!userObj) return false;
+    return userHasPermission(userObj, req.permission);
+  });
+
+  return results;
+}

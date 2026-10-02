@@ -1,0 +1,81 @@
+def compile_query(query: dict) -> dict:
+    params = []
+    param_counter = [0]  # Используем список, чтобы счетчик был доступен в вложенной функции
+
+    def process_where(cond):
+        # Базовый случай: простое условие
+        if 'field' in cond:
+            field = cond['field']
+            op = cond['op']
+            val = cond['value']
+            params.append(val)
+            placeholder = f"${param_counter[0]}"
+            param_counter[0] += 1
+            return f"{field} {op} {placeholder}", param_counter[0]
+
+        # Логическое И (AND)
+        elif 'AND' in cond:
+            sub_conds = cond['AND']
+            parts = []
+            for sub in sub_conds:
+                sql_part, idx = process_where(sub)
+                parts.append(sql_part)
+                param_counter[0] = idx
+            # Оборачиваем в скобки, если условий больше одного
+            if len(sub_conds) > 1:
+                return f"({' AND '.join(parts)})", param_counter[0]
+            else:
+                return parts[0], param_counter[0]
+
+        # Логическое ИЛИ (OR)
+        elif 'OR' in cond:
+            sub_conds = cond['OR']
+            parts = []
+            for sub in sub_conds:
+                sql_part, idx = process_where(sub)
+                parts.append(sql_part)
+                param_counter[0] = idx
+            # Оборачиваем в скобки, если условий больше одного
+            if len(sub_conds) > 1:
+                return f"({' OR '.join(parts)})", param_counter[0]
+            else:
+                return parts[0], param_counter[0]
+
+    # Формирование SQL частей
+    parts = []
+
+    # SELECT
+    select_list = query.get('select', ['*'])
+    if select_list == ['*']:
+        parts.append("SELECT *")
+    else:
+        parts.append(f"SELECT {', '.join(select_list)}")
+
+    # FROM
+    parts.append(f"FROM {query['table']}")
+
+    # WHERE
+    if 'where' in query:
+        where_sql, _ = process_where(query['where'])
+        parts.append(f"WHERE {where_sql}")
+
+    # ORDER BY
+    if 'orderBy' in query:
+        order_parts = []
+        for item in query['orderBy']:
+            field = item['field']
+            direction = item.get('dir', 'ASC')
+            order_parts.append(f"{field} {direction}")
+        parts.append(f"ORDER BY {', '.join(order_parts)}")
+
+    # LIMIT
+    if 'limit' in query:
+        parts.append(f"LIMIT {query['limit']}")
+
+    # OFFSET
+    if 'offset' in query:
+        parts.append(f"OFFSET {query['offset']}")
+
+    sql = " ".join(parts)
+
+    return {"sql": sql, "params": params}

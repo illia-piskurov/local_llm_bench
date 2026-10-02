@@ -1,0 +1,22 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-08-25 10:46:44",
+  "passed": 25,
+  "total": 37,
+  "failures": [
+    "pop: ожидалось ['1'], получено ['2', '1']",
+    "unconditional_jump_skips_code: неожиданное исключение: Label skip not found at line 2",
+    "jz_taken_when_zero: неожиданное исключение: Label zero not found at line 2",
+    "jz_not_taken_when_nonzero: неожиданное исключение: Label end not found at line 5",
+    "jnz_taken_when_nonzero: неожиданное исключение: Label nz not found at line 2",
+    "jnz_not_taken_when_zero: неожиданное исключение: Label end not found at line 5",
+    "countdown_loop: ожидалось ['5', '4', '3', '2', '1'], получено ['5', '4']",
+    "count_up_loop: ожидалось ['1', '2', '3', '4', '5'], получено ['1']",
+    "call_ret_basic: неожиданное исключение: Subroutine double not found at line 2",
+    "call_ret_nested: неожиданное исключение: Subroutine func_a not found at line 1",
+    "recursive_factorial: неожиданное исключение: Subroutine fact not found at line 2",
+    "recursive_fibonacci: неожиданное исключение: Subroutine fib not found at line 2"
+  ]
+}

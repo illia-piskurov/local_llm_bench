@@ -1,0 +1,11 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-08-25 10:22:25",
+  "passed": 0,
+  "total": 15,
+  "failures": [
+    "не удалось загрузить решение: closing parenthesis ')' does not match opening parenthesis '[' (liquid_lfm2-24b-a2b_sql_level3.py, line 65)"
+  ]
+}

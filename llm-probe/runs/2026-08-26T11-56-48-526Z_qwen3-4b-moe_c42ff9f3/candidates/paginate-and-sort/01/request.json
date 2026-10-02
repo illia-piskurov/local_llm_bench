@@ -1,0 +1,16 @@
+{
+  "model": "qwen3-4b-moe",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Process an array of records in input.items with filtering, sorting, and pagination:\n1. Filter: if input.filter is provided ({ field: string, op: 'eq'|'neq'|'gt'|'gte'|'lt'|'lte'|'contains', value: any }), filter items. For 'contains', perform case-insensitive substring matching on String(item[field]).\n2. Sort: if input.sort is provided ({ field: string, dir: 'asc'|'desc' }), sort items. Stable sort preserving original relative order for ties.\n3. Paginate: input.page (1-indexed, default 1), input.pageSize (default 10). Return { items: any[], total: number, page: number, totalPages: number }. If total is 0, totalPages must be 0.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"items\":[{\"id\":1,\"name\":\"Apples\",\"qty\":10},{\"id\":2,\"name\":\"Bananas\",\"qty\":5},{\"id\":3,\"name\":\"Avocados\",\"qty\":8}],\"filter\":{\"field\":\"name\",\"op\":\"contains\",\"value\":\"a\"},\"sort\":{\"field\":\"qty\",\"dir\":\"asc\"},\"page\":1,\"pageSize\":2}\noutput: {\"items\":[{\"id\":2,\"name\":\"Bananas\",\"qty\":5},{\"id\":3,\"name\":\"Avocados\",\"qty\":8}],\"total\":3,\"page\":1,\"totalPages\":2}"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 16000,
+  "stream": false
+}

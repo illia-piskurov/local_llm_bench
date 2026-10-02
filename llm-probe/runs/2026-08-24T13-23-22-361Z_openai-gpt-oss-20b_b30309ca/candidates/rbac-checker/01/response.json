@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-4czb0ynkw2bdxcdj2alsof",
+  "object": "chat.completion",
+  "created": 1787578364,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const roles = input.roles || {};\n  const users = input.users || {};\n\n  const matchRule = (rule, perm) => {\n    if (rule === '*') return true;\n    if (rule.endsWith(':*')) {\n      const prefix = rule.slice(0, -2);\n      return perm.startsWith(prefix + ':');\n    }\n    return rule === perm;\n  };\n\n  const userHasPermission = (userObj, perm) => {\n    // denies\n    if (Array.isArray(userObj.denies)) {\n      for (const d of userObj.denies) {\n        if (matchRule(d, perm)) return false;\n      }\n    }\n\n    // allows\n    let allowed = false;\n    if (Array.isArray(userObj.allows)) {\n      for (const a of userObj.allows) {\n        if (matchRule(a, perm)) {\n          allowed = true;\n          break;\n        }\n      }\n    }\n\n    // roles\n    const roleNames = Array.isArray(userObj.roles) ? userObj.roles : [];\n    for (const rn of roleNames) {\n      const rules = roles[rn] || [];\n      for (const r of rules) {\n        if (matchRule(r, perm)) {\n          allowed = true;\n          break;\n        }\n      }\n      if (allowed) break;\n    }\n\n    return allowed;\n  };\n\n  const results = input.requests.map(req => {\n    const userObj = users[req.user];\n    if (!userObj) return false;\n    return userHasPermission(userObj, req.permission);\n  });\n\n  return results;\n}\n",
+        "reasoning": "We need to implement matching logic. Use helper match(rule, perm). Return array. Ensure no mutation.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 432,
+    "completion_tokens": 367,
+    "total_tokens": 799,
+    "completion_tokens_details": {
+      "reasoning_tokens": 21
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

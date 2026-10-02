@@ -1,0 +1,10 @@
+Return k most frequent numbers from input.numbers. Sort by descending frequency; break ties by ascending number value.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"numbers":[1,1,1,2,2,3],"k":2}
+output: [1,2]

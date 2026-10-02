@@ -1,0 +1,45 @@
+def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
+    # Преобразование задач в кортежи для работы с heapq
+    task_heap = [(priority, duration, deps, name) for name, (duration, deps, priority) in tasks]
+    
+    # Сортировка: prioritize большие priority (largest), затем меньший duration, затем имя
+    task_heap.sort(key=lambda x: (-x[0], x[1], x[2]))
+    
+    result = []
+    current_time = 0
+    active_tasks = []  # список текущих задач, готовых к запуску
+    
+    while task_heap and workers > 0:
+        priority, duration, deps, name = heapq.heappop(task_heap)
+        
+        if len(active_tasks) < workers:  # не более workers одновременно
+            active_tasks.append((name, duration))
+            result.append(name)
+            current_time += duration
+        else:
+            for task_name, dur in active_tasks:
+                if task_name == name and dur <= duration:  # не прерываемся
+                    active_tasks.remove((task_name, dur))
+                    result.append(task_name)
+                    current_time += dur
+                    break
+    
+    return len(result) if result else None
+
+def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
+    # Создаем граф зависимостей из deps
+    graph = {}
+    for name, (duration, deps, _) in tasks.items():
+        for dep in deps:
+            if dep not in graph:
+                graph[dep] = []
+            graph[dep].append(name)
+    
+    # Определение циклов через DFS или BFS
+    has_cycle = detect_cycle(graph)
+    if has_cycle:
+        return None
+    
+    # Найти максимальный путь (сумма duration) с использованием workers
+    max_duration_path = find_max_duration_path(graph, workers)
+    return max_duration_path if max_duration_path is not None else 0

@@ -1,11 +1,12 @@
 {
-  "hardware": "AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon",
+  "hardware": "M4 | 24GB | 10-core GPU M4",
   "savedHardware": [
+    "M4 | 24GB | 10-core GPU M4",
     "AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon",
     "AMD RYZEN 7 250 | 32 GB 5600 | 780m Radeon"
   ],
   "defaults": {
-    "hardware": "AMD Ryzen 7 7735HS | 32GB 5600 | 680m Radeon",
+    "hardware": "M4 | 24GB | 10-core GPU M4",
     "timeoutMs": 9000000
   }
 }

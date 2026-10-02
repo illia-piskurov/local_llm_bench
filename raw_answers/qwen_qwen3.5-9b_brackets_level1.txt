@@ -3,23 +3,33 @@
 ```python
 def is_balanced(s: str) -> bool:
     stack = []
-    opening_brackets = {'(', '[', '{'}
-    closing_to_opening = {')': '(', ']': '[', '}': '{'}
-    
+    pairs = {')': '(', ']': '[', '}': '{'}
+    opening = set(pairs.values())
+    closing = set(pairs.keys())
+
     for char in s:
-        if char in opening_brackets:
+        if char in opening:
             stack.append(char)
-        elif char in closing_to_opening:
-            if not stack or stack.pop() != closing_to_opening[char]:
+        elif char in closing:
+            if not stack:
                 return False
-    
+            top = stack.pop()
+            if pairs[char] != top:
+                return False
     return len(stack) == 0
 
 if __name__ == "__main__":
-    # Примеры использования
-    print(is_balanced("()"))          # True
-    print(is_balanced("([])") )       # True
-    print(is_balanced("{[}]") )       # False
-    print(is_balanced("a(b)c") )      # True
-    print(is_balanced("") )           # True
+    test_cases = [
+        ("()", True),
+        ("([])", True),
+        ("([)]", False),
+        ("(]", False),
+        ("", True),
+        ("a(b)c", True),
+        ("(((", False),
+        (")))", False),
+    ]
+    for s, expected in test_cases:
+        result = is_balanced(s)
+        print(f"Input: {s}, Expected: {expected}, Got: {result}, Pass: {result == expected}")
 ```

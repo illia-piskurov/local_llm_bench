@@ -2,53 +2,53 @@
 def compile_query(query: dict) -> dict:
     def build_condition(condition):
         if isinstance(condition, dict):
-            op = list(condition.keys())[0]
-            values = condition[op]
-            if op in ['AND', 'OR']:
-                sub_conditions = [build_condition(c) for c in values]
-                return f"({') {op.upper()} ('.join(sub_conditions)})" if len(values) > 1 else sub_conditions[0]
-            elif op == 'NOT':
-                return f"NOT ({build_condition(values)})" if len(values) == 1 else "NOT ({})".format(
-                    build_condition(values[0]))
+            if 'AND' in condition:
+                return '(' + ' AND '.join(build_condition(c) for c in condition['AND']) + ')'
+            elif 'OR' in condition:
+                return '(' + ' OR '.join(build_condition(c) for c in condition['OR']) + ')'
             else:
-                field, value = list(condition.items())[0]
+                field = list(condition.keys())[0]
+                op = condition[field]
+                if isinstance(op, str):
+                    return f"{field} {op}"
+                value = op
                 params.append(value)
-                return f"{field} = ${{len(params)}}"
+                return "$" + str(len(params))
         elif isinstance(condition, list):
             return ' AND '.join(build_condition(c) for c in condition)
-        else:
-            raise ValueError("Unsupported condition type")
 
     def build_select(columns):
-        if not columns:
-            return "*"
-        return ", ".join(columns)
+        return "SELECT " + (",".join(columns) if columns else "*")
 
     def build_order_by(order_by):
-        if not order_by:
-            return ""
-        return " ORDER BY " + ", ".join(f"{field} {'ASC' if 'dir' not in o else o['dir']}" for field, o in order_by)
+        order_clauses = [f"{field} {direction}" for field, direction in (o.get('field', ''), o.get('dir', 'ASC'))]
+        return "ORDER BY " + ", ".join(order_clauses) if order_by else ""
 
     def build_limit_offset(limit, offset):
-        limit_clause = f" LIMIT {limit}" if limit is not None else ""
-        offset_clause = f" OFFSET {offset}" if offset is not None else ""
-        return limit_clause + offset_clause
+        limit_clause = f"LIMIT {limit}" if limit is not None else ""
+        offset_clause = f"OFFSET {offset}" if offset is not None else ""
+        return " ".join(filter(None, [limit_clause, offset_clause]))
 
     params = []
     sql_parts = []
 
     table = query.get('table')
+    sql_parts.append(f"{table}")
+
     select = query.get('select', ['*'])
+    sql_parts.append(build_select(select))
+
     where = query.get('where')
-    order_by = query.get('orderBy', [])
-    limit = query.get('limit')
-    offset = query.get('offset')
-
-    sql_parts.append(f"SELECT {build_select(select)} FROM {table}")
     if where:
-        sql_parts.append("WHERE " + build_condition(where))
-    sql_parts.extend(build_order_by(order_by))
-    sql_parts.append(build_limit_offset(limit, offset))
+        condition_str = build_condition(where)
+        sql_parts.append("WHERE")
+        sql_parts.append(condition_str)
 
-    return {"sql": ' '.join(sql_parts), "params": params}
+    order_by = query.get('orderBy', [])
+    sql_parts.append(build_order_by(order_by))
+
+    limit_offset = query.get('limit') or query.get('offset')
+    sql_parts.append(build_limit_offset(limit_offset[0] if 'limit' in limit_offset else None, limit_offset[1] if 'offset' in limit_offset else None))
+
+    return {"sql": " ".join(sql_parts), "params": params}
 ```

@@ -1,0 +1,16 @@
+{
+  "model": "qwen/qwen3-1.7b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-09-03 12:45:19",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "simple_select_all: SQL: ожидали 'SELECT * FROM products', получили '* FROM products'",
+    "select_specific_columns: SQL: ожидали 'SELECT id, email, created_at FROM users', получили 'id, email, created_at FROM users'",
+    "simple_where_equality: SQL: ожидали 'SELECT * FROM users WHERE status = $1', получили '* FROM users status = $1'",
+    "where_and_or_nested: исключение/таймаут: 'field'",
+    "order_by_limit_offset: SQL: ожидали 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', получили '* FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20'",
+    "multiple_and_conditions: исключение/таймаут: 'list' object has no attribute 'join'"
+  ]
+}

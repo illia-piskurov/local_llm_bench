@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-fifvz9e0btv64dfp6bl8b9",
+  "object": "chat.completion",
+  "created": 1787578554,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const { schema, data, definitions } = input;\n\n  // Resolve $ref in a schema object\n  function resolve(schemaNode) {\n    if (schemaNode && typeof schemaNode === 'object' && '$ref' in schemaNode) {\n      const refPath = schemaNode['$ref'];\n      // Only support \"#/definitions/<Name>\" or subpaths\n      const parts = refPath.split('/');\n      if (parts[0] !== '#' || parts[1] !== 'definitions') throw new Error('Unsupported $ref');\n      let def = definitions;\n      for (let i = 2; i < parts.length; i++) {\n        def = def && def[parts[i]];\n      }\n      // Return a copy to avoid mutation\n      return clone(def);\n    }\n    return schemaNode;\n  }\n\n  // Simple deep clone for plain objects/arrays\n  function clone(obj) {\n    if (Array.isArray(obj)) return obj.map(clone);\n    if (obj && typeof obj === 'object') {\n      const res = {};\n      for (const k in obj) res[k] = clone(obj[k]);\n      return res;\n    }\n    return obj;\n  }\n\n  const errors = [];\n\n  function validate(value, schemaNode, path) {\n    const sch = resolve(schemaNode);\n    if (!sch || typeof sch !== 'object') return;\n\n    // Type validation\n    if ('type' in sch) {\n      switch (sch.type) {\n        case 'string':\n          if (typeof value !== 'string')\n            errors.push({ path, message: 'Expected type string' });\n          else if ('minLength' in sch && value.length < sch.minLength)\n            errors.push({ path, message: `String length ${value.length} is less than minimum ${sch.minLength}`});\n          break;\n        case 'number':\n          if (typeof value !== 'number')\n            errors.push({ path, message: 'Expected type number' });\n          break;\n        case 'boolean':\n          if (typeof value !== 'boolean')\n            errors.push({ path, message: 'Expected type boolean' });\n          break;\n        case 'array':\n          if (!Array.isArray(value))\n            errors.push({ path, message: 'Expected type array' });\n          else {\n            if ('minItems' in sch && value.length < sch.minItems)\n              errors.push({ path, message: `Array length ${value.length} is less than minimum ${sch.minItems}`});\n            if ('items' in sch) {\n              for (let i = 0; i < value.length; i++) {\n                validate(value[i], sch.items, `${path}/items/${i}`);\n              }\n            }\n          }\n          break;\n        case 'object':\n          if (typeof value !== 'object' || value === null || Array.isArray(value))\n            errors.push({ path, message: 'Expected type object' });\n          else {\n            // required\n            if ('required' in sch) {\n              for (const req of sch.required) {\n                if (!(req in value))\n                  errors.push({ path, message: `Missing required property '${req}'`});\n              }\n            }\n            // properties\n            const props = sch.properties || {};\n            for (const key in props) {\n              if (key in value)\n                validate(value[key], props[key], `${path}/${key}`);\n            }\n            // additionalProperties\n            if (sch.additionalProperties === false) {\n              for (const key in value) {\n                if (!(key in props))\n                  errors.push({ path, message: `Unexpected property '${key}'`});\n              }\n            }\n          }\n          break;\n        default:\n          // unsupported type ignored\n          break;\n      }\n    }\n\n    // enum validation\n    if ('enum' in sch && Array.isArray(sch.enum)) {\n      if (!sch.enum.includes(value))\n        errors.push({ path, message: 'Value not in enum' });\n    }\n  }\n\n  validate(data, schema, '#');\n\n  return { valid: errors.length === 0, errors };\n}\n",
+        "reasoning": "Need to implement recursive validation with ref resolution. Return errors array. Ensure no mutation. Use deep copy? We'll just read.\n\nImplement resolveRef(schema, definitions). For $ref property only? Might be nested. We'll create a function getSchema(node) that if node has $ref then replace with referenced schema (deep clone?). But need to keep original for recursion? We can inline resolution by returning resolved object but not mutate input.\n\nWe'll implement validate(value, schema, path). If schema has $ref, resolve first.\n\nCheck type: typeof value; number/boolean/string etc. For array check Array.isArray. For object typeof 'object' and not null.\n\nObject: required keys present. properties defined. additionalProperties false disallows others.\n\nArray: items schema, minItems.\n\nString: minLength.\n\nEnum: check inclusion.\n\nCollect errors in array.\n\nReturn valid flag based on length==0.\n\nImplement deep clone for referenced schemas? Not needed if we don't mutate. We'll just return the referenced object directly; but careful that modifications not happen.\n\nOk.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 455,
+    "completion_tokens": 1063,
+    "total_tokens": 1518,
+    "completion_tokens_details": {
+      "reasoning_tokens": 212
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

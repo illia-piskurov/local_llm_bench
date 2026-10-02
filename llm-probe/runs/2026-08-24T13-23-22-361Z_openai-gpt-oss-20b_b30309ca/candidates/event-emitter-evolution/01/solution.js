@@ -1,0 +1,55 @@
+export function solve(input) {
+  const ops = input.operations || [];
+  // Each registration: {event, id, once}
+  const listeners = [];
+  const logs = [];
+
+  for (const op of ops) {
+    switch (op.op) {
+      case 'on':
+        listeners.push({ event: op.event, id: op.listenerId, once: false });
+        break;
+      case 'once':
+        listeners.push({ event: op.event, id: op.listenerId, once: true });
+        break;
+      case 'off':
+        // remove matching listener
+        for (let i = 0; i < listeners.length; i++) {
+          const l = listeners[i];
+          if (l.event === op.event && l.id === op.listenerId) {
+            listeners.splice(i, 1);
+            break;
+          }
+        }
+        break;
+      case 'emit':
+        // iterate over a snapshot to allow removal during iteration
+        for (let i = 0; i < listeners.length; ) {
+          const l = listeners[i];
+          let match = false;
+          if (l.event === '*') {
+            match = true;
+          } else if (l.event.endsWith('.*')) {
+            const prefix = l.event.slice(0, -1); // keep trailing dot
+            if (op.event.startsWith(prefix)) match = true;
+          } else if (l.event === op.event) {
+            match = true;
+          }
+          if (match) {
+            logs.push({ listenerId: l.id, event: op.event, payload: op.payload });
+            if (l.once) {
+              listeners.splice(i, 1);
+              continue; // skip increment
+            }
+          }
+          i++;
+        }
+        break;
+      default:
+        // ignore unknown ops
+        break;
+    }
+  }
+
+  return { log: logs };
+}

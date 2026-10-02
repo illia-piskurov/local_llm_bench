@@ -1,0 +1,71 @@
+```python
+import heapq
+from collections import defaultdict, deque
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    # Check for cycles in dependencies
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task in tasks}
+    for task, (duration, deps, priority) in tasks.items():
+        for dep in deps:
+            graph[dep].append(task)
+            in_degree[task] += 1
+    
+    # Topological sort
+    queue = deque()
+    for task in tasks:
+        if in_degree[task] == 0:
+            queue.append(task)
+    
+    top_order = []
+    while queue:
+        task = queue.popleft()
+        top_order.append(task)
+        for neighbor in graph[task]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+    
+    if len(top_order) != len(tasks):
+        return None
+    
+    # Compute earliest completion times
+    earliest_completion = {task: 0 for task in tasks}
+    for i, task in enumerate(top_order):
+        for j in range(i + 1, len(top_order)):
+            if top_order[j] in graph[task]:
+                earliest_completion[task] = max(earliest_completion[task], earliest_completion[top_order[j]] + tasks[top_order[j]][0])
+    
+    # Now schedule tasks with limited workers
+    available_tasks = []
+    for task in tasks:
+        if earliest_completion[task] == 0:
+            heapq.heappush(available_tasks, (-tasks[task][2], tasks[task][0], task))
+    
+    result = []
+    current_time = 0
+    
+    while available_tasks:
+        # Select up to workers tasks
+        selected = []
+        for _ in range(min(workers, len(available_tasks))):
+            neg_priority, duration, task_name = heapq.heappop(available_tasks)
+            selected.append(task_name)
+        
+        if not selected:
+            break
+        
+        result.extend(selected)
+        current_time += sum(tasks[task_name][0] for task_name in selected)
+        
+        # Add new tasks that can be scheduled
+        for task_name in selected:
+            for dep in tasks[task_name][1]:
+                if earliest_completion[dep] < current_time:
+                    heapq.heappush(available_tasks, (-tasks[task_name][2], tasks[task_name][0], task_name))
+    
+    return result
+```

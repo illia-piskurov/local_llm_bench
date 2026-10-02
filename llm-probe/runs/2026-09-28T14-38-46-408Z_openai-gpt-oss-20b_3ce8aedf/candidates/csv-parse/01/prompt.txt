@@ -1,0 +1,16 @@
+Parse a CSV string in input.csv into an array of objects where keys are header column names from the first row. Rules:
+- Rows are separated by newline (
+ or 
+). Ignore empty lines at the end.
+- Values enclosed in double quotes "..." may contain commas and newlines; two double quotes "" represent an escaped quote.
+- Unquoted values should have leading/trailing whitespace trimmed. Quoted values preserve internal whitespace.
+- If input is empty or only has a header row, return [].
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"csv":"name,age,city\nAlice,30,New York\n\"Smith, Bob\",25,\"Los \"\"Angeles\"\"\""}
+output: [{"name":"Alice","age":"30","city":"New York"},{"name":"Smith, Bob","age":"25","city":"Los \"Angeles\""}]

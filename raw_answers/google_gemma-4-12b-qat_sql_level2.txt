@@ -1,0 +1,97 @@
+```python
+def compile_query(query: dict) -> dict:
+    params = []
+
+    def build_where(condition: dict) -> str:
+        if "AND" in condition:
+            sub_conditions = condition["AND"]
+            if len(sub_conditions) > 1:
+                parts = [f"({build_where(c)})" for c in sub_conditions]
+                return " AND ".join(parts)
+            else:
+                return build_where(sub_conditions[0])
+        
+        if "OR" in condition:
+            sub_conditions = condition["OR"]
+            if len(sub_conditions) > 1:
+                parts = [f"({build_where(c)})" for c in sub_conditions]
+                return " OR ".join(parts)
+            else:
+                return build_where(sub_conditions[0])
+        
+        field = condition.get("field")
+        op = condition.get("op")
+        value = condition.get("value")
+
+        if op == "IS NULL" or op == "IS NOT NULL":
+            return f"{field} {op}"
+        
+        if op == "IN":
+            if not isinstance(value, list):
+                value = [value]
+            placeholders = []
+            for v in value:
+                params.append(v)
+                placeholders.append(f"${len(params)}")
+            return f"{field} IN ({', '.join(placeholders)})"
+        
+        params.append(value)
+        return f"{field} {op} ${len(params)}"
+
+    # 1. SELECT
+    select_clause = ", ".join(query.get("select", ["*"]))
+    
+    # 2. FROM
+    table = query.get("table")
+    
+    # 3. JOINS
+    join_clause = ""
+    if "joins" in query and query["joins"]:
+        parts = []
+        for j in query["joins"]:
+            j_type = j.get("type", "INNER")
+            j_table = j.get("table")
+            j_on = j.get("on", {})
+            on_parts = []
+            for left, right in j_on.items():
+                on_parts.append(f"{left} = {right}")
+            on_str = " ON " + " AND ".join(on_parts) if on_parts else ""
+            parts.append(f"{j_type} JOIN {j_table}{on_str}")
+        join_clause = " " + " ".join(parts)
+    
+    # 4. WHERE
+    where_clause = ""
+    if "where" in query and query["where"]:
+        where_clause = " WHERE " + build_where(query["where"])
+    
+    # 5. GROUP BY
+    group_clause = ""
+    if "groupBy" in query and query["groupBy"]:
+        group_clause = " GROUP BY " + ", ".join(query["groupBy"])
+    
+    # 6. ORDER BY
+    order_clause = ""
+    if "orderBy" in query and query["orderBy"]:
+        orders = []
+        for item in query["orderBy"]:
+            field = item.get("field")
+            direction = item.get("dir", "ASC")
+            orders.append(f"{field} {direction}")
+        order_clause = " ORDER BY " + ", ".join(orders)
+    
+    # 7. LIMIT & OFFSET
+    limit_clause = ""
+    if "limit" in query:
+        limit_clause = f" LIMIT {query['limit']}"
+        
+    offset_clause = ""
+    if "offset" in query:
+        offset_clause = f" OFFSET {query['offset']}"
+
+    sql = f"SELECT {select_clause} FROM {table}{join_clause}{where_clause}{group_clause}{order_clause}{limit_clause}{offset_clause}"
+    
+    return {
+        "sql": sql,
+        "params": params
+    }
+```

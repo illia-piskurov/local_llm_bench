@@ -1,0 +1,13 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-08-25 10:22:38",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "simple_where_equality: исключение/таймаут: Unsupported condition format: status",
+    "where_and_or_nested: исключение/таймаут: Unsupported condition format: [{'field': 'status', 'op': '=', 'value': 'active'}, {'OR': [{'field': 'role', 'op': '=', 'value': 'admin'}, {'field': 'age', 'op': '>=', 'value': 21}]}]",
+    "multiple_and_conditions: исключение/таймаут: Unsupported condition format: [{'field': 'level', 'op': '=', 'value': 'error'}, {'field': 'code', 'op': '!=', 'value': 404}, {'field': 'timestamp', 'op': '>', 'value': 1000}]"
+  ]
+}

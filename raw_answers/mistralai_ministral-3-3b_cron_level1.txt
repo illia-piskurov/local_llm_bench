@@ -1,81 +1,99 @@
 ```python
-from datetime import datetime, timedelta
 import re
+from datetime import datetime, timedelta
+from typing import List
 
-def parse_cron_field(field):
-    """Разбирает одно поле cron-выражения."""
+def parse_cron_field(field: str) -> set[int]:
+    """Парсит одно поле cron-выражения в множество допустимых значений."""
     if field == '*':
-        return set(range(1, 7))  # Для минуты: 0-59; для часа: 0-23; для дня месяца: 1-31; для месяца: 1-12; для дня недели: 0-6
-
-    if field.isdigit():
+        return set(range(1, 7))  # минута/час/день_недели (для часов и минут)
+    elif field == '0':  # для дня месяца и месяца
+        return {int(field)}
+    elif field.isdigit():
         return {int(field)}
 
     # Разбиваем на списки и диапазоны
-    parts = re.split(r'[,\s-]', field)
+    elements = re.findall(r'(\d+|\d{2})|([0-6]|[1-9]\d?)(?:-[0-5]?\d?)?', field)
     result = set()
-
-    for part in parts:
-        if not part:
-            continue
-        if '-' in part:
-            start, end = map(int, part.split('-'))
+    for num, range_str in elements:
+        if range_str:  # диапазон
+            start, end = map(int, range_str.split('-'))
             result.update(range(start, end + 1))
-        else:
-            try:
-                num = int(part)
-                result.add(num)
-            except ValueError:
-                pass
-
+        else:  # число или список
+            num = int(num)
+            if ',' in field:
+                for n in re.findall(r'\d+', field):
+                    result.add(int(n))
     return result
 
-def cron_to_datetime(cron_str):
-    """Преобразует cron-выражение в набор дат."""
-    fields = cron_str.split()
+def validate_cron(cron: str) -> None:
+    """Проверяет корректность cron-выражения."""
+    fields = cron.split()
     if len(fields) != 5:
-        raise ValueError("Cron expression must have exactly 5 fields")
+        raise ValueError("Cron выражение должно содержать ровно 5 полей")
 
-    minute_field, hour_field, day_of_month_field, month_field, day_of_week_field = fields
+    for i, field in enumerate(fields):
+        if i == 0:  # минута
+            parsed = parse_cron_field(field)
+            if not all(0 <= val <= 59 for val in parsed):
+                raise ValueError("Минуты должны быть в диапазоне 0-59")
+        elif i == 1:  # час
+            parsed = parse_cron_field(field)
+            if not all(0 <= val <= 23 for val in parsed):
+                raise ValueError("Часы должны быть в диапазоне 0-23")
+        elif i == 2:  # день месяца
+            parsed = parse_cron_field(field)
+            if not all(1 <= val <= 31 for val in parsed):
+                raise ValueError("День месяца должен быть в диапазоне 1-31")
+        elif i == 3:  # месяц
+            parsed = parse_cron_field(field)
+            if not all(1 <= val <= 12 for val in parsed):
+                raise ValueError("Месяц должен быть в диапазоне 1-12")
+        else:  # день недели (0-6)
+            parsed = parse_cron_field(field)
+            if not all(0 <= val <= 6 for val in parsed):
+                raise ValueError("День недели должен быть в диапазоне 0-6")
 
-    # Разбираем каждое поле
-    minutes = parse_cron_field(minute_field)
-    hours = parse_cron_field(hour_field)
-    days_of_month = parse_cron_field(day_of_month_field)
-    months = parse_cron_field(month_field)
-    days_of_week = parse_cron_field(day_of_week_field)
+def next_runs(cron: str, from_time: str, count: int) -> List[str]:
+    """Возвращает список следующих моментов запуска cron-выражения."""
+    validate_cron(cron)
+    fields = cron.split()
+    minutes_field, hours_field, day_month_field, month_field, week_day_field = map(parse_cron_field, fields)
 
-    # Генерируем даты в диапазоне 1-31 дней для дня месяца
-    for month in range(1, 13):
-        if month not in months:
+    current_time = datetime.fromisoformat(from_time.replace('Z', '+00:00'))
+    result = []
+
+    while len(result) < count:
+        next_run = current_time
+        # Проверяем минуту
+        if not any(minute in minutes_field for minute in range(60)):
+            next_run += timedelta(minutes=1)
             continue
 
-        for day in days_of_month:
-            try:
-                dt = datetime(year=2024, month=month, day=day)
-                # Проверяем день недели (переводим в формат datetime)
-                week_day = dt.weekday()  # Monday is 0
-                if week_day in days_of_week:
-                    yield dt
+        # Проверяем час
+        if not any(hour in hours_field for hour in range(24)):
+            next_run += timedelta(days=7)  # сдвигаем на неделю, если не подходит час
+            continue
 
-            except ValueError:  # Если день не существует для данного месяца
-                continue
+        # Проверяем день месяца (если поле не '*')
+        if day_month_field and not any(day in day_month_field for day in range(1, 32)):
+            next_run += timedelta(days=7)  # сдвигаем на неделю
+            continue
 
-def next_runs(cron: str, from_time: str, count: int) -> list[str]:
-    """Возвращает список следующих моментов запуска cron-выражения."""
-    try:
-        start_dt = datetime.fromisoformat(from_time.replace('Z', '+00:00'))
-    except ValueError:
-        raise ValueError("Invalid ISO 8601 UTC format")
+        # Проверяем месяц (если поле не '*')
+        if month_field and not any(month in month_field for month in range(1, 13)):
+            next_run += timedelta(days=30)  # максимальный день в месяце + 7 дней запаса
+            continue
 
-    next_dates = []
-    current_dt = start_dt
+        # Проверяем день недели (если поле не '*')
+        if week_day_field and not any(day % 7 in week_day_field for day in range(14)):
+            next_run += timedelta(days=7)  # сдвигаем на неделю
+            continue
 
-    while len(next_dates) < count:
-        # Находим следующую дату, удовлетворяющую cron
-        for candidate in cron_to_datetime(cron):
-            if candidate > current_dt:
-                next_dates.append(candidate.isoformat().replace('+00:00', 'Z'))
-                current_dt = candidate
+        # Если все условия выполнены, добавляем в результат
+        result.append(next_run.isoformat().replace('+00:00', 'Z').replace('.0', '.000'))
 
-    return next_dates[:count]
+        current_time += timedelta(minutes=1)
+
+    return result[:count]
 ```

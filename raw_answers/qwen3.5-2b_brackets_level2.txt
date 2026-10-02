@@ -1,0 +1,62 @@
+```python
+def is_balanced(s: str) -> bool:
+    """Проверка сбалансированности скобок."""
+    stack = []
+    
+    # Mapping from closing bracket to its corresponding opening bracket
+    close_to_open = {')': '(', ']': '[', '}': '{'}
+    
+    for char in s:
+        if char in close_to_open.values():
+            # It's a closing bracket - check if it matches the top of stack
+            if not stack or stack[-1] != close_to_open[char]:
+                return False
+            stack.pop()
+        elif char in close_to_open.keys():
+            # It's an opening bracket - push to stack
+            stack.append(char)
+    
+    return len(stack) == 0
+
+
+def max_depth(s: str) -> int:
+    """Верни максимальную глубину вложенности скобок при сканировании строки слева направо."""
+    depth = 0
+    
+    for char in s:
+        if char in close_to_open.values():
+            # It's a closing bracket - decrease depth (if stack is not empty)
+            if len(stack) > 0:
+                depth -= 1
+            else:
+                depth = max(depth, 0)
+        elif char in close_to_open.keys():
+            # It's an opening bracket - increase depth
+            depth += 1
+        
+        # Track maximum depth at any point
+        if depth > max_depth_so_far:
+            max_depth_so_far = depth
+    
+    return max_depth
+
+
+def find_unmatched(s: str) -> list[int]:
+    """Верни отсортированный по возрастанию список индексов всех "несовпавших" скобок."""
+    unmatched_indices = []
+    
+    stack = []
+    
+    for i, char in enumerate(s):
+        if char in close_to_open.values():
+            # It's a closing bracket - check if it matches the top of stack
+            if not stack or stack[-1] != close_to_open[char]:
+                unmatched_indices.append(i)
+            else:
+                stack.pop()
+        elif char in close_to_open.keys():
+            # It's an opening bracket - push to stack
+            stack.append(char)
+    
+    return sorted(unmatched_indices)
+```

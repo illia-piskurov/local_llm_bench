@@ -1,0 +1,6 @@
+{"at":"2026-08-26T11:56:48.531Z","type":"run_started"}
+{"at":"2026-08-26T11:56:48.532Z","type":"request_started","taskId":"flat-to-tree","attempt":1}
+{"at":"2026-08-26T12:01:53.674Z","type":"provider_error","taskId":"flat-to-tree","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
+{"at":"2026-08-26T12:01:53.678Z","type":"request_started","taskId":"paginate-and-sort","attempt":1}
+{"at":"2026-08-26T12:06:59.652Z","type":"provider_error","taskId":"paginate-and-sort","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
+{"at":"2026-08-26T12:06:59.655Z","type":"request_started","taskId":"deep-merge","attempt":1}

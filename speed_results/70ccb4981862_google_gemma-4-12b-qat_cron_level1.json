@@ -1,0 +1,16 @@
+{
+  "host_id": "70ccb4981862",
+  "host_label": "M4 | 24GB Unified Memory | 10-core GPU",
+  "model": "google/gemma-4-12b-qat",
+  "benchmark": "cron",
+  "level": "level1",
+  "tested_at": "2026-10-02 11:23:37",
+  "stats": {
+    "input_tokens": 499,
+    "total_output_tokens": 7693,
+    "reasoning_output_tokens": 7690,
+    "tokens_per_second": 5.913642997502258,
+    "time_to_first_token_seconds": 4.820887,
+    "model_load_time_seconds": null
+  }
+}

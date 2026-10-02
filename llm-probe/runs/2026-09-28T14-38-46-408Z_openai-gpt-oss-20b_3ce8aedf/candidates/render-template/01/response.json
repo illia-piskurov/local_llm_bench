@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-g70nr81hkwqazdk04gafcj",
+  "object": "chat.completion",
+  "created": 1790606391,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const template = input.template;\n  const data = input.data;\n  return template.replace(/{{\\s*([^}]+?)\\s*}}/g, (_, expr) => {\n    const parts = expr.split('.');\n    let value = data;\n    for (const part of parts) {\n      if (value == null || typeof value !== 'object' && typeof value !== 'function') {\n        value = undefined;\n        break;\n      }\n      if (Array.isArray(value) && !isNaN(part)) {\n        value = value[Number(part)];\n      } else {\n        value = value[part];\n      }\n    }\n    if (value === undefined || value === null) return '';\n    return String(value);\n  });\n}",
+        "reasoning": "Need to parse placeholders. Use regex /{{\\s*([^}]+?)\\s*}}/g. For each match, evaluate path: split by '.' but need to handle array indices numeric string. Iterate over parts; if current is undefined/null, break. Return value or \"\". Convert to string. Ensure not mutating input. Use Object.defineProperty? just read. Return final string.\n\nImplement solve(input).",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 321,
+    "completion_tokens": 252,
+    "total_tokens": 573,
+    "completion_tokens_details": {
+      "reasoning_tokens": 84
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

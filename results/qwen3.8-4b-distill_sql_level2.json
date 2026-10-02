@@ -1,0 +1,11 @@
+{
+  "model": "qwen3.8-4b-distill",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-08-25 16:43:44",
+  "passed": 0,
+  "total": 11,
+  "failures": [
+    "не удалось загрузить решение: invalid syntax (qwen3.8-4b-distill_sql_level2.py, line 1638)"
+  ]
+}

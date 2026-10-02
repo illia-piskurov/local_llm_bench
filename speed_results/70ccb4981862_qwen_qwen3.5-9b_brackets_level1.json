@@ -1,0 +1,16 @@
+{
+  "host_id": "70ccb4981862",
+  "host_label": "M4 | 24GB Unified Memory | 10-core GPU",
+  "model": "qwen/qwen3.5-9b",
+  "benchmark": "brackets",
+  "level": "level1",
+  "tested_at": "2026-09-28 16:42:43",
+  "stats": {
+    "input_tokens": 194,
+    "total_output_tokens": 5797,
+    "reasoning_output_tokens": 5550,
+    "tokens_per_second": 13.245856775359275,
+    "time_to_first_token_seconds": 1.569,
+    "model_load_time_seconds": null
+  }
+}

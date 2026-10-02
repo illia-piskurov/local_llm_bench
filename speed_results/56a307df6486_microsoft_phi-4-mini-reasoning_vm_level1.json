@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "microsoft/phi-4-mini-reasoning",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-09-02 11:05:33",
+  "stats": {
+    "input_tokens": 328,
+    "total_output_tokens": 16056,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 12.724969706983085,
+    "time_to_first_token_seconds": 0.340552,
+    "model_load_time_seconds": null
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "smollm3-3b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-09-02 15:38:50",
+  "stats": {
+    "input_tokens": 599,
+    "total_output_tokens": 12969,
+    "reasoning_output_tokens": 2047,
+    "tokens_per_second": 21.768036446434255,
+    "time_to_first_token_seconds": 2.8793249999999997,
+    "model_load_time_seconds": null
+  }
+}

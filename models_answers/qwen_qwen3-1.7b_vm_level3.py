@@ -1,0 +1,193 @@
+def run(program: str) -> list[str]:
+    lines = []
+    for i, line in enumerate(program.split('\n')):
+        stripped_line = line.strip()
+        if not stripped_line or stripped_line.startswith('#'):
+            continue
+        lines.append((i, stripped_line))
+    
+    stack = []
+    output = []
+    current_line = 0
+    
+    label_map = {}
+    label_positions = []
+    
+    # For subroutines and variables
+    subroutine_stack = []
+    variable_map = {}
+    
+    for i, line in enumerate(lines):
+        current_line = i
+        parts = line[1:].split()
+        command = parts[0]
+        
+        if command == 'LABEL':
+            if len(parts) != 2:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            name = parts[1]
+            label_map[name] = current_line
+            label_positions.append(name)
+        elif command == 'JMP':
+            if len(parts) != 2:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            name = parts[1]
+            target = label_map[name]
+            current_line = target
+        elif command == 'JZ':
+            if len(parts) != 3:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            name = parts[1]
+            if stack and stack[-1] == 0:
+                current_line = label_map[name]
+        elif command == 'JNZ':
+            if len(parts) != 3:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            name = parts[1]
+            if stack and stack[-1] != 0:
+                current_line = label_map[name]
+        elif command == 'CALL':
+            if len(parts) != 2:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            name = parts[1]
+            # Save return address
+            subroutine_stack.append(current_line)
+            current_line = label_map[name]
+        elif command == 'RET':
+            if not subroutine_stack:
+                output.append(f"Ошибка: стек вызовов пуст на строке {current_line + 1}")
+                continue
+            saved_address = subroutine_stack.pop()
+            current_line = saved_address
+        elif command == 'EQ':
+            if len(parts) != 2:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            a = stack.pop()
+            b = stack.pop()
+            result = 1 if a == b else 0
+            output.append(str(result))
+            stack.append(result)
+        elif command == 'GT':
+            if len(parts) != 2:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            a = stack.pop()
+            b = stack.pop()
+            result = 1 if a > b else 0
+            output.append(str(result))
+            stack.append(result)
+        elif command == 'LT':
+            if len(parts) != 2:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            a = stack.pop()
+            b = stack.pop()
+            result = 1 if a < b else 0
+            output.append(str(result))
+            stack.append(result)
+        elif command == 'STORE':
+            if len(parts) != 2:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            var = parts[1]
+            if var in variable_map:
+                output.append(f"Ошибка: переменная '{var}' уже существует на строке {current_line + 1}")
+                continue
+            value = stack.pop()
+            variable_map[var] = value
+        elif command == 'LOAD':
+            if len(parts) != 2:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            var = parts[1]
+            if var not in variable_map:
+                output.append(f"Ошибка: переменная '{var}' не существует на строке {current_line + 1}")
+                continue
+            value = variable_map[var]
+            stack.append(value)
+        else:
+            output.append(f"Ошибка: неизвестная инструкция на строке {current_line + 1}")
+    
+    for line in lines:
+        current_line = line[0]
+        parts = line[1:].split()
+        command = parts[0]
+        
+        if command == 'PUSH':
+            if len(parts) != 2:
+                output.append(f"Ошибка: неверное количество аргументов на строке {current_line + 1}")
+                continue
+            n = int(parts[1])
+            stack.append(n)
+        elif command == 'POP':
+            if not stack:
+                output.append(f"Ошибка: стек пуст на строке {current_line + 1}")
+                continue
+            val = stack.pop()
+            output.append(str(val))
+        elif command == 'ADD':
+            if len(stack) < 2:
+                output.append(f"Ошибка: стек не имеет достаточно элементов на строке {current_line + 1}")
+                continue
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a + b)
+            output.append(str(a + b))
+        elif command == 'SUB':
+            if len(stack) < 2:
+                output.append(f"Ошибка: стек не имеет достаточно элементов на строке {current_line + 1}")
+                continue
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a - b)
+            output.append(str(a - b))
+        elif command == 'MUL':
+            if len(stack) < 2:
+                output.append(f"Ошибка: стек не имеет достаточно элементов на строке {current_line + 1}")
+                continue
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a * b)
+            output.append(str(a * b))
+        elif command == 'DIV':
+            if len(stack) < 2:
+                output.append(f"Ошибка: стек не имеет достаточно элементов на строке {current_line + 1}")
+                continue
+            a = stack.pop()
+            b = stack.pop()
+            if b == 0:
+                output.append(f"Ошибка: деление на ноль на строке {current_line + 1}")
+                continue
+            stack.append(a // b)
+            output.append(str(a // b))
+        elif command == 'DUP':
+            if len(stack) < 1:
+                output.append(f"Ошибка: стек пуст на строке {current_line + 1}")
+                continue
+            stack.append(stack[-1])
+            output.append(str(stack[-1]))
+        elif command == 'SWAP':
+            if len(stack) < 2:
+                output.append(f"Ошибка: стек не имеет достаточно элементов на строке {current_line + 1}")
+                continue
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a)
+            stack.append(b)
+            output.append(str(b))
+        elif command == 'PRINT':
+            if not stack:
+                output.append(f"Ошибка: стек пуст на строке {current_line + 1}")
+                continue
+            val = stack[-1]
+            output.append(str(val))
+        else:
+            output.append(f"Ошибка: неизвестная инструкция на строке {current_line + 1}")
+    
+    return output

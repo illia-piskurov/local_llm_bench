@@ -1,0 +1,33 @@
+```python
+import heapq
+from typing import Any, List, Optional, Tuple
+
+def plan_order(tasks: dict[str, Tuple[int, List[str], int]], workers: int) -> Optional[List[str]]:
+    # Преобразование задач в кортежи для работы с heapq
+    task_heap = [(priority, duration, deps, name) for name, (duration, deps, priority) in tasks]
+    
+    # Сортировка: prioritize большие priority, затем меньший duration, затем имя
+    task_heap.sort(key=lambda x: (-x[0], x[1], x[2]))
+    
+    result = []
+    current_time = 0
+    active_tasks = []  # список текущих задач, готовых к запуску
+    
+    while task_heap and workers > 0:
+        priority, duration, deps, name = heapq.heappop(task_heap)
+        
+        if len(active_tasks) < workers:  # не более workers одновременно
+            active_tasks.append((name, duration))
+            result.append(name)
+            current_time += duration
+        else:
+            # Попробуем выполнить эту задачу в текущем моменте
+            for task_name, dur in active_tasks:
+                if task_name == name and dur <= duration:  # не прерываемся
+                    active_tasks.remove((task_name, dur))
+                    result.append(task_name)
+                    current_time += dur
+                    break
+    
+    return result if len(result) > 0 else None
+```

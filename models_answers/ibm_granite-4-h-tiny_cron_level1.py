@@ -1,45 +1,51 @@
 import datetime
+import calendar
 
-def parse_cron(cron):
-    parts = cron.split()
-    if len(parts) != 5:
-        raise ValueError("Invalid cron expression")
-    
-    minute, hour, day_of_month, month, day_of_week = map(lambda x: x.strip(), parts)
-    
-    def parse_range(value):
-        if '-' in value:
-            start, end = map(int, value.split('-'))
-            return range(start, end + 1)
-        elif ',' in value:
-            return set(map(int, value.split(',')))
-        else:
-            return {int(value)}
-    
-    minute_set = parse_range(minute) if minute != '*' else set(range(60))
-    hour_set = parse_range(hour) if hour != '*' else set(range(24))
-    day_of_month_set = parse_range(day_of_month) if day_of_month != '*' else set(range(1, 32))
-    month_set = parse_range(month) if month != '*' else set(range(1, 13))
-    day_of_week_set = parse_range(day_of_week) if day_of_week != '*' else set(range(7))
-    
-    return minute_set, hour_set, day_of_month_set, month_set, day_of_week_set
-
-def next_runs(cron: str, from_time: str, count: int):
-    minute_set, hour_set, day_of_month_set, month_set, day_of_week_set = parse_cron(cron)
-    
-    start_dt = datetime.datetime.fromisoformat(from_time.rstrip('Z')) + datetime.timedelta(seconds=1)
-    
-    next_times = []
-    current_time = start_dt
-    while len(next_times) < count:
-        if (current_time.minute in minute_set and 
-            current_time.hour in hour_set and 
-            current_time.day in day_of_month_set and 
-            current_time.month in month_set and 
-            current_time.weekday() in day_of_week_set):
-            
-            next_times.append(current_time.isoformat().replace('+00:00', 'Z'))
+def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+    def parse_cron(cron_expr):
+        parts = cron_expr.split()
+        if len(parts) != 5:
+            raise ValueError("Invalid cron expression")
         
-        current_time += datetime.timedelta(seconds=1)
-    
-    return next_times
+        minute = parse_field(parts[0], range(60))
+        hour = parse_field(parts[1], range(24))
+        day_of_month = parse_field(parts[2], lambda x: calendar.monthrange(from_time.year, from_time.month)[1] if from_time.month == int(parts[3]) else None)
+        month = parse_field(parts[3], range(1, 13))
+        day_of_week = parse_field(parts[4], range(7))
+
+        return minute, hour, day_of_month, month, day_of_week
+
+    def parse_field(field_str, valid_range):
+        if field_str == '*':
+            return lambda: True
+        elif '-' in field_str:
+            start, end = map(int, field_str.split('-'))
+            if start > end:
+                raise ValueError("Invalid range")
+            return lambda x: start <= x <= end
+        else:
+            return lambda x: x == int(field_str)
+
+    def next_date(dt, minute_func, hour_func, day_of_month_func, month_func, day_of_week_func):
+        while True:
+            dt += datetime.timedelta(minutes=1)
+            if (minute_func() and 
+                hour_func(dt.hour) and 
+                day_of_month_func(dt.day) and 
+                month_func(dt.month) and 
+                day_of_week_func(dt.weekday()) == int(day_of_week_func(0))):
+                return dt
+
+    from_time = datetime.datetime.fromisoformat(from_time.rstrip('Z'))
+    minute, hour, day_of_month, month, day_of_week = parse_cron(cron)
+
+    results = []
+    for _ in range(count):
+        next_dt = next_date(from_time, lambda: minute(), lambda h: hour() if h == from_time.hour else True,
+                            lambda d: day_of_month()(d) if d == from_time.day else None,
+                            lambda m: month()(m) if m == from_time.month else True,
+                            lambda w: day_of_week()(w) if w == from_time.weekday() else 0)
+        results.append(next_dt.isoformat().replace('+00:00', 'Z'))
+        from_time = next_dt + datetime.timedelta(seconds=1)
+
+    return results

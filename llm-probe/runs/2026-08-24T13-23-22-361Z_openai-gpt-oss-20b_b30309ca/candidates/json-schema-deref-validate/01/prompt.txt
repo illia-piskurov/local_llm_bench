@@ -1,0 +1,20 @@
+Validate input.data against a JSON schema in input.schema, resolving $ref pointers using input.definitions.
+Rules:
+1. $ref format: "#/definitions/<Name>" (or subpaths like "#/definitions/<Name>/properties/<Prop>"). Resolve pointers from input.definitions.
+2. Validation:
+   - type: 'string' | 'number' | 'boolean' | 'array' | 'object'
+   - object: 'properties', 'required' (array of required keys), 'additionalProperties: false' (disallows unlisted keys)
+   - array: 'items' (schema for elements), 'minItems' (minimum length)
+   - string: 'minLength'
+   - enum: array of allowed values
+3. Path in errors: root path is "#", property path is "#/name", array element is "#/items/0".
+Return { valid: boolean, errors: Array<{ path: string, message: string }> }.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"definitions":{"User":{"type":"object","required":["id","role"],"properties":{"id":{"type":"number"},"role":{"$ref":"#/definitions/Role"}}},"Role":{"type":"string","enum":["admin","editor","viewer"]}},"schema":{"$ref":"#/definitions/User"},"data":{"id":"100","role":"superadmin"}}
+output: {"valid":false,"errors":[{"path":"#/id","message":"Expected type number"},{"path":"#/role","message":"Value not in enum"}]}

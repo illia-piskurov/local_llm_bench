@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-7m4um5guopuyxndjrrtl8d",
+  "object": "chat.completion",
+  "created": 1787578804,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const words = Array.isArray(input?.words) ? [...input.words] : [];\n  if (words.length === 0) return [];\n\n  const groupsMap = new Map();\n\n  for (const w of words) {\n    const key = [...w].sort().join('');\n    let arr = groupsMap.get(key);\n    if (!arr) {\n      arr = [];\n      groupsMap.set(key, arr);\n    }\n    arr.push(w);\n  }\n\n  const result = Array.from(groupsMap.values()).map(group => {\n    group.sort();\n    return group;\n  });\n\n  result.sort((a, b) => a[0].localeCompare(b[0]));\n  return result;\n}",
+        "reasoning": "We need to implement grouping. Return array of arrays sorted as specified. Ensure not mutating input.words. We'll copy words array.\n\nImplementation steps: create map from signature (sorted letters) to array. For each word, compute key by sorting characters. Use [...word].sort().join('').\n\nAfter building groups, sort each group alphabetically. Then collect groups into array, sort by first element of each group.\n\nReturn that array.\n\nEdge cases: empty input.words => return [].\n\nOk.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 207,
+    "completion_tokens": 257,
+    "total_tokens": 464,
+    "completion_tokens_details": {
+      "reasoning_tokens": 100
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

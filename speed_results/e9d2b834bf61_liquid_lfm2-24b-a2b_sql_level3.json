@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-08-25 10:22:25",
+  "stats": {
+    "input_tokens": 1628,
+    "total_output_tokens": 2061,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 10.217242267064574,
+    "time_to_first_token_seconds": 17.808605,
+    "model_load_time_seconds": null
+  }
+}

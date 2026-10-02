@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-irttzhby47lk8ok0dlmfbd",
+  "object": "chat.completion",
+  "created": 1787578089,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const { template, data } = input;\n  // Regular expression to match {{ ... }} with optional whitespace\n  const regex = /\\{\\{\\s*([^}]+?)\\s*\\}\\}/g;\n\n  return template.replace(regex, (_, pathStr) => {\n    const parts = pathStr.split('.').map(p => p.trim());\n    let value = data;\n    for (const key of parts) {\n      if (value == null || typeof value !== 'object' && !Array.isArray(value)) {\n        value = undefined;\n        break;\n      }\n      value = value[key];\n      if (value === undefined) break;\n    }\n    if (value === undefined || value === null) return '';\n    // Convert non-string primitives to string\n    return typeof value !== 'string' ? String(value) : value;\n  });\n}",
+        "reasoning": "Implement regex to find all placeholders. For each, trim inside, get path split by '.', traverse data. If any undefined/null -> empty string. Convert primitives to string via String(). Return template.replace.\n\nNeed not mutate input; use a new variable.\n\nReturn string. Ensure escape? just replace.\n\nEdge cases: numbers, booleans convert.\n\nImplement solve.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 321,
+    "completion_tokens": 261,
+    "total_tokens": 582,
+    "completion_tokens_details": {
+      "reasoning_tokens": 72
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

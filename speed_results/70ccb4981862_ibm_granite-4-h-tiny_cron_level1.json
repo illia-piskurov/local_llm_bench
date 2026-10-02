@@ -1,0 +1,16 @@
+{
+  "host_id": "70ccb4981862",
+  "host_label": "M4 | 24GB Unified Memory | 10-core GPU",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "cron",
+  "level": "level1",
+  "tested_at": "2026-10-02 10:53:48",
+  "stats": {
+    "input_tokens": 584,
+    "total_output_tokens": 520,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 48.8550273658753,
+    "time_to_first_token_seconds": 1.0847090000000001,
+    "model_load_time_seconds": null
+  }
+}

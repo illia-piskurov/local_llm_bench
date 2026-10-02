@@ -2,21 +2,10 @@
   "model": "microsoft/phi-4-mini-reasoning",
   "benchmark": "vm",
   "level": "level1",
-  "tested_at": "2026-08-17 15:13:04",
-  "passed": 6,
+  "tested_at": "2026-09-02 11:05:33",
+  "passed": 0,
   "total": 18,
   "failures": [
-    "add: неожиданное исключение: Line 4: PRINT on empty stack",
-    "sub_order: неожиданное исключение: Line 4: PRINT on empty stack",
-    "mul: неожиданное исключение: Line 4: PRINT on empty stack",
-    "div_order: неожиданное исключение: Line 4: PRINT on empty stack",
-    "div_truncate: неожиданное исключение: Line 4: PRINT on empty stack",
-    "dup: неожиданное исключение: Line 4: PRINT on empty stack",
-    "swap: неожиданное исключение: Line 5: PRINT on empty stack",
-    "pop: ожидалось ['1'], получено ['2', '1']",
-    "comments_and_blank_lines: неожиданное исключение: Line 8: PRINT on empty stack",
-    "multiple_prints: неожиданное исключение: Line 6: PRINT on empty stack",
-    "negative_numbers: неожиданное исключение: Line 4: PRINT on empty stack",
-    "complex_chain: неожиданное исключение: Line 7: Insufficient elements for MUL"
+    "не удалось загрузить решение: unterminated string literal (detected at line 2) (microsoft_phi-4-mini-reasoning_vm_level1.py, line 2)"
   ]
 }

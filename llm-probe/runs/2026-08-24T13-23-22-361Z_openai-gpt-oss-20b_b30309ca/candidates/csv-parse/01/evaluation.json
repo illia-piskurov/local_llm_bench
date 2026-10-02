@@ -1,0 +1,26 @@
+{
+  "status": "failed",
+  "passed": 2,
+  "total": 4,
+  "tests": [
+    {
+      "id": "empty",
+      "passed": true
+    },
+    {
+      "id": "header-only",
+      "passed": true
+    },
+    {
+      "id": "quoted-commas",
+      "passed": false,
+      "error": "Expected [{\"id\":\"1\",\"title\":\"Item, special edition\"},{\"id\":\"2\",\"title\":\"Standard\"}], got []"
+    },
+    {
+      "id": "escaped-quotes-and-crlf",
+      "passed": false,
+      "error": "Expected [{\"code\":\"A\",\"desc\":\"He said \\\"Hello\\\"\"},{\"code\":\"B\",\"desc\":\"Simple\"}], got []"
+    }
+  ],
+  "durationMs": 23
+}

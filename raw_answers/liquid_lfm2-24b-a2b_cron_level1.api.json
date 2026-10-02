@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "liquid/lfm2-24b-a2b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```\nimport datetime\nimport calendar\nfrom typing import List, Tuple, Union, Set\n\ndef parse_cron(cron: str) -> Tuple[Union[int, str], ...]:\n    parts = cron.strip().split()\n    if len(parts) != 5:\n        raise ValueError(\"Cron must have exactly 5 fields\")\n    def parse_field(field: str) -> Union[int, List[int], Tuple[int, int]]:\n        if field == '*':\n            return '*'\n        if '-' in field:\n            a, b = field.split('-')\n            a = int(a.strip() or 0)\n            b = int(b.strip() or 100)  # max value\n            return (a, b)\n        if ',' in field:\n            return [int(x.strip()) for x in field.split(',')]\n        if '.' in field:\n            raise ValueError(\"Dot not allowed in cron field\")\n        try:\n            return int(field)\n        except ValueError:\n            raise ValueError(f\"Invalid value in cron field: {field}\")\n    return tuple(parse_field(p) for p in parts)\n\ndef generate_candidates(range_type: Union[str, Tuple[int, int]], start: int, end: int) -> List[int]:\n    if range_type == '*':\n        return list(range(start, end + 1))\n    if isinstance(range_type, tuple):\n        a, b = range_type\n        return list(range(a, b + 1))\n    return []\n\ndef matches(cron_parts: Tuple[Union[int, str], ...], dt: datetime.datetime) -> bool:\n    minute, hour, day_m, month, day_d = cron_parts\n    m = dt.minute\n    h = dt.hour\n    dm = dt.day\n    mo = dt.month\n    dd = dt.weekday()  # Monday=0 ... Sunday=6\n\n    def in_range(v, l, r):\n        if isinstance(v, int):\n            return l <= v <= r\n        if isinstance(v, tuple):\n            a, b = l, r\n            return a <= v <= b\n        if isinstance(v, list):\n            return any(in_range(x, l, r) for x in v)\n        return False\n\n    if not in_range(m, minute, minute): return False\n    if not in_range(h, hour, hour): return False\n    if not in_range(dm, day_m, month): return False\n    if not in_range(day_d, 0, 6): return False\n    return True\n\ndef next_runs(cron: str, from_time: str, count: int) -> List[str]:\n    cron_parts = parse_cron(cron)\n    dt = datetime.datetime.fromisoformat(from_time.replace('Z', '+00:00'))\n    start = dt + datetime.timedelta(seconds=1)\n    results = []\n    current = start\n    while len(results) < count:\n        if matches(cron_parts, current):\n            results.append(current.strftime(\"%Y-%m-%dT%H:%M:%S.000Z\"))\n        current += datetime.timedelta(seconds=1)\n        # Prevent infinite loop in case cron never matches\n        if len(results) == 0 and current > dt + datetime.timedelta(days=365):\n            break\n    return results\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 543,
+    "total_output_tokens": 765,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 11.338015513814039,
+    "time_to_first_token_seconds": 5.466348
+  },
+  "response_id": "resp_b9fa8c5656cf227ede59ffd5bacf323cc8ced29925e46dd2"
+}

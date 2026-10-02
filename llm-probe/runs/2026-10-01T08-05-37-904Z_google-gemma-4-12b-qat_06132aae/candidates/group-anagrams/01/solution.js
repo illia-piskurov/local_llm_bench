@@ -1,0 +1,26 @@
+export function solve(input) {
+  const groups = new Map();
+
+  // Group words by their sorted character sequence
+  for (const word of input.words) {
+    const sortedKey = word.split('').sort().join('');
+    if (!groups.has(sortedKey)) {
+      groups.set(sortedKey, []);
+    }
+    groups.get(sortedKey).push(word);
+  }
+
+  // Create the final array, sorting words within each anagram group
+  const result = Array.from(groups.values()).map(group => {
+    return [...group].sort();
+  });
+
+  // Sort the groups based on the first word of each group alphabetically
+  result.sort((a, b) => {
+    if (a[0] < b[0]) return -1;
+    if (a[0] > b[0]) return 1;
+    return 0;
+  });
+
+  return result;
+}

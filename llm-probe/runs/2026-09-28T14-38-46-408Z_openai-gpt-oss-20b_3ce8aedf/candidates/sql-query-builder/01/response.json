@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-s68cpd11bppv4iwm89pcrn",
+  "object": "chat.completion",
+  "created": 1790606556,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const { query } = input;\n  let paramIndex = 1;\n  const params = [];\n\n  // SELECT clause\n  const selectClause =\n    query.select && query.select.length > 0\n      ? query.select.map((col) => {\n          if (typeof col === 'string') return col;\n          // alias object\n          return `${col.expr} AS ${col.as}`;\n        }).join(', ')\n      : '*';\n\n  // FROM clause\n  const fromClause = `FROM ${query.table}`;\n\n  // JOIN clauses\n  let joinClause = '';\n  if (Array.isArray(query.joins)) {\n    const parts = query.joins.map((j) => {\n      const type = j.type ? `${j.type.toUpperCase()} JOIN` : 'JOIN';\n      const onParts = Object.entries(j.on).map(\n        ([left, right]) => `${left} = ${right}`\n      );\n      return `${type} ${j.table} ON ${onParts.join(' AND ')}`;\n    });\n    joinClause = parts.length ? ' ' + parts.join(' ') : '';\n  }\n\n  // WHERE clause\n  function buildWhere(cond) {\n    if (!cond || typeof cond !== 'object') return '';\n    const keys = Object.keys(cond);\n    if (keys.length === 1 && (keys[0] === 'AND' || keys[0] === 'OR')) {\n      const operator = keys[0];\n      const subconds = cond[operator].map(buildWhere);\n      return `(${subconds.join(` ${operator} `)})`;\n    }\n    // single condition\n    const { field, op, value } = cond;\n    if (op === 'IS NULL' || op === 'IS NOT NULL') {\n      return `${field} ${op}`;\n    }\n    if (op === 'IN' && Array.isArray(value)) {\n      const placeholders = value.map(() => `$${paramIndex++}`);\n      params.push(...value);\n      return `${field} IN (${placeholders.join(', ')})`;\n    }\n    // other ops\n    params.push(value);\n    return `${field} ${op} $${paramIndex++}`;\n  }\n\n  const whereClause = query.where ? ` WHERE ${buildWhere(query.where)}` : '';\n\n  // GROUP BY clause\n  const groupByClause =\n    Array.isArray(query.groupBy) && query.groupBy.length > 0\n      ? ` GROUP BY ${query.groupBy.join(', ')}`\n      : '';\n\n  // ORDER BY clause\n  const orderByClause =\n    Array.isArray(query.orderBy) && query.orderBy.length > 0\n      ? ` ORDER BY ${query.orderBy\n          .map((o) => `${o.field} ${o.dir ? o.dir.toUpperCase() : 'ASC'}`)\n          .join(', ')}`\n      : '';\n\n  // LIMIT and OFFSET\n  const limitClause = typeof query.limit === 'number' ? ` LIMIT ${query.limit}` : '';\n  const offsetClause = typeof query.offset === 'number' ? ` OFFSET ${query.offset}` : '';\n\n  const sql =\n    `SELECT ${selectClause} ${fromClause}${joinClause}${whereClause}${groupByClause}${orderByClause}${limitClause}${offsetClause}`.trim();\n\n  return { sql, params };\n}\n",
+        "reasoning": "Need build SQL. Implement helper to traverse where recursively. Keep param counter. Ensure no mutation.\n\nReturn object.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 562,
+    "completion_tokens": 721,
+    "total_tokens": 1283,
+    "completion_tokens_details": {
+      "reasoning_tokens": 22
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

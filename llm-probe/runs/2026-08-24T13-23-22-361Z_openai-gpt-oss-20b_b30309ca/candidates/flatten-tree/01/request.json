@@ -1,0 +1,16 @@
+{
+  "model": "openai/gpt-oss-20b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You write correct JavaScript solutions. Return only one ESM JavaScript module and no explanation or Markdown."
+    },
+    {
+      "role": "user",
+      "content": "Given a binary tree as input.root (object with value, left, right or null), return its values as an array in breadth-first (level-order) order. Return [] for a null root.\n\nImplement exactly:\nexport function solve(input) { /* return a JSON-compatible value */ }\n\nRules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.\n\nExamples:\ninput: {\"root\":{\"value\":1,\"left\":{\"value\":2,\"left\":null,\"right\":null},\"right\":{\"value\":3,\"left\":null,\"right\":null}}}\noutput: [1,2,3]"
+    }
+  ],
+  "temperature": 0.8,
+  "max_tokens": 15000,
+  "stream": false
+}

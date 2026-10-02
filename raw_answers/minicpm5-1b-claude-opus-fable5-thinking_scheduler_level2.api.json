@@ -1,0 +1,21 @@
+{
+  "model_instance_id": "minicpm5-1b-claude-opus-fable5-thinking",
+  "output": [
+    {
+      "type": "reasoning",
+      "content": "Мы реализую функцию critical_path, которая использует задачу же tasks: кортеж (длительность_задачи, список_зависимостей). \n Для этого будем построить граф зависимостей: ключ — время выполнения каждой задачи (второй элемент), значение — список его зависимостей (первый элемент каждого в списке).\n Затем применяем классический критический путь метод.\n\n Примечание: не меняю сигнатуру, и поведение topo_sort (сортировка) останется тем же.\n\n Функция вернет int или None.\n\n Решение: построить граф, затем DFS для получения порядка задач, затем вычислить длину критического пути.\n\n Важно: если в графе есть цикл, вернуть None.\n"
+    },
+    {
+      "type": "message",
+      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    if not tasks:\n        return 0\n    \n    # Построить граф зависимостей: ключ — время выполнения, значение — список зависимостей\n    graph = {}\n    for duration, sub_tasks in tasks.items():\n        graph[duration] = sub_tasks\n    \n    # Найти топологическую сортировку (в порядке выполнения)\n    visited = set()\n    order = []\n    \n    def dfs(node):\n        if node in visited:\n            return\n        visited.add(node)\n        for child in graph.get(node, []):\n            dfs(child)\n        order.append(node)\n    \n    for task in tasks:\n        if task not in visited:\n            dfs(task)\n    \n    # Получаем порядок от корней (последний в order) и вычисляем критический путь\n    if not order:\n        return 0\n    critical_path_length = sum(graph[order[i]][0] for i in range(len(order)-1))\n    return critical_path_length\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 573,
+    "total_output_tokens": 423,
+    "reasoning_output_tokens": 175,
+    "tokens_per_second": 51.80925404127528,
+    "time_to_first_token_seconds": 0.338072
+  },
+  "response_id": "resp_7f3e5242132c93e94d88fe34bc60b1a0b93d4f411ad7bfa3"
+}

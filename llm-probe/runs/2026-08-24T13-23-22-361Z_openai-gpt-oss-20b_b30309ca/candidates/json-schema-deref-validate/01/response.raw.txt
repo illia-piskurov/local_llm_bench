@@ -1,0 +1,110 @@
+export function solve(input) {
+  const { schema, data, definitions } = input;
+
+  // Resolve $ref in a schema object
+  function resolve(schemaNode) {
+    if (schemaNode && typeof schemaNode === 'object' && '$ref' in schemaNode) {
+      const refPath = schemaNode['$ref'];
+      // Only support "#/definitions/<Name>" or subpaths
+      const parts = refPath.split('/');
+      if (parts[0] !== '#' || parts[1] !== 'definitions') throw new Error('Unsupported $ref');
+      let def = definitions;
+      for (let i = 2; i < parts.length; i++) {
+        def = def && def[parts[i]];
+      }
+      // Return a copy to avoid mutation
+      return clone(def);
+    }
+    return schemaNode;
+  }
+
+  // Simple deep clone for plain objects/arrays
+  function clone(obj) {
+    if (Array.isArray(obj)) return obj.map(clone);
+    if (obj && typeof obj === 'object') {
+      const res = {};
+      for (const k in obj) res[k] = clone(obj[k]);
+      return res;
+    }
+    return obj;
+  }
+
+  const errors = [];
+
+  function validate(value, schemaNode, path) {
+    const sch = resolve(schemaNode);
+    if (!sch || typeof sch !== 'object') return;
+
+    // Type validation
+    if ('type' in sch) {
+      switch (sch.type) {
+        case 'string':
+          if (typeof value !== 'string')
+            errors.push({ path, message: 'Expected type string' });
+          else if ('minLength' in sch && value.length < sch.minLength)
+            errors.push({ path, message: `String length ${value.length} is less than minimum ${sch.minLength}`});
+          break;
+        case 'number':
+          if (typeof value !== 'number')
+            errors.push({ path, message: 'Expected type number' });
+          break;
+        case 'boolean':
+          if (typeof value !== 'boolean')
+            errors.push({ path, message: 'Expected type boolean' });
+          break;
+        case 'array':
+          if (!Array.isArray(value))
+            errors.push({ path, message: 'Expected type array' });
+          else {
+            if ('minItems' in sch && value.length < sch.minItems)
+              errors.push({ path, message: `Array length ${value.length} is less than minimum ${sch.minItems}`});
+            if ('items' in sch) {
+              for (let i = 0; i < value.length; i++) {
+                validate(value[i], sch.items, `${path}/items/${i}`);
+              }
+            }
+          }
+          break;
+        case 'object':
+          if (typeof value !== 'object' || value === null || Array.isArray(value))
+            errors.push({ path, message: 'Expected type object' });
+          else {
+            // required
+            if ('required' in sch) {
+              for (const req of sch.required) {
+                if (!(req in value))
+                  errors.push({ path, message: `Missing required property '${req}'`});
+              }
+            }
+            // properties
+            const props = sch.properties || {};
+            for (const key in props) {
+              if (key in value)
+                validate(value[key], props[key], `${path}/${key}`);
+            }
+            // additionalProperties
+            if (sch.additionalProperties === false) {
+              for (const key in value) {
+                if (!(key in props))
+                  errors.push({ path, message: `Unexpected property '${key}'`});
+              }
+            }
+          }
+          break;
+        default:
+          // unsupported type ignored
+          break;
+      }
+    }
+
+    // enum validation
+    if ('enum' in sch && Array.isArray(sch.enum)) {
+      if (!sch.enum.includes(value))
+        errors.push({ path, message: 'Value not in enum' });
+    }
+  }
+
+  validate(data, schema, '#');
+
+  return { valid: errors.length === 0, errors };
+}

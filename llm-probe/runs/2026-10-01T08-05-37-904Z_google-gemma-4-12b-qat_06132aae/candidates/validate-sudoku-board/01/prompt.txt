@@ -1,0 +1,10 @@
+Return whether a 9×9 Sudoku board (input.board: string[9], each 9 chars) is valid. '.' means empty. Check rows, columns and all 3×3 boxes.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"board":["53..7....","6..195...",".98....6.","8...6...3","4..8.3..1","7...2...6",".6....28.","...419..5","....8..79"]}
+output: true

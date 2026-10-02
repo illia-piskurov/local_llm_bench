@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-tcg0co50u7p5d2j6t3jjfs",
+  "object": "chat.completion",
+  "created": 1787578672,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  // Helper to parse a single cron field into a Set of allowed integers\n  const parseField = (field, min, max) => {\n    const result = new Set();\n    if (field === '*') {\n      for (let i = min; i <= max; i++) result.add(i);\n      return result;\n    }\n    // Split by commas for lists\n    const parts = field.split(',');\n    for (const part of parts) {\n      let step = 1;\n      let rangePart = part;\n      if (part.includes('/')) {\n        [rangePart, step] = part.split('/');\n        step = parseInt(step, 10);\n      }\n      let start, end;\n      if (rangePart === '*') {\n        start = min;\n        end = max;\n      } else if (rangePart.includes('-')) {\n        [start, end] = rangePart.split('-').map(Number);\n      } else {\n        start = end = parseInt(rangePart, 10);\n      }\n      for (let val = start; val <= end; val += step) result.add(val);\n    }\n    return result;\n  };\n\n  // Parse all fields\n  const [minField, hourField, domField, monthField, dowField] =\n    input.cron.trim().split(/\\s+/);\n\n  const minutesSet = parseField(minField, 0, 59);\n  const hoursSet = parseField(hourField, 0, 23);\n  const domSet = parseField(domField, 1, 31);\n  const monthSet = parseField(monthField, 1, 12);\n  const dowSet = parseField(dowField, 0, 6);\n\n  const isDomAll = domField === '*';\n  const isDowAll = dowField === '*';\n\n  // Start from the next minute strictly after input.from\n  let startDate = new Date(input.from);\n  startDate.setSeconds(0, 0); // zero seconds and ms\n  if (startDate <= new Date(input.from)) {\n    startDate.setMinutes(startDate.getMinutes() + 1);\n  }\n\n  const results = [];\n  while (results.length < input.count) {\n    const d = startDate;\n    const minute = d.getUTCMinutes();\n    const hour = d.getUTCHours();\n    const day = d.getUTCDate();\n    const month = d.getUTCMonth() + 1; // JS months 0-11\n    const weekday = d.getUTCDay();\n\n    const minuteMatch = minutesSet.has(minute);\n    const hourMatch = hoursSet.has(hour);\n    const monthMatch = monthSet.has(month);\n\n    const domMatch = domSet.has(day);\n    const dowMatch = dowSet.has(weekday);\n\n    let dayMatch;\n    if (!isDomAll && !isDowAll) {\n      dayMatch = domMatch || dowMatch; // OR rule\n    } else if (isDomAll) {\n      dayMatch = dowMatch;\n    } else { // isDowAll\n      dayMatch = domMatch;\n    }\n\n    if (minuteMatch && hourMatch && monthMatch && dayMatch) {\n      results.push(d.toISOString());\n    }\n    startDate.setMinutes(startDate.getMinutes() + 1);\n  }\n\n  return results;\n}\n",
+        "reasoning": "Need to parse cron fields into sets of allowed values. Then iterate from next minute after 'from', check if matches, collect count.\n\nImplement helper parseField(fieldStr, min, max). handle *, lists, ranges, steps.\n\nFor step syntax e.g., */15 => base \"*\", step 15. Also \"1-5/2\". If no slash, step=1.\n\nReturn array of numbers inclusive.\n\nThen for each minute candidate: start from floor to next minute after 'from' (set seconds ms zero). Actually input.from may be any timestamp; we need strictly after. So add 1 minute? But if from is exactly at a matching time but we want strictly after, so increment by one minute until > from.\n\nSimpler: start = new Date(input.from); start.setSeconds(0,0); if start <= original, start.setMinutes(start.getMinutes()+1). Then loop while result length < count: check match. For month/day logic: dayMatch = (dayOfMonthMatches && monthMatches && year?) but we ignore year; assume any year? Actually cron no year field. So use current date's year.\n\nDay-of-week rule: if both dom and dow not '*', then OR else must match the non-star.\n\nImplement function matches(date): get minute, hour, day, month, weekday (0-6). Check sets.\n\nEdge: month index: Date.getMonth() returns 0-11; adjust +1.\n\nReturn array of ISO string with .toISOString() ensures ms. Need to ensure seconds & ms zero set earlier.\n\nLet's code.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 415,
+    "completion_tokens": 1027,
+    "total_tokens": 1442,
+    "completion_tokens_details": {
+      "reasoning_tokens": 323
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-88ttepb92grh26524ixphr",
+  "object": "chat.completion",
+  "created": 1790606675,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const s = input.text;\n  let left = 0;\n  let maxLen = 0;\n  const seen = new Map();\n  for (let right = 0; right < s.length; right++) {\n    const ch = s[right];\n    if (seen.has(ch) && seen.get(ch) >= left) {\n      left = seen.get(ch) + 1;\n    }\n    seen.set(ch, right);\n    const curLen = right - left + 1;\n    if (curLen > maxLen) maxLen = curLen;\n  }\n  return maxLen;\n}",
+        "reasoning": "Implement sliding window.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 178,
+    "completion_tokens": 144,
+    "total_tokens": 322,
+    "completion_tokens_details": {
+      "reasoning_tokens": 4
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

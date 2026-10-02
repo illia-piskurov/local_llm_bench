@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-pg9ctonndgts3g0e345kk",
+  "object": "chat.completion",
+  "created": 1790606326,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const nodes = Array.isArray(input.nodes) ? input.nodes : [];\n  const map = new Map();\n  for (const n of nodes) {\n    map.set(n.id, { ...n, children: [] });\n  }\n  const roots = [];\n  for (const n of nodes) {\n    const nodeCopy = map.get(n.id);\n    if (n.parentId == null || !map.has(n.parentId)) {\n      roots.push(nodeCopy);\n    } else {\n      const parent = map.get(n.parentId);\n      parent.children.push(nodeCopy);\n    }\n  }\n  return roots;\n}\n",
+        "reasoning": "Need to implement solve. Ensure not mutate input: copy nodes.\n\nApproach: create map id->nodeCopy with children empty. Iterate nodes to fill map. Then build roots array by checking parentId: if null or not in map, root. Also maintain order.\n\nBut need to preserve original relative order of roots and children: iterate input.nodes in order, when encountering node, push to parent's children if parent exists else roots. But we need map for quick lookup. We can create copy of node with children: [].\n\nImplementation:\n\nexport function solve(input) {\n  const nodes = input.nodes || [];\n  const map = new Map();\n  // create copies\n  for (const n of nodes) {\n    map.set(n.id, {...n, children: []});\n  }\n  const roots = [];\n  for (const n of nodes) {\n    const nodeCopy = map.get(n.id);\n    if (n.parentId == null || !map.has(n.parentId)) {\n      roots.push(nodeCopy);\n    } else {\n      const parent = map.get(n.parentId);\n      parent.children.push(nodeCopy);\n    }\n  }\n  return roots;\n}\n\nEdge: parentId type string|number|null. map.has uses key as same.\n\nReturn JSON-compatible value.\n\nLet's output module.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 358,
+    "completion_tokens": 400,
+    "total_tokens": 758,
+    "completion_tokens_details": {
+      "reasoning_tokens": 260
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

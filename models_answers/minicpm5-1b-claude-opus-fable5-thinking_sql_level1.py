@@ -1,0 +1,48 @@
+def compile_query(query):
+    table = query['table']
+    select = query.get('select', ['*'])
+    where = query.get('where', {})
+    orderBy = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    params = []
+
+    def to_param(param):
+        return f"${param}"
+
+    def apply_where(conditions):
+        new_conditions = []
+        for cond in conditions:
+            if isinstance(cond, dict) and 'op' in cond:
+                op = cond['op']
+                value = cond.get('value')
+                if op == '=':
+                    new_condition = f"{value} = ${params[-1]}"
+                elif op == '!=':
+                    new_condition = f"{value} != ${params[-1]}"
+                elif op == '>':
+                    new_condition = f"{value} > ${params[-1]}"
+                elif op == '<':
+                    new_condition = f"{value} < ${params[-1]}"
+                elif op == '>=':
+                    new_condition = f"{value} >= ${params[-1]}"
+                elif op == '<=':
+                    new_condition = f"{value} <= ${params[-1]}"
+            else:  # AND или OR
+                if len(cond) > 0:
+                    cond_str = to_param(cond[0])
+                    params.append(f"({cond_str})")
+                    new_conditions.append(cond)
+        return new_conditions
+
+    where_processed = apply_where(where)
+    sql = f"SELECT {select} FROM {table}"
+    if where_processed:
+        sql += " WHERE " + " AND ".join(to_param(c) for c in where_processed)
+    order_by_params = [{'field': field, 'dir': dir} for field, dir in orderBy]
+    sql += " ORDER BY " + ", ".join(f"{d['field']}" if d.get('dir') else d['field']) + f" {order_by_params[0]['dir']}"
+    limit_param = -limit
+    sql += f" LIMIT {limit_param} OFFSET {offset}"
+
+    return {"sql": sql, "params": params}

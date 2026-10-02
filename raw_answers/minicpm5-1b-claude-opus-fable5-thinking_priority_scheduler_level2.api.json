@@ -1,0 +1,21 @@
+{
+  "model_instance_id": "minicpm5-1b-claude-opus-fable5-thinking",
+  "output": [
+    {
+      "type": "reasoning",
+      "content": "Пользователь просит реализовать два новых функция: critical_path и makespan.\n- critical_path: возвращает длину самого длинного зависимого пути (сумма duration), игнорируя priority. Если есть цикл, верна None.\n- makespan: возвращает общее время завершения всех задач при те же правилах выбора задач: prioritize by highest priority, then lowest duration, then name; не меняю sigнатуру plan_order.\n\nИтак, код должен содержать:\n```python\ndef critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:\n    # ... реализация\n    pass\n\ndef makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:\n    # ... реализация\n    pass\n```\n\nНужно быть осторожным с порядком выбора задач в makespan: prioritize by highest priority (largest number), then lowest duration, then name. В задании сказано: \"priority по убыванию\" для makespan? Перечитаем: \"Используй тот же детерминированный порядок выбора готовых задач: priority по убыванию,.duration по возрастанию, name по возрастанию.\" Да, для makespan: prioritize by highest priority (largest), then duration, then name. В коде выше я использовал -x[0] (первый элемент), что соответствует \"priority по убыванию\" (больше -> меньший). Правильно.\n\nТакже в critical_path игнорируем priority, только сумма duration.\n\nИтак, напишем код:\n"
+    },
+    {
+      "type": "message",
+      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:\n    # Преобразование задач в кортежи для работы с heapq\n    task_heap = [(priority, duration, deps, name) for name, (duration, deps, priority) in tasks]\n    \n    # Сортировка: prioritize большие priority (largest), затем меньший duration, затем имя\n    task_heap.sort(key=lambda x: (-x[0], x[1], x[2]))\n    \n    result = []\n    current_time = 0\n    active_tasks = []  # список текущих задач, готовых к запуску\n    \n    while task_heap and workers > 0:\n        priority, duration, deps, name = heapq.heappop(task_heap)\n        \n        if len(active_tasks) < workers:  # не более workers одновременно\n            active_tasks.append((name, duration))\n            result.append(name)\n            current_time += duration\n        else:\n            for task_name, dur in active_tasks:\n                if task_name == name and dur <= duration:  # не прерываемся\n                    active_tasks.remove((task_name, dur))\n                    result.append(task_name)\n                    current_time += dur\n                    break\n    \n    return len(result) if result else None\n\ndef makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:\n    # Создаем граф зависимостей из deps\n    graph = {}\n    for name, (duration, deps, _) in tasks.items():\n        for dep in deps:\n            if dep not in graph:\n                graph[dep] = []\n            graph[dep].append(name)\n    \n    # Определение циклов через DFS или BFS\n    has_cycle = detect_cycle(graph)\n    if has_cycle:\n        return None\n    \n    # Найти максимальный путь (сумма duration) с использованием workers\n    max_duration_path = find_max_duration_path(graph, workers)\n    return max_duration_path if max_duration_path is not None else 0\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 854,
+    "total_output_tokens": 846,
+    "reasoning_output_tokens": 361,
+    "tokens_per_second": 50.93070284189103,
+    "time_to_first_token_seconds": 0.6693790000000001
+  },
+  "response_id": "resp_5a1f9d78f085ee08c3f08bb876b6114b7d503eb30c19f41a"
+}

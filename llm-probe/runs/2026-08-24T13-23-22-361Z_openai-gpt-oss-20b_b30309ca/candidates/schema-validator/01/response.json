@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-kuy6fhe9ehghvnv7eksj3",
+  "object": "chat.completion",
+  "created": 1787578232,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const schema = input.schema || {};\n  const data = input.data || {};\n\n  const errors = {};\n\n  for (const field in schema) {\n    const rule = schema[field];\n    const value = data[field];\n\n    const fieldErrors = [];\n\n    // Check required\n    if (rule.required && (value === undefined || value === null)) {\n      fieldErrors.push('Required');\n    } else if (value !== undefined && value !== null) {\n      // Type check\n      let typeMatches = false;\n      switch (rule.type) {\n        case 'string':\n          typeMatches = typeof value === 'string';\n          break;\n        case 'number':\n          typeMatches = typeof value === 'number' && !Number.isNaN(value);\n          break;\n        case 'boolean':\n          typeMatches = typeof value === 'boolean';\n          break;\n        case 'array':\n          typeMatches = Array.isArray(value);\n          break;\n      }\n      if (!typeMatches) {\n        fieldErrors.push('Invalid type');\n      } else {\n        // Min / Max checks\n        switch (rule.type) {\n          case 'string': {\n            const len = value.length;\n            if (rule.min !== undefined && len < rule.min) {\n              fieldErrors.push('Too short');\n            }\n            if (rule.max !== undefined && len > rule.max) {\n              fieldErrors.push('Too long');\n            }\n            break;\n          }\n          case 'number': {\n            const num = value;\n            if (rule.min !== undefined && num < rule.min) {\n              fieldErrors.push('Too small');\n            }\n            if (rule.max !== undefined && num > rule.max) {\n              fieldErrors.push('Too large');\n            }\n            break;\n          }\n          case 'array': {\n            const len = value.length;\n            if (rule.min !== undefined && len < rule.min) {\n              fieldErrors.push('Too few items');\n            }\n            if (rule.max !== undefined && len > rule.max) {\n              fieldErrors.push('Too many items');\n            }\n            break;\n          }\n        }\n\n        // Pattern for strings\n        if (rule.type === 'string' && rule.pattern) {\n          const regex = new RegExp(rule.pattern);\n          if (!regex.test(value)) {\n            fieldErrors.push('Invalid format');\n          }\n        }\n      }\n    }\n\n    if (fieldErrors.length > 0) {\n      errors[field] = fieldErrors;\n    }\n  }\n\n  return { valid: Object.keys(errors).length === 0, errors };\n}",
+        "reasoning": "Implement solve. Need deep copy? just read. No mutation. For each key in schema, check data[key]. If required true and value===undefined||value===null => error 'Required'. Else if value !== undefined && value !== null: type checking. typeof for array -> Array.isArray. Then min/max/pattern. Collect errors. Finally valid = Object.keys(errors).length===0. Return object.\n\nEdge cases: pattern string may be regex literal? Use new RegExp(pattern). Test with ^...$ maybe. Ensure escape? Just new RegExp(pattern).\n\nReturn JSON-compatible value: plain JS object.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 402,
+    "completion_tokens": 660,
+    "total_tokens": 1062,
+    "completion_tokens_details": {
+      "reasoning_tokens": 124
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

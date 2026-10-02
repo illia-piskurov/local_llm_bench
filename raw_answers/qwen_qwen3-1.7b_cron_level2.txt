@@ -1,0 +1,81 @@
+```python
+from datetime import datetime, timedelta
+import calendar
+
+def parse_cron_field(field_str):
+    if field_str == '*':
+        return set(range(0, 61))  # minutes 0-59
+    elif ',' in field_str:
+        parts = list(map(int, field_str.split(',')))
+        return set(parts)
+    elif '-' in field_str:
+        start, end = map(int, field_str.split('-'))
+        return set(range(start, end + 1))
+    else:
+        if '/' in field_str:
+            # Handle step values
+            step = int(field_str.split('/')[1])
+            # Generate step sequence
+            base_values = set(range(0, 61)) if field_str == '*'
+            start, end = None, None
+            if ',' in field_str:
+                parts = list(map(int, field_str.split(',')))
+                start, end = min(parts), max(parts)
+            else:
+                start, end = int(field_str), None
+            # Generate step sequence
+            result = set()
+            for i in range(start, end + 1):
+                if i % step == 0:
+                    result.add(i)
+            return result
+        else:
+            return {int(field_str)}
+
+def next_runs(cron: str, from_time: str, count: int) -> list[str]:
+    # Parse cron into five fields
+    parts = cron.split()
+    minute_field = parse_cron_field(parts[0])
+    hour_field = parse_cron_field(parts[1])
+    day_month_field = parse_cron_field(parts[2])
+    month_field = parse_cron_field(parts[3])
+    day_week_field = parse_cron_field(parts[4])
+
+    # Convert from_time to datetime object
+    from_dt = datetime.fromisoformat(from_time)
+    
+    result = []
+    current = from_dt
+    
+    while len(result) < count:
+        if is_valid(current, minute_field, hour_field, day_month_field, month_field, day_week_field):
+            result.append(current.strftime("%Y-%m-%dT%H:%M:00.000Z"))
+        else:
+            # Move to next time
+            current += timedelta(seconds=1)
+    
+    return result
+
+def is_valid(time: datetime, minute_set: set, hour_set: set, day_month_set: set, month_set: set, day_week_set: set) -> bool:
+    # Check if the time matches all cron fields
+    # Extract values from the time
+    minute = time.minute
+    hour = time.hour
+    day_month = time.day
+    month = time.month
+    day_of_week = time.weekday()  # Monday is 0, Sunday is 6
+
+    # Check each field
+    if minute not in minute_set:
+        return False
+    if hour not in hour_set:
+        return False
+    if day_month not in day_month_set:
+        return False
+    if month not in month_set:
+        return False
+    if day_of_week not in day_week_set:
+        return False
+
+    return True
+```

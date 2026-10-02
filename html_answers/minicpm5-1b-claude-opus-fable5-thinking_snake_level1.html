@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <style>
+      body { font-family: monospace; margin-top: 20px; }
+      zmianka { font-size: 1.2em; color: #333; }
+      .game-over { color: red; text-align: center; }
+      .restart-btn { display: block; padding: 10px 20px; font-size: 14px; background: #4caf50; color: white; border: none; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <h1>Змейка</h1>
+    <div id="game">0</div>
+    <button class="restart-btn" onclick="restartGame()">Перезапустить</button>
+
+    <script>
+      let count = 0;
+      const gameElement = document.getElementById('game');
+      const restartBtn = document.querySelector('.restart-btn');
+
+      function handleClick(event) {
+        if (event.key === 'c' || event.ctrl + 'C') { // c или Ctrl+C
+          restartGame();
+        }
+      }
+
+      function restartGame() {
+        count = 10; // начальное количество еды
+        gameElement.textContent = count;
+        restartBtn.disabled = true;
+        restartBtn.style.background = #f44336;
+        setTimeout(() => { restartBtn.disabled = false; }, 3000);
+      }
+
+      function mael() {
+        if (count > 5) {
+          document.body.classList.add('game-over');
+          restartGame();
+        } else {
+          gameElement.textContent = count;
+        }
+      }
+
+      mael(); // запуск игры
+    </script>
+  </body>
+</html>

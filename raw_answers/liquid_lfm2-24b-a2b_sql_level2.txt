@@ -1,0 +1,77 @@
+```
+def compile_query(query: dict) -> dict:
+    table = query.get('table', '')
+    select = query.get('select', ['*'])
+    where = query.get('where', {})
+    orderBy = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+    joins = query.get('joins', [])
+    groupBy = query.get('groupBy', [])
+
+    params = []
+    conditions = []
+
+    def add_condition(cond):
+        nonlocal params
+        if isinstance(cond, dict) and len(cond) == 3:
+            field, op, value = cond['field'], cond['op'], cond['value']
+            if op in ('IS NULL', 'IS NOT NULL'):
+                conditions.append(f"{field} {op}")
+            elif op == 'IN':
+                placeholders = ', '.join(f"${len(params) + i}" for i in range(1, len(value) + 1))
+                params.extend(value)
+                conditions.append(f"{field} IN ({placeholders})")
+            elif op == 'LIKE':
+                conditions.append(f"{field} LIKE ${len(params) + 1}")
+                params.append(value)
+            else:
+                placeholder = f"${len(params) + 1}"
+                params.append(value)
+                conditions.append(f"{field} {op} {placeholder}")
+        elif isinstance(cond, dict) and 'AND' in cond:
+            inner = [f"({c})" for c in cond['AND']]
+            conditions.append(f"({' AND '.join(inner)})")
+        elif isinstance(cond, dict) and 'OR' in cond:
+            inner = [f"({c})" for c in cond['OR']]
+            conditions.append(f"({' OR '.join(inner)})")
+        else:
+            raise ValueError(f"Unsupported condition format: {cond}")
+
+    def process_where(where_dict):
+        for k, v in where_dict.items():
+            if isinstance(v, dict) and len(v) == 3:
+                add_condition({k: v['op'], 'value': v['value']})
+            else:
+                raise ValueError(f"Unsupported condition format: {v}")
+
+    process_where(where)
+    for j in joins:
+        join_type = j.get('type', 'INNER').upper()
+        join_table = j['table']
+        on_conditions = j['on']
+        on_parts = []
+        for left, right in on_conditions.items():
+            left_col, right_col = left.split('.') if '.' in left else (left, right)
+            right_col = right.split('.') if '.' in right else right
+            on_parts.append(f"{left_col} {join_type} {right_col}")
+        conditions.append(f"JOIN {join_table} ON {' AND '.join(on_parts)}")
+
+    select_clause = ', '.join(select)
+    order_by_clause = ', '.join([f"{b['field']} {b.get('dir', 'ASC')}" for b in orderBy])
+    group_by_clause = ', '.join(groupBy) if groupBy else ''
+    limit_clause = f"LIMIT {limit}" if limit is not None else ""
+    offset_clause = f"OFFSET {offset}" if offset is not None else ""
+
+    sql_parts = [
+        f"SELECT {select_clause} FROM {table}",
+        *conditions,
+        f"WHERE {' AND '.join(conditions)}" if conditions else '',
+        f"GROUP BY {group_by_clause}" if groupBy else '',
+        f"ORDER BY {order_by_clause}" if orderBy else '',
+        limit_clause,
+        offset_clause
+    ]
+    sql = ' '.join([p for p in sql_parts if p])
+    return {"sql": sql, "params": params}
+```

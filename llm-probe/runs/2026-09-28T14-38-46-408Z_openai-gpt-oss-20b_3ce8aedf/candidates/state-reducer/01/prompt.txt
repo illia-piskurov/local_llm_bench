@@ -1,0 +1,17 @@
+Apply a list of actions in input.actions to initial state in input.state without mutating input.
+Actions:
+- { type: 'SET', path: string, value: any }: sets property at dot-separated path (creates nested objects if missing).
+- { type: 'TOGGLE', path: string }: negates boolean at path (if value is not boolean, sets true).
+- { type: 'ARRAY_PUSH', path: string, item: any }: appends item to array at path (creates [item] if array missing).
+- { type: 'ARRAY_REMOVE', path: string, index: number }: removes element at index if within bounds.
+- { type: 'DELETE', path: string }: deletes key at path.
+Return the resulting state object.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"state":{"user":{"name":"Bob","active":false},"tags":["a","b"]},"actions":[{"type":"TOGGLE","path":"user.active"},{"type":"ARRAY_PUSH","path":"tags","item":"c"},{"type":"ARRAY_REMOVE","path":"tags","index":0}]}
+output: {"user":{"name":"Bob","active":true},"tags":["b","c"]}

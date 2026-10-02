@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-bzojfpcsauo3vk9j0g3kjg",
+  "object": "chat.completion",
+  "created": 1790606590,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const { definitions, schema: rootSchema, data } = input;\n  const errors = [];\n\n  function resolve(schema) {\n    if (schema.$ref && typeof schema.$ref === 'string') {\n      const ref = schema.$ref;\n      if (!ref.startsWith('#/definitions/')) return schema;\n      const parts = ref.slice(14).split('/');\n      let target = definitions;\n      for (const part of parts) {\n        if (target && typeof target === 'object' && part in target) {\n          target = target[part];\n        } else {\n          return schema;\n        }\n      }\n      return target || schema;\n    }\n    return schema;\n  }\n\n  function validate(value, schema, path) {\n    const s = resolve(schema);\n    if (!s || typeof s !== 'object') return;\n\n    // Type validation\n    const type = s.type;\n    if (type) {\n      switch (type) {\n        case 'string':\n          if (typeof value !== 'string') {\n            errors.push({ path, message: 'Expected type string' });\n            return;\n          }\n          if (s.minLength !== undefined && value.length < s.minLength) {\n            errors.push({ path, message: 'String length less than minLength' });\n          }\n          break;\n        case 'number':\n          if (typeof value !== 'number') {\n            errors.push({ path, message: 'Expected type number' });\n          }\n          break;\n        case 'boolean':\n          if (typeof value !== 'boolean') {\n            errors.push({ path, message: 'Expected type boolean' });\n          }\n          break;\n        case 'array':\n          if (!Array.isArray(value)) {\n            errors.push({ path, message: 'Expected type array' });\n          } else {\n            if (s.minItems !== undefined && value.length < s.minItems) {\n              errors.push({ path, message: 'Array length less than minItems' });\n            }\n            if (s.items) {\n              for (let i = 0; i < value.length; i++) {\n                validate(value[i], s.items, `${path}/items/${i}`);\n              }\n            }\n          }\n          break;\n        case 'object':\n          if (typeof value !== 'object' || value === null || Array.isArray(value)) {\n            errors.push({ path, message: 'Expected type object' });\n          } else {\n            const props = s.properties || {};\n            // Required\n            if (Array.isArray(s.required)) {\n              for (const req of s.required) {\n                if (!(req in value)) {\n                  errors.push({ path: `${path}/${req}`, message: 'Missing required property' });\n                }\n              }\n            }\n            // Properties\n            for (const key of Object.keys(props)) {\n              if (key in value) {\n                validate(value[key], props[key], `${path}/${key}`);\n              }\n            }\n            // Additional properties\n            if (s.additionalProperties === false) {\n              for (const key of Object.keys(value)) {\n                if (!(key in props)) {\n                  errors.push({ path: `${path}/${key}`, message: 'Additional property not allowed' });\n                }\n              }\n            }\n          }\n          break;\n      }\n    }\n\n    // Enum validation\n    if (Array.isArray(s.enum)) {\n      const found = s.enum.some((v) => Object.is(v, value));\n      if (!found) {\n        errors.push({ path, message: 'Value not in enum' });\n      }\n    }\n  }\n\n  validate(data, rootSchema, '#');\n\n  return { valid: errors.length === 0, errors };\n}\n",
+        "reasoning": "Need to implement recursive validation with ref resolution. Ensure not mutate input: copy definitions? We can resolve references by looking up definitions map.\n\nImplement function validate(value, schema, path). Resolve $ref first: if schema has $ref, replace with resolved definition. Use recursion.\n\nCollect errors array.\n\nImplement type checks: typeof for string/number/boolean, Array.isArray, object non-null. For array: check minItems.\n\nFor object: required keys must exist; for each property defined, validate; if additionalProperties false, check no extra keys.\n\nEnum: if schema.enum exists and value not in array (strict equality). For string minLength.\n\nReturn {valid: errors.length===0, errors}.\n\nEdge cases: schema may have $ref and other keys? Usually only $ref. We'll resolve recursively until no $ref.\n\nImplementation: function resolve(schema) { if schema.$ref, get ref path after '#/definitions/', split by '/', locate in definitions. return resolved schema. } Need to handle nested paths.\n\nWe'll use input.definitions object; pass it.\n\nAvoid mutation: create new object for resolved? just return the referenced schema directly (no modification). But if later we modify during validation, we shouldn't. We'll not mutate.\n\nImplement traversal: for object properties, loop over schema.properties keys; validate each existing property if present. For required: check presence.\n\nAdditionalProperties false: for any key in value that not in properties, error.\n\nPath building: start '#'; when entering property 'name', path + '/'+name; for array, each element path: currentPath + '/items/'+index.\n\nReturn errors as array of objects with path and message strings.\n\nLet's code.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 455,
+    "completion_tokens": 1106,
+    "total_tokens": 1561,
+    "completion_tokens_details": {
+      "reasoning_tokens": 340
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

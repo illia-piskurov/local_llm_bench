@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-d3n83o39l1ofuowz72fam",
+  "object": "chat.completion",
+  "created": 1787578954,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n    const a = input.a;\n    const b = input.b;\n    const m = a.length;\n    const n = b.length;\n    // create 2D array of size (m+1)x(n+1)\n    const dp = Array.from({ length: m + 1 }, () => new Uint16Array(n + 1));\n    for (let i = 1; i <= m; i++) {\n        const ai = a.charCodeAt(i - 1);\n        for (let j = 1; j <= n; j++) {\n            if (ai === b.charCodeAt(j - 1)) {\n                dp[i][j] = dp[i - 1][j - 1] + 1;\n            } else {\n                const up = dp[i - 1][j];\n                const left = dp[i][j - 1];\n                dp[i][j] = up > left ? up : left;\n            }\n        }\n    }\n    return dp[m][n];\n}",
+        "reasoning": "We need LCS length. Use DP O(n*m). Return number. Ensure no mutation. Return as JSON-compatible value i.e., number. Implement solve(input).",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 182,
+    "completion_tokens": 259,
+    "total_tokens": 441,
+    "completion_tokens_details": {
+      "reasoning_tokens": 33
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

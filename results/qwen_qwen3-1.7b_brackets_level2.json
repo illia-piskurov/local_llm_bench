@@ -1,0 +1,14 @@
+{
+  "model": "qwen/qwen3-1.7b",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-09-03 11:14:19",
+  "passed": 11,
+  "total": 15,
+  "failures": [
+    "find_unmatched/single_unclosed_open: ожидалось [0], получено []",
+    "find_unmatched/mismatch_and_unclosed: ожидалось [0, 1], получено [1]",
+    "find_unmatched/wrong_order_classic: ожидалось [0, 2], получено [2]",
+    "find_unmatched/mixed_with_text: ожидалось [3, 7], получено [7]"
+  ]
+}

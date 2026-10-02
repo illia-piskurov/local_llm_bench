@@ -1,0 +1,20 @@
+Calculate totals for a shopping cart from input.items (array of { price: number, qty: number, category?: string }) and optional input.coupon and input.taxRate (e.g. 0.08 for 8%).
+Rules:
+1. subtotal: sum of (price * qty) for all items.
+2. discount: from input.coupon (if provided):
+   - { type: 'percent', value: 20 }: 20% off subtotal.
+   - { type: 'fixed', value: 15 }: flat $15 off subtotal (capped at subtotal).
+   - { type: 'category_percent', category: 'food', value: 10 }: 10% off only items in that category.
+   If coupon is absent or unknown type, discount is 0. Discount cannot exceed subtotal.
+3. tax: Math.round((subtotal - discount) * taxRate * 100) / 100. (0 if taxRate omitted).
+4. total: Math.round((subtotal - discount + tax) * 100) / 100.
+Round subtotal, discount, tax, total to 2 decimal places (Math.round(x * 100) / 100). Return { subtotal, discount, tax, total }.
+
+Implement exactly:
+export function solve(input) { /* return a JSON-compatible value */ }
+
+Rules: use synchronous JavaScript ES2023 only; do not use imports, require, files, network, subprocesses, async, or timers; do not mutate input.
+
+Examples:
+input: {"items":[{"price":100,"qty":2,"category":"electronics"},{"price":20,"qty":1,"category":"books"}],"coupon":{"type":"percent","value":10},"taxRate":0.05}
+output: {"subtotal":220,"discount":22,"tax":9.9,"total":207.9}

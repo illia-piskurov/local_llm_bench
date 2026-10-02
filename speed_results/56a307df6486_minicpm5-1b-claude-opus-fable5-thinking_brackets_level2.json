@@ -1,0 +1,16 @@
+{
+  "host_id": "56a307df6486",
+  "host_label": "Ryzen 7 250 | 32 GB | 780m Radeon iGPU",
+  "model": "minicpm5-1b-claude-opus-fable5-thinking",
+  "benchmark": "brackets",
+  "level": "level2",
+  "tested_at": "2026-09-02 12:02:21",
+  "stats": {
+    "input_tokens": 649,
+    "total_output_tokens": 397,
+    "reasoning_output_tokens": 396,
+    "tokens_per_second": 50.56726640381053,
+    "time_to_first_token_seconds": 0.42256099999999996,
+    "model_load_time_seconds": null
+  }
+}

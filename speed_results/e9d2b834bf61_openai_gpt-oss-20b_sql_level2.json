@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "openai/gpt-oss-20b",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-08-24 16:56:03",
+  "stats": {
+    "input_tokens": 1685,
+    "total_output_tokens": 1536,
+    "reasoning_output_tokens": 128,
+    "tokens_per_second": 8.307080579071012,
+    "time_to_first_token_seconds": 9.090423000000001,
+    "model_load_time_seconds": null
+  }
+}

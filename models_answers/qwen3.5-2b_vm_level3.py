@@ -1,0 +1,122 @@
+class Interpreter:
+    def __init__(self):
+        self.labels = {}  # {label_name: (address, label)}
+        self.variables = {}  # {var_name: address}
+        self.subroutines = []  # [(name, address), ...]
+    
+    def run(self, program: str) -> list[str]:
+        instructions = []
+        
+        for i in range(0, len(program.split()), 2):
+            if i + 1 >= len(program.split()):
+                break
+            
+            opcode = program[i:i+2].strip()
+            
+            # Handle labels and jumps
+            if opcode.startswith('LABEL'):
+                label_name = opcode[6:]
+                self.labels[label_name] = (i, None)
+                
+            elif opcode == 'JMP':
+                target = program[i+1:i+3].strip()
+                self.labels[target] = (i, None)
+            
+            # Handle subroutines
+            elif opcode.startswith('CALL'):
+                name = opcode[5:]
+                if name not in self.subroutines:
+                    raise ValueError(f"Unknown subroutine: {name}")
+                
+                # Save address of return instruction
+                ret_addr = i + 1
+                
+                # Check for subroutines
+                for j, (sub_name, _) in enumerate(self.subroutines):
+                    if sub_name == name:
+                        self.labels[ret_addr] = (j, None)
+                        
+            elif opcode.startswith('EQ'):
+                b = program[i+2:i+4].strip()
+                a = program[i+3:i+5].strip()
+                
+            elif opcode.startswith('GT'):
+                b = program[i+2:i+4].strip()
+                a = program[i+3:i+5].strip()
+                
+            elif opcode.startswith('LT'):
+                b = program[i+2:i+4].strip()
+                a = program[i+3:i+5].strip()
+            
+            # Handle named variables
+            elif opcode.startswith('STORE'):
+                var_name = opcode[6:]
+                if var_name not in self.variables:
+                    raise ValueError(f"Unknown variable: {var_name}")
+                
+            else:
+                instructions.append(opcode)
+        
+        return instructions
+
+def execute_program(program: str) -> list[str]:
+    interpreter = Interpreter()
+    
+    # Parse program into instructions
+    instructions = []
+    for i in range(0, len(program.split()), 2):
+        if i + 1 >= len(program.split()):
+            break
+        
+        opcode = program[i:i+2].strip()
+        
+        # Handle labels and jumps
+        if opcode.startswith('LABEL'):
+            label_name = opcode[6:]
+            interpreter.labels[label_name] = (i, None)
+            
+        elif opcode == 'JMP':
+            target = program[i+1:i+3].strip()
+            interpreter.labels[target] = (i, None)
+        
+        # Handle subroutines
+        elif opcode.startswith('CALL'):
+            name = opcode[5:]
+            if name not in interpreter.subroutines:
+                raise ValueError(f"Unknown subroutine: {name}")
+            
+            ret_addr = i + 1
+            
+            for j, (sub_name, _) in enumerate(interpreter.subroutines):
+                if sub_name == name:
+                    interpreter.labels[ret_addr] = (j, None)
+        
+        # Handle comparisons
+        elif opcode.startswith('EQ'):
+            b = program[i+2:i+4].strip()
+            a = program[i+3:i+5].strip()
+            
+        elif opcode.startswith('GT'):
+            b = program[i+2:i+4].strip()
+            a = program[i+3:i+5].strip()
+        
+        elif opcode.startswith('LT'):
+            b = program[i+2:i+4].strip()
+            a = program[i+3:i+5].strip()
+        
+        # Handle named variables
+        elif opcode.startswith('STORE'):
+            var_name = opcode[6:]
+            if var_name not in interpreter.variables:
+                raise ValueError(f"Unknown variable: {var_name}")
+            
+        else:
+            instructions.append(opcode)
+    
+    return instructions
+
+# Example usage
+if __name__ == "__main__":
+    program = "LABEL start\nJMP end\nLABEL end\nRET\nSTORE x\nLOAD y\nEQ 10\nGT 20\nLT 30"
+    result = execute_program(program)
+    print(result)

@@ -1,0 +1,118 @@
+import re
+
+def compile_query(query: dict) -> dict:
+    table = query.get('table', '')
+    select = query.get('select', ['*'])
+    where = query.get('where', {})
+    orderby = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    # Parse where conditions
+    conditions = []
+    if 'where' in query:
+        cond_dict = query['where']
+        for field, op, value in cond_dict.items():
+            if isinstance(value, dict):
+                cond = parse_condition(field, op, value)
+                conditions.append(cond)
+            else:
+                conditions.append(f"{field} {op} {value}")
+    
+    # Handle AND and OR
+    if isinstance(where, dict):
+        cond_list = []
+        for cond in where.values():
+            cond_list.append(parse_condition(cond))
+        conditions = [cond for cond in cond_list if cond]
+    else:
+        conditions = [parse_condition(field, op, value) for field, op, value in where.items()]
+
+    # Handle JOIN
+    joins = []
+    if 'joins' in query:
+        join_info = query['joins']
+        for join in join_info:
+            join_type = join.get('type', 'INNER')
+            left_table = join.get('leftTable', '')
+            right_table = join.get('rightTable', '')
+            on_col = join.get('on', {}).get('left', '').replace(' ', '_')
+            joins.append({'type': join_type, 'table': left_table, 'on': f"{left_table} = {on_col}"})
+    
+    # Handle GROUP BY
+    groupby = query.get('groupBy', [])
+    if groupby:
+        gby = ', '.join(groupby)
+        conditions.append(f"GROUP BY {gby}")
+    
+    # Handle ORDER BY
+    if orderby:
+        for field, dir in orderby:
+            params.append(f"{field} {dir}")
+    
+    # Handle LIMIT
+    if limit is not None:
+        params.append(str(limit))
+    
+    # Handle OFFSET
+    if offset is not None:
+        params.append(str(offset))
+
+    # Parse extended operators
+    def parse_condition(field, op, value):
+        if op == 'IS NULL':
+            return f"{field} IS NULL"
+        elif op == 'IS NOT NULL':
+            return f"{field} IS NOT NULL"
+        elif op == 'IN':
+            values = re.findall(r'[^@]+', value)
+            return f"{field} IN ({', '.join(values)})"
+        elif op == 'LIKE':
+            return f"{field} LIKE ${{1}}"
+        elif op == 'NOT IN':
+            values = re.findall(r'[^@]+', value)
+            return f"{field} NOT IN ({', '.join(values)})"
+        elif op == 'OR':
+            conditions = []
+            for cond in value.split(', '):
+                cond = cond.strip()
+                if cond:
+                    conds = re.split(r'[ \t]+', cond)
+                    cond = cond[0].strip()
+                    if cond in conditions:
+                        conditions.append(cond)
+            return " OR ".join(conditions)
+        elif op == '=':
+            return f"{field} = ${{1}}"
+        elif op == '!=':
+            return f"{field} != ${{1}}"
+        elif op == '>':
+            return f"{field} > ${{1}}"
+        elif op == '<':
+            return f"{field} < ${{1}}"
+        elif op == '>=':
+            return f"{field} >= ${{1}}"
+        elif op == '<=':
+            return f"{field} <= ${{1}}"
+        else:
+            raise ValueError(f"Unsupported operator: {op}")
+    
+    # Build parameter list
+    params = []
+    if conditions:
+        param_placeholders = [f"${{i+1}}" for i in range(len(conditions))]
+        params = [f"{field}={value}" for field, value in conditions]
+    else:
+        params = []
+
+    # Build SQL
+    sql = f"SELECT {', '.join(select)} FROM {table}"
+    if conditions:
+        sql += " WHERE "
+        for cond in conditions:
+            sql += f"({cond})"
+    if params:
+        sql += " PARAMETERS"
+    sql = sql.replace(' ', '')
+
+    return {"sql": sql, "params": params}

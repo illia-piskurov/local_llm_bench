@@ -1,0 +1,22 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "benchmark": "cron",
+  "level": "level2",
+  "tested_at": "2026-08-25 10:34:23",
+  "passed": 0,
+  "total": 12,
+  "failures": [
+    "hourly_zero_minute: исключение/таймаут: '<=' not supported between instances of 'str' and 'int'",
+    "exact_daily_time: исключение/таймаут: '<=' not supported between instances of 'str' and 'int'",
+    "minute_list: исключение/таймаут: '<=' not supported between instances of 'str' and 'int'",
+    "hour_range: исключение/таймаут: '<=' not supported between instances of 'str' and 'int'",
+    "first_of_month: исключение/таймаут: '<=' not supported between instances of 'int' and 'str'",
+    "specific_day_of_week: исключение/таймаут: '<=' not supported between instances of 'str' and 'int'",
+    "strictly_after_exact_match: исключение/таймаут: '<=' not supported between instances of 'str' and 'int'",
+    "every_15_minutes_in_work_hours: исключение/таймаут: invalid literal for int() with base 10: '*'",
+    "step_with_range: исключение/таймаут: invalid literal for int() with base 10: '20/5'",
+    "dom_and_dow_or_rule: исключение/таймаут: '<=' not supported between instances of 'list' and 'int'",
+    "every_two_months: исключение/таймаут: invalid literal for int() with base 10: '*'",
+    "cross_year_boundary: ожидалось ['2027-01-01T00:00:00.000Z', '2028-01-01T00:00:00.000Z'], получено ['2026-08-01T00:00:01.000Z', '2026-08-01T00:00:02.000Z']"
+  ]
+}

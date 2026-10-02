@@ -1,0 +1,80 @@
+export function solve(input) {
+  const { query } = input;
+  let paramIndex = 1;
+  const params = [];
+
+  // SELECT clause
+  const selectClause =
+    query.select && query.select.length > 0
+      ? query.select.map((col) => {
+          if (typeof col === 'string') return col;
+          // alias object
+          return `${col.expr} AS ${col.as}`;
+        }).join(', ')
+      : '*';
+
+  // FROM clause
+  const fromClause = `FROM ${query.table}`;
+
+  // JOIN clauses
+  let joinClause = '';
+  if (Array.isArray(query.joins)) {
+    const parts = query.joins.map((j) => {
+      const type = j.type ? `${j.type.toUpperCase()} JOIN` : 'JOIN';
+      const onParts = Object.entries(j.on).map(
+        ([left, right]) => `${left} = ${right}`
+      );
+      return `${type} ${j.table} ON ${onParts.join(' AND ')}`;
+    });
+    joinClause = parts.length ? ' ' + parts.join(' ') : '';
+  }
+
+  // WHERE clause
+  function buildWhere(cond) {
+    if (!cond || typeof cond !== 'object') return '';
+    const keys = Object.keys(cond);
+    if (keys.length === 1 && (keys[0] === 'AND' || keys[0] === 'OR')) {
+      const operator = keys[0];
+      const subconds = cond[operator].map(buildWhere);
+      return `(${subconds.join(` ${operator} `)})`;
+    }
+    // single condition
+    const { field, op, value } = cond;
+    if (op === 'IS NULL' || op === 'IS NOT NULL') {
+      return `${field} ${op}`;
+    }
+    if (op === 'IN' && Array.isArray(value)) {
+      const placeholders = value.map(() => `$${paramIndex++}`);
+      params.push(...value);
+      return `${field} IN (${placeholders.join(', ')})`;
+    }
+    // other ops
+    params.push(value);
+    return `${field} ${op} $${paramIndex++}`;
+  }
+
+  const whereClause = query.where ? ` WHERE ${buildWhere(query.where)}` : '';
+
+  // GROUP BY clause
+  const groupByClause =
+    Array.isArray(query.groupBy) && query.groupBy.length > 0
+      ? ` GROUP BY ${query.groupBy.join(', ')}`
+      : '';
+
+  // ORDER BY clause
+  const orderByClause =
+    Array.isArray(query.orderBy) && query.orderBy.length > 0
+      ? ` ORDER BY ${query.orderBy
+          .map((o) => `${o.field} ${o.dir ? o.dir.toUpperCase() : 'ASC'}`)
+          .join(', ')}`
+      : '';
+
+  // LIMIT and OFFSET
+  const limitClause = typeof query.limit === 'number' ? ` LIMIT ${query.limit}` : '';
+  const offsetClause = typeof query.offset === 'number' ? ` OFFSET ${query.offset}` : '';
+
+  const sql =
+    `SELECT ${selectClause} ${fromClause}${joinClause}${whereClause}${groupByClause}${orderByClause}${limitClause}${offsetClause}`.trim();
+
+  return { sql, params };
+}

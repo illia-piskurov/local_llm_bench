@@ -1,0 +1,77 @@
+{"at":"2026-08-24T13:23:22.364Z","type":"run_started"}
+{"at":"2026-08-24T13:23:22.365Z","type":"request_started","taskId":"flat-to-tree","attempt":1}
+{"at":"2026-08-24T13:24:03.732Z","type":"response_received","taskId":"flat-to-tree","attempt":1,"detail":{"durationMs":41366,"finishReason":"stop","usage":{"prompt_tokens":358,"completion_tokens":375,"total_tokens":733,"completion_tokens_details":{"reasoning_tokens":225}}}}
+{"at":"2026-08-24T13:24:03.952Z","type":"evaluation_finished","taskId":"flat-to-tree","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-24T13:24:03.954Z","type":"request_started","taskId":"paginate-and-sort","attempt":1}
+{"at":"2026-08-24T13:25:03.234Z","type":"provider_error","taskId":"paginate-and-sort","attempt":1,"detail":{"message":"Provider returned HTTP 400","name":"ProviderError","status":400,"body":"{\"error\":\"Engine protocol predict stream returned an error: {\\\"code\\\":500,\\\"message\\\":\\\"The model produced output that does not match the expected peg-native format\\\",\\\"type\\\":\\\"server_error\\\"}\"}"}}
+{"at":"2026-08-24T13:25:03.235Z","type":"request_started","taskId":"deep-merge","attempt":1}
+{"at":"2026-08-24T13:25:34.711Z","type":"provider_error","taskId":"deep-merge","attempt":1,"detail":{"message":"Provider returned HTTP 400","name":"ProviderError","status":400,"body":"{\"error\":\"Engine protocol predict stream returned an error: {\\\"code\\\":500,\\\"message\\\":\\\"The model produced output that does not match the expected peg-native format\\\",\\\"type\\\":\\\"server_error\\\"}\"}"}}
+{"at":"2026-08-24T13:25:34.712Z","type":"request_started","taskId":"csv-parse","attempt":1}
+{"at":"2026-08-24T13:28:09.493Z","type":"response_received","taskId":"csv-parse","attempt":1,"detail":{"durationMs":154783,"finishReason":"stop","usage":{"prompt_tokens":318,"completion_tokens":1409,"total_tokens":1727,"completion_tokens_details":{"reasoning_tokens":370}}}}
+{"at":"2026-08-24T13:28:09.566Z","type":"evaluation_finished","taskId":"csv-parse","attempt":1,"detail":{"status":"failed","passed":2,"total":4}}
+{"at":"2026-08-24T13:28:09.566Z","type":"request_started","taskId":"render-template","attempt":1}
+{"at":"2026-08-24T13:28:38.952Z","type":"response_received","taskId":"render-template","attempt":1,"detail":{"durationMs":29386,"finishReason":"stop","usage":{"prompt_tokens":321,"completion_tokens":261,"total_tokens":582,"completion_tokens_details":{"reasoning_tokens":72}}}}
+{"at":"2026-08-24T13:28:39.032Z","type":"evaluation_finished","taskId":"render-template","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-24T13:28:39.033Z","type":"request_started","taskId":"shopping-cart","attempt":1}
+{"at":"2026-08-24T13:29:22.231Z","type":"response_received","taskId":"shopping-cart","attempt":1,"detail":{"durationMs":43194,"finishReason":"stop","usage":{"prompt_tokens":473,"completion_tokens":377,"total_tokens":850,"completion_tokens_details":{"reasoning_tokens":31}}}}
+{"at":"2026-08-24T13:29:22.307Z","type":"evaluation_finished","taskId":"shopping-cart","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-24T13:29:22.308Z","type":"request_started","taskId":"query-string-parser","attempt":1}
+{"at":"2026-08-24T13:30:32.603Z","type":"response_received","taskId":"query-string-parser","attempt":1,"detail":{"durationMs":70295,"finishReason":"stop","usage":{"prompt_tokens":396,"completion_tokens":646,"total_tokens":1042,"completion_tokens_details":{"reasoning_tokens":194}}}}
+{"at":"2026-08-24T13:30:32.676Z","type":"evaluation_finished","taskId":"query-string-parser","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-24T13:30:32.677Z","type":"request_started","taskId":"schema-validator","attempt":1}
+{"at":"2026-08-24T13:31:44.988Z","type":"response_received","taskId":"schema-validator","attempt":1,"detail":{"durationMs":72311,"finishReason":"stop","usage":{"prompt_tokens":402,"completion_tokens":660,"total_tokens":1062,"completion_tokens_details":{"reasoning_tokens":124}}}}
+{"at":"2026-08-24T13:31:45.069Z","type":"evaluation_finished","taskId":"schema-validator","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-24T13:31:45.070Z","type":"request_started","taskId":"state-reducer","attempt":1}
+{"at":"2026-08-24T13:32:44.565Z","type":"response_received","taskId":"state-reducer","attempt":1,"detail":{"durationMs":59494,"finishReason":"stop","usage":{"prompt_tokens":385,"completion_tokens":533,"total_tokens":918,"completion_tokens_details":{"reasoning_tokens":52}}}}
+{"at":"2026-08-24T13:32:44.645Z","type":"evaluation_finished","taskId":"state-reducer","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-24T13:32:44.646Z","type":"request_started","taskId":"rbac-checker","attempt":1}
+{"at":"2026-08-24T13:33:25.338Z","type":"response_received","taskId":"rbac-checker","attempt":1,"detail":{"durationMs":40691,"finishReason":"stop","usage":{"prompt_tokens":432,"completion_tokens":367,"total_tokens":799,"completion_tokens_details":{"reasoning_tokens":21}}}}
+{"at":"2026-08-24T13:33:25.416Z","type":"evaluation_finished","taskId":"rbac-checker","attempt":1,"detail":{"status":"passed","passed":3,"total":3}}
+{"at":"2026-08-24T13:33:25.417Z","type":"request_started","taskId":"i18n-pluralize","attempt":1}
+{"at":"2026-08-24T13:34:04.680Z","type":"response_received","taskId":"i18n-pluralize","attempt":1,"detail":{"durationMs":39263,"finishReason":"stop","usage":{"prompt_tokens":391,"completion_tokens":355,"total_tokens":746,"completion_tokens_details":{"reasoning_tokens":40}}}}
+{"at":"2026-08-24T13:34:04.778Z","type":"evaluation_finished","taskId":"i18n-pluralize","attempt":1,"detail":{"status":"passed","passed":3,"total":3}}
+{"at":"2026-08-24T13:34:04.780Z","type":"request_started","taskId":"sql-query-builder","attempt":1}
+{"at":"2026-08-24T13:35:54.192Z","type":"response_received","taskId":"sql-query-builder","attempt":1,"detail":{"durationMs":109412,"finishReason":"stop","usage":{"prompt_tokens":562,"completion_tokens":970,"total_tokens":1532,"completion_tokens_details":{"reasoning_tokens":94}}}}
+{"at":"2026-08-24T13:35:54.310Z","type":"evaluation_finished","taskId":"sql-query-builder","attempt":1,"detail":{"status":"passed","passed":3,"total":3}}
+{"at":"2026-08-24T13:35:54.312Z","type":"request_started","taskId":"json-schema-deref-validate","attempt":1}
+{"at":"2026-08-24T13:37:52.241Z","type":"response_received","taskId":"json-schema-deref-validate","attempt":1,"detail":{"durationMs":117929,"finishReason":"stop","usage":{"prompt_tokens":455,"completion_tokens":1063,"total_tokens":1518,"completion_tokens_details":{"reasoning_tokens":212}}}}
+{"at":"2026-08-24T13:37:52.349Z","type":"evaluation_finished","taskId":"json-schema-deref-validate","attempt":1,"detail":{"status":"failed","passed":1,"total":3}}
+{"at":"2026-08-24T13:37:52.350Z","type":"request_started","taskId":"cron-next-runs","attempt":1}
+{"at":"2026-08-24T13:39:44.748Z","type":"response_received","taskId":"cron-next-runs","attempt":1,"detail":{"durationMs":112397,"finishReason":"stop","usage":{"prompt_tokens":415,"completion_tokens":1027,"total_tokens":1442,"completion_tokens_details":{"reasoning_tokens":323}}}}
+{"at":"2026-08-24T13:39:44.952Z","type":"evaluation_finished","taskId":"cron-next-runs","attempt":1,"detail":{"status":"timeout","passed":1,"total":3}}
+{"at":"2026-08-24T13:39:44.953Z","type":"request_started","taskId":"longest-substring-no-repeat","attempt":1}
+{"at":"2026-08-24T13:40:04.132Z","type":"response_received","taskId":"longest-substring-no-repeat","attempt":1,"detail":{"durationMs":19179,"finishReason":"stop","usage":{"prompt_tokens":178,"completion_tokens":170,"total_tokens":348,"completion_tokens_details":{"reasoning_tokens":20}}}}
+{"at":"2026-08-24T13:40:04.221Z","type":"evaluation_finished","taskId":"longest-substring-no-repeat","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-24T13:40:04.222Z","type":"request_started","taskId":"group-anagrams","attempt":1}
+{"at":"2026-08-24T13:40:32.522Z","type":"response_received","taskId":"group-anagrams","attempt":1,"detail":{"durationMs":28300,"finishReason":"stop","usage":{"prompt_tokens":207,"completion_tokens":257,"total_tokens":464,"completion_tokens_details":{"reasoning_tokens":100}}}}
+{"at":"2026-08-24T13:40:32.614Z","type":"evaluation_finished","taskId":"group-anagrams","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-24T13:40:32.615Z","type":"request_started","taskId":"top-k-frequent","attempt":1}
+{"at":"2026-08-24T13:41:03.861Z","type":"response_received","taskId":"top-k-frequent","attempt":1,"detail":{"durationMs":31246,"finishReason":"stop","usage":{"prompt_tokens":199,"completion_tokens":284,"total_tokens":483,"completion_tokens_details":{"reasoning_tokens":101}}}}
+{"at":"2026-08-24T13:41:03.951Z","type":"evaluation_finished","taskId":"top-k-frequent","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-24T13:41:03.952Z","type":"request_started","taskId":"merge-intervals","attempt":1}
+{"at":"2026-08-24T13:41:33.633Z","type":"provider_error","taskId":"merge-intervals","attempt":1,"detail":{"message":"Provider returned HTTP 400","name":"ProviderError","status":400,"body":"{\"error\":\"Engine protocol predict stream returned an error: {\\\"code\\\":500,\\\"message\\\":\\\"The model produced output that does not match the expected peg-native format\\\",\\\"type\\\":\\\"server_error\\\"}\"}"}}
+{"at":"2026-08-24T13:41:33.634Z","type":"request_started","taskId":"flatten-tree","attempt":1}
+{"at":"2026-08-24T13:41:49.719Z","type":"response_received","taskId":"flatten-tree","attempt":1,"detail":{"durationMs":16084,"finishReason":"stop","usage":{"prompt_tokens":236,"completion_tokens":134,"total_tokens":370,"completion_tokens_details":{"reasoning_tokens":37}}}}
+{"at":"2026-08-24T13:41:49.813Z","type":"evaluation_finished","taskId":"flatten-tree","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-24T13:41:49.814Z","type":"request_started","taskId":"shortest-path-grid","attempt":1}
+{"at":"2026-08-24T13:42:34.201Z","type":"provider_error","taskId":"shortest-path-grid","attempt":1,"detail":{"message":"Provider returned HTTP 400","name":"ProviderError","status":400,"body":"{\"error\":\"Engine protocol predict stream returned an error: {\\\"code\\\":500,\\\"message\\\":\\\"The model produced output that does not match the expected peg-native format\\\",\\\"type\\\":\\\"server_error\\\"}\"}"}}
+{"at":"2026-08-24T13:42:34.202Z","type":"request_started","taskId":"lcs-length","attempt":1}
+{"at":"2026-08-24T13:43:02.949Z","type":"response_received","taskId":"lcs-length","attempt":1,"detail":{"durationMs":28746,"finishReason":"stop","usage":{"prompt_tokens":182,"completion_tokens":259,"total_tokens":441,"completion_tokens_details":{"reasoning_tokens":33}}}}
+{"at":"2026-08-24T13:43:03.044Z","type":"evaluation_finished","taskId":"lcs-length","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-24T13:43:03.045Z","type":"request_started","taskId":"topological-sort","attempt":1}
+{"at":"2026-08-24T13:43:29.960Z","type":"response_received","taskId":"topological-sort","attempt":1,"detail":{"durationMs":26915,"finishReason":"stop","usage":{"prompt_tokens":227,"completion_tokens":240,"total_tokens":467,"completion_tokens_details":{"reasoning_tokens":21}}}}
+{"at":"2026-08-24T13:43:30.057Z","type":"evaluation_finished","taskId":"topological-sort","attempt":1,"detail":{"status":"passed","passed":5,"total":5}}
+{"at":"2026-08-24T13:43:30.058Z","type":"request_started","taskId":"rotate-square-matrix","attempt":1}
+{"at":"2026-08-24T13:43:46.459Z","type":"provider_error","taskId":"rotate-square-matrix","attempt":1,"detail":{"message":"Provider returned HTTP 400","name":"ProviderError","status":400,"body":"{\"error\":\"Engine protocol predict stream returned an error: {\\\"code\\\":500,\\\"message\\\":\\\"The model produced output that does not match the expected peg-native format\\\",\\\"type\\\":\\\"server_error\\\"}\"}"}}
+{"at":"2026-08-24T13:43:46.460Z","type":"request_started","taskId":"validate-sudoku-board","attempt":1}
+{"at":"2026-08-24T13:44:25.639Z","type":"response_received","taskId":"validate-sudoku-board","attempt":1,"detail":{"durationMs":39178,"finishReason":"stop","usage":{"prompt_tokens":246,"completion_tokens":351,"total_tokens":597,"completion_tokens_details":{"reasoning_tokens":20}}}}
+{"at":"2026-08-24T13:44:25.740Z","type":"evaluation_finished","taskId":"validate-sudoku-board","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
+{"at":"2026-08-24T13:44:25.741Z","type":"request_started","taskId":"deep-equal","attempt":1}
+{"at":"2026-08-24T13:45:02.416Z","type":"response_received","taskId":"deep-equal","attempt":1,"detail":{"durationMs":36675,"finishReason":"stop","usage":{"prompt_tokens":214,"completion_tokens":329,"total_tokens":543,"completion_tokens_details":{"reasoning_tokens":28}}}}
+{"at":"2026-08-24T13:45:02.528Z","type":"evaluation_finished","taskId":"deep-equal","attempt":1,"detail":{"status":"passed","passed":8,"total":8}}
+{"at":"2026-08-24T13:45:02.529Z","type":"request_started","taskId":"bytecode-vm-evolution","attempt":1}
+{"at":"2026-08-24T13:46:49.054Z","type":"provider_error","taskId":"bytecode-vm-evolution","attempt":1,"detail":{"message":"Provider returned HTTP 400","name":"ProviderError","status":400,"body":"{\"error\":\"Engine protocol predict stream returned an error: {\\\"code\\\":500,\\\"message\\\":\\\"The model produced output that does not match the expected peg-native format\\\",\\\"type\\\":\\\"server_error\\\"}\"}"}}
+{"at":"2026-08-24T13:46:49.055Z","type":"request_started","taskId":"event-emitter-evolution","attempt":1}
+{"at":"2026-08-24T13:47:55.443Z","type":"response_received","taskId":"event-emitter-evolution","attempt":1,"detail":{"durationMs":66388,"finishReason":"stop","usage":{"prompt_tokens":468,"completion_tokens":592,"total_tokens":1060,"completion_tokens_details":{"reasoning_tokens":199}}}}
+{"at":"2026-08-24T13:47:55.550Z","type":"evaluation_finished","taskId":"event-emitter-evolution","attempt":1,"detail":{"status":"passed","passed":3,"total":3}}
+{"at":"2026-08-24T13:47:55.552Z","type":"run_finished","detail":{"status":"completed"}}

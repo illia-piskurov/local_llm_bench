@@ -1,0 +1,84 @@
+export function solve(input) {
+  // Helper to parse a single cron field into a Set of allowed integers
+  const parseField = (field, min, max) => {
+    const result = new Set();
+    if (field === '*') {
+      for (let i = min; i <= max; i++) result.add(i);
+      return result;
+    }
+    // Split by commas for lists
+    const parts = field.split(',');
+    for (const part of parts) {
+      let step = 1;
+      let rangePart = part;
+      if (part.includes('/')) {
+        [rangePart, step] = part.split('/');
+        step = parseInt(step, 10);
+      }
+      let start, end;
+      if (rangePart === '*') {
+        start = min;
+        end = max;
+      } else if (rangePart.includes('-')) {
+        [start, end] = rangePart.split('-').map(Number);
+      } else {
+        start = end = parseInt(rangePart, 10);
+      }
+      for (let val = start; val <= end; val += step) result.add(val);
+    }
+    return result;
+  };
+
+  // Parse all fields
+  const [minField, hourField, domField, monthField, dowField] =
+    input.cron.trim().split(/\s+/);
+
+  const minutesSet = parseField(minField, 0, 59);
+  const hoursSet = parseField(hourField, 0, 23);
+  const domSet = parseField(domField, 1, 31);
+  const monthSet = parseField(monthField, 1, 12);
+  const dowSet = parseField(dowField, 0, 6);
+
+  const isDomAll = domField === '*';
+  const isDowAll = dowField === '*';
+
+  // Start from the next minute strictly after input.from
+  let startDate = new Date(input.from);
+  startDate.setSeconds(0, 0); // zero seconds and ms
+  if (startDate <= new Date(input.from)) {
+    startDate.setMinutes(startDate.getMinutes() + 1);
+  }
+
+  const results = [];
+  while (results.length < input.count) {
+    const d = startDate;
+    const minute = d.getUTCMinutes();
+    const hour = d.getUTCHours();
+    const day = d.getUTCDate();
+    const month = d.getUTCMonth() + 1; // JS months 0-11
+    const weekday = d.getUTCDay();
+
+    const minuteMatch = minutesSet.has(minute);
+    const hourMatch = hoursSet.has(hour);
+    const monthMatch = monthSet.has(month);
+
+    const domMatch = domSet.has(day);
+    const dowMatch = dowSet.has(weekday);
+
+    let dayMatch;
+    if (!isDomAll && !isDowAll) {
+      dayMatch = domMatch || dowMatch; // OR rule
+    } else if (isDomAll) {
+      dayMatch = dowMatch;
+    } else { // isDowAll
+      dayMatch = domMatch;
+    }
+
+    if (minuteMatch && hourMatch && monthMatch && dayMatch) {
+      results.push(d.toISOString());
+    }
+    startDate.setMinutes(startDate.getMinutes() + 1);
+  }
+
+  return results;
+}

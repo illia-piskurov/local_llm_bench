@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "zai-org/glm-4.7-flash",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-08-25 16:01:57",
+  "stats": {
+    "input_tokens": 1357,
+    "total_output_tokens": 2966,
+    "reasoning_output_tokens": 2048,
+    "tokens_per_second": 6.497623520485813,
+    "time_to_first_token_seconds": 43.910485,
+    "model_load_time_seconds": null
+  }
+}

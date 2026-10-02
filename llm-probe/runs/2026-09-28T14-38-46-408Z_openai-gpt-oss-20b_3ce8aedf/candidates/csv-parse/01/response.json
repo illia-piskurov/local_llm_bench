@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-mv209bglnoe6avwj0heju",
+  "object": "chat.completion",
+  "created": 1790606367,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  // If input is empty or only whitespace, return []\n  if (!input || /^\\s*$/.test(input)) return [];\n\n  const rows = [];\n  let row = '';\n  let field = '';\n  let inQuotes = false;\n  let i = 0;\n\n  while (i < input.length) {\n    const ch = input[i];\n\n    if (inQuotes) {\n      if (ch === '\"') {\n        // Check for escaped quote\n        if (i + 1 < input.length && input[i + 1] === '\"') {\n          field += '\"';\n          i += 2;\n          continue;\n        } else {\n          inQuotes = false;\n          i++;\n          continue;\n        }\n      } else {\n        field += ch;\n        i++;\n        continue;\n      }\n    } else {\n      if (ch === '\"') {\n        inQuotes = true;\n        i++;\n        continue;\n      } else if (ch === ',') {\n        row += field + '\\0'; // use null char as separator\n        field = '';\n        i++;\n        continue;\n      } else if (ch === '\\n' || ch === '\\r') {\n        // Handle CRLF\n        if (ch === '\\r' && i + 1 < input.length && input[i + 1] === '\\n') {\n          i++; // skip LF\n        }\n        row += field + '\\0';\n        rows.push(row);\n        row = '';\n        field = '';\n        i++;\n        continue;\n      } else {\n        field += ch;\n        i++;\n        continue;\n      }\n    }\n  }\n\n  // Add last field and row if any data remains\n  if (field !== '' || row !== '') {\n    row += field + '\\0';\n    rows.push(row);\n  }\n\n  // Remove possible empty trailing line\n  if (rows.length > 0 && rows[rows.length - 1].trim() === '') {\n    rows.pop();\n  }\n\n  if (rows.length <= 1) return [];\n\n  const headerRow = rows[0];\n  const headers = [];\n  let buf = '';\n  for (let j = 0; j < headerRow.length; j++) {\n    const c = headerRow[j];\n    if (c === '\\0') {\n      headers.push(buf.trim());\n      buf = '';\n    } else {\n      buf += c;\n    }\n  }\n\n  const result = [];\n\n  for (let rIdx = 1; rIdx < rows.length; rIdx++) {\n    const rowStr = rows[rIdx];\n    const obj = {};\n    let idx = 0;\n    for (let h = 0; h < headers.length; h++) {\n      let valBuf = '';\n      while (idx < rowStr.length && rowStr[idx] !== '\\0') {\n        valBuf += rowStr[idx];\n        idx++;\n      }\n      // skip separator\n      if (idx < rowStr.length && rowStr[idx] === '\\0') idx++;\n\n      // If value was quoted originally, it already had quotes removed during parsing\n      obj[headers[h]] = valBuf;\n    }\n    result.push(obj);\n  }\n\n  return result;\n}",
+        "reasoning": "We need to parse CSV with quoting rules. Implement simple parser.\n\nReturn [] if only header or empty input. If only header row with no data rows, return [].\n\nEdge: trailing newline ignored. Should split lines respecting quoted newlines.\n\nWe'll parse char by char.\n\nImplement solve(input). Input is string. Return array of objects.\n\nLet's code.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 318,
+    "completion_tokens": 742,
+    "total_tokens": 1060,
+    "completion_tokens_details": {
+      "reasoning_tokens": 70
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

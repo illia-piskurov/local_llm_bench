@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+import sys
+
+def compile_query(query):
+    """
+    Compile a simple AST query dictionary into parameterized SQL.
+    Returns {"sql": sql_string, "params": [values]}
+    """
+
+    params = []
+    param_counter = 1
+
+    def _add_param(value):
+        nonlocal param_counter
+        placeholder = f"${param_counter}"
+        param_counter += 1
+        params.append(value)
+        return placeholder
+
+    # SELECT clause
+    select_cols = query.get("select", ["*"])
+    if not isinstance(select_cols, list) or any(not isinstance(c, str) for c in select_cols):
+        raise ValueError("`select` must be a list of column names")
+    select_part = "SELECT " + ", ".join(select_cols)
+
+    # FROM clause
+    table = query.get("table")
+    if not table:
+        raise ValueError("`table` is required")
+    from_part = f"FROM {table}"
+
+    # WHERE clause
+    where_tree = query.get("where")
+
+    def _compile_where(node):
+        if isinstance(node, dict):
+            if "AND" in node:
+                subconds = [ _compile_where(c) for c in node["AND"] ]
+                joined = " AND ".join(subconds)
+                return f"({joined})" if len(subconds) > 1 else joined
+            if "OR" in node:
+                subconds = [ _compile_where(c) for c in node["OR"] ]
+                joined = " OR ".join(subconds)
+                return f"({joined})" if len(subconds) > 1 else joined
+            # simple condition
+            field = node.get("field")
+            op = node.get("op")
+            value = node.get("value")
+            if field is None or op not in ("=", "!=", ">", "<", ">=", "<="):
+                raise ValueError(f"Invalid where condition: {node}")
+            placeholder = _add_param(value)
+            return f"{field} {op} {placeholder}"
+        else:
+            raise ValueError(f"Unsupported where node type: {type(node)}")
+
+    if where_tree is not None:
+        where_part = "WHERE " + _compile_where(where_tree)
+    else:
+        where_part = ""
+
+    # ORDER BY clause
+    order_by = query.get("orderBy")
+    order_parts = []
+    if isinstance(order_by, list):
+        for ob in order_by:
+            field = ob.get("field")
+            if not field:
+                continue
+            direction = ob.get("dir", "ASC").upper()
+            if direction not in ("ASC", "DESC"):
+                direction = "ASC"
+            order_parts.append(f"{field} {direction}")
+    order_part = f"ORDER BY {', '.join(order_parts)}" if order_parts else ""
+
+    # LIMIT and OFFSET
+    limit = query.get("limit")
+    offset = query.get("offset")
+
+    limit_part = f"LIMIT {int(limit)}" if isinstance(limit, int) else ""
+    offset_part = f"OFFSET {int(offset)}" if isinstance(offset, int) else ""
+
+    sql_parts = [select_part, from_part]
+    if where_part:
+        sql_parts.append(where_part)
+    if order_part:
+        sql_parts.append(order_part)
+    if limit_part:
+        sql_parts.append(limit_part)
+    if offset_part:
+        sql_parts.append(offset_part)
+
+    sql = " ".join(sql_parts).strip()
+    return {"sql": sql, "params": params}
+
+# Example usage (uncomment to test):
+if __name__ == "__main__":
+    sample_query = {
+        "table": "users",
+        "select": ["id", "name"],
+        "where": {
+            "AND": [
+                {"field": "age", "op": ">=", "value": 18},
+                {"OR": [
+                    {"field": "status", "op": "=", "value": "active"},
+                    {"field": "role", "op": "=", "value": "admin"}
+                ]}
+            ]
+        },
+        "orderBy": [{"field": "name", "dir": "DESC"}],
+        "limit": 10,
+        "offset": 5
+    }
+    result = compile_query(sample_query)
+    print(result["sql"])
+    print(result["params"])

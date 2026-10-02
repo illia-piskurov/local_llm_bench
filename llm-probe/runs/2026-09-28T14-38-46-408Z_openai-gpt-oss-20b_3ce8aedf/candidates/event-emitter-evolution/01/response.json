@@ -1,0 +1,29 @@
+{
+  "id": "chatcmpl-0kdp84zjy6imapr0khazv7",
+  "object": "chat.completion",
+  "created": 1790606845,
+  "model": "openai/gpt-oss-20b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "export function solve(input) {\n  const ops = input.operations;\n  // Maintain a list of registrations in order\n  const listeners = []; // { event, id, once }\n  const log = [];\n\n  for (const op of ops) {\n    if (op.op === 'on' || op.op === 'once') {\n      listeners.push({ event: op.event, id: op.listenerId, once: op.op === 'once' });\n    } else if (op.op === 'off') {\n      // remove matching registration(s)\n      for (let i = listeners.length - 1; i >= 0; i--) {\n        const l = listeners[i];\n        if (l.event === op.event && l.id === op.listenerId) {\n          listeners.splice(i, 1);\n        }\n      }\n    } else if (op.op === 'emit') {\n      const eventName = op.event;\n      const payload = op.payload;\n\n      // Determine matching listeners in registration order\n      for (let i = 0; i < listeners.length; i++) {\n        const l = listeners[i];\n        let match = false;\n        if (l.event === '*') {\n          match = true;\n        } else if (l.event.endsWith('.*')) {\n          const prefix = l.event.slice(0, -2);\n          if (eventName.startsWith(prefix + '.')) {\n            match = true;\n          }\n        } else if (l.event === eventName) {\n          match = true;\n        }\n\n        if (match) {\n          log.push({ listenerId: l.id, event: eventName, payload });\n\n          if (l.once) {\n            listeners.splice(i, 1);\n            i--; // adjust index after removal\n          }\n        }\n      }\n    }\n  }\n\n  return { log };\n}",
+        "reasoning": "Implement emitter. Use maps of event->listeners array. For wildcard '*' and prefix 'user.*'. When emit, collect listeners: exact match event, prefix matches any pattern ending with .* where prefix equals part before dot. Also '*' listeners. Order: by registration order overall? Should be per event: listeners registered earlier first. So maintain a global array of listener registrations with event pattern and id, and when emit, iterate through that array filtering matches. Need to handle once: after invocation remove from list. Also off removes specific listenerId for that event pattern. Implement.\n\nReturn log array.",
+        "tool_calls": []
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 468,
+    "completion_tokens": 501,
+    "total_tokens": 969,
+    "completion_tokens_details": {
+      "reasoning_tokens": 118
+    }
+  },
+  "stats": {},
+  "system_fingerprint": "openai/gpt-oss-20b"
+}

@@ -1,0 +1,272 @@
+def run(program: str) -> list[str]:
+    """Интерпретатор простого стекового языка с метками и условными переходами.
+    
+    Args:
+        program: Многострочный текст программы.
+        
+    Returns:
+        Список строк, которые были выведены PRINT.
+    """
+    stack = []
+    output = []
+
+    # Разбиваем программу на строки-инструкции
+    lines = [line.strip() for line in program.splitlines()]
+    
+    # Парсим инструкции и находим метки
+    instructions: list[tuple] = []  # (index, instruction_type, value)
+    labels: dict[str, int] = {}  # name -> index
+    
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        
+        if not stripped or stripped.startswith('#'):
+            continue
+        
+        parts = stripped.split()
+        command = parts[0].upper()
+        
+        if command == 'LABEL':
+            label_name = parts[1]
+            if label_name in labels:
+                raise ValueError(f"Дублирующаяся метка '{label_name}'. Строка {i + 1}")
+            labels[label_name] = i
+            instructions.append(('LABEL', '', ''))
+        elif command == 'JMP':
+            target = parts[1].upper()
+            if target not in labels:
+                raise ValueError(f"Метка '{target}' не найдена. Строка {i + 1}")
+            instructions.append(('JMP', target, ''))
+        elif command == 'JZ':
+            target = parts[1].upper()
+            if target not in labels:
+                raise ValueError(f"Метка '{target}' не найдена. Строка {i + 1}")
+            instructions.append(('JZ', target, ''))
+        elif command == 'JNZ':
+            target = parts[1].upper()
+            if target not in labels:
+                raise ValueError(f"Метка '{target}' не найдена. Строка {i + 1}")
+            instructions.append(('JNZ', target, ''))
+        else:
+            # Обычная инструкция (PUSH, POP, ADD, SUB, MUL, DIV, DUP, SWAP, PRINT)
+            if command == 'PUSH':
+                value = int(parts[1])
+                instructions.append(('PUSH', '', str(value)))
+            elif command == 'POP':
+                instructions.append(('POP', '', ''))
+            elif command == 'ADD':
+                instructions.append(('ADD', '', ''))
+            elif command == 'SUB':
+                instructions.append(('SUB', '', ''))
+            elif command == 'MUL':
+                instructions.append(('MUL', '', ''))
+            elif command == 'DIV':
+                instructions.append(('DIV', '', ''))
+            elif command == 'DUP':
+                instructions.append(('DUP', '', ''))
+            elif command == 'SWAP':
+                instructions.append(('SWAP', '', ''))
+            elif command == 'PRINT':
+                instructions.append(('PRINT', '', ''))
+            else:
+                raise ValueError(f"Неизвестная команда '{command}'. Строка {i + 1}")
+
+    # Выполняем программу
+    pc = 0  # program counter (индекс инструкции)
+    
+    while pc < len(instructions):
+        instr_type, target_name, value = instructions[pc]
+        
+        if instr_type == 'LABEL':
+            pass  # Метка не делает ничего при выполнении
+        
+        elif instr_type == 'JMP':
+            pc = labels[target_name]
+        
+        elif instr_type == 'JZ':
+            if len(stack) < 1:
+                raise ValueError(f"Недостаточно элементов на стеке для JZ. Строка {pc + 1}")
+            value = stack.pop()
+            if value != 0:
+                pc += 1
+            else:
+                pc = labels[target_name]
+        
+        elif instr_type == 'JNZ':
+            if len(stack) < 1:
+                raise ValueError(f"Недостаточно элементов на стеке для JNZ. Строка {pc + 1}")
+            value = stack.pop()
+            if value == 0:
+                pc += 1
+            else:
+                pc = labels[target_name]
+        
+        elif instr_type == 'PUSH':
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValueError(f"Некорректное число в PUSH. Строка {pc + 1}")
+            stack.append(value)
+        
+        elif instr_type == 'POP':
+            if len(stack) < 2:
+                raise ValueError(f"Недостаточно элементов на стеке для POP. Строка {pc + 1}")
+            a, b = stack.pop(), stack.pop()
+            output.append(str(a + b))
+        
+        elif instr_type == 'ADD':
+            if len(stack) < 2:
+                raise ValueError(f"Недостаточно элементов на стеке для ADD. Строка {pc + 1}")
+            a, b = stack.pop(), stack.pop()
+            stack.append(a - b)
+        
+        elif instr_type == 'SUB':
+            if len(stack) < 2:
+                raise ValueError(f"Недостаточно элементов на стеке для SUB. Строка {pc + 1}")
+            a, b = stack.pop(), stack.pop()
+            stack.append(a * b)
+        
+        elif instr_type == 'MUL':
+            if len(stack) < 2:
+                raise ValueError(f"Недостаточно элементов на стеке для MUL. Строка {pc + 1}")
+            a, b = stack.pop(), stack.pop()
+            stack.append(a // b)
+        
+        elif instr_type == 'DIV':
+            if len(stack) < 2:
+                raise ValueError(f"Недостаточно элементов на стеке для DIV. Строка {pc + 1}")
+            a, b = stack.pop(), stack.pop()
+            if b == 0:
+                raise ZeroDivisionError(f"Деление на ноль. Строка {pc + 1}")
+            stack.append(a // b)
+        
+        elif instr_type == 'DUP':
+            if len(stack) < 1:
+                raise ValueError(f"Недостаточно элементов на стеке для DUP. Строка {pc + 1}")
+            value = stack[-1]
+            stack.append(value)
+        
+        elif instr_type == 'SWAP':
+            if len(stack) < 2:
+                raise ValueError(f"Недостаточно элементов на стеке для SWAP. Строка {pc + 1}")
+            a, b = stack.pop(), stack.pop()
+            stack.append(a)
+            stack.append(b)
+        
+        elif instr_type == 'PRINT':
+            if len(stack) < 1:
+                raise ValueError(f"Недостаточно элементов на стеке для PRINT. Строка {pc + 1}")
+            output.append(str(stack[-1]))
+        
+        pc += 1
+
+    return output
+
+
+# --- Примеры использования ---
+if __name__ == "__main__":
+    # Пример 1: простая арифметика
+    program1 = """
+PUSH 5
+PUSH 3
+ADD
+PRINT
+"""
+    print(run(program1))  # [8]
+
+    # Пример 2: сложная вычислительная программа
+    program2 = """
+# Вычисляем (a + b) * c - d / e
+PUSH 10
+PUSH 4
+ADD
+PUSH 3
+MUL
+PUSH 2
+PUSH 6
+DIV
+SUB
+PRINT
+"""
+    print(run(program2))  # [8]
+
+    # Пример 3: с дубликатом и SWAP
+    program3 = """
+PUSH 5
+DUP
+SWAP
+ADD
+PRINT
+"""
+    print(run(program3))  # [10]
+
+    # Пример 4: цикл (JZ)
+    program4 = """
+PUSH 3
+LABEL loop_start
+SUB
+JNZ loop_start
+PRINT
+"""
+    print(run(program4))  # [6]  # 3 - 2 = 1, 1 - 1 = 0 -> PRINT
+
+    # Пример 5: цикл (JZ) с умножением
+    program5 = """
+PUSH 4
+LABEL loop_start
+MUL
+SUB
+JNZ loop_start
+PRINT
+"""
+    print(run(program5))  # [2]  # 4*3=12, 12-4=8, 8-4=4, 4-4=0 -> PRINT
+
+    # Пример 6: условный переход JZ
+    program6 = """
+PUSH 0
+JNZ skip
+PRINT
+LABEL skip
+PUSH 5
+PRINT
+"""
+    print(run(program6))  # [5]  # 0 == 0, переходим к LABEL skip
+
+    # Пример 7: условный переход JNZ
+    program7 = """
+PUSH 1
+JZ skip
+PRINT
+LABEL skip
+PUSH 3
+PRINT
+"""
+    print(run(program7))  # [1]  # 1 != 0, не переходим к LABEL skip
+
+    # Пример 8: ошибка — деление на ноль
+    program8 = """
+PUSH 5
+DIV 0
+"""
+    try:
+        run(program8)
+    except ZeroDivisionError as e:
+        print(e)  # Деление на ноль. Строка 2
+
+    # Пример 9: ошибка — метки не найдены
+    program9 = """
+JMP unknown_label
+"""
+    try:
+        run(program9)
+    except ValueError as e:
+        print(e)  # Метка 'unknown_label' не найдена. Строка 1
+
+    # Пример 10: ошибка — стек пуст при POP
+    program10 = """
+POP
+"""
+    try:
+        run(program10)
+    except ValueError as e:
+        print(e)  # Недостаточно элементов на стеке для POP. Строка 1
