@@ -1,0 +1,18 @@
+{
+  "model": "minicpm5-1b-claude-opus-fable5-thinking",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-09-02 12:02:43",
+  "passed": 2,
+  "total": 10,
+  "failures": [
+    "simple_chain: невалидный топологический порядок: ['c', 'b', 'a']",
+    "diamond: невалидный топологический порядок: ['d', 'c', 'b', 'a']",
+    "multiple_roots: невалидный топологический порядок: ['d', 'c', 'b', 'a']",
+    "self_cycle: ожидался None (цикл), получено ['a']",
+    "two_node_cycle: ожидался None (цикл), получено ['a', 'b']",
+    "long_cycle: ожидался None (цикл), получено ['a', 'b', 'c', 'd']",
+    "cycle_with_extra_nodes: ожидался None (цикл), получено ['c', 'd', 'b', 'a']",
+    "wide_graph: невалидный топологический порядок: ['deploy', 'package', 'test', 'lint', 'compile']"
+  ]
+}

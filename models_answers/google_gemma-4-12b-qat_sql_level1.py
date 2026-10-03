@@ -1,56 +1,63 @@
 def compile_query(query: dict) -> dict:
     params = []
 
-    def build_where(node: dict) -> str:
-        if "AND" in node:
-            conditions = [build_where(c) for c in node["AND"]]
-            if len(conditions) > 1:
-                return f"({ ' AND '.join(conditions) })"
-            return conditions[0]
+    def build_where(condition: dict) -> str:
+        if "AND" in condition:
+            sub_conditions = condition["AND"]
+            if len(sub_conditions) > 1:
+                parts = [f"({build_where(c)})" for c in sub_conditions]
+                return " AND ".join(parts)
+            else:
+                return build_where(sub_conditions[0])
         
-        if "OR" in node:
-            conditions = [build_where(c) for c in node["OR"]]
-            if len(conditions) > 1:
-                return f"({ ' OR '.join(conditions) })"
-            return conditions[0]
+        if "OR" in condition:
+            sub_conditions = condition["OR"]
+            if len(sub_conditions) > 1:
+                parts = [f"({build_where(c)})" for c in sub_conditions]
+                return " OR ".join(parts)
+            else:
+                return build_where(sub_conditions[0])
         
-        # Leaf node: { field: str, op: str, value: any }
-        params.append(node["value"])
-        return f"{node['field']} {node['op']} ${len(params)}"
+        # Leaf condition: { field: str, op: str, value: any }
+        field = condition.get("field")
+        op = condition.get("op")
+        value = condition.get("value")
+        params.append(value)
+        return f"{field} {op} ${len(params)}"
 
-    # 1. SELECT clause
-    select_cols = query.get("select", ["*"])
-    select_str = ", ".join(select_cols)
+    # 1. SELECT
+    select_clause = ", ".join(query.get("select", ["*"]))
     
-    # 2. FROM clause
-    table_name = query["table"]
+    # 2. FROM
+    table = query.get("table")
     
-    sql_parts = [f"SELECT {select_str} FROM {table_name}"]
-
-    # 3. WHERE clause
-    where_node = query.get("where")
-    if where_node:
-        where_clause = build_where(where_node)
-        sql_parts.append(f"WHERE {where_clause}")
-
-    # 4. ORDER BY clause
-    order_by_list = query.get("orderBy")
-    if order_by_list:
-        order_parts = []
-        for item in order_by_list:
+    # 3. WHERE
+    where_clause = ""
+    if "where" in query and query["where"]:
+        where_clause = " WHERE " + build_where(query["where"])
+    
+    # 4. ORDER BY
+    order_clause = ""
+    if "orderBy" in query and query["orderBy"]:
+        orders = []
+        for item in query["orderBy"]:
+            field = item.get("field")
             direction = item.get("dir", "ASC")
-            order_parts.append(f"{item['field']} {direction}")
-        sql_parts.append(f"ORDER BY {', '.join(order_parts)}")
-
-    # 5. LIMIT clause
+            orders.append(f"{field} {direction}")
+        order_clause = " ORDER BY " + ", ".join(orders)
+    
+    # 5. LIMIT & OFFSET
+    limit_clause = ""
     if "limit" in query:
-        sql_parts.append(f"LIMIT {query['limit']}")
-
-    # 6. OFFSET clause
+        limit_clause = f" LIMIT {query['limit']}"
+        
+    offset_clause = ""
     if "offset" in query:
-        sql_parts.append(f"OFFSET {query['offset']}")
+        offset_clause = f" OFFSET {query['offset']}"
 
+    sql = f"SELECT {select_clause} FROM {table}{where_clause}{order_clause}{limit_clause}{offset_clause}"
+    
     return {
-        "sql": " ".join(sql_parts),
+        "sql": sql,
         "params": params
     }

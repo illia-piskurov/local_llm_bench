@@ -1,0 +1,11 @@
+{
+  "model": "llama-3.2-1b-instruct",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-09-02 11:57:46",
+  "passed": 0,
+  "total": 37,
+  "failures": [
+    "не удалось загрузить решение: invalid character '—' (U+2014) (llama-3.2-1b-instruct_vm_level3.py, line 185)"
+  ]
+}

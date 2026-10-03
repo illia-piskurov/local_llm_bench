@@ -1,0 +1,9 @@
+{
+  "model": "qwen/qwen3-1.7b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-09-02 12:52:23",
+  "passed": 10,
+  "total": 10,
+  "failures": []
+}

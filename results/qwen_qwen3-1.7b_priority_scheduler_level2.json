@@ -1,0 +1,15 @@
+{
+  "model": "qwen/qwen3-1.7b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-09-03 11:38:15",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: неожиданное исключение: name 'earliest_completion' is not defined",
+    "parallel_tasks_reduce_makespan: неожиданное исключение: name 'earliest_completion' is not defined",
+    "dependencies_and_workers: неожиданное исключение: name 'earliest_completion' is not defined",
+    "critical_path_longer_than_worker_parallelism: неожиданное исключение: name 'earliest_completion' is not defined",
+    "wide_graph_with_unlocks: неожиданное исключение: name 'earliest_completion' is not defined"
+  ]
+}

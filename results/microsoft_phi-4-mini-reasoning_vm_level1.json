@@ -1,0 +1,11 @@
+{
+  "model": "microsoft/phi-4-mini-reasoning",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-09-02 11:05:33",
+  "passed": 0,
+  "total": 18,
+  "failures": [
+    "не удалось загрузить решение: unterminated string literal (detected at line 2) (microsoft_phi-4-mini-reasoning_vm_level1.py, line 2)"
+  ]
+}

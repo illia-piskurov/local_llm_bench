@@ -1,0 +1,32 @@
+{
+  "model": "qwen/qwen3-1.7b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-09-03 11:30:58",
+  "passed": 5,
+  "total": 27,
+  "failures": [
+    "add: ожидалось ['5'], получено ['5', '5']",
+    "sub_order: ожидалось ['7'], получено ['-7', '-7']",
+    "mul: ожидалось ['24'], получено ['24', '24']",
+    "div_order: ожидалось ['5'], получено ['0', '0']",
+    "div_truncate: ожидалось ['3'], получено ['0', '0']",
+    "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+    "dup: ожидалось ['18'], получено ['9', '18', '18']",
+    "swap: ожидалось ['1'], получено ['1', '-1', '-1']",
+    "pop: ожидалось ['1'], получено ['2', '1']",
+    "comments_and_blank_lines: ожидалось ['7'], получено ['7', '7']",
+    "multiple_prints: неожиданное исключение: Line 5: Stack has less than two elements",
+    "print_does_not_pop: неожиданное исключение: Line 3: Stack is empty",
+    "negative_numbers: ожидалось ['2'], получено ['2', '2']",
+    "complex_chain: ожидалось ['10'], получено ['5', '-4', '-20', '-1', '-1']",
+    "unconditional_jump_skips_code: неожиданное исключение: 'skip'",
+    "jz_taken_when_zero: неожиданное исключение: Line 2: Invalid JZ command",
+    "jz_not_taken_when_nonzero: неожиданное исключение: Line 2: Invalid JZ command",
+    "jnz_taken_when_nonzero: неожиданное исключение: Line 2: Invalid JNZ command",
+    "jnz_not_taken_when_zero: неожиданное исключение: Line 2: Invalid JNZ command",
+    "countdown_loop: неожиданное исключение: Line 6: Stack has less than two elements",
+    "count_up_loop: неожиданное исключение: Line 4: Stack has less than two elements",
+    "label_does_nothing_on_its_own: неожиданное исключение: Line 3: Stack is empty"
+  ]
+}

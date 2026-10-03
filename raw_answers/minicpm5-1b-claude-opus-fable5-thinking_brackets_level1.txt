@@ -1,0 +1,14 @@
+```python
+import re
+
+def is_balanced(s: str) -> bool:
+    stack = []
+    pairs = re.findall(r'\([^()]*\)', s)
+    for pair in pairs:
+        if not pair or pair[0] != '(' or pair[-1] != ')':
+            return False
+        stack.append(pair[0])
+        if len(stack) > 1:
+            return False
+    return len(stack) == 0
+```

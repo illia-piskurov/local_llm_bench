@@ -1,0 +1,16 @@
+{
+  "host_id": "e9d2b834bf61",
+  "host_label": "Ryzen 7 7735HS | 32GB | 680m Radeon",
+  "model": "minicpm5-1b-claude-opus-fable5-thinking",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-09-02 12:06:59",
+  "stats": {
+    "input_tokens": 445,
+    "total_output_tokens": 2544,
+    "reasoning_output_tokens": 2047,
+    "tokens_per_second": 50.06331542741324,
+    "time_to_first_token_seconds": 0.38626499999999997,
+    "model_load_time_seconds": null
+  }
+}
