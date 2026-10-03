@@ -1,9 +1,0 @@
-export function solve(input) {
-  const result = [];
-
-  for (const node of input.nodes) {
-    result.push(node);
-  }
-
-  return result;
-}

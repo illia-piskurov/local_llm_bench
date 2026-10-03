@@ -105,8 +105,7 @@ def test_zig_c_compilation_and_wasm(tmp_path):
 
 
 def test_html_report_generation(tmp_path):
-    # Using existing or temp db
-    db = Database(Path(__file__).parent.parent / "bench.db")
+    db = Database(tmp_path / "test_bench.db")
     out_file = tmp_path / "test_report.html"
     res = generate_html_report(db, output_path=out_file, sync_records=False)
     assert res.exists()
@@ -115,7 +114,14 @@ def test_html_report_generation(tmp_path):
     assert "Local LLM Benchmark" in content
 
 
-def test_mcp_server_functions():
+def test_mcp_server_functions(tmp_path, monkeypatch):
+    import analytics
+    from sync import import_all
+
+    test_db = Database(tmp_path / "test_mcp.db")
+    import_all(test_db)
+    monkeypatch.setattr(analytics, "DB_PATH", tmp_path / "test_mcp.db")
+
     import mcp_server
 
     lb = mcp_server.get_leaderboard()

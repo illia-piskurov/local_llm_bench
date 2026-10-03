@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from database import Database
+from database import UPSERT_HOST_SQL, Database
 
 logger = logging.getLogger(__name__)
 
@@ -202,27 +202,25 @@ class HostConfig:
 
 
 class HostConfigStore:
-    def __init__(self, db: Database):
+    def __init__(self, db: Database, records_dir: Path | None = None):
         self.db = db
+        self.records_dir = records_dir or (Path(__file__).parent / "records" / "hosts")
 
     def load_all(self) -> list[HostConfig]:
         rows = self.db.conn.execute("SELECT id, label, created_at FROM hosts ORDER BY created_at").fetchall()
         return [HostConfig(id=row["id"], label=row["label"], created_at=row["created_at"]) for row in rows]
 
     def add(self, host: HostConfig) -> HostConfig:
-        self.db.conn.execute(
-            "INSERT OR REPLACE INTO hosts (id, label, created_at) VALUES (?, ?, ?)",
-            (host.id, host.label, host.created_at),
-        )
+        self.db.conn.execute(UPSERT_HOST_SQL, (host.id, host.label, host.created_at))
         self.db.conn.commit()
 
         # Persist to records/ for Git versioning
-        records_dir = Path(__file__).parent / "records" / "hosts"
+        records_dir = self.records_dir
+        path = records_dir / f"{host.id}.json"
         try:
             import json
 
             records_dir.mkdir(parents=True, exist_ok=True)
-            path = records_dir / f"{host.id}.json"
             path.write_text(
                 json.dumps(
                     {"id": host.id, "label": host.label, "created_at": host.created_at}, ensure_ascii=False, indent=2
@@ -230,7 +228,7 @@ class HostConfigStore:
                 encoding="utf-8",
             )
         except Exception as e:
-            logger.warning("Failed to persist host config record in %s: %s", records_dir, e)
+            logger.warning("Failed to persist host config record to %s: %s", path, e)
 
         return host
 

@@ -19,7 +19,7 @@ from database import Database
 from host_configs import HostConfig, HostConfigStore
 from html_report import generate_html_report, open_report_in_browser
 from lmstudio import Model
-from runner import run_queue
+from runner import run_queue, set_default_db
 from storage import ResultStore, RunStore, SpeedResultStore
 from sync import sync_db_and_records
 
@@ -33,10 +33,12 @@ if sys.platform == "win32":
 console = Console(legacy_windows=False)
 ROOT = Path(__file__).parent
 db = Database(ROOT / "bench.db")
+set_default_db(db)
 store = ResultStore(db=db, answers_root=ROOT, raw_answers_dir=ROOT / "raw_answers")
 speed_store = SpeedResultStore(db)
 host_store = HostConfigStore(db)
 run_store = RunStore(db)
+run_store.cleanup_stale_runs()
 
 
 def get_or_choose_host() -> HostConfig:

@@ -12,6 +12,7 @@ from typing import Any
 
 from benchmarks import BY_ID, REGISTRY
 from database import Database
+from storage import is_infra_failure
 
 ROOT = Path(__file__).parent
 
@@ -88,6 +89,9 @@ def load_leaderboard_data(conn) -> tuple[list[dict[str, Any]], int]:
 
         pct = (r["passed"] / r["total"] * 100) if r["total"] and r["total"] > 0 else 0.0
         failures = json.loads(r["failures"]) if r["failures"] else []
+        is_infra = is_infra_failure(failures)
+        if is_infra:
+            pct = 0.0
 
         models_data[m]["results"][key] = {
             "benchmark": r["benchmark"],
@@ -95,6 +99,7 @@ def load_leaderboard_data(conn) -> tuple[list[dict[str, Any]], int]:
             "passed": r["passed"],
             "total": r["total"],
             "percent": pct,
+            "is_infra": is_infra,
             "failures": failures,
             "tok_per_sec": r["tokens_per_second"],
             "ttft": r["time_to_first_token_seconds"],
@@ -104,8 +109,9 @@ def load_leaderboard_data(conn) -> tuple[list[dict[str, Any]], int]:
             "backend": r["backend"],
             "run_id": r["run_id"],
         }
-        models_data[m]["total_passed"] += r["passed"]
-        models_data[m]["total_tests"] += r["total"]
+        if not is_infra and r["total"] and r["total"] > 0:
+            models_data[m]["total_passed"] += r["passed"]
+            models_data[m]["total_tests"] += r["total"]
         if r["tokens_per_second"]:
             models_data[m]["speeds"].append(r["tokens_per_second"])
         if r["reasoning_output_tokens"]:
@@ -138,8 +144,15 @@ def load_runs_history(conn) -> tuple[list[dict[str, Any]], str]:
         SELECT r.id, r.host_id, h.label AS host_label, r.model_key, r.model_name,
                r.quantization, r.backend, r.generation_params, r.suite_version,
                r.started_at, r.completed_at, r.status,
-               COUNT(res.benchmark) as tests_completed,
-               AVG(CASE WHEN res.total > 0 THEN (res.passed * 100.0 / res.total) ELSE 0 END) as avg_score,
+               COUNT(CASE
+                   WHEN (res.failures LIKE '%[TRUNCATED]%' OR res.failures LIKE '%[GENERATION FAILED]%' OR res.failures LIKE '%Model generation failed%' OR res.failures LIKE '%[INFRA FAILURE]%') THEN NULL
+                   ELSE res.benchmark
+               END) as tests_completed,
+               AVG(CASE
+                   WHEN (res.failures LIKE '%[TRUNCATED]%' OR res.failures LIKE '%[GENERATION FAILED]%' OR res.failures LIKE '%Model generation failed%' OR res.failures LIKE '%[INFRA FAILURE]%') THEN NULL
+                   WHEN res.total > 0 THEN (res.passed * 100.0 / res.total)
+                   ELSE NULL
+               END) as avg_score,
                AVG(s.tokens_per_second) as avg_speed
         FROM runs r
         LEFT JOIN hosts h ON r.host_id = h.id

@@ -27,6 +27,7 @@ from storage import (
     detect_backend,
     detect_quantization,
     get_suite_version,
+    is_infra_failure,
 )
 
 # A truncated generation is retried with a doubled token budget, up to this cap.
@@ -34,10 +35,46 @@ MAX_TOKENS_RETRY_CAP = 65536
 
 ROOT = Path(__file__).parent
 _default_console = Console(legacy_windows=False)
-_default_db = Database(ROOT / "bench.db")
-_default_store = ResultStore(db=_default_db, answers_root=ROOT, raw_answers_dir=ROOT / "raw_answers")
-_default_speed_store = SpeedResultStore(_default_db)
-_default_run_store = RunStore(_default_db)
+_default_db: Database | None = None
+_default_store: ResultStore | None = None
+_default_speed_store: SpeedResultStore | None = None
+_default_run_store: RunStore | None = None
+
+
+def get_default_db() -> Database:
+    global _default_db
+    if _default_db is None:
+        _default_db = Database(ROOT / "bench.db")
+    return _default_db
+
+
+def set_default_db(db: Database) -> None:
+    global _default_db, _default_store, _default_speed_store, _default_run_store
+    _default_db = db
+    _default_store = ResultStore(db=db, answers_root=ROOT, raw_answers_dir=ROOT / "raw_answers")
+    _default_speed_store = SpeedResultStore(db)
+    _default_run_store = RunStore(db)
+
+
+def get_default_store() -> ResultStore:
+    global _default_store
+    if _default_store is None:
+        _default_store = ResultStore(db=get_default_db(), answers_root=ROOT, raw_answers_dir=ROOT / "raw_answers")
+    return _default_store
+
+
+def get_default_speed_store() -> SpeedResultStore:
+    global _default_speed_store
+    if _default_speed_store is None:
+        _default_speed_store = SpeedResultStore(get_default_db())
+    return _default_speed_store
+
+
+def get_default_run_store() -> RunStore:
+    global _default_run_store
+    if _default_run_store is None:
+        _default_run_store = RunStore(get_default_db())
+    return _default_run_store
 
 
 class GenerationTruncatedError(Exception):
@@ -92,47 +129,56 @@ def ensure_level_answer(
     store: ResultStore | None = None,
     speed_store: SpeedResultStore | None = None,
     console: Console | None = None,
+    is_prerequisite: bool = False,
+    quantization: str | None = None,
 ) -> Path | None:
     """Returns the path of the extracted answer for a level, generating it when needed.
 
-    An existing answer is reused when it already has a scored result (from any run of this model).
+    An existing answer is reused when it already has a scored result (from any run of this model)
+    or when used as an unscored prerequisite and the raw completion is already on disk.
     ``force`` applies only to the requested level: prerequisite levels are always reused when available,
     so a single-level rerun does not regenerate (and silently overwrite) earlier levels.
     """
-    store = store or _default_store
-    speed_store = speed_store or _default_speed_store
+    store = store or get_default_store()
+    speed_store = speed_store or get_default_speed_store()
     console = console or _default_console
 
     level = benchmark.level_by_id(level_id)
-    answer_path, raw_path = store.paths_for(benchmark, model.key, level_id)
+    answer_path, raw_path = store.paths_for(benchmark, model.key, level_id, quantization=quantization, run_id=run_id)
 
     if (
         not force
         and answer_path.exists()
         and raw_path.exists()
-        and store.has_scored_result(benchmark, model.key, level_id)
+        and (
+            store.has_scored_result(benchmark, model.key, level_id) or (is_prerequisite and raw_path.stat().st_size > 0)
+        )
     ):
         return answer_path
 
     messages = []
     if level.requires:
-        prev_answer = ensure_level_answer(
-            model,
-            benchmark,
-            level.requires,
-            host,
-            run_id=run_id,
-            force=False,
-            gen_config=gen_config,
-            store=store,
-            speed_store=speed_store,
-            console=console,
-        )
-        if prev_answer is None:
-            return None
-        _, prev_raw = store.paths_for(benchmark, model.key, level.requires)
-        prev_content = prev_raw.read_text(encoding="utf-8") if prev_raw.exists() else ""
-        messages.append({"role": "user", "content": benchmark.level_by_id(level.requires).prompt})
+        req_id = level.requires
+        req_answer, req_raw = store.paths_for(benchmark, model.key, req_id, quantization=quantization, run_id=run_id)
+        if not (req_raw.exists() and req_raw.read_text(encoding="utf-8").strip()):
+            prev_answer = ensure_level_answer(
+                model,
+                benchmark,
+                req_id,
+                host,
+                run_id=None,
+                force=False,
+                gen_config=gen_config,
+                store=store,
+                speed_store=speed_store,
+                console=console,
+                is_prerequisite=True,
+                quantization=quantization,
+            )
+            if prev_answer is None:
+                return None
+        prev_content = req_raw.read_text(encoding="utf-8") if req_raw.exists() else ""
+        messages.append({"role": "user", "content": benchmark.level_by_id(req_id).prompt})
         messages.append({"role": "assistant", "content": prev_content})
 
     messages.append({"role": "user", "content": level.prompt})
@@ -162,8 +208,8 @@ def ensure_level_answer(
             json.dumps(response.raw, ensure_ascii=False, indent=2), encoding="utf-8"
         )
 
-    # Save speed stats
-    if response.stats:
+    # Save speed stats only for tests that are part of this run (not auxiliary prerequisites)
+    if not is_prerequisite and run_id and response.stats:
         stats = GenerationStats.from_dict(response.stats)
         if stats and stats.tokens_per_second:
             sample = SpeedSample(
@@ -194,14 +240,25 @@ def execute_test(
     speed_store: SpeedResultStore | None = None,
     db: Database | None = None,
     console: Console | None = None,
+    quantization: str | None = None,
 ) -> bool:
-    store = store or _default_store
-    speed_store = speed_store or _default_speed_store
-    db = db or _default_db
+    store = store or get_default_store()
+    speed_store = speed_store or get_default_speed_store()
+    db = db or get_default_db()
     console = console or _default_console
 
     level = benchmark.level_by_id(level_id)
     tag = f"[bold cyan]{benchmark.short}[/bold cyan] / [bold]{level.name}[/bold]"
+
+    # Resolve quantization if needed
+    quant = quantization
+    if not quant and run_id:
+        r_store = RunStore(db)
+        r_obj = r_store.get(run_id)
+        if r_obj:
+            quant = r_obj.quantization
+    if not quant:
+        quant = detect_quantization(model.key)
 
     # A run always starts empty, so "already done" must be looked up across earlier runs of this model.
     if not force and store.has_scored_result(benchmark, model.key, level_id):
@@ -229,6 +286,7 @@ def execute_test(
             store=store,
             speed_store=speed_store,
             console=console,
+            quantization=quant,
         )
     except GenerationTruncatedError as e:
         console.print(f"  ✂️  {tag} -> [yellow]Output truncated, not scored as code failure:[/yellow] {e}")
@@ -238,7 +296,7 @@ def execute_test(
                 benchmark=benchmark.id,
                 level=level_id,
                 tested_at=now_str(),
-                evaluation=TestResult(0, 1, [f"{TRUNCATED_PREFIX} {e}"]),
+                evaluation=TestResult(0, 0, [f"{TRUNCATED_PREFIX} {e}"]),
             )
             store.save(benchmark, model.key, level_id, truncated, run_id=run_id)
         return False
@@ -246,7 +304,7 @@ def execute_test(
     if answer_path is None or not answer_path.exists():
         console.print(f"  ❌ {tag} -> [red]Failed to get response from model (timeout or error)[/red]")
         if run_id:
-            test_result = TestResult(0, 1, [f"{GENERATION_FAILED_PREFIX} Model generation failed or timed out"])
+            test_result = TestResult(0, 0, [f"{GENERATION_FAILED_PREFIX} Model generation failed or timed out"])
             stored = StoredResult(
                 model=model.key,
                 benchmark=benchmark.id,
@@ -267,6 +325,9 @@ def execute_test(
     if run_id:
         speed_query += " AND run_id = ?"
         params.append(run_id)
+    elif host and host.id:
+        speed_query += " AND host_id = ?"
+        params.append(host.id)
     speed_query += " ORDER BY tested_at DESC LIMIT 1"
     speed_row = db.conn.execute(speed_query, params).fetchone()
 
@@ -281,7 +342,7 @@ def execute_test(
     try:
         test_result = benchmark.run_tests(level_id, answer_path)
     except Exception as e:
-        test_result = TestResult(0, 1, [f"Test runner exception: {e}"])
+        test_result = TestResult(0, 0, [f"{GENERATION_FAILED_PREFIX} Test runner exception: {e}"])
 
     stored = StoredResult(
         model=model.key,
@@ -293,7 +354,10 @@ def execute_test(
     store.save(benchmark, model.key, level_id, stored, run_id=run_id)
 
     pct = test_result.percent()
-    if pct >= 80:
+    if is_infra_failure(test_result.failures):
+        icon = "[yellow]⚠️[/yellow]"
+        score_styled = "[bold yellow]INFRA ERROR[/bold yellow]"
+    elif pct >= 80:
         icon = "[green]✅[/green]"
         score_styled = f"[bold green]{test_result.format()} ({pct:.0f}%)[/bold green]"
     elif pct >= 40:
@@ -326,10 +390,10 @@ def run_queue(
     db: Database | None = None,
     console: Console | None = None,
 ) -> None:
-    store = store or _default_store
-    speed_store = speed_store or _default_speed_store
-    run_store = run_store or _default_run_store
-    db = db or _default_db
+    store = store or get_default_store()
+    speed_store = speed_store or get_default_speed_store()
+    run_store = run_store or get_default_run_store()
+    db = db or get_default_db()
     console = console or _default_console
 
     total = len(queue)
@@ -393,6 +457,7 @@ def run_queue(
                 speed_store=speed_store,
                 db=db,
                 console=console,
+                quantization=quant,
             )
             if ok:
                 completed += 1

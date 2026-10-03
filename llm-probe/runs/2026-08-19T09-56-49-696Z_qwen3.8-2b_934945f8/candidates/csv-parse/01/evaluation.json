@@ -1,8 +1,0 @@
-{
-  "status": "compile_error",
-  "passed": 0,
-  "total": 4,
-  "tests": [],
-  "durationMs": 16,
-  "error": "expecting ','"
-}

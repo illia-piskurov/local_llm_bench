@@ -10,6 +10,7 @@ import sqlite3
 from pathlib import Path
 
 from benchmarks import REGISTRY
+from storage import TRUNCATED_PREFIX, is_infra_failure
 
 ROOT = Path(__file__).parent
 DB_PATH = ROOT / "bench.db"
@@ -77,6 +78,11 @@ SCHEMA_TEXT = """\
 """
 
 
+def set_db_path(path: Path) -> None:
+    global DB_PATH
+    DB_PATH = path
+
+
 def _conn() -> sqlite3.Connection:
     if not DB_PATH.exists():
         try:
@@ -96,9 +102,27 @@ def _safe(key: str) -> str:
     return re.sub(r"[^a-zA-Z0-9_.-]", "_", key)
 
 
-def _pct(row) -> float:
+def _extract_failures(row) -> list[str]:
+    failures: list[str] = []
+    try:
+        keys = row.keys() if hasattr(row, "keys") else (row.__dict__.keys() if hasattr(row, "__dict__") else [])
+        if "failures" in keys and row["failures"]:
+            val = row["failures"]
+            if isinstance(val, list):
+                failures = val
+            elif isinstance(val, str):
+                failures = json.loads(val)
+    except Exception:
+        failures = []
+    return failures
+
+
+def _pct(row) -> float | None:
     if row["manual_score"] is not None:
         return row["manual_score"] * 10.0
+    failures = _extract_failures(row)
+    if is_infra_failure(failures):
+        return None
     if row["total"] and row["total"] > 0:
         return row["passed"] * 100.0 / row["total"]
     return 0.0
@@ -107,6 +131,11 @@ def _pct(row) -> float:
 def _score_text(row) -> str:
     if row["manual_score"] is not None:
         return f"{row['manual_score']}/10"
+    failures = _extract_failures(row)
+    if is_infra_failure(failures):
+        if failures and failures[0].startswith(TRUNCATED_PREFIX):
+            return "✂️ TRUNC"
+        return "⚠️ INFRA"
     return f"{row['passed']}/{row['total']}"
 
 
@@ -162,17 +191,25 @@ def list_models(conn: sqlite3.Connection | None = None) -> str:
     try:
         rows = conn.execute("""
             SELECT model,
-                   COUNT(*) AS tests,
+                   COUNT(CASE
+                       WHEN (failures LIKE '%[TRUNCATED]%' OR failures LIKE '%[GENERATION FAILED]%' OR failures LIKE '%Model generation failed%' OR failures LIKE '%[INFRA FAILURE]%') THEN NULL
+                       ELSE 1
+                   END) AS tests,
                    AVG(CASE
+                       WHEN (failures LIKE '%[TRUNCATED]%' OR failures LIKE '%[GENERATION FAILED]%' OR failures LIKE '%Model generation failed%' OR failures LIKE '%[INFRA FAILURE]%') THEN NULL
                        WHEN manual_score IS NOT NULL THEN manual_score * 10.0
                        WHEN total > 0 THEN passed * 100.0 / total
-                       ELSE 0
+                       ELSE NULL
                    END) AS avg_quality,
                    AVG(CASE
+                       WHEN (failures LIKE '%[TRUNCATED]%' OR failures LIKE '%[GENERATION FAILED]%' OR failures LIKE '%Model generation failed%' OR failures LIKE '%[INFRA FAILURE]%') THEN NULL
                        WHEN level = 'level3' AND total > 0 THEN passed * 100.0 / total
                        ELSE NULL
                    END) AS l3_quality,
-                   COUNT(CASE WHEN level = 'level3' THEN 1 ELSE NULL END) AS l3_count
+                   COUNT(CASE
+                       WHEN level = 'level3' AND NOT (failures LIKE '%[TRUNCATED]%' OR failures LIKE '%[GENERATION FAILED]%' OR failures LIKE '%Model generation failed%' OR failures LIKE '%[INFRA FAILURE]%') THEN 1
+                       ELSE NULL
+                   END) AS l3_count
             FROM results
             GROUP BY model
             ORDER BY avg_quality DESC
@@ -184,8 +221,9 @@ def list_models(conn: sqlite3.Connection | None = None) -> str:
             "|---|-------|-------|-----------------|--------------------|",
         ]
         for i, r in enumerate(rows, 1):
+            avg_q = r["avg_quality"] if r["avg_quality"] is not None else 0.0
             l3_str = f"{r['l3_quality']:.1f}% ({r['l3_count']} tests)" if r["l3_quality"] is not None else "—"
-            lines.append(f"| {i} | `{r['model']}` | {r['tests']} | {r['avg_quality']:.1f}% | {l3_str} |")
+            lines.append(f"| {i} | `{r['model']}` | {r['tests']} | {avg_q:.1f}% | {l3_str} |")
         lines.append(f"\nTotal models: {len(rows)}")
         return "\n".join(lines)
     finally:
@@ -231,14 +269,16 @@ def list_benchmarks(conn: sqlite3.Connection | None = None) -> str:
         for r in conn.execute("""
             SELECT benchmark, level, COUNT(DISTINCT model) AS models,
                    AVG(CASE
+                       WHEN (failures LIKE '%[TRUNCATED]%' OR failures LIKE '%[GENERATION FAILED]%' OR failures LIKE '%Model generation failed%' OR failures LIKE '%[INFRA FAILURE]%') THEN NULL
                        WHEN manual_score IS NOT NULL THEN manual_score * 10.0
                        WHEN total > 0 THEN passed * 100.0 / total
-                       ELSE 0
+                       ELSE NULL
                    END) AS avg_score
             FROM results
             GROUP BY benchmark, level
         """).fetchall():
-            stats[(r["benchmark"], r["level"])] = (r["models"], r["avg_score"])
+            avg_sc = r["avg_score"] if r["avg_score"] is not None else 0.0
+            stats[(r["benchmark"], r["level"])] = (r["models"], avg_sc)
 
         lines = [
             "| ID | Benchmark | Language | Level | Tested Models | Average Score |",
@@ -270,7 +310,7 @@ def get_leaderboard(conn: sqlite3.Connection | None = None) -> str:
     try:
         results = conn.execute("""
             SELECT model, benchmark, level,
-                   passed, total, manual_score
+                   passed, total, failures, manual_score
             FROM results
             ORDER BY model, benchmark, level
         """).fetchall()
@@ -286,7 +326,7 @@ def get_leaderboard(conn: sqlite3.Connection | None = None) -> str:
                 seen.add(key)
         columns.sort()
 
-        by_model: dict[str, dict[tuple[str, str], tuple[float, str]]] = {}
+        by_model: dict[str, dict[tuple[str, str], tuple[float | None, str]]] = {}
         for r in results:
             p = _pct(r)
             s = _score_text(r)
@@ -294,8 +334,8 @@ def get_leaderboard(conn: sqlite3.Connection | None = None) -> str:
 
         rows = []
         for model, entries in by_model.items():
-            percents = [v[0] for v in entries.values()]
-            avg = sum(percents) / len(percents) if percents else 0
+            percents = [v[0] for v in entries.values() if v[0] is not None]
+            avg = sum(percents) / len(percents) if percents else 0.0
             rows.append((model, entries, avg, len(percents)))
         rows.sort(key=lambda x: x[2], reverse=True)
 
@@ -398,48 +438,70 @@ def compare_intelligence(model_a: str, model_b: str, host_id: str = "", conn: sq
             pa = _pct(ra)
             pb = _pct(rb)
 
-            level_scores_a.setdefault(lvl, []).append(pa)
-            level_scores_b.setdefault(lvl, []).append(pb)
-
-            cat = category_map.get(bench, "Other")
-            cat_scores_a.setdefault(cat, []).append(pa)
-            cat_scores_b.setdefault(cat, []).append(pb)
+            if pa is not None:
+                level_scores_a.setdefault(lvl, []).append(pa)
+                cat = category_map.get(bench, "Other")
+                cat_scores_a.setdefault(cat, []).append(pa)
+            if pb is not None:
+                level_scores_b.setdefault(lvl, []).append(pb)
+                cat = category_map.get(bench, "Other")
+                cat_scores_b.setdefault(cat, []).append(pb)
 
             sa = _score_text(ra)
             sb = _score_text(rb)
 
-            if pa > pb:
+            if pa is not None and pb is not None:
+                if pa > pb:
+                    wins_a += 1
+                    winner = f"**{resolved_a.split('/')[-1]}**"
+                elif pb > pa:
+                    wins_b += 1
+                    winner = f"**{resolved_b.split('/')[-1]}**"
+                else:
+                    ties += 1
+                    winner = "tie"
+
+                if pa - pb >= 30:
+                    decisive_a.append(f"{bench}/{lvl} ({sa} vs {sb})")
+                elif pb - pa >= 30:
+                    decisive_b.append(f"{bench}/{lvl} ({sb} vs {sa})")
+
+                if pa == 0:
+                    zero_a += 1
+                if pb == 0:
+                    zero_b += 1
+            elif pa is not None and pb is None:
                 wins_a += 1
-                winner = f"**{resolved_a.split('/')[-1]}**"
-            elif pb > pa:
+                winner = f"**{resolved_a.split('/')[-1]}** (infra err B)"
+            elif pb is not None and pa is None:
                 wins_b += 1
-                winner = f"**{resolved_b.split('/')[-1]}**"
+                winner = f"**{resolved_b.split('/')[-1]}** (infra err A)"
             else:
                 ties += 1
-                winner = "tie"
-
-            if pa - pb >= 30:
-                decisive_a.append(f"{bench}/{lvl} ({sa} vs {sb})")
-            elif pb - pa >= 30:
-                decisive_b.append(f"{bench}/{lvl} ({sb} vs {sa})")
-
-            if pa == 0:
-                zero_a += 1
-            if pb == 0:
-                zero_b += 1
+                winner = "infra error"
 
             if ra["failures"]:
-                failures_a_count += len(json.loads(ra["failures"]))
+                try:
+                    f_a = json.loads(ra["failures"]) if isinstance(ra["failures"], str) else ra["failures"]
+                    failures_a_count += len(f_a)
+                except Exception:
+                    pass
             if rb["failures"]:
-                failures_b_count += len(json.loads(rb["failures"]))
+                try:
+                    f_b = json.loads(rb["failures"]) if isinstance(rb["failures"], str) else rb["failures"]
+                    failures_b_count += len(f_b)
+                except Exception:
+                    pass
 
             detail_rows.append((bench, lvl, sa, sb, pa, pb, winner))
 
         # Aggregates
         total_a = sum(sum(v) for v in level_scores_a.values())
         total_b = sum(sum(v) for v in level_scores_b.values())
-        avg_a = total_a / len(common_keys)
-        avg_b = total_b / len(common_keys)
+        count_a = sum(len(v) for v in level_scores_a.values())
+        count_b = sum(len(v) for v in level_scores_b.values())
+        avg_a = total_a / count_a if count_a else 0.0
+        avg_b = total_b / count_b if count_b else 0.0
 
         lines = [
             f"# 🧠 Intelligence Analysis: {resolved_a} vs {resolved_b}\n",
@@ -651,8 +713,10 @@ def compare_code(model_a: str, model_b: str, benchmark: str, level: str, conn: s
         # Scores
         score_a_str = _score_text(res_a) if res_a else "not tested"
         score_b_str = _score_text(res_b) if res_b else "not tested"
-        pct_a = f"{_pct(res_a):.0f}%" if res_a else "—"
-        pct_b = f"{_pct(res_b):.0f}%" if res_b else "—"
+        pct_a_val = _pct(res_a) if res_a else None
+        pct_b_val = _pct(res_b) if res_b else None
+        pct_a = f"{pct_a_val:.0f}%" if pct_a_val is not None else "—"
+        pct_b = f"{pct_b_val:.0f}%" if pct_b_val is not None else "—"
         lines.append(f"| Test Result | **{score_a_str}** ({pct_a}) | **{score_b_str}** ({pct_b}) |")
 
         # Code metrics A and B
@@ -774,7 +838,7 @@ def compare_models(models: str, host_id: str = "", conn: sqlite3.Connection | No
         ph = ",".join("?" * len(model_list))
         results = conn.execute(
             f"""
-            SELECT model, benchmark, level, passed, total, manual_score
+            SELECT model, benchmark, level, passed, total, failures, manual_score
             FROM results WHERE model IN ({ph})
             ORDER BY benchmark, level, model
         """,
@@ -784,7 +848,7 @@ def compare_models(models: str, host_id: str = "", conn: sqlite3.Connection | No
         if not results:
             return f"No results for: {', '.join(model_list)}"
 
-        by_model: dict[str, dict[tuple[str, str], tuple[float, str]]] = {}
+        by_model: dict[str, dict[tuple[str, str], tuple[float | None, str]]] = {}
         all_tests: set[tuple[str, str]] = set()
         for r in results:
             key = (r["benchmark"], r["level"])
@@ -811,8 +875,9 @@ def compare_models(models: str, host_id: str = "", conn: sqlite3.Connection | No
                 entry = by_model.get(m, {}).get((bench, level))
                 if entry:
                     scores.append(entry[1])
-                    pcts.append((m, entry[0]))
-                    totals[m].append(entry[0])
+                    if entry[0] is not None:
+                        pcts.append((m, entry[0]))
+                        totals[m].append(entry[0])
                 else:
                     scores.append("—")
 
@@ -834,7 +899,7 @@ def compare_models(models: str, host_id: str = "", conn: sqlite3.Connection | No
         avgs = {}
         for m in active:
             vals = totals[m]
-            avg = sum(vals) / len(vals) if vals else 0
+            avg = sum(vals) / len(vals) if vals else 0.0
             avgs[m] = avg
             lines.append(f"- **{m}**: average {avg:.1f}%, wins {wins[m]}/{len(tests)}")
 
@@ -1001,14 +1066,22 @@ def get_model_details(model: str, conn: sqlite3.Connection | None = None) -> str
         for r in results:
             p = _pct(r)
             s = _score_text(r)
-            percents.append(p)
-            lines.append(f"| {r['benchmark']} | {r['level']} | {s} ({p:.0f}%) | {r['tested_at']} |")
+            if p is not None:
+                percents.append(p)
+                p_str = f" ({p:.0f}%)"
+            else:
+                p_str = ""
+            lines.append(f"| {r['benchmark']} | {r['level']} | {s}{p_str} | {r['tested_at']} |")
             if r["failures"]:
-                for f in json.loads(r["failures"]):
-                    all_failures.append((r["benchmark"], r["level"], f))
+                try:
+                    f_list = json.loads(r["failures"]) if isinstance(r["failures"], str) else r["failures"]
+                    for f in f_list:
+                        all_failures.append((r["benchmark"], r["level"], f))
+                except Exception:
+                    pass
 
-        avg = sum(percents) / len(percents) if percents else 0
-        lines.append(f"\n**Average: {avg:.1f}%** across {len(percents)} tests")
+        avg = sum(percents) / len(percents) if percents else 0.0
+        lines.append(f"\n**Average: {avg:.1f}%** across {len(percents)} scored tests")
 
         if all_failures:
             lines.append(f"\n## Failed Tests ({len(all_failures)})\n")

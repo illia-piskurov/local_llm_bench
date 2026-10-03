@@ -175,22 +175,31 @@ def get_model_artifact_info(model_key: str) -> ModelArtifactInfo:
 
 
 def _render_transcript(messages: list[dict]) -> tuple[str | None, str]:
+    if not messages:
+        return None, ""
+
     if len(messages) == 1 and messages[0].get("role") == "user":
         return None, messages[0].get("content", "")
 
     system_prompt = None
     chunks: list[str] = []
+    last_role = None
 
     for message in messages:
-        role = message.get("role")
+        role = (message.get("role") or "user").lower()
         content = message.get("content", "")
 
         if role == "system":
             system_prompt = content
             continue
 
-        label = "User" if role == "user" else "Assistant" if role == "assistant" else str(role or "message")
-        chunks.append(f"{label}:\n{content}")
+        label = "User" if role == "user" else "Assistant" if role == "assistant" else role.capitalize()
+        chunks.append(f"### {label}:\n{content.strip()}")
+        last_role = role
+
+    # Append terminal assistant cue so the model recognizes its turn to respond as Assistant
+    if last_role != "assistant":
+        chunks.append("### Assistant:\n")
 
     return system_prompt, "\n\n".join(chunks)
 
@@ -239,14 +248,14 @@ def ask_model(
     # Work on a copy so the caller's shared config is never mutated.
     cfg = replace(config) if config is not None else GenerationConfig()
     if temperature is not None:
-        cfg.temperature = temperature
+        cfg = replace(cfg, temperature=temperature)
 
     system_prompt, input_text = _render_transcript(messages)
 
     payload = {
         "model": model_key,
         "input": input_text,
-        "store": True,
+        "store": False,
         "temperature": cfg.temperature,
         "max_output_tokens": cfg.max_tokens,
         "top_p": cfg.top_p,

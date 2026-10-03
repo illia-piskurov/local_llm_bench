@@ -159,6 +159,31 @@ def test_unscored_prerequisite_is_generated_first(env, ask_calls):
     assert len(ask_calls) == 2
     assert ask_calls[0][-1]["content"] == "prompt 1"
     assert ask_calls[1][-1]["content"] == "prompt 2"
+    # Current run only executed level2, so only level2 must have a speed sample in this run
+    speeds = env.speed_store.all_saved(run_id=run.id)
+    assert len(speeds) == 1
+    assert speeds[0].level == "level2"
+
+
+def test_prerequisite_with_raw_on_disk_is_reused_without_regeneration(env, ask_calls):
+    # Prerequisite raw file exists on disk, but has NO DB record in results
+    _, raw_path = env.store.paths_for(env.bench, env.model.key, "level1")
+    raw_path.write_text("existing raw answer\n", encoding="utf-8")
+    run = env.new_run()
+
+    env.execute("level2", run.id, force=False)
+
+    assert len(ask_calls) == 1
+    assert ask_calls[0][-1]["content"] == "prompt 2"
+    assert ask_calls[0][-2]["content"] == "existing raw answer\n"
+
+
+def test_skip_with_none_load_does_not_crash(env, monkeypatch):
+    run = env.new_run()
+    monkeypatch.setattr(env.store, "has_scored_result", lambda *args, **kwargs: True)
+    monkeypatch.setattr(env.store, "load", lambda *args, **kwargs: None)
+
+    assert env.execute("level1", run.id, force=False) is True
 
 
 @pytest.mark.parametrize("marker", [TRUNCATED_PREFIX, GENERATION_FAILED_PREFIX, "Model generation failed or timed out"])
@@ -221,9 +246,10 @@ def test_host_add_survives_unwritable_records_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "mkdir", boom)
     host = HostConfig.create("Some Host")
 
-    HostConfigStore(db).add(host)
+    store = HostConfigStore(db, records_dir=tmp_path / "records" / "hosts")
+    store.add(host)
 
-    assert HostConfigStore(db).get(host.id) is not None
+    assert store.get(host.id) is not None
 
 
 # ── JS virtual timers ───────────────────────────────────────────────────────────
@@ -338,3 +364,221 @@ def test_export_writes_distinct_snapshot_files_per_run_and_roundtrips(tmp_path):
     assert imported["results"] == 2
     rows = dst.conn.execute("SELECT run_id, passed FROM results ORDER BY run_id").fetchall()
     assert {(r["run_id"], r["passed"]) for r in rows} == {(run_a.id, 1), (run_b.id, 2)}
+
+
+def test_infra_failures_not_penalized_in_leaderboard_and_analytics(tmp_path):
+    import analytics
+    import report_data
+
+    db = Database(tmp_path / "t.db")
+    _add_host(db, "host1")
+    store = ResultStore(db, tmp_path / "answers", tmp_path / "raw")
+    run_store = RunStore(db)
+    bench = DummyBenchmark()
+    run = run_store.create(host_id="host1", model_key="test-model")
+
+    # Scored success
+    res1 = _stored("test-model", "level1", passed=5, total=5)
+    # Infra failures (timeout/error and truncation)
+    res2 = _stored(
+        "test-model",
+        "level2",
+        passed=0,
+        total=0,
+        failures=[f"{GENERATION_FAILED_PREFIX} Model generation failed or timed out"],
+    )
+    res3 = _stored("test-model", "level3", passed=0, total=0, failures=[f"{TRUNCATED_PREFIX} Output truncated"])
+
+    store.save(bench, "test-model", "level1", res1, run_id=run.id)
+    store.save(bench, "test-model", "level2", res2, run_id=run.id)
+    store.save(bench, "test-model", "level3", res3, run_id=run.id)
+
+    assert store.has_scored_result(bench, "test-model", "level1") is True
+    assert store.has_scored_result(bench, "test-model", "level2") is False
+    assert store.has_scored_result(bench, "test-model", "level3") is False
+
+    assert store.has_result(bench, "test-model", "level1", only_scored=True) is True
+    assert store.has_result(bench, "test-model", "level2", only_scored=True) is False
+
+    # Check analytics helper behavior
+    rows = db.conn.execute("SELECT * FROM results WHERE model = 'test-model' ORDER BY level").fetchall()
+    assert analytics._pct(rows[0]) == 100.0
+    assert analytics._pct(rows[1]) is None
+    assert analytics._pct(rows[2]) is None
+
+    assert analytics._score_text(rows[0]) == "5/5"
+    assert analytics._score_text(rows[1]) == "⚠️ INFRA"
+    assert analytics._score_text(rows[2]) == "✂️ TRUNC"
+
+    # Leaderboard should average only genuinely scored tests (100%, not 33.3%)
+    leaderboard = analytics.get_leaderboard(db.conn)
+    assert "100%" in leaderboard
+    assert "33%" not in leaderboard
+
+    # list_models should show 100.0% average quality
+    models_summary = analytics.list_models(db.conn)
+    assert "100.0%" in models_summary
+
+    # report_data should also exclude infra failures from totals and averages
+    l_data, _ = report_data.load_leaderboard_data(db.conn)
+    assert len(l_data) == 1
+    assert l_data[0]["avg_pct"] == 100.0
+    assert l_data[0]["passed"] == 5
+    assert l_data[0]["total"] == 5
+
+
+def test_runner_records_zero_total_on_generation_failure(env, monkeypatch):
+    run = env.new_run()
+    monkeypatch.setattr(runner, "ensure_level_answer", lambda *a, **kw: None)
+
+    ret = env.execute("level1", run_id=run.id, force=True)
+    assert ret is False
+
+    res = env.store.load(env.bench, env.model.key, "level1", run_id=run.id)
+    assert res is not None
+    assert res.evaluation.passed == 0
+    assert res.evaluation.total == 0
+    assert res.evaluation.failures[0].startswith(GENERATION_FAILED_PREFIX)
+    assert env.store.has_scored_result(env.bench, env.model.key, "level1", run_id=run.id) is False
+
+
+def test_js_global_const_and_class_redeclaration():
+    # User solution declaring its own class AbortController or const __timers must not fail with SyntaxError
+    code = """
+    class AbortController {
+        constructor() { this.custom = true; }
+    }
+    class AbortSignal {
+        constructor() { this.custom = true; }
+    }
+    const __timers = [1, 2, 3];
+    const setTimeout = () => 42;
+    const clearInterval = () => true;
+    let __currentTime = 999;
+    const result = {
+        ac: new AbortController().custom,
+        as: new AbortSignal().custom,
+        timers: __timers,
+        st: setTimeout(),
+    };
+    """
+    ctx = create_js_context(code)
+    drain_js_jobs(ctx)
+    res = json.loads(ctx.eval("JSON.stringify(result)"))
+    assert res == {"ac": True, "as": True, "timers": [1, 2, 3], "st": 42}
+
+
+def test_js_virtual_clock_date_and_performance():
+    code = """
+    const pStart = performance.now();
+    const dStart = Date.now();
+    const objStart = new Date().getTime();
+    let pEnd = 0;
+    let dEnd = 0;
+    let objEnd = 0;
+
+    setTimeout(() => {
+        pEnd = performance.now();
+        dEnd = Date.now();
+        objEnd = new Date().getTime();
+    }, 150);
+    """
+    ctx = create_js_context(code)
+    drain_js_jobs(ctx)
+    assert ctx.eval("pStart") == 0
+    assert ctx.eval("pEnd") == 150
+    assert ctx.eval("dEnd - dStart") == 150
+    assert ctx.eval("objEnd - objStart") == 150
+
+
+def test_js_set_interval_and_clear_interval():
+    code = """
+    const ticks = [];
+    const id = setInterval(() => {
+        ticks.push(performance.now());
+        if (ticks.length === 3) {
+            clearInterval(id);
+        }
+    }, 20);
+    """
+    ctx = create_js_context(code)
+    drain_js_jobs(ctx)
+    ticks = json.loads(ctx.eval("JSON.stringify(ticks)"))
+    assert ticks == [20, 40, 60]
+
+
+def test_js_queue_microtask():
+    code = """
+    const order = [];
+    setTimeout(() => order.push("timer"), 0);
+    queueMicrotask(() => order.push("microtask"));
+    """
+    ctx = create_js_context(code)
+    drain_js_jobs(ctx)
+    assert json.loads(ctx.eval("JSON.stringify(order)")) == ["microtask", "timer"]
+
+
+def test_js_abort_signal_features():
+    code = """
+    const c = new AbortController();
+    const sig = c.signal;
+
+    let onabortCalled = false;
+    let listenerCalled = false;
+    let eventType = null;
+    let eventTargetIsSig = false;
+
+    sig.onabort = (e) => {
+        onabortCalled = true;
+        eventType = e.type;
+        eventTargetIsSig = (e.target === sig);
+    };
+    sig.addEventListener('abort', (e) => {
+        listenerCalled = true;
+    });
+
+    c.abort();
+
+    let threwAbort = false;
+    try {
+        sig.throwIfAborted();
+    } catch (err) {
+        threwAbort = (err.name === 'AbortError' && err.message === 'This operation was aborted');
+    }
+
+    const staticAborted = AbortSignal.abort();
+    let staticTimeoutAborted = false;
+    let timeoutReasonName = null;
+    const timeoutSig = AbortSignal.timeout(10);
+    timeoutSig.addEventListener('abort', (e) => {
+        staticTimeoutAborted = true;
+        timeoutReasonName = timeoutSig.reason.name;
+    });
+    """
+    ctx = create_js_context(code)
+    drain_js_jobs(ctx)
+    assert ctx.eval("onabortCalled") is True
+    assert ctx.eval("listenerCalled") is True
+    assert ctx.eval("eventType") == "abort"
+    assert ctx.eval("eventTargetIsSig") is True
+    assert ctx.eval("threwAbort") is True
+    assert ctx.eval("staticAborted.aborted") is True
+    assert ctx.eval("staticAborted.reason.name") == "AbortError"
+    assert ctx.eval("staticTimeoutAborted") is True
+    assert ctx.eval("timeoutReasonName") == "TimeoutError"
+
+
+def test_js_exception_inside_timer_does_not_break_drain_js_jobs():
+    code = """
+    const log = [];
+    setTimeout(() => {
+        log.push(1);
+        throw new Error("Failure inside timer");
+    }, 10);
+    setTimeout(() => {
+        log.push(2);
+    }, 20);
+    """
+    ctx = create_js_context(code)
+    drain_js_jobs(ctx)
+    assert json.loads(ctx.eval("JSON.stringify(log)")) == [1, 2]

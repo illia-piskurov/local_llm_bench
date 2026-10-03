@@ -552,10 +552,12 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html",
 
           if (r) {{
             hasAny = true;
-            bPassed += r.passed;
-            bTotal += r.total;
+            if (!r.is_infra) {{
+              bPassed += r.passed;
+              bTotal += r.total;
+            }}
             const pct = r.percent;
-            const fillCls = pct >= 80 ? 'fill-green' : pct >= 40 ? 'fill-yellow' : 'fill-red';
+            const fillCls = r.is_infra ? 'fill-yellow' : (pct >= 80 ? 'fill-green' : pct >= 40 ? 'fill-yellow' : 'fill-red');
 
             let failuresHtml = '';
             if (r.failures && r.failures.length > 0) {{
@@ -584,14 +586,23 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html",
               `;
             }}
 
+            let scoreMeta = '';
+            if (r.is_infra) {{
+              const isTrunc = r.failures && r.failures[0] && r.failures[0].startsWith('[TRUNCATED]');
+              const tagText = isTrunc ? '✂️ truncated' : '⚠️ infra failure';
+              scoreMeta = `<span style="color:#e3b341; font-weight:600; font-size:12px;">${{tagText}}</span>`;
+            }} else {{
+              scoreMeta = `<span><strong>${{r.passed}}/${{r.total}}</strong> (${{pct}}%)</span>`;
+            }}
+
             levelsHtml += `
               <div class="level-row">
                 <div class="level-meta">
                   <span style="font-weight:500;">${{l.name}}</span>
-                  <span><strong>${{r.passed}}/${{r.total}}</strong> (${{pct}}%)</span>
+                  ${{scoreMeta}}
                 </div>
                 <div class="progress-bar">
-                  <div class="progress-fill ${{fillCls}}" style="width: ${{pct}}%;"></div>
+                  <div class="progress-fill ${{fillCls}}" style="width: ${{r.is_infra ? 0 : pct}}%;"></div>
                 </div>
                 ${{failuresHtml}}
                 ${{reasoningHtml}}
@@ -705,8 +716,17 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html",
         }}
 
         const pct = res.percent;
-        const pillCls = pct >= 80 ? 'score-green' : pct >= 40 ? 'score-yellow' : 'score-red';
-        const fillCls = pct >= 80 ? 'fill-green' : pct >= 40 ? 'fill-yellow' : 'fill-red';
+        let pillHtml = '';
+        if (res.is_infra) {{
+          const isTrunc = res.failures && res.failures[0] && res.failures[0].startsWith('[TRUNCATED]');
+          const tagText = isTrunc ? '✂️ truncated' : '⚠️ infra failure';
+          pillHtml = `<span class="score-pill" style="background:rgba(210,153,34,0.2); color:#e3b341; border:1px solid rgba(210,153,34,0.4);">${{tagText}}</span>`;
+        }} else {{
+          const pillCls = pct >= 80 ? 'score-green' : pct >= 40 ? 'score-yellow' : 'score-red';
+          pillHtml = `<span class="score-pill ${{pillCls}}">${{res.passed}}/${{res.total}} (${{pct}}%)</span>`;
+        }}
+        const fillCls = res.is_infra ? 'fill-yellow' : (pct >= 80 ? 'fill-green' : pct >= 40 ? 'fill-yellow' : 'fill-red');
+        const borderColor = res.is_infra ? 'var(--yellow)' : (pct >= 80 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--red)');
 
         let speedBadge = '';
         if (res.tok_per_sec) {{
@@ -721,9 +741,10 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html",
 
         let failuresHtml = '';
         if (res.failures && res.failures.length > 0) {{
+          const failTitle = res.is_infra ? '⚠️ Infrastructure error / Truncated:' : `❌ Failed tests (${{res.failures.length}}):`;
           failuresHtml = `
             <div style="background:rgba(248,81,73,0.08); border:1px solid rgba(248,81,73,0.3); border-radius:6px; padding:10px 14px; margin: 12px 0;">
-              <strong style="color:var(--red); font-size:13px;">❌ Failed tests (${{res.failures.length}}):</strong>
+              <strong style="color:var(--red); font-size:13px;">${{failTitle}}</strong>
               <ul class="failures-list" style="margin-top:6px;">
                 ${{res.failures.map(f => '<li>' + escapeHtml(f) + '</li>').join('')}}
               </ul>
@@ -757,7 +778,7 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html",
         }}
 
         return `
-          <div class="card" style="border-top: 3px solid ${{pct >= 80 ? 'var(--green)' : pct >= 40 ? 'var(--yellow)' : 'var(--red)'}};">
+          <div class="card" style="border-top: 3px solid ${{borderColor}};">
             <div class="card-header">
               <div>
                 <span class="badge" style="background:#1f242c; color:var(--text-muted); margin-bottom:4px; display:inline-block;">${{label}}</span>
@@ -765,12 +786,12 @@ def generate_html_report(db: Database, output_path: Path = ROOT / "report.html",
                 <div style="margin-top:4px;">${{speedBadge}}</div>
               </div>
               <div style="text-align:right;">
-                <span class="score-pill ${{pillCls}}">${{res.passed}}/${{res.total}} (${{pct}}%)</span>
+                ${{pillHtml}}
               </div>
             </div>
 
             <div class="progress-bar" style="margin-bottom:12px;">
-              <div class="progress-fill ${{fillCls}}" style="width: ${{pct}}%;"></div>
+              <div class="progress-fill ${{fillCls}}" style="width: ${{res.is_infra ? 0 : pct}}%;"></div>
             </div>
 
             ${{failuresHtml}}

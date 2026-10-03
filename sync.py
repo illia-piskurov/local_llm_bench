@@ -12,7 +12,7 @@ import logging
 import re
 from pathlib import Path
 
-from database import Database
+from database import UPSERT_HOST_SQL, UPSERT_RESULT_SQL, UPSERT_RUN_SQL, UPSERT_SPEED_SQL, Database
 from storage import result_record_name, speed_record_name
 
 logger = logging.getLogger(__name__)
@@ -39,6 +39,18 @@ def ensure_records_dirs(records_dir: Path = RECORDS_DIR) -> tuple[Path, Path, Pa
     return hosts_dir, runs_dir, results_dir, speeds_dir
 
 
+def _write_if_changed(path: Path, content: str) -> bool:
+    """Writes content to path only if the file does not exist or has different content."""
+    if path.exists():
+        try:
+            if path.read_text(encoding="utf-8") == content:
+                return False
+        except Exception:
+            pass
+    path.write_text(content, encoding="utf-8")
+    return True
+
+
 def export_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
     """Exports all tables from SQLite to JSON files in records/."""
     hosts_dir, runs_dir, results_dir, speeds_dir = ensure_records_dirs(records_dir)
@@ -53,7 +65,7 @@ def export_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
             "created_at": row["created_at"],
         }
         path = hosts_dir / f"{row['id']}.json"
-        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_if_changed(path, json.dumps(data, ensure_ascii=False, indent=2))
         hosts_count += 1
 
     # 2. Runs (with embedded results and speeds)
@@ -111,7 +123,7 @@ def export_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
             "speeds": speeds_in_run,
         }
         path = runs_dir / f"{row['id']}.json"
-        path.write_text(json.dumps(run_data, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_if_changed(path, json.dumps(run_data, ensure_ascii=False, indent=2))
         runs_count += 1
 
     # 3. Per-result snapshots: results/ (one file per host + run + test, so machines never share a file)
@@ -136,7 +148,7 @@ def export_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
             "comment": row["comment"] or "",
         }
         path = results_dir / result_record_name(host_id, row["run_id"], row["model"], row["benchmark"], row["level"])
-        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_if_changed(path, json.dumps(data, ensure_ascii=False, indent=2))
         results_count += 1
 
     # 4. Per-sample snapshots: speeds/
@@ -163,7 +175,7 @@ def export_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
         path = speeds_dir / speed_record_name(
             row["host_id"], row["run_id"], row["model"], row["benchmark"], row["level"]
         )
-        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        _write_if_changed(path, json.dumps(data, ensure_ascii=False, indent=2))
         speeds_count += 1
 
     return {"hosts": hosts_count, "runs": runs_count, "results": results_count, "speeds": speeds_count}
@@ -182,10 +194,7 @@ def import_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
     for path in hosts_dir.glob("*.json"):
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-            conn.execute(
-                "INSERT OR REPLACE INTO hosts (id, label, created_at) VALUES (?, ?, ?)",
-                (data["id"], data["label"], data["created_at"]),
-            )
+            conn.execute(UPSERT_HOST_SQL, (data["id"], data["label"], data["created_at"]))
             hosts_count += 1
         except Exception as e:
             logger.warning("Failed to import host record from %s: %s", path, e)
@@ -208,10 +217,7 @@ def import_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
                     else str(run_data.get("generation_params", "{}"))
                 )
                 conn.execute(
-                    """INSERT OR REPLACE INTO runs
-                       (id, host_id, model_key, model_name, quantization, backend,
-                        generation_params, suite_version, started_at, completed_at, status)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    UPSERT_RUN_SQL,
                     (
                         run_id,
                         run_data["host_id"],
@@ -231,9 +237,7 @@ def import_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
                 for r in run_data.get("results", []):
                     failures_json = json.dumps(r.get("failures", []), ensure_ascii=False)
                     conn.execute(
-                        """INSERT OR REPLACE INTO results
-                           (run_id, model, benchmark, level, tested_at, passed, total, failures, manual_score, comment)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        UPSERT_RESULT_SQL,
                         (
                             run_id,
                             run_data["model_key"],
@@ -252,11 +256,7 @@ def import_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
                 for s in run_data.get("speeds", []):
                     stats = s.get("stats", {})
                     conn.execute(
-                        """INSERT OR REPLACE INTO speed_results
-                           (run_id, host_id, model, benchmark, level, tested_at,
-                            input_tokens, total_output_tokens, reasoning_output_tokens,
-                            tokens_per_second, time_to_first_token_seconds, model_load_time_seconds)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        UPSERT_SPEED_SQL,
                         (
                             run_id,
                             run_data["host_id"],
@@ -326,7 +326,7 @@ def import_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
             if rid not in legacy_runs:
                 legacy_runs[rid] = (hid, m)
                 conn.execute(
-                    """INSERT OR REPLACE INTO runs
+                    """INSERT OR IGNORE INTO runs
                        (id, host_id, model_key, model_name, started_at, completed_at, status)
                        VALUES (?, ?, ?, ?, ?, ?, ?)""",
                     (rid, hid, m, m, s["tested_at"], s["tested_at"], "completed"),
@@ -338,42 +338,39 @@ def import_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
             if r.get("run_id"):
                 # New-format snapshot: it names its own run, so attribute it exactly.
                 ensure_stub_run(r["run_id"], r.get("host_id"), m, r["tested_at"])
-                matching_rids = [r["run_id"]]
+                target_rid = r["run_id"]
+            elif r.get("host_id"):
+                hid = r["host_id"]
+                target_rid = f"legacy_{hid}_{safe_filename(m)}"
+                if target_rid not in legacy_runs:
+                    ensure_stub_run(target_rid, hid, m, r["tested_at"])
+                    legacy_runs[target_rid] = (hid, m)
+                    runs_count += 1
             else:
-                # Old-format snapshot without run info: match by model.
-                matching_rids = [rid for rid, (hid, m_key) in legacy_runs.items() if m_key == m]
-            if not matching_rids:
-                rid = f"legacy_{default_host}_{safe_filename(m)}"
-                legacy_runs[rid] = (default_host, m)
-                conn.execute(
-                    """INSERT OR REPLACE INTO runs
-                       (id, host_id, model_key, model_name, started_at, completed_at, status)
-                       VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                    (rid, default_host, m, m, r["tested_at"], r["tested_at"], "completed"),
-                )
-                runs_count += 1
-                matching_rids = [rid]
+                # Old snapshot without run or host info: attribute to default_host run only
+                target_rid = f"legacy_{default_host}_{safe_filename(m)}"
+                if target_rid not in legacy_runs:
+                    ensure_stub_run(target_rid, default_host, m, r["tested_at"])
+                    legacy_runs[target_rid] = (default_host, m)
+                    runs_count += 1
 
             failures_json = json.dumps(r.get("failures", []), ensure_ascii=False)
-            for rid in matching_rids:
-                conn.execute(
-                    """INSERT OR REPLACE INTO results
-                       (run_id, model, benchmark, level, tested_at, passed, total, failures, manual_score, comment)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (
-                        rid,
-                        m,
-                        r["benchmark"],
-                        r["level"],
-                        r["tested_at"],
-                        r.get("passed", 0),
-                        r.get("total", 0),
-                        failures_json,
-                        r.get("manual_score"),
-                        r.get("comment", ""),
-                    ),
-                )
-                results_count += 1
+            conn.execute(
+                UPSERT_RESULT_SQL,
+                (
+                    target_rid,
+                    m,
+                    r["benchmark"],
+                    r["level"],
+                    r["tested_at"],
+                    r.get("passed", 0),
+                    r.get("total", 0),
+                    failures_json,
+                    r.get("manual_score"),
+                    r.get("comment", ""),
+                ),
+            )
+            results_count += 1
 
         for s in speed_records:
             hid = s["host_id"]
@@ -381,11 +378,7 @@ def import_all(db: Database, records_dir: Path = RECORDS_DIR) -> dict[str, int]:
             rid = s.get("run_id") or f"legacy_{hid}_{safe_filename(m)}"
             stats = s.get("stats", {})
             conn.execute(
-                """INSERT OR REPLACE INTO speed_results
-                   (run_id, host_id, model, benchmark, level, tested_at,
-                    input_tokens, total_output_tokens, reasoning_output_tokens,
-                    tokens_per_second, time_to_first_token_seconds, model_load_time_seconds)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                UPSERT_SPEED_SQL,
                 (
                     rid,
                     hid,

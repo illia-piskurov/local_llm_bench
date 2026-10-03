@@ -1,9 +1,0 @@
-{"at":"2026-10-02T08:45:08.780Z","type":"run_started"}
-{"at":"2026-10-02T08:45:08.781Z","type":"request_started","taskId":"flat-to-tree","attempt":1}
-{"at":"2026-10-02T08:48:22.102Z","type":"response_received","taskId":"flat-to-tree","attempt":1,"detail":{"durationMs":193315,"finishReason":"stop","usage":{"prompt_tokens":302,"completion_tokens":2332,"total_tokens":2634,"completion_tokens_details":{"reasoning_tokens":2053}}}}
-{"at":"2026-10-02T08:48:22.153Z","type":"evaluation_finished","taskId":"flat-to-tree","attempt":1,"detail":{"status":"passed","passed":4,"total":4}}
-{"at":"2026-10-02T08:48:22.154Z","type":"request_started","taskId":"paginate-and-sort","attempt":1}
-{"at":"2026-10-02T08:53:23.063Z","type":"provider_error","taskId":"paginate-and-sort","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
-{"at":"2026-10-02T08:53:23.064Z","type":"request_started","taskId":"deep-merge","attempt":1}
-{"at":"2026-10-02T08:58:24.028Z","type":"provider_error","taskId":"deep-merge","attempt":1,"detail":{"message":"Cannot connect to http://127.0.0.1:1234/v1: fetch failed","name":"ProviderError"}}
-{"at":"2026-10-02T08:58:24.029Z","type":"request_started","taskId":"csv-parse","attempt":1}

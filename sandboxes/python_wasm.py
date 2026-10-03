@@ -7,7 +7,10 @@ Uses WebAssembly (WASI) via MicroPython/Wasmtime:
 """
 
 import json
+from functools import cache
 from pathlib import Path
+
+from sandboxes.mpy_compat import build_prelude
 
 try:
     import micropython_wasm
@@ -18,6 +21,22 @@ except ImportError:
 
 
 DEFAULT_FUEL = 50_000_000  # 50M instructions per test case
+
+
+_PRELUDE_MEASURE_FUEL = 2_000_000_000
+
+
+@cache
+def _prelude_fuel(prelude: str) -> int:
+    """Fuel needed just to parse and run a shim prelude (deterministic, so measured once and cached).
+
+    The cost is added on top of the per-test budget: otherwise importing a shimmed module would eat
+    into the fuel the solution itself is allowed to use and make correct-but-heavy answers time out.
+    """
+    if not prelude:
+        return 0
+    result = micropython_wasm.run(prelude + "pass\n", fuel=_PRELUDE_MEASURE_FUEL)
+    return _PRELUDE_MEASURE_FUEL - result.fuel_remaining
 
 
 def _indent(text: str, prefix: str = "    ") -> str:
@@ -46,9 +65,11 @@ def run_function_in_wasm(
 
     args_json = json.dumps(list(args), ensure_ascii=False)
 
+    # CPython-only stdlib modules the solution imports (typing, copy, defaultdict, ...) are provided
+    # by pure-Python shims so correct answers are not rejected for MicroPython's smaller stdlib.
+    prelude = build_prelude(code)
     driver = (
-        "import json\n"
-        f"_WASM_ARGS = {args_json}\n"
+        "import json\n" + prelude + f"_WASM_ARGS = {args_json}\n"
         "try:\n" + _indent(code) + "\n"
         f"    _WASM_RESULT = {func_name}(*_WASM_ARGS)\n"
         "    print('__WASM_RES__:' + json.dumps(_WASM_RESULT))\n"
@@ -57,7 +78,7 @@ def run_function_in_wasm(
     )
 
     try:
-        res = micropython_wasm.run(driver, fuel=fuel)
+        res = micropython_wasm.run(driver, fuel=fuel + _prelude_fuel(prelude))
     except Exception as e:
         err_str = str(e).lower()
         if "fuel consumed" in err_str or "out of fuel" in err_str:

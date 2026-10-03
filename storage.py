@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from benchmarks.base import Benchmark, GenerationStats, ManualResult, SpeedSample, StoredResult, TestResult
-from database import Database
+from database import UPSERT_RUN_SQL, Database
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,11 @@ def speed_record_name(host_id: str, run_id: str, model: str, benchmark: str, lev
 # Results carrying them are stored for visibility but are not treated as completed tests.
 TRUNCATED_PREFIX = "[TRUNCATED]"
 GENERATION_FAILED_PREFIX = "[GENERATION FAILED]"
+INFRA_FAILURE_PREFIX = "[INFRA FAILURE]"
 INFRA_FAILURE_PREFIXES = (
     TRUNCATED_PREFIX,
     GENERATION_FAILED_PREFIX,
+    INFRA_FAILURE_PREFIX,
     "Model generation failed or timed out",  # format used before the prefixes were introduced
 )
 
@@ -63,15 +65,18 @@ def detect_backend(url: str | None = None) -> str:
     try:
         from lmstudio import get_base_url
 
-        u = (url or get_base_url()).lower()
+        base = (url or get_base_url()).rstrip("/")
     except Exception:
-        u = (url or "").lower()
+        base = (url or "http://localhost:1234").rstrip("/")
+
+    root_url = re.sub(r"/(?:v1|api)/?$", "", base)
+    u = root_url.lower()
 
     if ":11434" in u or "ollama" in u:
         try:
             import requests
 
-            r = requests.get(f"{url or 'http://localhost:11434'}/api/version", timeout=1)
+            r = requests.get(f"{root_url}/api/version", timeout=1)
             if r.status_code == 200 and "version" in r.json():
                 return f"Ollama v{r.json()['version']}"
         except Exception:
@@ -85,7 +90,7 @@ def detect_backend(url: str | None = None) -> str:
         try:
             import requests
 
-            r = requests.get(f"{url or 'http://localhost:8000'}/version", timeout=1)
+            r = requests.get(f"{root_url}/version", timeout=1)
             if r.status_code == 200 and "version" in r.json():
                 return f"vLLM v{r.json()['version']}"
         except Exception:
@@ -248,10 +253,7 @@ class RunStore:
     def save(self, run: Run) -> None:
         params_json = json.dumps(run.generation_params, ensure_ascii=False)
         self.db.conn.execute(
-            """INSERT OR REPLACE INTO runs
-               (id, host_id, model_key, model_name, quantization, backend,
-                generation_params, suite_version, started_at, completed_at, status)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            UPSERT_RUN_SQL,
             (
                 run.id,
                 run.host_id,
@@ -320,10 +322,34 @@ class RunStore:
         )
         self.db.conn.commit()
 
+    finish = complete
+
     def delete(self, run_id: str) -> bool:
         cur = self.db.conn.execute("DELETE FROM runs WHERE id = ?", (run_id,))
         self.db.conn.commit()
         return cur.rowcount > 0
+
+    def cleanup_stale_runs(self, max_age_seconds: int = 14400) -> int:
+        """Marks in_progress runs older than max_age_seconds as failed."""
+        now = datetime.now()
+        rows = self.db.conn.execute("SELECT id, started_at FROM runs WHERE status = 'in_progress'").fetchall()
+        count = 0
+        for r in rows:
+            try:
+                started_str = r["started_at"]
+                if started_str:
+                    started = datetime.strptime(started_str, "%Y-%m-%d %H:%M:%S")
+                    if (now - started).total_seconds() > max_age_seconds:
+                        self.db.conn.execute(
+                            "UPDATE runs SET status = 'failed', completed_at = ? WHERE id = ?",
+                            (started_str, r["id"]),
+                        )
+                        count += 1
+            except Exception:
+                pass
+        if count:
+            self.db.conn.commit()
+        return count
 
 
 class ResultStore:
@@ -338,11 +364,32 @@ class ResultStore:
         for benchmark in benchmarks:
             (self.answers_root / benchmark.answers_dir_name).mkdir(parents=True, exist_ok=True)
 
-    def paths_for(self, benchmark: Benchmark, model_key: str, level_id: str) -> tuple[Path, Path]:
+    def paths_for(
+        self,
+        benchmark: Benchmark,
+        model_key: str,
+        level_id: str,
+        quantization: str | None = None,
+        run_id: str | None = None,
+    ) -> tuple[Path, Path]:
         key = safe_filename(model_key)
+        quant = quantization or detect_quantization(model_key)
+        if quant and safe_filename(quant).lower() not in key.lower():
+            file_prefix = f"{key}__{safe_filename(quant)}"
+        else:
+            file_prefix = key
+
         answers_dir = self.answers_root / benchmark.answers_dir_name
-        answer_path = answers_dir / f"{key}_{benchmark.id}_{level_id}.{benchmark.file_ext}"
-        raw_path = self.raw_answers_dir / f"{key}_{benchmark.id}_{level_id}.txt"
+        answer_path = answers_dir / f"{file_prefix}_{benchmark.id}_{level_id}.{benchmark.file_ext}"
+        raw_path = self.raw_answers_dir / f"{file_prefix}_{benchmark.id}_{level_id}.txt"
+
+        # Backward compatibility: if quantized files do not exist but base unquantized files exist, reuse them
+        if not answer_path.exists() and not raw_path.exists():
+            base_answer = answers_dir / f"{key}_{benchmark.id}_{level_id}.{benchmark.file_ext}"
+            base_raw = self.raw_answers_dir / f"{key}_{benchmark.id}_{level_id}.txt"
+            if base_answer.exists() or base_raw.exists():
+                return base_answer, base_raw
+
         return answer_path, raw_path
 
     def load(
@@ -372,7 +419,10 @@ class ResultStore:
         model_key: str,
         level_id: str,
         run_id: str | None = None,
+        only_scored: bool = False,
     ) -> bool:
+        if only_scored:
+            return self.has_scored_result(benchmark, model_key, level_id, run_id=run_id)
         if run_id:
             row = self.db.conn.execute(
                 "SELECT 1 FROM results WHERE run_id = ? AND benchmark = ? AND level = ?",
@@ -406,18 +456,26 @@ class ResultStore:
                 return True
         return False
 
-    def _ensure_active_run_id(self, model_key: str) -> str:
-        active = self.run_store.get_active_run_id(model_key)
+    def _ensure_active_run_id(self, model_key: str, host_id: str | None = None) -> str:
+        if not host_id:
+            host_row = self.db.conn.execute("SELECT id FROM hosts WHERE is_active = 1 LIMIT 1").fetchone()
+            if not host_row:
+                host_row = self.db.conn.execute("SELECT id FROM hosts LIMIT 1").fetchone()
+            host_id = host_row[0] if host_row else "default"
+
+        active = self.run_store.get_active_run_id(model_key, host_id=host_id)
         if active:
-            return active
-        latest = self.run_store.get_latest(model_key)
-        if latest:
-            return latest.id
-        # Fallback host
-        host_row = self.db.conn.execute("SELECT id FROM hosts WHERE is_active = 1 LIMIT 1").fetchone()
-        if not host_row:
-            host_row = self.db.conn.execute("SELECT id FROM hosts LIMIT 1").fetchone()
-        host_id = host_row[0] if host_row else "default"
+            run = self.run_store.get(active)
+            if run and run.started_at:
+                try:
+                    started = datetime.strptime(run.started_at, "%Y-%m-%d %H:%M:%S")
+                    if (datetime.now() - started).total_seconds() < 14400:
+                        return active
+                    self.run_store.finish(active, status="failed")
+                except Exception:
+                    pass
+
+        # NEVER attach to a completed/failed run. Create a new active run!
         run = self.run_store.create(host_id=host_id, model_key=model_key)
         return run.id
 
@@ -467,17 +525,19 @@ class ResultStore:
 
         # Persist a per-run snapshot to records/results for Git versioning compatibility
         records_dir = self.answers_root / "records" / "results"
+        path = None
         try:
             run = self.run_store.get(target_run_id)
             host_id = run.host_id if run else "unknown"
-            records_dir.mkdir(parents=True, exist_ok=True)
             path = records_dir / result_record_name(
                 host_id, target_run_id, result.model, result.benchmark, result.level
             )
+            records_dir.mkdir(parents=True, exist_ok=True)
             data = {**result.to_dict(), "run_id": target_run_id, "host_id": host_id}
             path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception as e:
-            logger.warning("Failed to persist result record in %s: %s", records_dir, e)
+            target = path or records_dir
+            logger.warning("Failed to persist result record to %s: %s", target, e)
 
     def clear(self, benchmark: Benchmark, model_key: str, level_id: str) -> int:
         count = 0
@@ -597,15 +657,15 @@ class SpeedResultStore:
 
         # Persist a per-run snapshot to records/speeds for Git versioning compatibility
         records_dir = self.records_speeds_dir
+        path = records_dir / speed_record_name(
+            sample.host_id, target_run_id, sample.model, sample.benchmark, sample.level
+        )
         try:
             records_dir.mkdir(parents=True, exist_ok=True)
-            path = records_dir / speed_record_name(
-                sample.host_id, target_run_id, sample.model, sample.benchmark, sample.level
-            )
             data = {**sample.to_dict(), "run_id": target_run_id}
             path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception as e:
-            logger.warning("Failed to persist speed record in %s: %s", records_dir, e)
+            logger.warning("Failed to persist speed record to %s: %s", path, e)
 
     def clear_level(self, model_key: str, benchmark_id: str, level_id: str) -> int:
         cursor = self.db.conn.execute(

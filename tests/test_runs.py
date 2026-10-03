@@ -350,7 +350,14 @@ def test_runs_git_sync(tmp_path):
     assert target_run.generation_params["seed"] == 123
 
 
-def test_mcp_runs_tools():
+def test_mcp_runs_tools(tmp_path, monkeypatch):
+    import analytics
+    from sync import import_all
+
+    test_db = Database(tmp_path / "test_runs_mcp.db")
+    import_all(test_db)
+    monkeypatch.setattr(analytics, "DB_PATH", tmp_path / "test_runs_mcp.db")
+
     import mcp_server
 
     runs_res = mcp_server.list_runs(limit=10)
@@ -436,6 +443,53 @@ def test_render_transcript_single_and_multi_turn():
     ]
     sys_p, content = _render_transcript(messages)
     assert sys_p == "You are an assistant"
-    assert "User:\nLevel 1 prompt" in content
-    assert "Assistant:\nLevel 1 code" in content
-    assert "User:\nLevel 2 prompt" in content
+    assert "### User:\nLevel 1 prompt" in content
+    assert "### Assistant:\nLevel 1 code" in content
+    assert "### User:\nLevel 2 prompt" in content
+    assert content.endswith("### Assistant:\n")
+
+
+def test_ask_model_does_not_mutate_config(monkeypatch):
+    import requests
+
+    import lmstudio
+
+    shared_cfg = lmstudio.GenerationConfig(temperature=0.0, max_tokens=2048)
+
+    class MockResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"output": [{"type": "message", "content": "ok"}], "stats": {}}
+
+    monkeypatch.setattr(requests, "post", lambda *args, **kwargs: MockResp())
+
+    lmstudio.ask_model("test-model", [{"role": "user", "content": "hi"}], temperature=0.8, config=shared_cfg)
+    assert shared_cfg.temperature == 0.0
+    assert shared_cfg.max_tokens == 2048
+
+
+def test_ask_model_payload_has_store_false(monkeypatch):
+    import requests
+
+    import lmstudio
+
+    captured_payload = {}
+
+    class MockResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"output": [{"type": "message", "content": "ok"}], "stats": {}}
+
+    def fake_post(url, json=None, **kwargs):
+        nonlocal captured_payload
+        captured_payload = json or {}
+        return MockResp()
+
+    monkeypatch.setattr(requests, "post", fake_post)
+
+    lmstudio.ask_model("test-model", [{"role": "user", "content": "hi"}])
+    assert captured_payload.get("store") is False

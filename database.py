@@ -1,6 +1,77 @@
 import sqlite3
 from pathlib import Path
 
+# Upserts instead of INSERT OR REPLACE.
+#
+# REPLACE resolves a conflict by deleting the old row first. With foreign_keys=ON that delete fires
+# `ON DELETE CASCADE`, so replacing a run silently wiped all of its results and speed samples.
+# `ON CONFLICT ... DO UPDATE` modifies the row in place and never deletes anything.
+
+UPSERT_HOST_SQL = """
+    INSERT INTO hosts (id, label, created_at) VALUES (?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET label = excluded.label, created_at = excluded.created_at
+"""
+
+# A finished run must never be reverted to 'in_progress' (or lose its completion time) by a stale copy.
+UPSERT_RUN_SQL = """
+    INSERT INTO runs
+        (id, host_id, model_key, model_name, quantization, backend,
+         generation_params, suite_version, started_at, completed_at, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+        host_id = excluded.host_id,
+        model_key = excluded.model_key,
+        model_name = excluded.model_name,
+        quantization = excluded.quantization,
+        backend = excluded.backend,
+        generation_params = excluded.generation_params,
+        suite_version = excluded.suite_version,
+        started_at = excluded.started_at,
+        completed_at = CASE
+            WHEN runs.completed_at IS NOT NULL AND excluded.completed_at IS NOT NULL AND excluded.completed_at < runs.completed_at THEN runs.completed_at
+            ELSE COALESCE(excluded.completed_at, runs.completed_at)
+        END,
+        status = CASE
+            WHEN excluded.status = 'in_progress' AND runs.status != 'in_progress' THEN runs.status
+            ELSE excluded.status
+        END
+"""
+
+# Imported data only replaces a row when it is not older than what is already stored.
+UPSERT_RESULT_SQL = """
+    INSERT INTO results
+        (run_id, model, benchmark, level, tested_at, passed, total, failures, manual_score, comment)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(run_id, benchmark, level) DO UPDATE SET
+        model = excluded.model,
+        tested_at = excluded.tested_at,
+        passed = excluded.passed,
+        total = excluded.total,
+        failures = excluded.failures,
+        manual_score = excluded.manual_score,
+        comment = excluded.comment
+    WHERE excluded.tested_at >= results.tested_at
+"""
+
+UPSERT_SPEED_SQL = """
+    INSERT INTO speed_results
+        (run_id, host_id, model, benchmark, level, tested_at,
+         input_tokens, total_output_tokens, reasoning_output_tokens,
+         tokens_per_second, time_to_first_token_seconds, model_load_time_seconds)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(run_id, benchmark, level) DO UPDATE SET
+        host_id = excluded.host_id,
+        model = excluded.model,
+        tested_at = excluded.tested_at,
+        input_tokens = excluded.input_tokens,
+        total_output_tokens = excluded.total_output_tokens,
+        reasoning_output_tokens = excluded.reasoning_output_tokens,
+        tokens_per_second = excluded.tokens_per_second,
+        time_to_first_token_seconds = excluded.time_to_first_token_seconds,
+        model_load_time_seconds = excluded.model_load_time_seconds
+    WHERE excluded.tested_at >= speed_results.tested_at
+"""
+
 
 class Database:
     def __init__(self, db_path: Path):
@@ -174,28 +245,29 @@ class Database:
             key = (r["model"], r["benchmark"], r["level"])
             m_slug = safe_slug(r["model"])
             if key in speeds_by_test:
-                for s in speeds_by_test[key]:
-                    hid = s["host_id"]
-                    rid = f"legacy_{hid}_{m_slug}"
-                    self.conn.execute(
-                        """
-                        INSERT OR REPLACE INTO _new_results
-                        (run_id, model, benchmark, level, tested_at, passed, total, failures, manual_score, comment)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                        (
-                            rid,
-                            r["model"],
-                            r["benchmark"],
-                            r["level"],
-                            r["tested_at"],
-                            r["passed"],
-                            r["total"],
-                            r["failures"],
-                            r["manual_score"],
-                            r["comment"],
-                        ),
-                    )
+                # Attribute to the primary/first host that tested this combination, not all hosts
+                s = speeds_by_test[key][0]
+                hid = s["host_id"]
+                rid = f"legacy_{hid}_{m_slug}"
+                self.conn.execute(
+                    """
+                    INSERT OR REPLACE INTO _new_results
+                    (run_id, model, benchmark, level, tested_at, passed, total, failures, manual_score, comment)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                    (
+                        rid,
+                        r["model"],
+                        r["benchmark"],
+                        r["level"],
+                        r["tested_at"],
+                        r["passed"],
+                        r["total"],
+                        r["failures"],
+                        r["manual_score"],
+                        r["comment"],
+                    ),
+                )
             else:
                 hosts = model_hosts.get(r["model"], [default_host])
                 hid = hosts[0]
@@ -265,7 +337,7 @@ class Database:
         for r_dict in runs_to_insert.values():
             self.conn.execute(
                 """
-                INSERT OR REPLACE INTO runs
+                INSERT OR IGNORE INTO runs
                 (id, host_id, model_key, model_name, quantization, backend, generation_params, suite_version, started_at, completed_at, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
