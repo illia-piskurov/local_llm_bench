@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-10-03 22:31:41",
+  "stats": {
+    "input_tokens": 635,
+    "total_output_tokens": 2031,
+    "reasoning_output_tokens": 1431,
+    "tokens_per_second": 22.21181804616992,
+    "time_to_first_token_seconds": 1.4006859999999999,
+    "model_load_time_seconds": null
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "run_id": "run_20261003_195451_db47f1",
+  "host_id": "56a307df6486",
+  "model": "qwen/qwen3-vl-4b",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-10-03 19:57:15",
+  "passed": 26,
+  "total": 37,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: Undefined label: skip",
+    "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: Undefined label: zero",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: Undefined label: zero",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: Undefined label: nz",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: Undefined label: nz",
+    "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+    "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']",
+    "call_ret_basic: unexpected exception/timeout: ValueError: Line 2: Undefined label: double",
+    "call_ret_nested: unexpected exception/timeout: ValueError: Line 1: Undefined label: func_a",
+    "recursive_factorial: unexpected exception/timeout: ValueError: Line 2: Undefined label: fact",
+    "recursive_fibonacci: unexpected exception/timeout: ValueError: Line 2: Undefined label: fib"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

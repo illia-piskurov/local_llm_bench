@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```lua\nlocal BT = {}\n\n-- Execution statuses\nBT.SUCCESS = \"SUCCESS\"\nBT.FAILURE = \"FAILURE\"\nBT.RUNNING = \"RUNNING\"\n\n-- Action node\nfunction BT.Action(fn)\n    return {\n        tick = function(ctx)\n            local result = fn(ctx)\n            if result == true or result == BT.SUCCESS then\n                return BT.SUCCESS\n            elseif result == false or result == BT.FAILURE then\n                return BT.FAILURE\n            else\n                return BT.RUNNING\n            end\n        end,\n        reset = function() end\n    }\nend\n\n-- Condition check node\nfunction BT.Condition(predicate)\n    return {\n        tick = function(ctx)\n            if predicate(ctx) then\n                return BT.SUCCESS\n            else\n                return BT.FAILURE\n            end\n        end,\n        reset = function() end\n    }\nend\n\n-- Sequence node (logical AND)\nfunction BT.Sequence(children)\n    local index = 1\n    return {\n        tick = function(ctx)\n            while true do\n                if index > #children then\n                    return BT.SUCCESS\n                elseif index < 1 then\n                    error(\"Invalid sequence index\")\n                end\n                \n                local result = children[index]:tick(ctx)\n                if result == BT.FAILURE then\n                    return BT.FAILURE\n                elseif result == BT.RUNNING then\n                    return BT.RUNNING\n                end\n                \n                index = index + 1\n            end\n        end,\n        reset = function()\n            index = 1\n        end\n    }\nend\n\n-- Selector node (logical OR / Fallback)\nfunction BT.Selector(children)\n    local index = 1\n    return {\n        tick = function(ctx)\n            while true do\n                if index > #children then\n                    return BT.FAILURE\n                elseif index < 1 then\n                    error(\"Invalid selector index\")\n                end\n                \n                local result = children[index]:tick(ctx)\n                if result == BT.SUCCESS then\n                    return BT.SUCCESS\n                elseif result == BT.RUNNING then\n                    return BT.RUNNING\n                end\n                \n                index = index + 1\n            end\n        end,\n        reset = function()\n            index = 1\n        end\n    }\nend\n\nreturn BT\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 483,
+    "total_output_tokens": 462,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 43.045805405694104,
+    "time_to_first_token_seconds": 1.110026
+  }
+}

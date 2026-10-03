@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261003_122800_f42493",
+  "host_id": "56a307df6486",
+  "model": "google/gemma-4-e4b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-10-03 12:57:35",
+  "passed": 4,
+  "total": 6,
+  "failures": [
+    "where_and_or_nested: SQL: expected 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', got 'SELECT id, email FROM users WHERE (status = $1 (role = $2 age >= $3))'",
+    "multiple_and_conditions: SQL: expected 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', got 'SELECT * FROM logs WHERE (level = $1 code != $2 timestamp > $3)'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,47 @@
+We need to produce C code implementing ring buffer plus feed_bytes and get_next_packet. Must preserve previous functions (ringbuf_*). Also decode logic similar but now streaming: we cannot pre-scan entire stream; we have only ring buffer data. Need to locate first valid packet in buffer, possibly after noise bytes.
+
+Implementation: ring buffer holds incoming bytes sequentially. We need to scan from head? Actually ring buffer stores data in circular array; we can treat as linear sequence from tail to head-1 (wrapping). Simpler: maintain a pointer to current position within buffer where next byte to read is at index 'head'? In previous code, ringbuf_pop returns value at tail and increments tail. So the buffer holds bytes from tail..(tail+count-1) mod size.
+
+To find packet, we need to examine sequence starting at head? Actually feed_bytes pushes bytes to end (head). The packet is formed by consecutive bytes in order they were fed. So scanning from tail forward (i.e., reading sequentially) is natural: the buffer holds data in order of arrival; we can iterate i = 0..count-1, checking if stream[i] == 0xAA etc.
+
+But need to handle false 0xAA markers preceding packet: discard noise up to next candidate. So scanning from start (tail) until find valid packet.
+
+Implementation steps:
+
+int get_next_packet(uint8_t *out_payload, int *out_type):
+- If count <4 return -1.
+- For i=0; i+len+3 <= count; i++:
+   if buffer[i] == 0xAA:
+      type = buffer[i+1];
+      len = buffer[i+2];
+      // ensure payload and checksum present within remaining bytes
+      if (i + len + 3 > count) continue;
+      compute xor of payload bytes: for j=0..len-1 xor ^= buffer[i+3+j];
+      if xor == buffer[i+len+3]:
+          copy payload to out_payload[0..len-1]; *out_type = type; return len;
+
+If not found, return -1.
+
+But need to discard noise bytes: scanning from start ensures we skip false 0xAA markers because they won't satisfy checksum.
+
+Edge: if packet is incomplete (i+len+3 > count) we continue scanning.
+
+Return -1 without discarding incomplete data.
+
+Now feed_bytes: push each byte via ringbuf_push; if overflow, discard bytes that do not fit. So while len>0 and free space>0: push one byte, decrement len.
+
+Implementation:
+
+void feed_bytes(const uint8_t *data, int len) {
+    for (int i=0;i<len && ringbuf_free_space()>0;i++) {
+        ringbuf_push(data[i]);
+    }
+}
+
+Now need to preserve all functions from Level 1 and Level 2. So include ringbuf_* definitions.
+
+We'll output code block with includes, defines, functions.
+
+Potential issues: The decode_packet function earlier used scanning over stream; we may keep it but not needed? The problem says "Preserve all functions from Level 1 and Level 2." So keep both decode_packet and new functions. But decode_packet expects const uint8_t *stream, int stream_len etc., which is okay.
+
+Now produce final code.

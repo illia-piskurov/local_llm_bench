@@ -1,0 +1,682 @@
+{
+  "id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model_key": "ibm/granite-4-h-tiny",
+  "model_name": "Granite 4 H Tiny",
+  "quantization": "Q4_K_M",
+  "backend": "LM Studio (69d945a)",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "ibm/granite-4-h-tiny",
+      "display_name": "Granite 4 H Tiny",
+      "architecture": "granitehybrid",
+      "quantization": "Q4_K_M",
+      "quantization_bits": 4,
+      "size_bytes": 4231029544,
+      "params_string": "7B",
+      "max_context_length": 1048576,
+      "format": "gguf",
+      "publisher": "ibm"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "3824c37 (051cb8695784)",
+  "started_at": "2026-10-03 19:47:13",
+  "completed_at": "2026-10-03 19:53:24",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:47:26",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:47:49",
+      "passed": 20,
+      "total": 27,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Error at line 1: Undefined label: skip",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Error at line 1: Undefined label: zero",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Error at line 1: Undefined label: zero",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Error at line 1: Undefined label: nz",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Error at line 1: Undefined label: nz",
+        "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+        "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:48:21",
+      "passed": 25,
+      "total": 37,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "jz_taken_when_zero: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "countdown_loop: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "count_up_loop: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "call_ret_basic: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "call_ret_nested: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "recursive_factorial: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+        "recursive_fibonacci: unexpected exception/timeout: NameError: name 'labels' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:48:26",
+      "passed": 6,
+      "total": 10,
+      "failures": [
+        "self_cycle: expected None (cycle), got ['a']",
+        "two_node_cycle: expected None (cycle), got ['b', 'a']",
+        "long_cycle: expected None (cycle), got ['d', 'c', 'b', 'a']",
+        "cycle_with_extra_nodes: expected None (cycle), got ['a', 'b', 'c', 'd']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:48:31",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception/timeout: NameError: name 'topo_sort' isn't defined",
+        "simple_chain: unexpected exception/timeout: NameError: name 'topo_sort' isn't defined",
+        "diamond_pick_longer_branch: unexpected exception/timeout: NameError: name 'topo_sort' isn't defined",
+        "independent_tasks: unexpected exception/timeout: NameError: name 'topo_sort' isn't defined",
+        "wide_graph: unexpected exception/timeout: NameError: name 'topo_sort' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:48:44",
+      "passed": 3,
+      "total": 6,
+      "failures": [
+        "dependency_unlocks_later: expected ['a', 'b', 'c'], got ['c', 'b', 'a']",
+        "resource_limit_and_priority: expected ['compile', 'lint', 'test', 'package', 'deploy'], got ['package', 'test', 'lint', 'deploy', 'compile']",
+        "simultaneous_unlocks: expected ['root', 'c', 'd', 'b'], got ['d', 'c', 'root', 'b']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:49:06",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "failed to load solution: Syntax error in solution: invalid syntax (<unknown>, line 62)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:49:16",
+      "passed": 11,
+      "total": 15,
+      "failures": [
+        "simple_transaction_rollback: expected ['5'], got ['10']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', 'NULL']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '20', '20']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['2', '99', '2']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:49:33",
+      "passed": 12,
+      "total": 25,
+      "failures": [
+        "simple_transaction_rollback: expected ['5'], got ['10']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', 'NULL']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '20', '20']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['2', '99', '2']",
+        "count_basic: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+        "count_zero: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+        "count_respects_transaction: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+        "count_after_delete: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+        "watch_set_new_key: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_set_change: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_no_change_no_notification: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_delete: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got []"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:49:55",
+      "passed": 16,
+      "total": 30,
+      "failures": [
+        "simple_transaction_rollback: expected ['5'], got ['10']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', 'NULL']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '20', '20']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['2', '99', '2']",
+        "count_basic: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+        "count_zero: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+        "count_respects_transaction: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+        "count_after_delete: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+        "watch_set_new_key: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_set_change: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_no_change_no_notification: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_delete: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got []",
+        "restore_keeps_watch_registrations: unexpected exception/timeout: IndexError: list index out of range"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:50:09",
+      "passed": 3,
+      "total": 6,
+      "failures": [
+        "simple_where_equality: exception/timeout: ValueError: too many values to unpack (expected 3)",
+        "where_and_or_nested: exception/timeout: ValueError: too many values to unpack (expected 3)",
+        "multiple_and_conditions: exception/timeout: ValueError: too many values to unpack (expected 3)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:50:30",
+      "passed": 0,
+      "total": 5,
+      "failures": [
+        "left_join_with_group_by: exception/timeout: ValueError: too many values to unpack (expected 3)",
+        "multiple_joins_inner_and_left: exception/timeout: ValueError: too many values to unpack (expected 3)",
+        "where_in_operator: exception/timeout: ValueError: need more than 2 values to unpack",
+        "where_is_null_and_like: exception/timeout: ValueError: too many values to unpack (expected 3)",
+        "where_is_not_null: exception/timeout: ValueError: too many values to unpack (expected 3)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:51:04",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "select_expression_alias: exception/timeout: ValueError: too many values to unpack (expected 3)",
+        "having_clause: exception/timeout: TypeError: 'int' object isn't iterable",
+        "where_subquery_in: exception/timeout: ValueError: need more than 2 values to unpack",
+        "subquery_with_parent_params_order: exception/timeout: TypeError: 'NoneType' object isn't iterable"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:51:15",
+      "passed": 3,
+      "total": 4,
+      "failures": [
+        "full_overflow_check: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:51:29",
+      "passed": 4,
+      "total": 8,
+      "failures": [
+        "full_overflow_check: assertion returned False",
+        "clean_packet: assertion returned False",
+        "with_junk_prefix: assertion returned False",
+        "recover_after_false_magic: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:51:51",
+      "passed": 0,
+      "total": 10,
+      "failures": [
+        "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\ibm_granite-4-h-tiny__Q4_K_M_c_framing_level3.c:92:25: error: too few arguments to function call, expected 2, have 0\n   92 |             ringbuf_pop();\n      |             ~~~~~~~~~~~ ^\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\ibm_granite-4-h-tiny__Q4_K_M_c_framing_level3.c:33:5: note: 'ringbuf_pop' declared here\n   33 | int ringbuf_pop(uint8_t *data, int len) {\n      |     ^           ~~~~~~~~~~~~~~~~~~~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\ibm_granite-4-h-tiny__Q4_K_M_c_framing_level3.c:103:25: error: too few arguments to function call, expected 2, have 0\n  103 |             ringbuf_pop();\n      |             ~~~~~~~~~~~ ^\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\ibm_granite-4-h-tiny__Q4_K_M_c_framing_level3.c:33:5: note: 'ringbuf_pop' declared here\n   33 | int ringbuf_pop(uint8_t *data, int len) {\n      |     ^           ~~~~~~~~~~~~~~~~~~~~~~\n2 errors generated.\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:51:57",
+      "passed": 4,
+      "total": 7,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_default_one: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:52:06",
+      "passed": 1,
+      "total": 12,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "concurrency_default_one: assertion returned False",
+        "index_passed: assertion returned False",
+        "mapper_rejection: assertion returned False",
+        "retry_transient_failure: assertion returned False",
+        "retry_exhausted: assertion returned False",
+        "exponential_backoff: assertion returned False",
+        "task_timeout: assertion returned False",
+        "timeout_triggers_retry: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:52:19",
+      "passed": 2,
+      "total": 17,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "concurrency_default_one: assertion returned False",
+        "index_passed: assertion returned False",
+        "mapper_rejection: assertion returned False",
+        "retry_transient_failure: assertion returned False",
+        "retry_exhausted: assertion returned False",
+        "exponential_backoff: assertion returned False",
+        "task_timeout: assertion returned False",
+        "timeout_triggers_retry: assertion returned False",
+        "mid_flight_abort: assertion returned False",
+        "settled_all_success: exception object of type 'NoneType' has no len()",
+        "settled_mixed_failures: exception object of type 'NoneType' has no len()",
+        "settled_with_retries: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:52:31",
+      "passed": 0,
+      "total": 7,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "sequence_all_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "selector_first_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_all_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:52:56",
+      "passed": 0,
+      "total": 12,
+      "failures": [
+        "Lua syntax error: [string \"<python>\"]:96: attempt to index a nil value (field 'Blackboard')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:53:24",
+      "passed": 0,
+      "total": 16,
+      "failures": [
+        "Lua syntax error: [string \"<python>\"]:117: attempt to index a nil value (field 'Blackboard')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:47:25",
+      "stats": {
+        "input_tokens": 273,
+        "total_output_tokens": 483,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 46.68472584249466,
+        "time_to_first_token_seconds": 1.7588920000000001,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:47:47",
+      "stats": {
+        "input_tokens": 895,
+        "total_output_tokens": 798,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 45.579547376222216,
+        "time_to_first_token_seconds": 2.675049,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:48:18",
+      "stats": {
+        "input_tokens": 1217,
+        "total_output_tokens": 1154,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 44.46548381280918,
+        "time_to_first_token_seconds": 2.410739,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:48:25",
+      "stats": {
+        "input_tokens": 170,
+        "total_output_tokens": 123,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 46.23096383222859,
+        "time_to_first_token_seconds": 0.765937,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:48:31",
+      "stats": {
+        "input_tokens": 424,
+        "total_output_tokens": 138,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 45.5724683745365,
+        "time_to_first_token_seconds": 1.041367,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:48:44",
+      "stats": {
+        "input_tokens": 216,
+        "total_output_tokens": 482,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 43.87066599319265,
+        "time_to_first_token_seconds": 0.8386319999999999,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:49:06",
+      "stats": {
+        "input_tokens": 874,
+        "total_output_tokens": 848,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 43.011172037680424,
+        "time_to_first_token_seconds": 2.040571,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:49:15",
+      "stats": {
+        "input_tokens": 319,
+        "total_output_tokens": 301,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 44.37558668223559,
+        "time_to_first_token_seconds": 0.956647,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:49:30",
+      "stats": {
+        "input_tokens": 825,
+        "total_output_tokens": 529,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 43.405439523645036,
+        "time_to_first_token_seconds": 2.0198620000000003,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:49:52",
+      "stats": {
+        "input_tokens": 974,
+        "total_output_tokens": 717,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 42.955772292890934,
+        "time_to_first_token_seconds": 2.126288,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:50:08",
+      "stats": {
+        "input_tokens": 345,
+        "total_output_tokens": 516,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 43.18015919476633,
+        "time_to_first_token_seconds": 0.9961,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:50:30",
+      "stats": {
+        "input_tokens": 1111,
+        "total_output_tokens": 763,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 42.796411908388045,
+        "time_to_first_token_seconds": 2.8758600000000003,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:51:03",
+      "stats": {
+        "input_tokens": 1254,
+        "total_output_tokens": 1265,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 41.977288360823756,
+        "time_to_first_token_seconds": 2.549725,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:51:10",
+      "stats": {
+        "input_tokens": 235,
+        "total_output_tokens": 220,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 44.91074143942823,
+        "time_to_first_token_seconds": 0.874499,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:51:29",
+      "stats": {
+        "input_tokens": 759,
+        "total_output_tokens": 488,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 44.23414303614256,
+        "time_to_first_token_seconds": 1.913187,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:51:51",
+      "stats": {
+        "input_tokens": 1038,
+        "total_output_tokens": 807,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 42.62571439057867,
+        "time_to_first_token_seconds": 2.426693,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:51:57",
+      "stats": {
+        "input_tokens": 215,
+        "total_output_tokens": 210,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 44.947406158310784,
+        "time_to_first_token_seconds": 0.8584109999999999,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:52:06",
+      "stats": {
+        "input_tokens": 667,
+        "total_output_tokens": 310,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 43.13788011243211,
+        "time_to_first_token_seconds": 1.815817,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:52:19",
+      "stats": {
+        "input_tokens": 803,
+        "total_output_tokens": 436,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 43.20666562639583,
+        "time_to_first_token_seconds": 1.981392,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:52:31",
+      "stats": {
+        "input_tokens": 483,
+        "total_output_tokens": 462,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 43.045805405694104,
+        "time_to_first_token_seconds": 1.110026,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:52:55",
+      "stats": {
+        "input_tokens": 1245,
+        "total_output_tokens": 883,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 41.97143743750384,
+        "time_to_first_token_seconds": 2.543439,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:53:24",
+      "stats": {
+        "input_tokens": 1484,
+        "total_output_tokens": 1059,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 41.65353838737735,
+        "time_to_first_token_seconds": 2.769442,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

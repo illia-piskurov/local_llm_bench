@@ -1,0 +1,231 @@
+import re
+from typing import Any, Dict, List, Tuple
+
+# Global state container for parameter indexing and value collection
+class QueryState:
+    def __init__(self):
+        self.params: List[Any] = []
+        self.param_index: int = 0
+
+    def get_placeholder(self) -> str:
+        """Generates the next placeholder ($1, $2, ...) and increments the index."""
+        self.param_index += 1
+        return f"${self.param_index}"
+
+    def add_param(self, value: Any):
+        """Adds a value to the parameter list."""
+        self.params.append(value)
+
+
+def _compile_simple_condition(state: 'QueryState', condition: Dict[str, Any]) -> Tuple[str, str]:
+    """
+    Compiles a simple comparison condition: { field: str, op: str, value: any }
+    Returns (sql_fragment, placeholder)
+    Handles IN, IS NULL/NOT NULL, LIKE operators, and Subqueries.
+    """
+    field = condition['field']
+    op = condition['op'].upper()
+
+    # --- Subquery Handling ---
+    if op == 'IN' and 'query' in condition:
+        subquery_dict = condition['query']
+        # Recursively compile the subquery. This updates state.params internally.
+        subquery_result = compile_query(subquery_dict)
+        subquery_sql = subquery_result['sql']
+        return f"{field} IN ({subquery_sql})", "" # Subqueries do not generate a placeholder themselves
+
+    # --- Special Case Handlers (Non-Subquery) ---
+
+    if op == 'IS NULL':
+        return f"{field} IS NULL", ""
+    elif op == 'IS NOT NULL':
+        return f"{field} IS NOT NULL", ""
+    elif op == 'IN':
+        # Standard IN list handling
+        values: List[Any] = condition.get('value')
+        if not values:
+            return "", ""
+
+        # Bind all values sequentially and generate placeholders
+        for v in values:
+            state.add_param(v)
+
+        placeholders = [f"${i+1}" for i in range(len(values))]
+        return f"{field} IN ({', '.join(placeholders)})", placeholders[-1]
+
+
+    elif op == 'LIKE':
+        # LIKE requires a single value (string)
+        value = condition.get('value')
+        placeholder = state.get_placeholder()
+        state.add_param(value)
+        return f"{field} LIKE {placeholder}", placeholder
+
+    # --- Standard Comparison Operators ---
+    else:
+        # Standard operators: =, !=, >, <, >=, <=
+        if op in ('=', '!=', '>', '<', '>=', '<='):
+            value = condition.get('value')
+            placeholder = state.get_placeholder()
+            state.add_param(value)
+            return f"{field} {op} {placeholder}", placeholder
+
+    # Fallback
+    return "", ""
+
+
+def _compile_logical_group(state: 'QueryState', group: Dict[str, List[Dict]]) -> str:
+    """
+    Compiles a logical group (AND or OR).
+    The structure is expected to be { AND: [cond1, cond2...] } or { OR: [...] }.
+    """
+    operator = next(iter(group)) # 'AND' or 'OR'
+    conditions = group[operator]
+
+    if not conditions:
+        return ""
+
+    compiled_parts = []
+    for condition in conditions:
+        # Recursively compile the child condition (which might be simple or another group)
+        if isinstance(condition, dict):
+            if 'AND' in condition or 'OR' in condition:
+                # It's a nested logical group
+                compiled_parts.append(_compile_logical_group(state, condition))
+            else:
+                # It must be a simple comparison (or subquery)
+                sql_fragment, _ = _compile_simple_condition(state, condition)
+                compiled_parts.append(sql_fragment)
+
+    if len(compiled_parts) == 1:
+        return compiled_parts[0]
+    else:
+        # Wrap multiple conditions in parentheses for correct precedence
+        inner_sql = " ".join(compiled_parts)
+        return f"({inner_sql})"
+
+
+def _compile_where_clause(state: 'QueryState', where_condition: Dict[str, Any]) -> str:
+    """
+    Entry point for compiling the WHERE clause. Handles nested AND/OR structures.
+    """
+    if not where_condition:
+        return ""
+
+    # Check if the top level is a logical group (AND or OR)
+    if 'AND' in where_condition or 'OR' in where_condition:
+        return _compile_logical_group(state, where_condition)
+    else:
+        # Assume it's a single simple condition at the root level
+        sql_fragment, _ = _compile_simple_condition(state, where_condition)
+        return sql_fragment
+
+
+def compile_query(query: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Compiles a query AST dictionary into parameterized SQL and parameter list.
+
+    Returns: {"sql": str, "params": list}
+    """
+    state = QueryState()
+    parts = []
+
+    # 1. SELECT Clause (Handling Expressions/Aliases)
+    select_list = query.get('select')
+    if select_list is None:
+        select_cols = ['*']
+    else:
+        select_cols = []
+        for item in select_list:
+            if isinstance(item, str):
+                # Simple column name or function call (e.g., 'orders.id')
+                select_cols.append(item)
+            elif isinstance(item, dict) and 'expr' in item:
+                # Computed expression with alias { expr: str, as: str }
+                expr = item['expr']
+                alias = item.get('as', '')
+                if alias:
+                    select_cols.append(f"({expr}) AS {alias}")
+                else:
+                    select_cols.append(expr)
+
+    parts.append(f"SELECT {', '.join(select_cols)}")
+
+
+    # 2. FROM Clause
+    table = query.get('table')
+    if not table:
+        raise ValueError("Query must specify a 'table'.")
+    parts.append(f"FROM {table}")
+
+    # 3. JOINS Clause
+    joins_list = query.get('joins')
+    if joins_list:
+        join_clauses = []
+        for join in joins_list:
+            join_type = join.get('type', 'INNER').upper()
+            table_name = join['table']
+            on_conditions = join['on']
+
+            # Build the ON clause string (e.g., col1 = col2)
+            on_parts = []
+            for left_col, right_col in on_conditions.items():
+                on_parts.append(f"{left_col} = {right_col}")
+            
+            on_clause = " AND ".join(on_parts)
+
+            join_clauses.append(f"{join_type} JOIN {table_name} ON {on_clause}")
+        
+        if join_clauses:
+            parts.append(" ".join(join_clauses))
+
+
+    # 4. WHERE Clause
+    where_condition = query.get('where')
+    if where_condition:
+        where_sql = _compile_where_clause(state, where_condition)
+        if where_sql:
+            parts.append(f"WHERE {where_sql}")
+
+    # 5. HAVING Clause (New)
+    having_condition = query.get('having')
+    if having_condition:
+        having_sql = _compile_where_clause(state, having_condition)
+        if having_sql:
+            parts.append(f"HAVING {having_sql}")
+
+    # 6. GROUP BY Clause
+    group_by_list = query.get('groupBy')
+    if group_by_list:
+        parts.append("GROUP BY " + ", ".join(group_by_list))
+
+    # 7. ORDER BY Clause
+    order_by_list = query.get('orderBy')
+    if order_by_list:
+        order_clauses = []
+        for item in order_by_list:
+            field = item['field']
+            direction = item.get('dir', 'ASC').upper()
+            order_clauses.append(f"{field} {direction}")
+
+        if order_clauses:
+            parts.append("ORDER BY " + ", ".join(order_clauses))
+
+    # 8. LIMIT and OFFSET Clauses
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    if limit is not None:
+        parts.append(f"LIMIT {limit}")
+    
+    if offset is not None:
+        parts.append(f"OFFSET {offset}")
+
+
+    # Final Assembly
+    sql_string = " ".join(parts)
+
+    return {
+        "sql": sql_string,
+        "params": state.params
+    }

@@ -1,0 +1,21 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-10-03 22:25:39",
+  "passed": 20,
+  "total": 27,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: undefined label 'skip'",
+    "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: undefined label 'zero'",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 5: undefined label 'end'",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: undefined label 'nz'",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 5: undefined label 'end'",
+    "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+    "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

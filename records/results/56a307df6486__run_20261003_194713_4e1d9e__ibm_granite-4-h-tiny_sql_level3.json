@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-10-03 19:51:04",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "select_expression_alias: exception/timeout: ValueError: too many values to unpack (expected 3)",
+    "having_clause: exception/timeout: TypeError: 'int' object isn't iterable",
+    "where_subquery_in: exception/timeout: ValueError: need more than 2 values to unpack",
+    "subquery_with_parent_params_order: exception/timeout: TypeError: 'NoneType' object isn't iterable"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

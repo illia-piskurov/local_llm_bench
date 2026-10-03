@@ -1,0 +1,26 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-10-03 19:48:21",
+  "passed": 25,
+  "total": 37,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "jz_taken_when_zero: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "countdown_loop: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "count_up_loop: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "label_does_nothing_on_its_own: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "call_ret_basic: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "call_ret_nested: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "recursive_factorial: unexpected exception/timeout: NameError: name 'labels' isn't defined",
+    "recursive_fibonacci: unexpected exception/timeout: NameError: name 'labels' isn't defined"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

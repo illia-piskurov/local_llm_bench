@@ -1,0 +1,80 @@
+```lua
+-- Global execution statuses
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+-- Action node: invokes a function and returns its result as a BT status
+BT.Action = function(fn)
+    local node = {
+        fn = fn,
+        tick = function(self, ctx)
+            local result = self.fn(ctx)
+            if result == BT.SUCCESS or result == true then return BT.SUCCESS
+            elseif result == BT.FAILURE or result == false then return BT.FAILURE
+            else return BT.RUNNING end
+        end,
+        reset = function() end
+    }
+    return node
+end
+
+-- Condition node: evaluates a predicate and returns SUCCESS/FAILURE
+BT.Condition = function(predicate)
+    local node = {
+        predicate = predicate,
+        tick = function(self, ctx) local ok = self.predicate(ctx); if ok then return BT.SUCCESS else return BT.FAILURE end,
+        reset = function() end
+    }
+    return node
+end
+
+-- Sequence node: logical AND of children (AND)
+BT.Sequence = function(children)
+    local idx = 1
+    local node = {
+        children = children,
+        idx = 1,
+        tick = function(self, ctx)
+            if self.idx > #self.children then return BT.SUCCESS end
+            local child = self.children[self.idx]
+            local status = child.tick(ctx)
+            if status == BT.FAILURE then return BT.FAILURE
+            elseif status == BT.RUNNING then return BT.RUNNING
+            else -- SUCCESS: advance to next node
+                self.idx = self.idx + 1
+                return BT.SUCCESS
+            end
+        end,
+        reset = function() self.idx = 1 end
+    }
+    return node
+end
+
+-- Selector node: logical OR of children (OR / fallback)
+BT.Selector = function(children)
+    local idx = 1
+    local node = {
+        children = children,
+        idx = 1,
+        tick = function(self, ctx)
+            if self.idx > #self.children then return BT.SUCCESS end
+            local child = self.children[self.idx]
+            local status = child.tick(ctx)
+            if status == BT.SUCCESS then -- advance and succeed
+                self.idx = self.idx + 1
+                return BT.SUCCESS
+            elseif status == BT.RUNNING then -- keep same node running
+                return BT.RUNNING
+            else -- FAILURE: move to next child
+                self.idx = self.idx + 1
+            end
+        end,
+        reset = function() self.idx = 1 end
+    }
+    return node
+end
+
+-- Global table for the engine (optional)
+BT = {}
+```

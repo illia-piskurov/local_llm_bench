@@ -1,0 +1,28 @@
+async function pMap(items, mapper, options) {
+  if (!Array.isArray(items)) throw new Error('items must be an array');
+  const n = items.length;
+  if (n === 0) return [];
+
+  // Determine concurrency limit
+  let max = typeof options === 'number' ? options : (options && options.concurrency ?? 1);
+  if (max < 1) throw new Error('concurrency must be >= 1');
+
+  const results = new Array(n);
+  let active = 0;
+  const pending = [...Array(n).keys()];
+
+  function run() {
+    while (active < max && pending.length) {
+      const i = pending.shift();
+      active++;
+      mapper(i)
+        .then(r => { results[i] = r; })
+        .catch(err => { throw err; })
+        .finally(() => { active--; run(); });
+    }
+  }
+
+  run();
+
+  return results;
+}

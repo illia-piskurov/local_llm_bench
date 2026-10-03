@@ -1,71 +1,78 @@
 ```python
 def compile_query(query: dict) -> dict:
-    table = query.get('table', '')
-    select = query.get('select', ['*'])
-    where_clause = ''
-    params = []
-    order_by = []
-    limit_offset = []
-
-    # Сбор SELECT
-    if len(select) == 1 and select[0] == '*':
-        select_str = 'SELECT *'
-    else:
-        select_str = f'SELECT {", ".join(select)}'
-
-    # Обработка WHERE
-    def process_condition(cond):
-        nonlocal params
-        if isinstance(cond, dict):
-            field = cond['field']
-            op = cond['op']
-            value = cond['value']
-
-            # Плейсхолдеры для значений
-            params.append(value)
-            placeholders = [f'${i+1}' for i in range(len(params))]
-            placeholder = ','.join(placeholders)
-
+    def _build_where_clause(cond):
+        if isinstance(cond, dict) and 'AND' in cond:
+            return f"({', '.join(_build_where_clause(c) for c in cond['AND'])}) AND"
+        elif isinstance(cond, dict) and 'OR' in cond:
+            return f"({', '.join(_build_where_clause(c) for c in cond['OR'])}) OR"
+        else:
+            field, op, value = cond
             if op == '=':
-                return f'{field} = {placeholder}'
+                return f"{field} = ?"
             elif op == '!=':
-                return f'{field} != {placeholder}'
-            elif op in ('>', '<', '>=', '<='):
-                return f'{field} {op} {placeholder}'
-        else:  # Логические условия (AND/OR)
-            conditions = []
-            for c in cond.values():
-                if isinstance(c, list):  # AND/OR списки
-                    processed = [process_condition(item) for item in c]
-                    conditions.append(f'({", ".join(processed)})')
-                else:  # Рекурсия для вложенных условий
-                    conditions.append(process_condition(c))
-            return f'{", ".join(conditions)}'
+                return f"{field} != ?"
+            elif op == '>':
+                return f"{field} > ?"
+            elif op == '<':
+                return f"{field} < ?"
+            elif op == '>=':
+                return f"{field} >= ?"
+            elif op == '<=':
+                return f"{field} <= ?"
+            else:
+                raise ValueError(f"Unsupported operator: {op}")
 
-    if query.get('where'):
-        where_clause = ' WHERE ' + process_condition(query['where'])
+    def _build_order_by_clause(order_conditions):
+        if not order_conditions:
+            return ""
+        clauses = []
+        for cond in order_conditions:
+            field, dir_ = cond.get('field'), cond.get('dir', 'ASC')
+            clauses.append(f"{field} {'DESC' if dir_ == 'DESC' else 'ASC'}")
+        return ", ".join(clauses)
 
-    # Обработка ORDER BY
-    if query.get('orderBy'):
-        for item in query['orderBy']:
-            order_by.append(f"{item['field']} {'DESC' if item.get('dir') == 'DESC' else 'ASC'}")
+    # Build SQL parts
+    select_clause = "SELECT " + (", ".join(query['select']) if query['select'] else "*")
+    where_clause = ""
+    if 'where' in query:
+        where_clause = _build_where_clause(query['where'])
 
-    # Обработка LIMIT/OFFSET
-    limit = query.get('limit')
-    offset = query.get('offset')
-    if limit is not None:
-        limit_offset.append(f'LIMIT {limit}')
-    if offset is not None:
-        limit_offset.append(f'OFFSET {offset}')
+    order_by_clause = ""
+    if 'orderBy' in query:
+        order_by_clause = f"ORDER BY {_build_order_by_clause(query['orderBy'])}"
 
-    sql_parts = [select_str]
+    limit_clause = ""
+    offset_clause = ""
+    if 'limit' in query:
+        limit_clause = f"LIMIT {query['limit']}"
+    if 'offset' in query:
+        offset_clause = f"OFFSET {query['offset']}"
+
+    sql = f"SELECT {select_clause} FROM {query['table']}"
     if where_clause:
-        sql_parts.append(where_clause)
-    if order_by:
-        sql_parts.append(' ORDER BY ' + ', '.join(order_by))
-    if limit_offset:
-        sql_parts.extend(limit_offset)
+        sql += " WHERE " + where_clause
+    if order_by_clause:
+        sql += " " + order_by_clause
+    if limit_clause:
+        sql += " " + limit_clause
+    if offset_clause:
+        sql += " " + offset_clause
 
-    sql = ' '.join(sql_parts)
-    return {"sql": sql, "params": params}
+    # Collect parameters in left-to-right traversal order
+    params = []
+    def _collect_params(cond, param_idx=1):
+        nonlocal params
+        if isinstance(cond, dict) and 'AND' in cond:
+            for c in cond['AND']:
+                _collect_params(c, param_idx)
+        elif isinstance(cond, dict) and 'OR' in cond:
+            for c in cond['OR']:
+                _collect_params(c, param_idx)
+        else:
+            _, op, value = cond
+            if op in ('=', '!=', '>', '<', '>=', '<='):
+                params.append(value)
+
+    _collect_params(query.get('where', {}))
+    return {"sql": sql.replace("?", f"${param_idx}", 1), "params": params}
 ```

@@ -2,208 +2,160 @@
 import collections
 from typing import List, Dict, Tuple, Optional
 
-def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> Optional[List[str]]:
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> Optional[list[str]]:
     """
-    Планирует выполнение задач с учетом зависимостей, приоритетов и ограниченного числа исполнителей.
+    Schedules tasks with dependencies, priorities, and limited worker pool.
 
     Args:
-        tasks: Словарь {task_name: (duration, dependencies, priority)}.
-        workers: Максимальное количество одновременно работающих задач.
+        tasks: Dictionary mapping task name to (duration, deps, priority).
+        workers: Maximum number of concurrent workers.
 
     Returns:
-        Список имен задач в порядке их старта, или None если обнаружен цикл зависимостей.
+        List[str] of tasks in the order they start, or None if a cycle exists.
     """
+    task_names = list(tasks.keys())
+    N = len(task_names)
 
-    # --- 1. Cycle Detection and Graph Setup ---
-    adj = collections.defaultdict(list)
-    in_degree = {task: 0 for task in tasks}
+    # --- 1. Dependency Graph Setup and Cycle Detection ---
     
-    for task_name, (_, deps, _) in tasks.items():
+    # Adjacency list: task -> tasks that depend on it
+    dependents: dict[str, set[str]] = collections.defaultdict(set)
+    # Initial dependency count for each task
+    dependencies_remaining: dict[str, int] = {}
+    
+    for name in task_names:
+        _, deps, _ = tasks[name]
+        dependencies_remaining[name] = len(deps)
+        for dep_name in deps:
+            if dep_name not in task_names:
+                # Handle case where dependency is listed but doesn't exist
+                return None 
+            dependents[dep_name].add(name)
+
+    # Cycle Detection using DFS (State: 0=Unvisited, 1=Visiting, 2=Visited)
+    state = {name: 0 for name in task_names}
+    def has_cycle(node):
+        if state[node] == 1:  # Currently visiting -> Cycle detected
+            return True
+        if state[node] == 2: # Already visited
+            return False
+
+        state[node] = 1  # Mark as Visiting
+        _, deps, _ = tasks[node]
         for dep in deps:
-            if dep not in tasks:
-                # Handle case where dependency is listed but not defined
-                return None # Or raise an error, assuming valid input structure
-            adj[dep].append(task_name)
-            in_degree[task_name] += 1
-
-    # Kahn's algorithm for cycle detection (Topological Sort check)
-    queue = collections.deque([task for task in tasks if in_degree[task] == 0])
-    processed_count = 0
-    temp_topo_order = []
-    
-    temp_in_degree = dict(in_degree) # Use a copy for the check
-    q_check = collections.deque([task for task in tasks if temp_in_degree[task] == 0])
-
-    while q_check:
-        u = q_check.popleft()
-        temp_topo_order.append(u)
-        processed_count += 1
+            if has_cycle(dep):
+                return True
         
-        for v in adj[u]:
-            temp_in_degree[v] -= 1
-            if temp_in_degree[v] == 0:
-                q_check.append(v)
+        state[node] = 2  # Mark as Visited
+        return False
 
-    if processed_count != len(tasks):
-        return None # Cycle detected
+    for name in task_names:
+        if state[name] == 0 and has_cycle(name):
+            return None # Cycle detected
 
     # --- 2. Simulation Setup ---
-    
-    # State tracking
-    completed_tasks = set()
-    running_tasks: Dict[str, int] = {}  # {task_name: finish_time}
-    scheduled_order: List[str] = []
+
     current_time = 0
-
-    # Tasks whose dependencies are met but haven't started yet.
-    eligible_tasks = set(task for task in tasks if not tasks[task][1]) # Start with tasks having no deps
+    start_order: list[str] = []
     
-    # Keep track of which tasks still need to be scheduled/completed
-    remaining_tasks = set(tasks.keys())
+    # Tracks tasks that are ready (dependencies met) but not yet started
+    ready_queue: set[str] = {name for name in task_names if dependencies_remaining[name] == 0}
+    
+    # Tasks currently running: {task_name: finish_time}
+    running_tasks: dict[str, int] = {}
+    
+    # Tracks tasks that have started (to prevent double-scheduling)
+    started_tasks: set[str] = set()
 
-    while remaining_tasks:
+    # --- 3. Main Simulation Loop ---
+
+    while len(start_order) < N:
         
-        # --- A. Process Completions and Update Dependencies ---
+        # A. Determine Next Event Time (Time Advancement)
+        if not running_tasks and ready_queue and len(start_order) == N:
+            break # Should not happen if logic is correct, but safety break
+        
+        next_finish_time = float('inf')
         if running_tasks:
-            min_finish_time = min(running_tasks.values())
+            next_finish_time = min(running_tasks.values())
+
+        # If nothing is ready and nothing is running, we are stuck (should only happen if N=0)
+        if not running_tasks and not ready_queue and len(start_order) < N:
+             break 
+
+        # Advance time to the next event (completion or start opportunity)
+        if running_tasks and next_finish_time != float('inf'):
+            current_time = next_finish_time
+        elif ready_queue and not running_tasks:
+            # If nothing is running, but tasks are ready, we schedule immediately at current_time
+            pass 
+
+        # B. Process Completions (At current_time)
+        finished_this_step = []
+        for task_name, finish_time in list(running_tasks.items()):
+            if finish_time <= current_time:
+                finished_this_step.append(task_name)
+
+        for finished_task in finished_this_step:
+            del running_tasks[finished_task]
             
-            # Advance time to the next completion event
-            current_time = max(current_time, min_finish_time)
+            # Update dependencies for all tasks that depended on this one
+            for dependent_task in dependents[finished_task]:
+                if dependent_task not in started_tasks: # Only update pending tasks
+                    dependencies_remaining[dependent_task] -= 1
+                    if dependencies_remaining[dependent_task] == 0:
+                        ready_queue.add(dependent_task)
 
-            finished_this_step = []
-            for task_name, finish_time in list(running_tasks.items()):
-                if finish_time <= current_time:
-                    finished_this_step.append(task_name)
-                    del running_tasks[task_name]
-                    completed_tasks.add(task_name)
-
-            # Update eligibility based on completions
-            for finished_task in finished_this_step:
-                for successor in adj[finished_task]:
-                    if successor not in completed_tasks and successor not in running_tasks:
-                        # Check if all dependencies of the successor are now met
-                        _, deps, _ = tasks[successor]
-                        if all(dep in completed_tasks for dep in deps):
-                            eligible_tasks.add(successor)
-
-        elif eligible_tasks and not running_tasks:
-            # Edge case: If nothing is running but we have ready tasks (T=0 start)
-            pass # Time remains 0, scheduling happens below
-
-        # --- B. Scheduling Phase ---
+        # C. Scheduling Decision (At current_time)
+        workers_available = workers - len(running_tasks)
         
-        available_workers = workers - len(running_tasks)
-        if available_workers <= 0 and not running_tasks:
-             # Should only happen if workers is 0 and there are tasks to run
-            break 
-
-        candidates = list(eligible_tasks)
-        
-        if candidates:
-            # Apply selection rules:
-            # 1. Highest Priority (descending) -> -priority
-            # 2. Shortest Duration (ascending) -> duration
-            # 3. Alphabetical Name (ascending) -> name
-            def sort_key(task_name):
-                duration, _, priority = tasks[task_name]
-                return (-priority, duration, task_name)
-
-            candidates.sort(key=sort_key)
+        if workers_available > 0 and ready_queue:
             
-            tasks_to_start = candidates[:available_workers]
+            # Filter out tasks that have already started or are running
+            candidates = [t for t in ready_queue if t not in started_tasks]
 
-            # Record the start event and update state
-            if tasks_to_start:
-                # The order of starting tasks must follow the tie-breaker rule
-                scheduled_order.extend(tasks_to_start) 
+            if candidates:
+                # Sorting criteria (Tie-breakers):
+                # 1. Highest Priority (Max) -> Use negative priority for ascending sort
+                # 2. Shortest Duration (Min)
+                # 3. Alphabetical Name (Ascending)
+                def sort_key(task_name):
+                    duration, _, priority = tasks[task_name]
+                    return (-priority, duration, task_name)
+
+                candidates.sort(key=sort_key)
                 
-                for task_name in tasks_to_start:
-                    duration, _, _ = tasks[task_name]
-                    finish_time = current_time + duration
-                    running_tasks[task_name] = finish_time
-                    eligible_tasks.remove(task_name)
+                tasks_to_start = candidates[:workers_available]
+            else:
+                tasks_to_start = []
 
-        # --- C. Termination Check ---
-        if not running_tasks and not eligible_tasks and remaining_tasks:
-            # We are stuck (e.g., dependencies form a cycle that wasn't caught, or workers=0)
-            break 
 
-    return scheduled_order if len(completed_tasks) == len(tasks) else None
+        # D. Execute Starts and Update State
+        if tasks_to_start:
+            newly_started_names = []
+            for task_name in tasks_to_start:
+                duration, _, _ = tasks[task_name]
+                finish_time = current_time + duration
+                
+                running_tasks[task_name] = finish_time
+                started_tasks.add(task_name)
+                newly_started_names.append(task_name)
 
-if __name__ == '__main__':
-    # Example 1: Basic sequential execution
-    tasks1 = {
-        "A": (5, [], 1),
-        "B": (3, ["A"], 2),
-        "C": (2, ["B"], 3)
-    }
-    workers1 = 1
-    print("--- Example 1 (Sequential) ---")
-    result1 = plan_order(tasks1, workers1)
-    # Expected: ['A', 'B', 'C']
-    print(f"Result 1: {result1}")
+            # The output list must reflect the tie-breaking order for tasks starting at the same time
+            if newly_started_names:
+                # Re-sort the batch of starters using the official criteria
+                def sort_key(task_name):
+                    duration, _, priority = tasks[task_name]
+                    return (-priority, duration, task_name)
 
-    # Example 2: Parallel execution with limited workers
-    tasks2 = {
-        "T1": (5, [], 1),
-        "T2": (3, [], 2),
-        "T3": (7, ["T1"], 3)
-    }
-    workers2 = 2
-    print("\n--- Example 2 (Parallel, Workers=2) ---")
-    result2 = plan_order(tasks2, workers2)
-    # T1 and T2 start at t=0. T2 has higher priority/shorter duration tie-breaker than T1? No, Prio: T2(2), T1(1). 
-    # Order: T2 (P=2), T1 (P=1).
-    # Expected Start Order: ['T2', 'T1']
-    print(f"Result 2: {result2}")
+                newly_started_names.sort(key=sort_key)
+                start_order.extend(newly_started_names)
 
-    # Example 3: Complex scheduling and tie-breaking
-    tasks3 = {
-        "A": (5, [], 1),  # P=1, D=5
-        "B": (2, [], 2),  # P=2, D=2 -> Should start first
-        "C": (4, ["B"], 3) # Must wait for B
-    }
-    workers3 = 2
-    print("\n--- Example 3 (Tie-breaking & Dependencies) ---")
-    result3 = plan_order(tasks3, workers3)
-    # T=0: Candidates A, B. Select B (P=2), then A (P=1). Start order: ['B', 'A']
-    print(f"Result 3: {result3}")
 
-    # Example 4: Cycle detection
-    tasks4 = {
-        "X": (1, ["Y"], 1),
-        "Y": (1, ["Z"], 1),
-        "Z": (1, ["X"], 1)
-    }
-    workers4 = 3
-    print("\n--- Example 4 (Cycle Detection) ---")
-    result4 = plan_order(tasks4, workers4)
-    # Expected: None
-    print(f"Result 4: {result4}")
+        # E. Cleanup Ready Queue (Tasks that start are no longer ready candidates)
+        for task in tasks_to_start:
+            ready_queue.discard(task)
 
-    # Example 5: Workers limit forcing sequential start
-    tasks5 = {
-        "A": (10, [], 3),
-        "B": (10, [], 2),
-        "C": (10, [], 1)
-    }
-    workers5 = 1
-    print("\n--- Example 5 (Workers Limit=1) ---")
-    result5 = plan_order(tasks5, workers5)
-    # Order: A (P=3), B (P=2), C (P=1). All start sequentially.
-    print(f"Result 5: {result5}")
-
-    # Example 6: Multiple tasks ready at T=0 with same priority/duration
-    tasks6 = {
-        "Z": (5, [], 3),
-        "A": (5, [], 3),
-        "B": (5, [], 3)
-    }
-    workers6 = 3
-    print("\n--- Example 6 (Tie-breaking by Name) ---")
-    result6 = plan_order(tasks6, workers6)
-    # P=3 for all. D=5 for all. Tiebreaker: Alphabetical name (A, B, Z).
-    # Expected Start Order: ['A', 'B', 'Z']
-    print(f"Result 6: {result6}")
+    return start_order
 
 ```

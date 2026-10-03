@@ -1,0 +1,36 @@
+Here's a plan to implement the compiler:
+
+1.  **Structure:** Define the main function `compile_query(query: dict)`.
+2.  **State Management:** We need a counter for parameters ($1, $2, ...) and a list to collect these parameter values. These must be managed globally or passed through recursive calls.
+3.  **SQL Building (Core Logic):** The query structure dictates the order of SQL components: `SELECT` -> `FROM` -> `WHERE` -> `GROUP BY`/`HAVING` (N/A here) -> `ORDER BY` -> `LIMIT`/`OFFSET`.
+
+### Step-by-Step Implementation Details:
+
+#### 1. Parameter Handling
+*   Initialize `params = []` and a counter `param_index = 0`.
+*   Create a helper function or mechanism to generate the placeholder `$N` and increment the index, while simultaneously appending the value to `params`.
+
+#### 2. SELECT Clause
+*   If `query['select']` is provided, join the columns with `, `. Otherwise, use `*`.
+
+#### 3. FROM Clause
+*   Use `query['table']`.
+
+#### 4. WHERE Clause (The hardest part)
+*   This requires recursive processing because conditions can be nested (`AND`, `OR`).
+*   We need a function `_compile_condition(condition)` that handles:
+    *   Simple comparison: `{ field, op, value }` -> `field OP $N`.
+    *   Logical AND/OR: `{ AND: [c1, c2...] }` or `{ OR: [c1, c2...] }` -> Recursively compile children and wrap them in parentheses if necessary.
+
+#### 5. ORDER BY Clause
+*   Iterate through `query['orderBy']`. Format as `field DIRECTION`. Handle default direction ('ASC').
+
+#### 6. LIMIT/OFFSET Clauses
+*   Append these directly if present.
+
+### Refinement (Self-Correction during design):
+
+*   **Parameter Indexing:** The parameter index must be managed carefully across all parts of the query, especially within nested `AND`/`OR` structures. A class or a mutable list wrapper for the counter is best practice here to avoid passing it everywhere.
+*   **Parentheses in Logic:** When compiling `AND` or `OR`, if there are multiple conditions, they *must* be wrapped in parentheses to ensure correct SQL precedence (e.g., `(A AND B) OR C`).
+
+Let's implement the structure using a helper class/closure for state management.

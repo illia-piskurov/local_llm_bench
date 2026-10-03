@@ -1,0 +1,49 @@
+The user wants to extend the existing stack machine implementation (`run` function) with three major features:
+1.  **Subroutines:** `CALL <name>` and `RET`. Requires managing a call stack (return addresses).
+2.  **Comparisons:** `EQ`, `GT`, `LT`. Pop two values, push 1 or 0 based on comparison result.
+3.  **Named Variables:** `STORE <var>` and `LOAD <var>`. Requires implementing memory/variable storage.
+
+I need to modify the existing structure:
+1.  Initialize a variable map for named variables (memory).
+2.  Initialize a call stack for return addresses.
+3.  Update the execution loop (`while program_counter < max_lines`) to handle these new instructions and manage state changes correctly, especially regarding `program_counter` updates after jumps/calls/returns.
+
+Let's analyze the required state variables:
+*   `stack`: Already exists (for data).
+*   `output`: Already exists (for printed results).
+*   `label_map`: Already exists (maps label name to line index).
+*   **New:** `memory`: Dictionary for named variables.
+*   **New:** `call_stack`: List/Stack for return addresses (program counter indices).
+
+### Implementation Steps:
+
+**1. Initialization:**
+Add `memory = {}` and `call_stack = []` to the `run` function scope.
+
+**2. Handling Variables (`STORE`, `LOAD`):**
+*   `STORE <var>`: Pop value, store in `memory[var]`. Check for stack underflow.
+*   `LOAD <var>`: Retrieve from `memory[var]`, push to stack. Check if variable exists.
+
+**3. Handling Comparisons (`EQ`, `GT`, `LT`):**
+These follow the pattern of binary operations (pop b, pop a, calculate result, push 1/0).
+*   Pop two values: $b$ then $a$.
+*   Calculate boolean result ($a == b$, $a > b$, $a < b$).
+*   Push integer representation (1 or 0).
+
+**4. Handling Subroutines (`CALL`, `RET`):**
+*   `CALL <name>`:
+    *   Get the return address: `program_counter + 1`.
+    *   Push this address onto `call_stack`.
+    *   Jump to the label's index (using `label_map`).
+*   `RET`:
+    *   Check if `call_stack` is empty. If so, raise error.
+    *   Pop return address $R$.
+    *   Set `program_counter = R - 1`. (Since the loop will increment it by 1).
+
+**5. Reviewing Control Flow and PC Management:**
+The existing structure handles jumps (`JMP`, `JZ`, `JNZ`) by setting `program_counter` directly, and then the end of the loop increments it *unless* a jump occurred. This is correct for relative jumping within the current iteration.
+
+For `CALL`: We set `program_counter = label_map[name]`. The subsequent increment will correctly move to the start of the subroutine.
+For `RET`: We pop $R$. We must set `program_counter` such that after the loop's automatic increment, it lands exactly on $R$. So, we set `program_counter = R - 1`.
+
+Let's integrate these changes into the existing code structure.

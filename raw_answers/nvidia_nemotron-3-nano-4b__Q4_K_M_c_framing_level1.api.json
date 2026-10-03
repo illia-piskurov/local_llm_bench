@@ -1,0 +1,20 @@
+{
+  "model_instance_id": "nvidia/nemotron-3-nano-4b",
+  "output": [
+    {
+      "type": "reasoning",
+      "content": "We need to output just C code in a single code block. Implement ring buffer with static array 512 bytes. Use two indices: head and tail for FIFO. Need init resets both to 0 and count=0? Or we can use count variable. Simpler: have int count; uint8_t data[BUFFER_SIZE]; int head = 0, tail = 0; ringbuf_init sets count=0, head=tail=0.\n\npush: if count == BUFFER_SIZE return -1 else data[head] = byte; head=(head+1)%BUFFER_SIZE; count++; return 0.\n\npop: if count==0 return -1 else byte=data[tail]; tail=(tail+1)%BUFFER_SIZE; count--; return byte.\n\navailable returns count. free_space returns BUFFER_SIZE - count.\n\nAll functions int except push/pop? Actually they said returns 0 on success, or -1 if full/empty. So pop returns byte value (0..255) on success, else -1. That's fine.\n\nImplement as C99 with stdint.h for uint8_t.\n\nProvide code block only.\n"
+    },
+    {
+      "type": "message",
+      "content": "```c\n#include <stdint.h>\n\n#define BUFFER_SIZE 512\n\nstatic uint8_t data[BUFFER_SIZE];\nint head = 0, tail = 0;\nint count = 0;\n\nvoid ringbuf_init(void) {\n    count = 0;\n    head = 0;\n    tail = 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if (count == BUFFER_SIZE)\n        return -1;               // buffer full\n    data[head] = byte;\n    head = (head + 1) % BUFFER_SIZE;\n    count++;\n    return 0;                    // success\n}\n\nint ringbuf_pop(void) {\n    if (count == 0)\n        return -1;               // buffer empty\n    int value = data[tail];\n    tail = (tail + 1) % BUFFER_SIZE;\n    count--;\n    return value;                // byte value (0..255)\n}\n\nint ringbuf_available(void) {\n    return count;\n}\n\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - count;\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 267,
+    "total_output_tokens": 479,
+    "reasoning_output_tokens": 245,
+    "tokens_per_second": 18.72744943774751,
+    "time_to_first_token_seconds": 0.750112
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```javascript\nasync function pMap(items, mapper, options = {}) {\n  const { retries = 0, backoffMs = 0, timeoutMs } = options;\n  if (items.length === 0) return [];\n\n  const results = new Array(items.length).fill(undefined);\n  let index = 0;\n\n  async function processItem(itemIndex) {\n    while (true) {\n      await new Promise(resolve => setTimeout(resolve, 0));\n      if (index >= items.length) break;\n      try {\n        const startTime = Date.now();\n        results[index] = await Promise.race([\n          mapper(items[index], index),\n          new Promise((_, reject) =>\n            setTimeout(reject, timeoutMs || Infinity, Error(\"Timeout\"))\n          ),\n        ]);\n        index++;\n        return;\n      } catch (error) {\n        if (error.name === \"Error\" && error.message === \"Timeout\") throw error;\n        if (retries <= 0) return Promise.reject(error);\n        const delay = backoffMs * Math.pow(2, retries - 1);\n        await new Promise(resolve => setTimeout(resolve, delay));\n        retries--;\n      }\n    }\n  }\n\n  const promises = [];\n  while (index < items.length) {\n    for (let i = 0; i < concurrency && index < items.length; i++) {\n      promises.push(processItem(index));\n    }\n    await Promise.race(promises);\n    promises.splice(0, promises.length);\n  }\n\n  return results;\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 667,
+    "total_output_tokens": 310,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 43.13788011243211,
+    "time_to_first_token_seconds": 1.815817
+  }
+}

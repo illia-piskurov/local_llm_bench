@@ -1,0 +1,194 @@
+{
+  "id": "run_20261003_195451_db47f1",
+  "host_id": "56a307df6486",
+  "model_key": "qwen/qwen3-vl-4b",
+  "model_name": "Qwen3 VL 4B",
+  "quantization": "Q4_K_M",
+  "backend": "LM Studio (69d945a)",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "qwen/qwen3-vl-4b",
+      "display_name": "Qwen3 VL 4B",
+      "architecture": "qwen3vl",
+      "quantization": "Q4_K_M",
+      "quantization_bits": 4,
+      "size_bytes": 3333641502,
+      "params_string": "4B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": "qwen"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "3824c37 (051cb8695784)",
+  "started_at": "2026-10-03 19:54:51",
+  "completed_at": "2026-10-03 20:40:44",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:55:18",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:56:05",
+      "passed": 20,
+      "total": 27,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: Undefined label: skip",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: Undefined label: zero",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: Undefined label: zero",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: Undefined label: nz",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: Undefined label: nz",
+        "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+        "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:57:15",
+      "passed": 26,
+      "total": 37,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: Undefined label: skip",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: Undefined label: zero",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: Undefined label: zero",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: Undefined label: nz",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: Undefined label: nz",
+        "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+        "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']",
+        "call_ret_basic: unexpected exception/timeout: ValueError: Line 2: Undefined label: double",
+        "call_ret_nested: unexpected exception/timeout: ValueError: Line 1: Undefined label: func_a",
+        "recursive_factorial: unexpected exception/timeout: ValueError: Line 2: Undefined label: fact",
+        "recursive_fibonacci: unexpected exception/timeout: ValueError: Line 2: Undefined label: fib"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:57:26",
+      "passed": 6,
+      "total": 10,
+      "failures": [
+        "simple_chain: invalid topological order: None",
+        "diamond: invalid topological order: None",
+        "multiple_roots: invalid topological order: None",
+        "wide_graph: invalid topological order: None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:57:50",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: expected 5, got None",
+        "simple_chain: expected 9, got None",
+        "diamond_pick_longer_branch: expected 12, got None",
+        "independent_tasks: expected 7, got None",
+        "wide_graph: expected 19, got None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:27:10",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[TRUNCATED] priority_scheduler/level1: unclosed code fence in the response; still truncated at max_tokens=65536 (retry cap 65536)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:55:16",
+      "stats": {
+        "input_tokens": 273,
+        "total_output_tokens": 622,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 25.13119007313945,
+        "time_to_first_token_seconds": 0.676676,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:56:02",
+      "stats": {
+        "input_tokens": 1034,
+        "total_output_tokens": 982,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 23.415309831809335,
+        "time_to_first_token_seconds": 2.4182390000000002,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-03 19:57:12",
+      "stats": {
+        "input_tokens": 1401,
+        "total_output_tokens": 1447,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 22.67576291984916,
+        "time_to_first_token_seconds": 3.147874,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 19:57:25",
+      "stats": {
+        "input_tokens": 170,
+        "total_output_tokens": 230,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 25.190302283627407,
+        "time_to_first_token_seconds": 0.462484,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 19:57:50",
+      "stats": {
+        "input_tokens": 531,
+        "total_output_tokens": 535,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 24.254225708371006,
+        "time_to_first_token_seconds": 1.316578,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

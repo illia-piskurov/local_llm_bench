@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```javascript\nasync function pMap(items, mapper, options = {}) {\n  const { signal, settled = false } = options;\n  if (signal && signal.aborted) {\n    return Promise.reject(signal.reason || new Error(\"Aborted\"));\n  }\n\n  const results = [];\n  let index = 0;\n\n  async function processItem(itemIndex) {\n    while (true) {\n      await new Promise(resolve => setTimeout(resolve, 0));\n      try {\n        if (signal && signal.aborted) throw new Error(\"Aborted\");\n        const startTime = Date.now();\n        const result = await Promise.race([\n          mapper(items[index], index),\n          new Promise((_, reject) =>\n            setTimeout(reject, options.timeoutMs || Infinity, Error(\"Timeout\"))\n          ),\n        ]);\n        results.push({ status: \"fulfilled\", value: result });\n        index++;\n        return;\n      } catch (error) {\n        if (signal && signal.aborted) throw error;\n        if (options.retries <= 0) {\n          results.push({ status: \"rejected\", reason: error.message || error });\n          index++;\n          return;\n        }\n        const delay = options.backoffMs * Math.pow(2, options.retries - 1);\n        await new Promise(resolve => setTimeout(resolve, delay));\n        options.retries--;\n      }\n    }\n  }\n\n  const promises = [];\n  while (index < items.length) {\n    for (let i = 0; i < concurrency && index < items.length; i++) {\n      promises.push(processItem(index));\n    }\n    await Promise.race(promises);\n    promises.splice(0, promises.length);\n  }\n\n  if (!settled) return results;\n  const settledResults = [];\n  while (results.length > 0) {\n    const result = results.shift();\n    settledResults.push(result.status === \"fulfilled\" ? { status: \"fulfilled\", value: result.value } : { status: \"rejected\", reason: result.reason });\n    if (!settled && signal && signal.aborted) break;\n  }\n  return settled ? settledResults : results;\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 803,
+    "total_output_tokens": 436,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 43.20666562639583,
+    "time_to_first_token_seconds": 1.981392
+  }
+}

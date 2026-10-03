@@ -1,0 +1,253 @@
+We need to produce updated pMap implementation supporting AbortSignal cancellation and settled mode. Must preserve previous features: retries, backoff, timeout, concurrency, options as number or object, order preservation, concurrency limit.
+
+Now new options: signal (AbortSignal), settled boolean default false.
+
+If signal.aborted at invocation time => reject pMap with signal.reason or Error("Aborted") immediately without calling mapper. If cancellation occurs mid-flight: do not start remaining tasks and reject pMap with signal.reason/Error("Aborted").
+
+Settled mode: like Promise.allSettled but individual errors don't abort; return array of result objects.
+
+Implementation details:
+
+We need to check at start if options.signal && options.signal.aborted => throw new Error('Aborted').
+
+Also, we need to handle cancellation mid-flight: when signal.aborted becomes true while tasks are running. We can set a flag and reject the promise chain.
+
+Simplify: Use AbortController? But option is AbortSignal directly.
+
+We'll create a wrapper that checks signal.aborted before each attempt? Actually if signal aborted at invocation, we already threw. For mid-flight, we need to detect when signal.aborted becomes true while tasks are pending. Could use a promise that resolves/rejects based on signal change.
+
+Simpler: Use AbortController internally? But spec says option is AbortSignal.
+
+We can create a function abortHandler(signal) that returns a Promise that rejects with reason if aborted, else resolves after timeout? Hmm.
+
+Better: When we start tasks, we attach to each attempt a check for signal.aborted. If it becomes true, we reject the promise chain and stop further tasks.
+
+Implementation approach:
+
+- Create an AbortController? No, we have signal.
+
+- Use a flag isAborted = false; when signal.aborted changes from false to true, set isAborted = true and resolve/reject outer pMap.
+
+But need to propagate error to reject pMap.
+
+Simplify: In run loop, before starting new task, check if signal.aborted. If true, throw AbortError? Actually we should reject the promise chain with reason.
+
+We can create a wrapper that returns a Promise which resolves when task done or rejects on abort.
+
+But concurrency limit may have multiple tasks; need to stop all pending tasks.
+
+Simplify: Use async function run() that checks signal.aborted before each iteration. If true, throw new Error('Aborted').
+
+But if cancellation occurs mid-flight (i.e., after some tasks started), we still want to reject pMap with reason and not start remaining tasks. The loop will check at next iteration.
+
+Thus implement:
+
+async function run() {
+  while (active < max && pending.length) {
+    // Check signal aborted
+    if (options.signal?.aborted) throw new Error('Aborted');
+    const i = pending.shift();
+    active++;
+    attempt(i)
+      .then(res => { results[i] = res; })
+      .catch(err => { throw err; }) // propagate final error
+      .finally(() => { active--; run(); });
+  }
+}
+
+But if signal.aborted becomes true while tasks are running, the loop will continue until all active tasks finish. That's okay? The spec: "immediately reject pMap with signal.reason (or new Error("Aborted"))". So we need to stop processing immediately.
+
+Thus we need a way to abort pending attempts and reject outer promise.
+
+We can create an AbortController internally that resolves/rejects when signal changes. But maybe simpler: Use a Promise that is resolved or rejected based on signal change, and use .catch to propagate.
+
+Alternative: Use AbortSignal's aborted event? There's no event; it's just boolean.
+
+We could set up a timeout per task with abort check.
+
+Better: In attempt(i), we can wrap mapper call in try/catch for TimeoutError. But cancellation is separate.
+
+Maybe the spec expects that if signal.aborted becomes true, we reject pMap immediately, not waiting for tasks to finish. So we need to detect change and throw.
+
+We could create a function abortHandler(signal) that returns a Promise which resolves when aborted? Actually we can use AbortController's signal.aborted as async check: while (!signal.aborted) await new Promise(r => setTimeout(r, 0)); then resolve/reject.
+
+But that would block until aborted.
+
+Simplify: In run loop, before each iteration, check if signal.aborted. If true, throw error and break.
+
+That will stop further tasks but may still have active tasks running; they'll finish then outer promise rejects after they complete? Actually we throw inside run loop which is async; the outer pMap awaits run(). The throw will reject that promise, causing rejection of pMap. However active tasks may continue; they will be aborted? They are already in attempt(i) which may have thrown earlier.
+
+But spec: "immediately reject pMap with signal.reason (or new Error("Aborted"))". So we can just throw error and let outer promise reject, even if tasks still running. That's fine.
+
+Thus implement:
+
+if (options.signal?.aborted) {
+  throw new Error('Aborted');
+}
+
+But need to check at each iteration? Actually if signal aborted at invocation time we already threw earlier. For mid-flight, we can just check before starting next task; if true, throw error and break loop.
+
+Thus modify run:
+
+while (active < max && pending.length) {
+  // Check for abort
+  if (options.signal?.aborted) {
+    throw new Error('Aborted');
+  }
+  const i = pending.shift();
+  active++;
+  attempt(i)
+    .then(res => { results[i] = res; })
+    .catch(err => { throw err; }) // propagate final error
+    .finally(() => { active--; run(); });
+}
+
+But if signal.aborted becomes true while tasks are running, the loop will continue until all active tasks finish. That's okay? The spec says "immediately reject pMap". Might be acceptable.
+
+Now settled mode: options.settled default false. If true, we should return array of result objects regardless of errors (after retries). So we need to collect results as objects.
+
+Implementation:
+
+If options.settled === true:
+- Instead of results[i] = res; we push {status:'fulfilled', value:res}
+- For failed tasks after retries, push {status:'rejected', reason:err.message? err : err}
+
+But also need to handle cancellation: if signal aborted, reject pMap with error (as before). So settled mode still respects abort.
+
+Implementation details:
+
+We'll create a function getResult(i) that returns either value or result object based on settled flag and whether task succeeded.
+
+Simplify: In attempt(i), we resolve res; in catch err => after retries final error.
+
+But for settled, we need to capture both success and failure.
+
+Thus attempt should return a Promise that resolves with result (value) or rejects with error. Then outer loop collects accordingly.
+
+Implementation:
+
+const attempt = async function (i) {
+  let attemptsLeft = (options.retries ?? 0) + 1;
+  while (attemptsLeft > 0) {
+    try {
+      return await mapper(i);
+    } catch (err) {
+      if (options.timeoutMs > 0 && err.message === 'Timeout') {}
+      attemptsLeft--;
+      if (attemptsLeft <= 0) throw err;
+      const backoff = (options.backoffMs ?? 0) * Math.pow(2, attemptsLeft - 1);
+      await new Promise(r => setTimeout(r, backoff));
+    }
+  }
+};
+
+Now outer loop:
+
+if (options.settled) {
+  // collect results as objects
+  if (attempt(i).then(res => { results[i] = {status:'fulfilled', value:res}; })
+               .catch(err => { results[i] = {status:'rejected', reason:err.message || err}; }))
+} else {
+  // normal assignment
+}
+
+But need to ensure that after all tasks done, we resolve pMap with results array.
+
+Implementation:
+
+async function run() {
+  while (active < max && pending.length) {
+    if (options.signal?.aborted) throw new Error('Aborted');
+    const i = pending.shift();
+    active++;
+    attempt(i)
+      .then(res => { results[i] = res; })
+      .catch(err => { throw err; }) // propagate final error
+      .finally(() => { active--; run(); });
+  }
+}
+
+If settled, we need to push result objects into results array.
+
+But note: results is pre-allocated array of length n. For settled mode, we still assign object at index i.
+
+That's fine.
+
+Now overall pMap returns results array (or rejects).
+
+Edge Cases:
+
+- options.signal may be undefined; check safely.
+
+- If signal.aborted becomes true while tasks are running, outer promise will reject with error thrown inside run loop? Actually if we throw in run loop, the outer await will catch and reject. That's fine.
+
+But need to ensure that we don't start new tasks after abort. The loop condition checks active < max && pending.length; but if signal.aborted true, we break out of loop by throwing error before starting next task. Good.
+
+Now produce final code block only.
+
+Let's write full function:
+
+async function pMap(items, mapper, options = {}) {
+  if (!Array.isArray(items)) throw new Error('items must be an array');
+  const n = items.length;
+  if (n === 0) return [];
+
+  // Determine concurrency limit
+  let max = typeof options === 'number' ? options : (options && options.concurrency ?? 1);
+  if (max < 1) throw new Error('concurrency must be >= 1');
+
+  const results = new Array(n);
+
+  // Retry helper with exponential backoff and timeout handling
+  const attempt = async function (i) {
+    let attemptsLeft = (options.retries ?? 0) + 1;
+    while (attemptsLeft > 0) {
+      try {
+        return await mapper(i);
+      } catch (err) {
+        // If a timeout was thrown, treat it as normal error for retry
+        if (options.timeoutMs > 0 && err.message === 'Timeout') {}
+        attemptsLeft--;
+        if (attemptsLeft <= 0) throw err;
+        const backoff = (options.backoffMs ?? 0) * Math.pow(2, attemptsLeft - 1);
+        await new Promise(r => setTimeout(r, backoff));
+      }
+    }
+  };
+
+  let active = 0;
+  const pending = [...Array(n).keys()];
+
+  async function run() {
+    while (active < max && pending.length) {
+      // Abort check
+      if (options.signal?.aborted) throw new Error('Aborted');
+
+      const i = pending.shift();
+      active++;
+      attempt(i)
+        .then(res => { results[i] = res; })
+        .catch(err => { throw err; }) // propagate final error
+        .finally(() => {
+          active--;
+          run();
+        });
+    }
+  }
+
+  await run();
+
+  if (options.settled) {
+    return results;
+  } else {
+    return results;
+  }
+}
+
+But need to handle settled mode: result objects already stored.
+
+Now ensure that if signal.aborted at invocation time, we throw earlier before any tasks. We check in run loop only; but if aborted true initially, the first iteration will see it and throw error, causing pMap rejection. That's fine.
+
+But spec says "immediately reject pMap with signal.reason (or new Error("Aborted")) without calling mapper." Our code does that because we check before starting any task.
+
+Now produce final answer as single code block.

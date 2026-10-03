@@ -1,0 +1,99 @@
+We need to extend implementation with COUNT and WATCH. Need to track current value per key across all open transactions? "current value (taking into account open transactions)" means we consider values from innermost transaction? Probably global store plus active transaction modifications. For GET, they already output stack[-1].get(key,"NULL") which is innermost only. But COUNT should count keys whose current value equals <value>. Should include both global and any active transaction? Likely yes: if key exists in global_store or any open transaction's dict with that value.
+
+Implementation: maintain global_store (final after commits) plus stack of transactions. For each command, we need to compute current value for a key: look at innermost transaction first; if present, use its value; else check global_store? Actually GET only returns innermost value or NULL. So "current value" likely same as GET output. So COUNT should count keys where that value equals <value>. Should include both global and active? If key not in any transaction but exists globally with some value, it's still current? Probably yes.
+
+Implementation: maintain a dict of all values per key across all open transactions? Simpler: for each command we can compute set of keys whose value equals target. But need to output count as string? Command "COUNT <value>" outputs the number (string). So we add that string to outputs list.
+
+WATCH: start watching a key. From this moment on, any SET or DELETE that modifies currently visible value must emit notification. Need to track if key is being watched and its current value before change. If set same as existing, no output. Also for DELETE? "modifies the currently visible value" - deleting removes key, so maybe also notify? Probably yes: if key exists and we delete it, that's a modification; but output format expects old_value -> new_value where new is NULL after deletion. So need to emit "WATCH <key> <old> -> NULL". Also for SET same as existing no output.
+
+Implementation details:
+
+We have stack of transactions (dicts). For each command line:
+
+- If cmd == "COUNT": value = tokens[1]; compute count = number of keys where current value equals that string. Need to consider global_store and all transaction dicts? Let's implement: iterate over global_store items, plus each inner dict in stack. Count matches.
+
+But note: if key appears both globally and in a transaction with different value, which is "current"? Probably innermost overrides. So we should treat current value as per GET (innermost). So for counting, we need to consider only innermost? But they said "taking into account open transactions". Might mean include all active changes. Simpler: count keys where any transaction or global has that value and key not overridden by deeper transaction with different value. That's complex.
+
+Simplify: For each command, we can compute current value as per GET (innermost). So COUNT should count keys whose innermost value equals target. That matches GET behavior.
+
+Thus for COUNT: iterate over stack[-1] if exists else {} plus global_store? Actually if no open transaction, use global_store. But they said "taking into account open transactions". If there is an open transaction, its changes are visible via GET immediately, so current value includes those. So we should consider innermost dict only (if any). That's fine.
+
+Implementation: cur = stack[-1] if stack else {}; count keys where cur.get(k, "NULL") == value.
+
+But need to include global_store? If no transaction, cur is empty, but key may exist globally with some value. GET would return NULL because not in innermost. So current value is NULL. COUNT should treat that as value "NULL"? Probably yes.
+
+Thus count keys where (cur.get(k,"NULL") == value). That includes global keys only if value=="NULL". Good.
+
+Now WATCH: need to start watching a key. We'll maintain a set of watched_keys with their current value at start? Actually we need to output notifications when modifications happen, not store state. So just track that key is being watched; we don't need its value stored because notifications will be emitted on each change.
+
+Implementation: if cmd == "WATCH": add token[1] to a set watch_set.
+
+When SET or DELETE modifies visible value of a watched key:
+
+- For SET: check if key in innermost dict (stack[-1]) and also not same as existing? Actually we need old_value = stack[-1].get(key, "NULL") before assignment. If new value == old_value -> no output. Else emit "WATCH <key> <old> -> <new>" where new is the assigned value.
+
+- For DELETE: if key in innermost dict, after deletion its value becomes NULL (since removed). So emit "WATCH <key> <old> -> NULL". Old = stack[-1].get(key,"NULL").
+
+But note: SET may assign same as existing; no output. Also if key not present before, old is "NULL", new is assigned value.
+
+Implementation details:
+
+We need to capture outputs list for these notifications.
+
+Also ensure that after COMMIT/ROLLBACK, watch set persists? Probably yes, because watching continues across transactions? The spec: "start watching a key. From this moment on..." So it's persistent until program ends.
+
+Now implement run function accordingly.
+
+Edge cases: multiple nested transactions; SET inside outer transaction may affect inner? But we only consider innermost for modifications.
+
+Implementation plan:
+
+global_store unchanged.
+
+stack list of dicts.
+
+watch_set = set()
+
+outputs list.
+
+Loop lines:
+
+if cmd == "SET":
+    key, value = tokens[1], tokens[2]
+    if stack:
+        cur_dict = stack[-1]
+        old_val = cur_dict.get(key, "NULL")
+        # commit immediate output
+        if old_val != value:
+            outputs.append(f"WATCH {key} {old_val} -> {value}")
+        cur_dict[key] = value
+
+elif cmd == "DELETE":
+    key = tokens[1]
+    if stack:
+        cur_dict = stack[-1]
+        if key in cur_dict:
+            old_val = cur_dict.pop(key)
+            outputs.append(f"WATCH {key} {old_val} -> NULL")
+
+elif cmd == "COUNT":
+    value = tokens[1]
+    # compute count
+    cur_dict = stack[-1] if stack else {}
+    cnt = sum(1 for k in cur_dict.keys() if cur_dict[k]==value) + (len(cur_dict)==0 and value=="NULL")
+    outputs.append(str(cnt))
+
+elif cmd == "WATCH":
+    watch_set.add(tokens[1])
+
+COMMIT/ROLLBACK unchanged.
+
+But need to ensure that after COMMIT, the innermost dict is merged into parent or global_store; but watch notifications already emitted. That's fine.
+
+Now implement run function accordingly.
+
+Potential issue: COUNT should count keys whose current value equals <value>. If there are multiple transactions with same key? Only innermost matters. Our cur_dict is innermost only, good.
+
+But what about keys that exist globally (not in any transaction) and value matches target? Since cur_dict empty, we treat as "NULL". So only counted if value=="NULL". That's okay per spec.
+
+Now produce final code block.

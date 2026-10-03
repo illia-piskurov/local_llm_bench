@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "qwen/qwen3-vl-4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef run(program: str) -> list[str]:\n    lines = program.splitlines()\n    stack = []\n    output = []\n    current_line = 0\n    \n    for line in lines:\n        # Skip empty lines and comments\n        if not line.strip() or line.strip().startswith(\"#\"):\n            continue\n        \n        parts = line.split()\n        instruction = parts[0]\n        \n        if instruction == \"PUSH\":\n            try:\n                n = int(parts[1])\n                stack.append(n)\n            except ValueError:\n                raise ValueError(f\"Line {current_line + 1}: Invalid number for PUSH\")\n                \n        elif instruction == \"POP\":\n            if len(stack) == 0:\n                raise ValueError(f\"Line {current_line + 1}: Stack is empty, cannot POP\")\n            stack.pop()\n            \n        elif instruction == \"ADD\":\n            if len(stack) < 2:\n                raise ValueError(f\"Line {current_line + 1}: Stack has less than 2 elements for ADD\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(a + b)\n            \n        elif instruction == \"SUB\":\n            if len(stack) < 2:\n                raise ValueError(f\"Line {current_line + 1}: Stack has less than 2 elements for SUB\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(a - b)\n            \n        elif instruction == \"MUL\":\n            if len(stack) < 2:\n                raise ValueError(f\"Line {current_line + 1}: Stack has less than 2 elements for MUL\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(a * b)\n            \n        elif instruction == \"DIV\":\n            if len(stack) < 2:\n                raise ValueError(f\"Line {current_line + 1}: Stack has less than 2 elements for DIV\")\n            b = stack.pop()\n            a = stack.pop()\n            if b == 0:\n                raise ValueError(f\"Line {current_line + 1}: Division by zero\")\n            stack.append(a // b)\n            \n        elif instruction == \"DUP\":\n            if len(stack) == 0:\n                raise ValueError(f\"Line {current_line + 1}: Stack is empty, cannot DUP\")\n            stack.append(stack[-1])\n            \n        elif instruction == \"SWAP\":\n            if len(stack) < 2:\n                raise ValueError(f\"Line {current_line + 1}: Stack has less than 2 elements for SWAP\")\n            stack[-1], stack[-2] = stack[-2], stack[-1]\n            \n        elif instruction == \"PRINT\":\n            if len(stack) == 0:\n                raise ValueError(f\"Line {current_line + 1}: Stack is empty, cannot PRINT\")\n            output.append(str(stack[-1]))\n            # Do not pop the value\n        else:\n            raise ValueError(f\"Line {current_line + 1}: Unknown instruction: {instruction}\")\n        \n        current_line += 1\n    \n    return output\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 273,
+    "total_output_tokens": 622,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 25.13119007313945,
+    "time_to_first_token_seconds": 0.676676
+  }
+}

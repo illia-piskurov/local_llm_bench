@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261003_122800_f42493",
+  "host_id": "56a307df6486",
+  "model": "google/gemma-4-e4b",
+  "benchmark": "js_async",
+  "level": "level3",
+  "tested_at": "2026-10-03 13:13:05",
+  "passed": 11,
+  "total": 17,
+  "failures": [
+    "order_preservation: assertion returned False",
+    "concurrency_limit: assertion returned False",
+    "index_passed: assertion returned False",
+    "already_aborted_signal: assertion returned False",
+    "mid_flight_abort: assertion returned False",
+    "settled_mixed_failures: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

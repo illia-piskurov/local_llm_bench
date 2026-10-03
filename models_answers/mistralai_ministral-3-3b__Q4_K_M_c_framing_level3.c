@@ -1,0 +1,139 @@
+#include <stdint.h>
+#include <string.h>
+
+// Ring Buffer Functions (unchanged)
+#define BUFFER_SIZE 512
+
+static uint8_t buffer[BUFFER_SIZE];
+static size_t head = 0;    // Next write position (circular index)
+static size_t tail = 0;   // Next read position (circular index)
+static bool is_full = false;
+
+void ringbuf_init(void) {
+    head = 0;
+    tail = 0;
+    is_full = false;
+}
+
+int ringbuf_push(uint8_t byte) {
+    if (is_full || ((head + 1) % BUFFER_SIZE) == tail) {
+        return -1; // Buffer full
+    }
+
+    buffer[head] = byte;
+    head = (head + 1) % BUFFER_SIZE;
+
+    if (tail == head && is_full) {
+        is_full = false;
+    }
+    return 0;
+}
+
+int ringbuf_pop(void) {
+    if (tail == head && !is_full) {
+        return -1; // Buffer empty
+    }
+
+    uint8_t byte = buffer[tail];
+    tail = (tail + 1) % BUFFER_SIZE;
+
+    if (head == tail) {
+        is_full = false;
+    }
+    return byte;
+}
+
+int ringbuf_available(void) {
+    size_t available = head - tail;
+    if (available < 0) available += BUFFER_SIZE; // Handle circular wrap
+    return available;
+}
+
+int ringbuf_free_space(void) {
+    return BUFFER_SIZE - ringbuf_available();
+}
+
+// Packet Validation Helper
+static bool validate_packet(const uint8_t *stream, size_t pos,
+                           uint8_t *out_type, uint8_t *out_len,
+                           uint8_t *out_payload, int max_payload_size) {
+    if (pos + 4 > BUFFER_SIZE || stream[pos] != 0xAA) return false;
+
+    uint8_t type = stream[pos + 1];
+    uint8_t len = stream[pos + 2];
+
+    // Check length validity
+    if (len > max_payload_size || pos + 3 + len > BUFFER_SIZE) {
+        return false;
+    }
+
+    // Calculate expected checksum
+    uint8_t calculated_checksum = 0;
+    for (size_t i = pos + 3; i < pos + 3 + len; ++i) {
+        calculated_checksum ^= stream[i];
+    }
+    if (stream[pos + 4] != calculated_checksum) return false;
+
+    *out_type = type;
+    *out_len = len;
+    return true;
+}
+
+// Packet Decoder Functions
+void feed_bytes(const uint8_t *data, int len) {
+    size_t bytes_remaining = len;
+    const uint8_t *current_data = data;
+
+    while (bytes_remaining > 0 && ringbuf_free_space() > 0) {
+        int push_result = ringbuf_push(*current_data);
+        if (push_result == -1) break; // Buffer full
+        current_data++;
+        bytes_remaining--;
+    }
+}
+
+int get_next_packet(uint8_t *out_payload, int *out_type) {
+    size_t pos = tail;
+    bool packet_found = false;
+
+    while (pos != head || ringbuf_available() > 0) {
+        // Check for potential packet start
+        if (buffer[pos] == 0xAA && ringbuf_available() >= 4) {
+            uint8_t *packet_start = &buffer[pos];
+            uint8_t type, len;
+            int payload_len;
+
+            if (validate_packet(packet_start, 0, &type, &len, NULL, BUFFER_SIZE)) {
+                // Check if we have enough data for the full packet
+                size_t required_pos = pos + 3 + len;
+                if (required_pos <= head) {
+                    // Packet is complete in current buffer
+                    uint8_t *payload_ptr = &buffer[pos + 3];
+                    memcpy(out_payload, payload_ptr, len);
+                    *out_type = type;
+                    return len;
+
+                    // Advance tail to consume the packet
+                    for (size_t i = pos; i < required_pos; ++i) {
+                        ringbuf_pop();
+                    }
+                } else {
+                    // Packet is fragmented - discard incomplete portion and continue searching
+                    pos = required_pos;
+                    continue;
+                }
+            }
+        }
+
+        // Move to next byte if no packet found yet
+        pos = (pos + 1) % BUFFER_SIZE;
+
+        // If we've looped through the entire buffer without finding a valid packet,
+        // check if there's more data in the buffer that could form a complete packet
+        if (pos == tail && ringbuf_available() > 0) {
+            return -1; // No valid packet found yet, incomplete or no data
+        }
+    }
+
+    return -1;
+}

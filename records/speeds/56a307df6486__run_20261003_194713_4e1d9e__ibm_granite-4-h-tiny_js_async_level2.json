@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "js_async",
+  "level": "level2",
+  "tested_at": "2026-10-03 19:52:06",
+  "stats": {
+    "input_tokens": 667,
+    "total_output_tokens": 310,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 43.13788011243211,
+    "time_to_first_token_seconds": 1.815817,
+    "model_load_time_seconds": null
+  }
+}

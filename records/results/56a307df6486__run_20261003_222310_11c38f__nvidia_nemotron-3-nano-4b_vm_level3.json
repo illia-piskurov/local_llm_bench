@@ -1,0 +1,26 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-10-03 22:27:44",
+  "passed": 25,
+  "total": 37,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: unknown instruction 'JMP'",
+    "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: unknown instruction 'JZ'",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: unknown instruction 'JZ'",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: unknown instruction 'JNZ'",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: unknown instruction 'JNZ'",
+    "countdown_loop: unexpected exception/timeout: ValueError: Line 8: unknown instruction 'JNZ'",
+    "count_up_loop: unexpected exception/timeout: ValueError: Line 10: unknown instruction 'JNZ'",
+    "call_ret_basic: unexpected exception/timeout: ValueError: Line 2: undefined label 'double'",
+    "call_ret_nested: unexpected exception/timeout: ValueError: Line 1: undefined label 'func_a'",
+    "comparison_eq_gt_lt: unexpected exception/timeout: ValueError: Line 3: EQ expects two values, got 2",
+    "recursive_factorial: unexpected exception/timeout: ValueError: Line 2: undefined label 'fact'",
+    "recursive_fibonacci: unexpected exception/timeout: ValueError: Line 2: undefined label 'fib'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

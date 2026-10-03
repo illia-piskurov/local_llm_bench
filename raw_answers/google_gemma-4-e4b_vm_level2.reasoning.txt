@@ -1,0 +1,13 @@
+Here's a plan to implement the required extensions (LABEL, JMP, JZ, JNZ):
+
+1.  **Structure Modification:** The `run` function needs to handle program flow control using jumps. Instead of iterating line by line and executing immediately, we need to process the instructions sequentially while keeping track of potential jump targets.
+2.  **Label Mapping:** We must first parse the entire program to map label names (strings) to their corresponding line numbers (integers).
+3.  **Execution Pointer:** The main loop will use a `program_counter` (PC) instead of relying solely on `enumerate(lines)` iteration.
+4.  **Instruction Handling:** Update `execute_instruction` or the main loop logic to handle the new jump instructions and update the PC accordingly.
+
+Let's refine the implementation details:
+
+*   **Parsing Phase:** Iterate through all lines once to build a dictionary mapping label names to line numbers.
+*   **Execution Phase:** Use a `while` loop controlled by the PC. Inside the loop, execute the instruction at `lines[PC]`. If it's a jump, update PC; otherwise, increment PC.
+
+Let's start modifying the existing code structure.

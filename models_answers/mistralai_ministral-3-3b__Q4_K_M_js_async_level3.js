@@ -1,0 +1,85 @@
+async function pMap(items, mapper, options = { concurrency: 1 }) {
+    const concurrency = typeof options === 'number' ? options : options.concurrency || 1;
+    const retries = options.retries !== undefined ? options.retries : 0;
+    const backoffMs = options.backoffMs !== undefined ? options.backoffMs : 0;
+    const timeoutMs = options.timeoutMs !== undefined ? options.timeoutMs : 0;
+    const signal = options.signal || (options.settled ? null : new AbortController().signal);
+    const settled = typeof options === 'object' && options.settled !== undefined ? options.settled : false;
+
+    if (!items.length) return settled ? items.map(() => ({ status: 'fulfilled', value: undefined })) : [];
+
+    const results = Array(items.length).fill(null);
+    let nextIndex = 0;
+    const activeTasks = new Set();
+    const semaphore = new Promise((resolve) => setTimeout(resolve, 0));
+
+    async function processNext() {
+        if (nextIndex >= items.length || activeTasks.size >= concurrency) return;
+
+        const item = items[nextIndex];
+        try {
+            if (signal.aborted) throw signal.reason;
+
+            const controller = new AbortController();
+            const timeoutId = timeoutMs > 0 ? setTimeout(() => controller.abort(), timeoutMs) : null;
+            const taskPromise = mapper(item, nextIndex)
+                .then(result => {
+                    clearTimeout(timeoutId);
+                    results[nextIndex] = { status: 'fulfilled', value: result };
+                    return Promise.resolve();
+                })
+                .catch(error => {
+                    if (error.name === 'AbortError') throw new Error("Timeout");
+                    activeTasks.delete(taskPromise);
+                    throw error;
+                });
+
+            const taskWithRetry = async () => {
+                let attempt = 0;
+                while (attempt <= retries) {
+                    try {
+                        await taskPromise;
+                        return;
+                    } catch (error) {
+                        if (attempt === retries || signal.aborted) throw error;
+
+                        const delay = backoffMs * Math.pow(2, attempt);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        attempt++;
+                    }
+                }
+            };
+
+            activeTasks.add(taskWithRetry());
+            taskWithRetry().finally(() => {
+                clearTimeout(timeoutId);
+                if (!signal.aborted) {
+                    activeTasks.delete(taskWithRetry());
+                    nextIndex++;
+                    processNext();
+                } else {
+                    throw signal.reason;
+                }
+            });
+        } catch (error) {
+            results[nextIndex] = { status: 'rejected', reason: error.message || error };
+            if (!settled && signal.aborted) throw error;
+            activeTasks.delete(taskWithRetry);
+            nextIndex++;
+            processNext();
+        }
+    }
+
+    await processNext();
+
+    // Cancel remaining tasks if signal is aborted
+    if (signal?.aborted) {
+        const remainingTasks = Array.from(activeTasks).filter(t => !t.done);
+        for (const task of remainingTasks) {
+            try { await task.catch(() => {}); } catch {}
+        }
+        throw signal.reason;
+    }
+
+    return results;
+}

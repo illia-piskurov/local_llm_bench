@@ -1,0 +1,30 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-10-03 22:35:22",
+  "passed": 9,
+  "total": 25,
+  "failures": [
+    "basic_set_get: expected ['10'], got ['NULL']",
+    "overwrite_set: expected ['2'], got ['NULL']",
+    "simple_transaction_commit: expected ['10'], got ['WATCH a NULL -> 10', 'NULL']",
+    "simple_transaction_rollback: expected ['5'], got ['WATCH a NULL -> 10', 'NULL']",
+    "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', 'NULL']",
+    "nested_transactions: expected ['20', '10', 'NULL'], got ['WATCH a NULL -> 10', 'WATCH a NULL -> 20', '20', '10', 'NULL']",
+    "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['WATCH a NULL -> 1', 'WATCH a NULL -> 2', '2', 'NULL']",
+    "rollback_after_commit_is_no_transaction: expected ['NO TRANSACTION'], got ['WATCH a NULL -> 1', 'NO TRANSACTION']",
+    "multiple_keys_independent: expected ['2', '1', '2'], got ['WATCH a NULL -> 99', 'NULL', 'NULL', 'NULL']",
+    "set_new_key_inside_transaction: expected ['100', '100'], got ['WATCH x NULL -> 100', '100', 'NULL']",
+    "count_basic: expected ['2'], got ['0']",
+    "count_respects_transaction: expected ['2', '1'], got ['WATCH b NULL -> 1', '1', '0']",
+    "count_after_delete: expected ['1'], got ['0']",
+    "watch_set_new_key: expected ['WATCH a NULL -> 10'], got []",
+    "watch_set_change: expected ['WATCH a 5 -> 10'], got []",
+    "watch_delete: expected ['WATCH a 5 -> NULL'], got []"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

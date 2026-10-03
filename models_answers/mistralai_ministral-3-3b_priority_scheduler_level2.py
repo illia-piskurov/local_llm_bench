@@ -1,126 +1,102 @@
 from collections import deque
 
-def has_cycle(task, tasks: dict[str, tuple[int, list[str], int]], visited=None, recursion_stack=None):
-    if visited is None:
-        visited = set()
-    if recursion_stack is None:
-        recursion_stack = set()
+def has_cycle(task_name, tasks):
+    visited = set()
+    recursion_stack = set()
 
-    if task in recursion_stack:
-        return True
-    if task in visited:
+    def _has_cycle(name):
+        if name in recursion_stack:
+            return True
+        if name in visited:
+            return False
+
+        visited.add(name)
+        recursion_stack.add(name)
+
+        duration, deps, _ = tasks[name]
+        for dep in deps:
+            if _has_cycle(dep):
+                return True
+
+        recursion_stack.remove(name)
         return False
 
-    visited.add(task)
-    recursion_stack.add(task)
-
-    for dep in tasks.get(task, (0, [], 0))[1]:
-        if has_cycle(dep, tasks, visited, recursion_stack):
-            return True
-
-    recursion_stack.remove(task)
-    return False
+    return any(_has_cycle(task) for task in tasks.keys())
 
 def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
-    # Проверка на циклы
-    for task in tasks:
-        if has_cycle(task, tasks):
-            return None
+    if has_cycle(tasks):
+        return None
 
-    # Нахождение самого длинного пути (критического пути)
-    max_duration = 0
-    stack = [(task, 0) for task in tasks]
+    # Build dependency graph and reverse adjacency list
+    graph = {task: [] for task in tasks}
+    reverse_graph = {task: set() for task in tasks}
 
-    while stack:
-        current_task, duration = stack.pop()
-        current_duration = duration + tasks[current_task][0]
-        if current_duration > max_duration:
-            max_duration = current_duration
+    for task, (_, deps, _) in tasks.items():
+        for dep in deps:
+            graph[dep].append(task)
+            reverse_graph[task].add(dep)
 
-        # Добавляем зависимые задачи в стек для обработки
-        for dep in reversed(tasks[current_task][1]):
-            if dep not in visited:
-                stack.append((dep, duration))
+    # Initialize distances
+    dist = {task: 0 for task in tasks}
+    queue = deque([task for task in tasks if not reverse_graph[task]])
 
-    return max_duration
+    while queue:
+        current = queue.popleft()
+        for neighbor in graph[current]:
+            dist[neighbor] = max(dist[neighbor], dist[current] + tasks[neighbor][0])
+            if not any(dep in reverse_graph[neighbor] for dep in tasks[neighbor][1]):
+                queue.append(neighbor)
+
+    return max(dist.values()) if dist else None
 
 def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
-    # Проверка на циклы
+    if has_cycle(tasks):
+        return None
+
+    # Initialize data structures
+    ready_queue = deque()
+    task_info = {task: (duration, deps, priority) for task, (duration, deps, priority) in tasks.items()}
+    completed_tasks = set()
+    current_time = 0
+    active_workers = 0
+    output = []
+
+    # Precompute dependencies and ready queue
     for task in tasks:
-        if has_cycle(task, tasks):
-            return None
+        duration, deps, _ = task_info[task]
+        if not deps:
+            ready_queue.append(task)
 
-    sorted_tasks = sorted(tasks.keys(), key=lambda x: (-tasks[x][2], tasks[x][0], x))
-    ready_queue = deque()
-    task_duration = {task: duration for task, (duration, _, _) in tasks.items()}
-    available_workers = workers
-    active_tasks = set()
-    result = []
-    current_time = 0
+    while ready_queue or active_workers < workers:
+        # Process completed tasks to update ready queue
+        while active_workers >= workers and ready_queue:
+            task = ready_queue.popleft()
+            duration, _, priority = task_info[task]
 
-    while True:
-        # Определяем задачи, готовые к выполнению в текущий момент времени
-        new_ready = False
-        for task in sorted_tasks:
-            if all(dep not in active_tasks and dep != task for dep in tasks[task][1]):
-                ready_queue.append(task)
-                new_ready = True
+            all_deps_met = True
+            for dep in task_info[task][1]:
+                if dep not in completed_tasks:
+                    all_deps_met = False
+                    break
 
-        # Если ни одна задача не готова к выполнению, ждем следующего цикла
-        if not new_ready and not ready_queue:
-            continue
+            if all_deps_met:
+                active_workers += 1
+                current_time += duration
+                output.append(task)
+                completed_tasks.add(task)
 
-        # Выполняем задачи по правилам
-        while available_workers > 0 and ready_queue:
-            current_task = ready_queue.popleft()
-            active_tasks.add(current_task)
-            result.append((current_time, current_task))
-            current_time += task_duration[current_task]
-            available_workers -= 1
+        # Update ready queue based on completed tasks
+        for task in list(completed_tasks):
+            duration, deps, _ = task_info[task]
+            if not deps:
+                continue
 
-        # Проверка на завершение всех задач
-        if len(result) != sum(1 for _ in tasks.values()):
-            return None
+            for dep in deps:
+                if dep in completed_tasks:
+                    ready_queue.append(task)
+                    break  # Only add once per dependency completion
 
-    # Возвращаем общее время выполнения (маakespan)
-    return current_time
+        # Sort ready queue by priority, duration, and name
+        ready_queue.sort(key=lambda x: (-task_info[x][2], task_info[x][0], x))
 
-def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
-    if has_cycle(list(tasks.keys()), tasks):
-        return None
-
-    sorted_tasks = sorted(tasks.keys(), key=lambda x: (-tasks[x][2], tasks[x][0], x))
-    ready_queue = deque()
-    task_duration = {task: duration for task, (duration, _, _) in tasks.items()}
-    available_workers = workers
-    active_tasks = set()
-    result = []
-    current_time = 0
-
-    while True:
-        # Определяем задачи, готовые к выполнению в текущий момент времени
-        new_ready = False
-        for task in sorted_tasks:
-            if all(dep not in active_tasks and dep != task for dep in tasks[task][1]):
-                ready_queue.append(task)
-                new_ready = True
-
-        # Если ни одна задача не готова к выполнению, ждем следующего цикла
-        if not new_ready and not ready_queue:
-            continue
-
-        # Выполняем задачи по правилам
-        while available_workers > 0 and ready_queue:
-            current_task = ready_queue.popleft()
-            active_tasks.add(current_task)
-            result.append((current_time, current_task))
-            current_time += task_duration[current_task]
-            available_workers -= 1
-
-    # Проверка на завершение всех задач
-    if len(result) != sum(1 for _ in tasks.values()):
-        return None
-
-    # Сортируем результаты по времени старта и возвращаем задачи в порядке выполнения
-    result.sort()
-    return [task for time, task in result]
+    return current_time if output else None

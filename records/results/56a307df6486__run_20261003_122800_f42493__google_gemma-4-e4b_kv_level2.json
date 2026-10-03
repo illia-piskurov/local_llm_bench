@@ -1,0 +1,30 @@
+{
+  "run_id": "run_20261003_122800_f42493",
+  "host_id": "56a307df6486",
+  "model": "google/gemma-4-e4b",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-10-03 12:52:23",
+  "passed": 9,
+  "total": 25,
+  "failures": [
+    "simple_transaction_commit: expected ['10'], got ['', '10']",
+    "simple_transaction_rollback: expected ['5'], got ['', '5']",
+    "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', '', '5']",
+    "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '', '10', '', 'NULL']",
+    "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['', '2', '', '2']",
+    "rollback_after_commit_is_no_transaction: expected ['NO TRANSACTION'], got ['', 'NO TRANSACTION']",
+    "multiple_keys_independent: expected ['2', '1', '2'], got ['2', '', '1', '2']",
+    "set_new_key_inside_transaction: expected ['100', '100'], got ['100', '', '100']",
+    "count_basic: expected ['2'], got []",
+    "count_zero: expected ['0'], got []",
+    "count_respects_transaction: expected ['2', '1'], got ['']",
+    "count_after_delete: expected ['1'], got []",
+    "watch_set_new_key: expected ['WATCH a NULL -> 10'], got []",
+    "watch_set_change: expected ['WATCH a 5 -> 10'], got []",
+    "watch_delete: expected ['WATCH a 5 -> NULL'], got []",
+    "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got []"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,86 +1,83 @@
-class TransactionDB:
+import sys
+
+class InMemoryKeyValueStore:
     def __init__(self):
         self.global_store = {}
-        self.stack = []  # Stack of nested transactions
+        self.transactions = []
+
+    def _push_transaction(self):
+        self.transactions.append({})
+
+    def _pop_transaction(self):
+        if not self.transactions:
+            return None
+        return self.transactions.pop()
 
     def run(self, program: str) -> list[str]:
         output = []
         commands = [cmd.strip() for cmd in program.split('\n') if cmd.strip()]
-        current_transaction = None
-        transaction_stack = []
+        current_transactions = []
 
+        # Parse and execute commands
         for cmd in commands:
             parts = cmd.split()
             if not parts:
                 continue
 
             if parts[0] == 'BEGIN':
-                # Start a new nested transaction
-                new_tx = {'store': {}, 'parent': current_transaction}
-                transaction_stack.append(new_tx)
-                current_transaction = new_tx
+                self._push_transaction()
+                current_transactions.append(self.transactions[-1])
 
             elif parts[0] == 'COMMIT':
-                if not transaction_stack:
+                if len(current_transactions) < 2 or not self.transactions[-1]:
                     output.append("NO TRANSACTION")
-                    continue
-
-                # Commit the innermost transaction
-                tx = transaction_stack.pop()
-                if tx['parent'] is None:  # Global commit
-                    self.global_store.update(tx['store'])
                 else:
-                    tx['parent']['store'].update(tx['store'])
+                    parent = current_transactions.pop()
+                    changes = self._pop_transaction()
+                    for key, value in changes.items():
+                        if key in parent:
+                            parent[key] = value
+                        else:
+                            parent[key] = value
 
             elif parts[0] == 'ROLLBACK':
-                if not transaction_stack:
+                if not self.transactions[-1]:
                     output.append("NO TRANSACTION")
-                    continue
-
-                # Rollback the innermost transaction
-                tx = transaction_stack.pop()
-                # Clear the transaction store (changes are undone)
-                tx['store'] = {}
+                else:
+                    self._pop_transaction()
 
             elif parts[0] == 'SET' and len(parts) >= 3:
                 key, value = parts[1], parts[2]
-                current_tx = transaction_stack[-1] if transaction_stack else self.global_store
-                current_tx[key] = value
+                current_store = self.transactions[-1] if self.transactions else self.global_store
+                current_store[key] = value
 
             elif parts[0] == 'GET':
                 key = parts[1]
-                # Find the most recent active transaction that contains this key
-                tx = None
-                for t in reversed(transaction_stack):
-                    if key in t['store']:
-                        tx = t
+                # Check all transactions from innermost to outermost
+                for store in reversed(self.transactions):
+                    if key in store:
+                        output.append(store[key])
                         break
-                if tx:
-                    output.append(tx['store'].get(key, "NULL"))
-                elif key in self.global_store:
-                    output.append(self.global_store.get(key, "NULL"))
                 else:
-                    output.append("NULL")
+                    if key in self.global_store:
+                        output.append(self.global_store[key])
+                    else:
+                        output.append("NULL")
 
             elif parts[0] == 'DELETE' and len(parts) >= 2:
                 key = parts[1]
-                # Delete from the most recent active transaction first
-                for t in reversed(transaction_stack):
-                    if key in t['store']:
-                        del t['store'][key]
-                        break
-                elif key in self.global_store:
-                    del self.global_store[key]
+                current_store = self.transactions[-1] if self.transactions else self.global_store
+                if key in current_store:
+                    del current_store[key]
 
         return output
 
-# Example usage (for testing):
-db = TransactionDB()
-program = """
-BEGIN
-SET a 10
-GET a
-COMMIT
-GET a
-"""
-print(db.run(program))
+def main():
+    store = InMemoryKeyValueStore()
+    program = sys.stdin.read().strip()
+    results = store.run(program)
+    for res in results:
+        print(res)
+
+if __name__ == "__main__":
+    main()

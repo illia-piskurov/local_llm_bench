@@ -1,0 +1,6 @@
+Here's a plan to implement the requested extensions:
+
+1.  **Blackboard Implementation (`BT.Blackboard`)**: Needs internal storage (a table) and mechanisms for `get`, `set`, and `watch`. The `set` method must handle change detection and callback invocation.
+2.  **Decorator Implementations**: These nodes wrap a single child node. They need to manage state (cooldown counter, etc.) and override the `tick` logic based on their specific rules.
+
+Let's integrate these into the existing structure while ensuring clean Lua code. I will reuse the global `BT` table and the established status constants.

@@ -1,0 +1,6 @@
+Here's a plan to implement the requested features:
+
+1.  **`BT.AsyncAction` Implementation:** This requires managing coroutine state (creation, resumption, yielding) and handling specific yield values (`"WAIT_TICKS"`).
+2.  **Composite Node Reset Update:** Modify `Sequence:reset()` and `Selector:reset()` to iterate through children and call `child:reset()`.
+
+Let's start by integrating these changes into the existing structure.

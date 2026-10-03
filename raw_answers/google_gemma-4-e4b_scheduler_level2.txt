@@ -1,183 +1,219 @@
 ```python
-from collections import defaultdict, deque
-from typing import Dict, List, Optional, Tuple
+from collections import deque, defaultdict
+import math
 
-def topo_sort(tasks: Dict[str, List[str]]) -> Optional[List[str]]:
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
     """
-    Выполняет топологическую сортировку задач с учетом их зависимостей.
+    Performs a topological sort on the given task dependency graph.
 
     Args:
-        tasks: Словарь, где ключ — имя задачи (строка), а значение — список 
-               имён задач, от которых она зависит (предшественники).
+        tasks: A dictionary where key is the task name and value is 
+               a list of prerequisite task names.
 
     Returns:
-        Список имён всех задач в порядке выполнения, или None, если обнаружен цикл.
+        A list of tasks in a valid execution order, or None if a cycle exists.
     """
     
-    # 1. Инициализация графа и подсчет in-degrees
-    adj: Dict[str, List[str]] = defaultdict(list)
-    in_degree: Dict[str, int] = {}
-    all_tasks: set[str] = set()
+    # 1. Initialize structures
+    in_degree = {}
+    adj = defaultdict(list)
+    all_tasks = set()
 
-    # Сбор всех уникальных задач и инициализация in_degree для каждой задачи
-    for task, prerequisites in tasks.items():
+    # Collect all unique task names (both keys and dependencies)
+    for task, deps in tasks.items():
         all_tasks.add(task)
-        for prereq in prerequisites:
-            all_tasks.add(prereq)
-            
-    # Инициализируем in_degree для всех задач нулем
+        for dep in deps:
+            all_tasks.add(dep)
+
+    # Initialize in-degrees for all known tasks to 0
     for task in all_tasks:
         in_degree[task] = 0
 
-    # Построение графа и подсчет входов (in-degrees)
-    for task, prerequisites in tasks.items():
-        for prereq in prerequisites:
-            # Ребро идет от prereq к task (prereq -> task)
-            adj[prereq].append(task)
-            # Увеличиваем степень входа для 'task'
-            in_degree[task] += 1
-
-    # 2. Инициализация очереди с задачами, у которых нет зависимостей (in_degree == 0)
-    queue = deque()
-    for task in all_tasks:
-        if in_degree[task] == 0:
-            queue.append(task)
-
-    # 3. Выполнение топологической сортировки (Kahn's Algorithm)
-    sorted_order: List[str] = []
-    
-    while queue:
-        u = queue.popleft()
-        sorted_order.append(u)
+    # 2. Build the graph (adj list) and calculate initial in-degrees
+    for task, deps in tasks.items():
+        current_in_degree = len(deps)
+        in_degree[task] = current_in_degree
         
-        for v in adj[u]:
-            in_degree[v] -= 1
-            if in_degree[v] == 0:
-                queue.append(v)
+        for dep in deps:
+            # Edge goes from dependency -> dependent task
+            adj[dep].append(task)
 
-    # 4. Проверка на циклы
-    if len(sorted_order) != len(all_tasks):
-        return None
+    # 3. Initialize queue with tasks having no dependencies (in-degree 0)
+    queue = deque([task for task in all_tasks if in_degree[task] == 0])
+    result = []
+
+    # 4. Process using Kahn's algorithm
+    while queue:
+        task = queue.popleft()
+        result.append(task)
+
+        # For every task that depends on the current 'task'
+        for neighbor in adj[task]:
+            # Decrement its dependency count
+            in_degree[neighbor] -= 1
+            
+            # If all dependencies are met, enqueue the neighbor
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    # 5. Check for cycles
+    if len(result) != len(all_tasks):
+        return None  # Cycle detected
     else:
-        return sorted_order
+        return result
 
 
-def critical_path(tasks: Dict[str, Tuple[int, List[str]]]) -> Optional[int]:
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
     """
-    Рассчитывает длину критического пути в проекте.
+    Calculates the length of the critical path (longest duration) through 
+    the task dependency graph using CPM principles.
 
     Args:
-        tasks: Словарь, где значение — кортеж (длительность_задачи, список_зависимостей).
+        tasks: A dictionary where key is the task name and value is a 
+               tuple (duration, list_of_dependencies).
 
     Returns:
-        Длина критического пути (максимальное время завершения), или None, если обнаружен цикл.
+        The total duration of the longest dependent sequence, or None if a cycle exists.
     """
     
-    # 1. Подготовка графа и проверка на циклы
+    # --- Initialization ---
+    in_degree = {}
+    adj = defaultdict(list)
+    all_tasks = set()
+    durations = {}
     
-    # Создаем структуру для топологической сортировки (Task -> [Prerequisites])
-    dependency_map: Dict[str, List[str]] = {}
     for task, data in tasks.items():
-        duration, prereqs = data
-        dependency_map[task] = prereqs
+        duration, _ = data
+        durations[task] = duration
+        all_tasks.add(task)
 
-    # Получаем порядок задач с помощью топологической сортировки
-    sorted_tasks = topo_sort(dependency_map)
-    
-    if sorted_tasks is None:
-        return None # Обнаружен цикл
-    
-    # 2. Расчет времени (Earliest Finish Time - EF)
-    
-    # earliest_finish_time[task] хранит максимальное время завершения задачи
-    earliest_finish_time: Dict[str, int] = {}
+    # Collect all unique task names (including dependencies that might not be keys)
+    for _, (_, deps) in tasks.items():
+        for dep in deps:
+            all_tasks.add(dep)
 
-    for task in sorted_tasks:
-        duration, prerequisites = tasks[task]
+    # Initialize structures for all known tasks
+    for task in all_tasks:
+        in_degree[task] = 0
         
-        if not prerequisites:
-            # Задача без зависимостей начинается в момент 0
-            es = 0
-        else:
-            # ES(T) = max(EF(P)) для всех предшественников P
-            max_prereq_finish_time = 0
-            for prereq in prerequisites:
-                # Если задача-предшественник не была обработана (что теоретически невозможно, 
-                # если topo_sort корректен), это будет ошибкой. Но для безопасности проверим.
-                if prereq not in earliest_finish_time:
-                    # Это должно быть невозможно при правильной топологической сортировке
-                    return None # Внутренняя ошибка графа
-                
-                max_prereq_finish_time = max(max_prereq_finish_time, 
-                                             earliest_finish_time[prereq])
-            es = max_prereq_finish_time
+    # ES (Earliest Start Time): Tracks the earliest time a task can begin.
+    earliest_start_time = {task: 0 for task in all_tasks}
 
-        # EF(T) = ES(T) + Duration(T)
-        ef = es + duration
-        earliest_finish_time[task] = ef
-
-    # 3. Определение длины критического пути
-    
-    # Критический путь — это максимальное время завершения среди всех задач.
-    if not earliest_finish_time:
-        return 0 # Пустой граф
+    # 1. Build graph and calculate initial in-degrees
+    for task, data in tasks.items():
+        _, deps = data
+        current_in_degree = len(deps)
+        in_degree[task] = current_in_degree
         
-    critical_path_length = max(earliest_finish_time.values())
-    
-    return critical_path_length
+        for dep in deps:
+            # Edge goes from dependency -> dependent task
+            adj[dep].append(task)
+
+    # 2. Initialize queue with tasks having no dependencies (in-degree 0)
+    queue = deque([task for task in all_tasks if in_degree[task] == 0])
+    processed_count = 0
+    max_project_duration = 0
+
+    # 3. Process using Kahn's algorithm and calculate path lengths
+    while queue:
+        P = queue.popleft()
+        processed_count += 1
+        
+        # If P is not a defined task (i.e., it was only listed as a dependency), 
+        # we assume its duration is 0 for calculation purposes, unless explicitly given.
+        duration_p = durations.get(P, 0)
+
+        # Calculate Earliest Finish Time (EF) for P
+        ef_p = earliest_start_time[P] + duration_p
+        
+        # Update the overall maximum project duration found so far
+        max_project_duration = max(max_project_duration, ef_p)
+
+        # For every task N that depends on P
+        for N in adj[P]:
+            # Update ES for N: N cannot start until P finishes. 
+            # We take the maximum required start time from all dependencies.
+            earliest_start_time[N] = max(earliest_start_time[N], ef_p)
+            
+            # Decrement dependency count
+            in_degree[N] -= 1
+            
+            # If all dependencies are met, enqueue N
+            if in_degree[N] == 0:
+                queue.append(N)
+
+    # 4. Check for cycles and return result
+    if processed_count != len(all_tasks):
+        return None  # Cycle detected
+    else:
+        return max_project_duration
 
 if __name__ == '__main__':
-    # --- Тест 1: Простая цепочка (A -> B -> C) ---
-    print("--- Тест 1: Линейный путь ---")
+    # --- Testing topo_sort (Included for completeness) ---
+    print("--- Topo Sort Tests ---")
     tasks1 = {
-        "A": (3, []),
-        "B": (2, ["A"]),
-        "C": (5, ["B"])
+        "B": ["A"],
+        "C": ["A"],
+        "D": ["B", "C"]
     }
-    # Ожидаемый расчет: A(3) -> B(3+2=5) -> C(5+5=10). Критический путь = 10.
-    result1 = critical_path(tasks1)
-    print(f"Задачи: {tasks1}")
-    print(f"Длина критического пути (Ожидается 10): {result1}")
+    result1 = topo_sort(tasks1)
+    print(f"Example 1 Result: {result1}")
 
-    # --- Тест 2: Расщепление и слияние (Параллельные ветви) ---
-    print("\n--- Тест 2: Параллельные ветви ---")
-    tasks2 = {
-        "Start": (0, []), # Начало
-        "A": (5, ["Start"]),
-        "B": (7, ["Start"]),
-        "End": (3, ["A", "B"])
-    }
-    # Ожидаемый расчет: 
-    # Start -> A(5)
-    # Start -> B(7)
-    # End начинается после max(EF_A=5, EF_B=7). ES_End = 7.
-    # EF_End = 7 + 3 = 10. Критический путь = 10.
-    result2 = critical_path(tasks2)
-    print(f"Задачи: {tasks2}")
-    print(f"Длина критического пути (Ожидается 10): {result2}")
-
-    # --- Тест 3: Цикл зависимостей ---
-    print("\n--- Тест 3: Обнаружение цикла ---")
     tasks3 = {
-        "A": (5, ["C"]),
-        "B": (2, ["A"]),
-        "C": (1, ["B"])
+        "B": ["A"],
+        "A": ["B"]
     }
-    # Ожидаемый результат: None
-    result3 = critical_path(tasks3)
-    print(f"Задачи: {tasks3}")
-    print(f"Длина критического пути (Ожидается None): {result3}")
+    result3 = topo_sort(tasks3)
+    print(f"Example 3 Result (Cycle): {result3}")
 
-    # --- Тест 4: Сложный граф с разными длительностями ---
-    print("\n--- Тест 4: Смешанный граф ---")
-    tasks4 = {
-        "T1": (2, []),
-        "T2": (5, ["T1"]), # T1 -> T2. EF_T2 = 7
-        "T3": (8, ["T1"]), # T1 -> T3. EF_T3 = 10
-        "T4": (3, ["T2", "T3"]) # ES_T4 = max(7, 10) = 10. EF_T4 = 13.
+
+    # --- Testing Critical Path ---
+    print("\n--- Critical Path Tests ---")
+
+    # Example 1: Simple linear path A -> B -> C. Durations: A=2, B=3, C=4. CP = 9.
+    tasks_cp1 = {
+        "B": (3, ["A"]),
+        "C": (4, ["B"])
     }
-    # Критический путь проходит через T1 -> T3 -> T4. Длина = 2 + 8 + 3 = 13.
-    result4 = critical_path(tasks4)
-    print(f"Задачи: {tasks4}")
-    print(f"Длина критического пути (Ожидается 13): {result4}")
+    cp1 = critical_path(tasks_cp1)
+    print(f"Example 1 (Linear Path): CP = {cp1}") # Expected: 9
+
+    # Example 2: Parallel paths meeting at D. A->D (Duration 5), B->D (Duration 3). Durations: A=2, B=4, D=1.
+    # Max path is A -> D (2 + 1 = 3) or B -> D (4 + 1 = 5). CP = 5.
+    tasks_cp2 = {
+        "D": (1, ["A", "B"]),
+        "A": (2, []),
+        "B": (4, [])
+    }
+    cp2 = critical_path(tasks_cp2)
+    print(f"Example 2 (Parallel Paths): CP = {cp2}") # Expected: 5
+
+    # Example 3: Cycle detection. A -> B, B -> A. Durations: A=1, B=1.
+    tasks_cp3 = {
+        "B": (1, ["A"]),
+        "A": (1, ["B"])
+    }
+    cp3 = critical_path(tasks_cp3)
+    print(f"Example 3 (Cycle): CP = {cp3}") # Expected: None
+
+    # Example 4: Complex graph. A=5, B=2, C=3. D depends on A and B. E depends on C.
+    # Path 1: A -> D (5 + 1) = 6
+    # Path 2: B -> D (2 + 1) = 3
+    # Max path to D is 6. Then D -> F (duration 4). Total max path: 6 + 4 = 10.
+    tasks_cp4 = {
+        "D": (1, ["A", "B"]),
+        "F": (4, ["D"]),
+        "E": (3, []) # Independent task E
+    }
+    # We must ensure all tasks are accounted for in the dependency list or keys. 
+    # Let's add A and B explicitly as independent start nodes.
+    tasks_cp4_full = {
+        "A": (5, []),
+        "B": (2, []),
+        "E": (3, []),
+        "D": (1, ["A", "B"]),
+        "F": (4, ["D"])
+    }
+    cp4 = critical_path(tasks_cp4_full)
+    print(f"Example 4 (Complex Graph): CP = {cp4}") # Expected: 10
 ```

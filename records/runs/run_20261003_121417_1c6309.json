@@ -1,0 +1,47 @@
+{
+  "id": "run_20261003_121417_1c6309",
+  "host_id": "56a307df6486",
+  "model_key": "google/gemma-4-12b-qat",
+  "model_name": "Gemma 4 12B QAT",
+  "quantization": "Q4_0",
+  "backend": "LM Studio (69d945a)",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "google/gemma-4-12b-qat",
+      "display_name": "Gemma 4 12B QAT",
+      "architecture": "gemma4",
+      "quantization": "Q4_0",
+      "quantization_bits": 4,
+      "size_bytes": 7151067268,
+      "params_string": "12B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": "google"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "a4e2db5 (051cb8695784)",
+  "started_at": "2026-10-03 12:14:17",
+  "completed_at": "2026-10-03 12:27:22",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:24:17",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": []
+}

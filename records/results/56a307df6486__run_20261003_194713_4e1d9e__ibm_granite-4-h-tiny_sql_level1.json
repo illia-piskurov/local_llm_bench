@@ -1,0 +1,17 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-10-03 19:50:09",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "simple_where_equality: exception/timeout: ValueError: too many values to unpack (expected 3)",
+    "where_and_or_nested: exception/timeout: ValueError: too many values to unpack (expected 3)",
+    "multiple_and_conditions: exception/timeout: ValueError: too many values to unpack (expected 3)"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

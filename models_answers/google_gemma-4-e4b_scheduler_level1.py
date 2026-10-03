@@ -1,114 +1,108 @@
-from collections import defaultdict, deque
-from typing import Dict, List, Optional
+from collections import deque, defaultdict
 
-def topo_sort(tasks: Dict[str, List[str]]) -> Optional[List[str]]:
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
     """
-    Выполняет топологическую сортировку задач с учетом их зависимостей.
+    Performs a topological sort on the given task dependency graph.
 
     Args:
-        tasks: Словарь, где ключ — имя задачи (строка), а значение — список 
-               имён задач, от которых она зависит (предшественники).
+        tasks: A dictionary where key is the task name and value is 
+               a list of prerequisite task names.
 
     Returns:
-        Список имён всех задач в порядке выполнения, или None, если обнаружен цикл.
+        A list of tasks in a valid execution order, or None if a cycle exists.
     """
     
-    # 1. Инициализация графа и подсчет in-degrees
-    
-    # adj[P] = [T1, T2, ...] означает, что задачи T1, T2... зависят от P (P -> Ti)
-    adj: Dict[str, List[str]] = defaultdict(list)
-    in_degree: Dict[str, int] = {}
-    all_tasks: set[str] = set()
+    # 1. Initialize structures
+    in_degree = {}
+    adj = defaultdict(list)
+    all_tasks = set()
 
-    # Сбор всех уникальных задач и инициализация in_degree для каждой задачи
-    for task, prerequisites in tasks.items():
+    # Collect all unique task names (both keys and dependencies)
+    for task, deps in tasks.items():
         all_tasks.add(task)
-        for prereq in prerequisites:
-            all_tasks.add(prereq)
-            
-    # Инициализируем in_degree для всех задач нулем
+        for dep in deps:
+            all_tasks.add(dep)
+
+    # Initialize in-degrees for all known tasks to 0
     for task in all_tasks:
         in_degree[task] = 0
 
-    # Построение графа и подсчет входов (in-degrees)
-    for task, prerequisites in tasks.items():
-        for prereq in prerequisites:
-            # Ребро идет от prereq к task (prereq -> task)
-            adj[prereq].append(task)
-            # Увеличиваем степень входа для 'task'
-            in_degree[task] += 1
-
-    # 2. Инициализация очереди с задачами, у которых нет зависимостей (in_degree == 0)
-    queue = deque()
-    for task in all_tasks:
-        if in_degree[task] == 0:
-            queue.append(task)
-
-    # 3. Выполнение топологической сортировки (Kahn's Algorithm)
-    sorted_order: List[str] = []
-    
-    while queue:
-        u = queue.popleft()
-        sorted_order.append(u)
+    # 2. Build the graph (adj list) and calculate initial in-degrees
+    for task, deps in tasks.items():
+        current_in_degree = len(deps)
+        in_degree[task] = current_in_degree
         
-        # Обрабатываем всех соседей (задач, которые зависят от u)
-        for v in adj[u]:
-            # Уменьшаем степень входа для задачи v
-            in_degree[v] -= 1
-            
-            # Если у v больше нет незавершенных зависимостей, добавляем ее в очередь
-            if in_degree[v] == 0:
-                queue.append(v)
+        for dep in deps:
+            # Edge goes from dependency -> dependent task
+            adj[dep].append(task)
 
-    # 4. Проверка на циклы
-    if len(sorted_order) != len(all_tasks):
-        # Если количество задач в порядке меньше общего числа, значит, есть цикл
-        return None
+    # 3. Initialize queue with tasks having no dependencies (in-degree 0)
+    queue = deque([task for task in all_tasks if in_degree[task] == 0])
+    result = []
+
+    # 4. Process using Kahn's algorithm
+    while queue:
+        task = queue.popleft()
+        result.append(task)
+
+        # For every task that depends on the current 'task'
+        for neighbor in adj[task]:
+            # Decrement its dependency count
+            in_degree[neighbor] -= 1
+            
+            # If all dependencies are met, enqueue the neighbor
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    # 5. Check for cycles
+    if len(result) != len(all_tasks):
+        return None  # Cycle detected
     else:
-        return sorted_order
+        return result
 
 if __name__ == '__main__':
-    # Пример 1: Корректный порядок
-    print("--- Тест 1: Успешная сортировка ---")
+    # Example 1: Valid dependencies (A -> B, A -> C, B -> D, C -> D)
     tasks1 = {
-        "C": ["A", "B"],
-        "D": ["A"],
-        "E": [] # Задача без зависимостей
-    }
-    result1 = topo_sort(tasks1)
-    print(f"Задачи: {tasks1}")
-    print(f"Результат (ожидается порядок, где A и B идут до C): {result1}")
-
-    # Пример 2: Цикл зависимостей (A -> B -> C -> A)
-    print("\n--- Тест 2: Обнаружение цикла ---")
-    tasks2 = {
-        "A": ["C"],
         "B": ["A"],
-        "C": ["B"]
+        "C": ["A"],
+        "D": ["B", "C"]
     }
-    result2 = topo_sort(tasks2)
-    print(f"Задачи: {tasks2}")
-    print(f"Результат (ожидается None): {result2}")
+    print(f"Example 1 Result: {topo_sort(tasks1)}") # Expected: [A, B, C, D] or similar valid order
 
-    # Пример 3: Сложный граф с несколькими независимыми ветвями
-    print("\n--- Тест 3: Сложный граф ---")
+    # Example 2: Simple linear dependency (E -> F)
+    tasks2 = {
+        "F": ["E"]
+    }
+    print(f"Example 2 Result: {topo_sort(tasks2)}") # Expected: [E, F]
+
+    # Example 3: Cycle detection (A -> B, B -> A)
     tasks3 = {
-        "Task_Z": ["A", "B"],
-        "Task_Y": ["C"],
-        "Task_X": []
+        "B": ["A"],
+        "A": ["B"]
     }
-    # Граф: A->Z, B->Z, C->Y. X - независима.
-    result3 = topo_sort(tasks3)
-    print(f"Задачи: {tasks3}")
-    print(f"Результат (должен быть корректным): {result3}")
+    print(f"Example 3 Result: {topo_sort(tasks3)}") # Expected: None
 
-    # Пример 4: Задача без зависимостей, но упоминается как зависимость для другой задачи
-    print("\n--- Тест 4: Независимая задача ---")
-    tasks4 = {
-        "Task_Final": ["Start"],
-        "Task_Mid": []
+    # Example 4: Disconnected tasks (No dependencies listed, but all must be included)
+    tasks4 = {}
+    # We need to manually define the task set if they are truly independent and not keys/values.
+    # For this implementation structure, we assume all relevant tasks are either keys or values.
+    # Let's test a case where tasks exist but have no dependencies listed:
+    tasks5 = {
+        "A": [], 
+        "B": []
     }
-    # Граф: Start -> Task_Final. Task_Mid - независима.
-    result4 = topo_sort(tasks4)
-    print(f"Задачи: {tasks4}")
-    print(f"Результат (должен включать Start и Task_Mid): {result4}")
+    print(f"Example 5 Result (Independent): {topo_sort(tasks5)}") # Expected: [A, B] or [B, A]
+
+    # Example 6: Complex graph with independent start nodes
+    tasks6 = {
+        "D": ["A", "B"],
+        "E": ["C"]
+    }
+    print(f"Example 6 Result: {topo_sort(tasks6)}") # Expected: [A, B, C, D, E] or similar valid order
+
+    # Example 7: Cycle involving an unlisted task (Task X is a dependency but not listed as key)
+    tasks7 = {
+        "B": ["A"],
+        "A": ["X"] # X must be treated as a prerequisite for A
+    }
+    print(f"Example 7 Result: {topo_sort(tasks7)}") # Expected: [X, A, B] or similar valid order

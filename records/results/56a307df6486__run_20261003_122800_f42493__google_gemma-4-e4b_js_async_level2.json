@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261003_122800_f42493",
+  "host_id": "56a307df6486",
+  "model": "google/gemma-4-e4b",
+  "benchmark": "js_async",
+  "level": "level2",
+  "tested_at": "2026-10-03 13:10:50",
+  "passed": 8,
+  "total": 12,
+  "failures": [
+    "order_preservation: assertion returned False",
+    "concurrency_limit: assertion returned False",
+    "concurrency_as_number: assertion returned False",
+    "concurrency_default_one: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

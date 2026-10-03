@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "c_framing",
+  "level": "level2",
+  "tested_at": "2026-10-03 20:51:19",
+  "passed": 0,
+  "total": 8,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level2.c:78:5: error: call to undeclared library function 'memcpy' with type 'void *(void *, const void *, unsigned long)'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   78 |     memcpy(out_payload, &stream[pos + 3], len);\n      |     ^\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level2.c:78:5: note: include the header <string.h> or explicitly provide a declaration for 'memcpy'\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level2.c:99:64: error: use of undeclared identifier 'NULL'\n   99 |                 if (validate_packet(packet_start, 0, out_type, NULL, NULL, 0)) {\n      |                                                                ^~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level2.c:99:70: error: use of undeclared identifier 'NULL'\n   99 |                 if (validate_packet(packet_start, 0, out_type, NULL, NULL, 0)) {\n      |                                                                      ^~~~\n3 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

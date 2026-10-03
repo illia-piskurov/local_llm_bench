@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-10-03 20:43:58",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: unexpected exception: AttributeError: 'deque' object has no attribute 'sort'",
+    "dependency_unlocks_later: unexpected exception: AttributeError: 'deque' object has no attribute 'sort'",
+    "single_worker_duration_tiebreak: unexpected exception: AttributeError: 'deque' object has no attribute 'sort'",
+    "resource_limit_and_priority: unexpected exception: AttributeError: 'deque' object has no attribute 'sort'",
+    "simultaneous_unlocks: unexpected exception: AttributeError: 'deque' object has no attribute 'sort'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

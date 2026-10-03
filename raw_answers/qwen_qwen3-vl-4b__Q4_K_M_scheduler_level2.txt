@@ -1,0 +1,82 @@
+```python
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    # Build the graph and calculate in-degrees
+    graph = {}
+    in_degree = {}
+    for task in tasks:
+        graph[task] = tasks[task]
+        in_degree[task] = len(tasks[hop])
+    
+    # Initialize result list
+    result = []
+    
+    # Use a queue for tasks with no dependencies
+    from collections import deque
+    queue = deque()
+    for task in tasks:
+        if in_degree[task] == 0:
+            queue.append(task)
+    
+    # Process tasks
+    while queue:
+        task = queue.popleft()
+        result.append(task)
+        
+        # Reduce in-degree of all neighbors
+        for neighbor in graph.get(task, []):
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+    
+    # Check for cycles
+    if len(result) != len(tasks):
+        return None
+    
+    return result
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    if not tasks:
+        return 0
+    
+    # Validate that all tasks have dependencies
+    for task in tasks:
+        if not isinstance(tasks[task], tuple) or len(tasks[task]) != 2:
+            return None
+    
+    # Extract durations and dependencies
+    durations = {}
+    dependencies = {}
+    for task in tasks:
+        durations[task] = tasks[task][0]
+        dependencies[task] = tasks[task][1]
+    
+    # Build graph for topological sort
+    graph = {}
+    in_degree = {}
+    for task in tasks:
+        graph[task] = dependencies[task]
+        in_degree[task] = len(dependencies[task])
+    
+    # Check for cycles using topological sort
+    topo = topo_sort(graph)
+    if topo is None:
+        return None
+    
+    # Calculate critical path using dynamic programming
+    # dp[task] = earliest finish time of task
+    dp = {}
+    for task in tasks:
+        dp[task] = 0
+    
+    # Process tasks in topological order
+    for task in topo:
+        for dep in dependencies[task]:
+            dp[task] = max(dp[task], dp[dep] + durations[dep])
+        dp[task] += durations[task]
+    
+    # Return the maximum finish time
+    return max(dp.values()) if dp else 0
+```

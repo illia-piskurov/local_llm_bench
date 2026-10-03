@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "mistralai/ministral-3-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```c\n#include <stdint.h>\n#include <stdbool.h>\n\n#define BUFFER_SIZE 512\n\nstatic uint8_t buffer[BUFFER_SIZE];\nstatic size_t head = 0;    // Next write position (circular index)\nstatic size_t tail = 0;   // Next read position (circular index)\nstatic bool is_full = false;\n\nvoid ringbuf_init(void) {\n    head = 0;\n    tail = 0;\n    is_full = false;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if (is_full || ((head + 1) % BUFFER_SIZE) == tail) {\n        return -1; // Buffer full\n    }\n\n    buffer[head] = byte;\n    head = (head + 1) % BUFFER_SIZE;\n\n    if (tail == head && is_full) {\n        is_full = false;\n    }\n    return 0;\n}\n\nint ringbuf_pop(void) {\n    if (tail == head && !is_full) {\n        return -1; // Buffer empty\n    }\n\n    uint8_t byte = buffer[tail];\n    tail = (tail + 1) % BUFFER_SIZE;\n\n    if (head == tail) {\n        is_full = false;\n    }\n    return byte;\n}\n\nint ringbuf_available(void) {\n    size_t available = head - tail;\n    if (available < 0) available += BUFFER_SIZE; // Handle circular wrap\n    return available;\n}\n\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - ringbuf_available();\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 785,
+    "total_output_tokens": 328,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 24.526634086996044,
+    "time_to_first_token_seconds": 0.476661
+  }
+}

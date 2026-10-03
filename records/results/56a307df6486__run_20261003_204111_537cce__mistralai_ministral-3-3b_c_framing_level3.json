@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "c_framing",
+  "level": "level3",
+  "tested_at": "2026-10-03 20:52:08",
+  "passed": 0,
+  "total": 10,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:10:8: error: unknown type name 'bool'\n   10 | static bool is_full = false;\n      |        ^\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:10:23: error: use of undeclared identifier 'false'\n   10 | static bool is_full = false;\n      |                       ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:15:15: error: use of undeclared identifier 'false'\n   15 |     is_full = false;\n      |               ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:27:19: error: use of undeclared identifier 'false'\n   27 |         is_full = false;\n      |                   ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:41:19: error: use of undeclared identifier 'false'\n   41 |         is_full = false;\n      |                   ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:57:8: error: unknown type name 'bool'\n   57 | static bool validate_packet(const uint8_t *stream, size_t pos,\n      |        ^\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:60:62: error: use of undeclared identifier 'false'\n   60 |     if (pos + 4 > BUFFER_SIZE || stream[pos] != 0xAA) return false;\n      |                                                              ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:67:16: error: use of undeclared identifier 'false'\n   67 |         return false;\n      |                ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:75:56: error: use of undeclared identifier 'false'\n   75 |     if (stream[pos + 4] != calculated_checksum) return false;\n      |                                                        ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:79:12: error: use of undeclared identifier 'true'\n   79 |     return true;\n      |            ^~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:97:5: error: use of undeclared identifier 'bool'\n   97 |     bool packet_found = false;\n      |     ^~~~\n11 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

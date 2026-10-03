@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-10-03 22:41:19",
+  "passed": 0,
+  "total": 5,
+  "failures": [
+    "left_join_with_group_by: exception/timeout: TypeError: 'NoneType' object isn't iterable",
+    "multiple_joins_inner_and_left: exception/timeout: TypeError: 'NoneType' object isn't iterable",
+    "where_in_operator: exception/timeout: TypeError: _compile_condition() takes 3 positional arguments but 1 were given",
+    "where_is_null_and_like: exception/timeout: TypeError: _compile_condition() takes 3 positional arguments but 1 were given",
+    "where_is_not_null: exception/timeout: TypeError: _compile_condition() takes 3 positional arguments but 1 were given"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

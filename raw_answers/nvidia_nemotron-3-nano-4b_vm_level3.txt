@@ -3,150 +3,123 @@ def run(program: str) -> list[str]:
     lines = program.splitlines()
     stack = []
     output = []
-
-    # Build label map while parsing (ignoring comments/empty)
     label_map = {}
-    for idx, raw in enumerate(lines):
-        line = raw.strip()
+    call_stack = []          # stores 1‑based line indices to resume from
+    memory = {}              # var name → value
+
+    for idx, line in enumerate(lines):
+        line = line.strip()
         if not line or line.startswith('#'):
             continue
         tokens = line.split()
-        cmd = tokens[0]
-        if cmd == 'LABEL':
-            label_map[tokens[1]] = idx
+        op = tokens[0]
 
-    i = 0
-    call_stack = []
-    var_store = {}
-
-    while i < len(lines):
-        raw = lines[i]
-        line = raw.strip()
-        if not line or line.startswith('#'):
-            i += 1
+        # LABEL
+        if op == 'LABEL':
+            name = tokens[1]
+            label_map[name] = idx + 1
             continue
 
-        tokens = line.split()
-        cmd = tokens[0]
-
-        # LABEL – just record (already done) and move on
-        if cmd == 'LABEL':
-            i += 1
+        # CALL / RET
+        elif op == 'CALL':
+            target_name = tokens[1]
+            if target_name not in label_map:
+                raise ValueError(f"Line {idx+1}: undefined label '{target_name}'")
+            call_stack.append(idx + 2)          # resume after this line
+            idx = label_map[target_name] - 1    # jump to label
             continue
-
-        # CALL / RET – handle jumps and call stack
-        elif cmd == 'CALL':
-            target = tokens[1]
-            if target not in label_map:
-                raise Exception(f'Label "{target}" not defined at line {i}')
-            call_stack.append(i)
-            i = label_map[target] - 1
-            continue
-
-        elif cmd == 'RET':
+        elif op == 'RET':
             if not call_stack:
-                raise Exception('Stack of calls is empty at RET')
-            address = call_stack.pop()
-            i = address - 1
+                raise ValueError(f"Line {idx+1}: RET with empty call stack")
+            return_addr = call_stack.pop()
+            idx = return_addr - 1               # resume at that line
             continue
 
-        # EQ / GT / LT – compare ops
-        elif cmd == 'EQ':
-            if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {i}')
+        # Comparison operations
+        elif op in ('EQ', 'GT', 'LT'):
+            if len(tokens) != 3:
+                raise ValueError(f"Line {idx+1}: {op} expects two values, got {len(stack)}")
             b = stack.pop()
             a = stack.pop()
-            stack.append(1 if a == b else 0)
+            result = 1 if (op == 'EQ' and a == b) or (op == 'GT' and a > b) or (op == 'LT' and a < b) else 0
+            stack.append(result)
+            continue
 
-        elif cmd == 'GT':
-            if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {i}')
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(1 if a > b else 0)
-
-        elif cmd == 'LT':
-            if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {i}')
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(1 if a < b else 0)
-
-        # STORE / LOAD – named variables
-        elif cmd == 'STORE':
+        # Named variables
+        elif op == 'STORE':
+            var = tokens[1]
             if not stack:
-                raise Exception(f'Stack underflow at line {i}')
-            val = stack.pop()
-            var_name = tokens[1]
-            var_store[var_name] = val
+                raise ValueError(f"Line {idx+1}: STORE on empty stack")
+            value = stack.pop()
+            memory[var] = value
+            continue
+        elif op == 'LOAD':
+            var = tokens[1]
+            if var not in memory:
+                raise ValueError(f"Line {idx+1}: LOAD from undefined variable '{var}'")
+            stack.append(memory[var])
+            continue
 
-        elif cmd == 'LOAD':
-            var_name = tokens[1]
-            if var_name not in var_store:
-                raise Exception(f'Variable "{var_name}" not defined at line {i}')
-            stack.append(var_store[var_name])
-
-        # Existing stack operations (PUSH, POP, ADD, SUB, MUL, DIV, DUP, SWAP)
-        elif cmd == 'PUSH':
+        # Existing instructions (unchanged)
+        elif op == 'PUSH':
             n = int(tokens[1])
             stack.append(n)
 
-        elif cmd == 'POP':
+        elif op == 'POP':
             if not stack:
-                raise Exception(f'Stack underflow at line {i}')
+                raise ValueError(f"Line {idx+1}: POP on empty stack")
             stack.pop()
 
-        elif cmd == 'ADD':
+        elif op == 'ADD':
             if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {i}')
+                raise ValueError(f"Line {idx+1}: ADD requires two values, got {len(stack)}")
             b = stack.pop()
             a = stack.pop()
             stack.append(a + b)
 
-        elif cmd == 'SUB':
+        elif op == 'SUB':
             if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {i}')
+                raise ValueError(f"Line {idx+1}: SUB requires two values, got {len(stack)}")
             b = stack.pop()
             a = stack.pop()
             stack.append(a - b)
 
-        elif cmd == 'MUL':
+        elif op == 'MUL':
             if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {i}')
+                raise ValueError(f"Line {idx+1}: MUL requires two values, got {len(stack)}")
             b = stack.pop()
             a = stack.pop()
             stack.append(a * b)
 
-        elif cmd == 'DIV':
+        elif op == 'DIV':
             if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {i}')
+                raise ValueError(f"Line {idx+1}: DIV requires two values, got {len(stack)}")
             b = stack.pop()
             a = stack.pop()
             if b == 0:
-                raise Exception(f'Division by zero at line {i}')
+                raise ValueError(f"Line {idx+1}: division by zero")
             stack.append(a // b)
 
-        elif cmd == 'DUP':
+        elif op == 'DUP':
             if not stack:
-                raise Exception(f'Stack underflow at line {i}')
+                raise ValueError(f"Line {idx+1}: DUP on empty stack")
             stack.append(stack[-1])
 
-        elif cmd == 'SWAP':
+        elif op == 'SWAP':
             if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {i}')
+                raise ValueError(f"Line {idx+1}: SWAP requires two values, got {len(stack)}")
             a = stack.pop()
             b = stack.pop()
             stack.append(a)
             stack.append(b)
 
-        # PRINT
-        elif cmd == 'PRINT':
+        elif op == 'PRINT':
+            if not stack:
+                raise ValueError(f"Line {idx+1}: PRINT on empty stack")
             output.append(str(stack[-1]))
 
         else:
-            raise Exception(f'Unknown command "{cmd}" at line {i}')
-
-        i += 1
+            raise ValueError(f"Line {idx+1}: unknown instruction '{op}'")
 
     return output
 ```

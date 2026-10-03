@@ -1,0 +1,22 @@
+Here's a plan to implement the requested features:
+
+1.  **Analyze Changes:**
+    *   **`options.signal` (AbortSignal):** Needs integration into `processBatch` and `executeTaskWithRetryAndTimeout`. Must check for initial abortion and handle mid-flight cancellation by rejecting immediately.
+    *   **`options.settled` (boolean):** If true, the main logic must switch from failing fast (`Promise.all`) to collecting results/rejections for every task. The return type changes from `Array<T>` to `Array<{status: 'fulfilled' | 'rejected', value?: T, reason?: any}>`.
+    *   **Preservation:** Must maintain existing retry/backoff/timeout logic and the core concurrency mechanism (Level 2 behavior).
+
+2.  **Implementation Steps:**
+
+    *   **Update Option Parsing (`getOptions`):** Handle `signal` and `settled`.
+    *   **Update `executeTaskWithRetryAndTimeout`:** This function needs to respect the `AbortSignal`. If the signal aborts, it should throw an error that can be caught by the retry loop (if retries are configured) or propagated immediately.
+    *   **Update `processBatch`:**
+        *   Check for initial abortion using `signal.aborted`.
+        *   Use `Promise.allSettled` logic if `settled` is true, otherwise use standard promise handling combined with signal checks.
+        *   The batch processing must respect the signal and stop immediately upon cancellation.
+
+3.  **Refinement (Self-Correction/Detailing):**
+
+    *   *Signal Handling:* When using `Promise.all(tasks)`, if a task fails due to timeout or permanent failure, that's fine. If the *signal* aborts, we need to ensure the entire `await Promise.all(...)` block rejects with the signal reason.
+    *   *Settled Mode Logic:* In settled mode, even if a task fails permanently (after retries), it must resolve its promise wrapper so that `Promise.allSettled` can collect it. The result stored in `results[i]` will be an object describing the outcome.
+
+Let's start coding the combined structure.

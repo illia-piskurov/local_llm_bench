@@ -1,0 +1,108 @@
+We need to extend interpreter with label handling. Need to parse program into tokens lines, keep labels mapping name->index (line number). When encountering JMP/JZ/JNZ, pop value(s) and jump to target line index (label's position). Must handle that after executing a jump, continue from next line after target? Usually jumps are immediate; we need to set current index accordingly. Implementation: parse lines into list of tokens with line numbers. Build label dict mapping name->line number (index+1?). In loop over idx, line. When encountering JMP <name>, pop value, then set idx = label[name] - 1? Since loop increments idx each iteration; we need to jump to that line and continue after it. So set idx = label[name]; then loop will increment to next line.
+
+Similarly for JZ/JNZ: pop value v, if v==0 then jump to label (JZ) else not.
+
+Need to ensure labels defined before use? Probably okay.
+
+Implementation details:
+
+- Parse lines into list of tokens with line numbers.
+- Build label dict while scanning; when encountering LABEL name, store mapping name->idx+1 (line number).
+- In loop: idx is 0-based index. When we execute JMP/JZ/JNZ, after popping value(s), set idx = label[name] - 1? Let's think.
+
+Loop:
+
+for idx, line in enumerate(lines):
+    ...
+When we want to jump to line L (label). Suppose lines[L-1] is the target line (since line numbers start at 1). After executing JMP, we should continue with next iteration idx = L. So set idx = label[name]; then loop will increment to L+1.
+
+Thus inside if op == 'JMP': pop value; idx = label[name]; continue? But loop increments automatically after each iteration. If we set idx = label[name], the for loop will still iterate next index (idx+1). That's fine because we want to execute target line at its own iteration.
+
+But careful: if we set idx = label[name] and then continue, the for loop will increment to idx+1 automatically. So after executing JMP, we go to target line.
+
+Implementation:
+
+if op == 'JMP':
+    if not stack:
+        raise ...
+    v = stack.pop()
+    idx = label[v]  # but label expects name string; need mapping from value? Wait JMP <name> jumps to label based on name, not value. So we pop value? Actually JMP takes a label name as argument, no value popped. The spec: "JMP <name>" unconditional jump to label. No stack pop.
+
+But earlier they said "pop value from stack" for JZ/JNZ only. For JMP just jumps.
+
+Thus JMP does not pop anything. So we need to read label name token[1].
+
+Implementation:
+
+if op == 'JMP':
+    if len(tokens)!=2: raise ...
+    target = tokens[1]
+    idx = label[target]  # set current index
+
+Similarly for JZ/JNZ.
+
+Now implement.
+
+Also need to handle unknown labels? Could raise error.
+
+Let's produce final code.
+
+We'll keep previous logic unchanged, add label handling at top.
+
+Implementation steps:
+
+- lines = program.splitlines()
+- stack = []
+- output = []
+- label_map = {}
+- token_lines = [] # maybe not needed
+
+Loop idx from 0 to len(lines)-1:
+    line = lines[idx].strip()
+    if empty or comment: continue
+    tokens = line.split()
+    op = tokens[0]
+
+    if op == 'LABEL':
+        name = tokens[1]
+        label_map[name] = idx+1
+
+    elif op in ... as before.
+
+    elif op == 'JMP':
+        target = tokens[1]
+        if target not in label_map:
+            raise ValueError(f"Line {idx+1}: JMP to undefined label '{target}'")
+        idx = label_map[target]  # set index
+
+    elif op == 'JZ':
+        if len(tokens)!=2: raise ...
+        v = stack.pop()
+        if v != 0:
+            continue
+        target = tokens[1]
+        if target not in label_map:
+            raise ValueError...
+        idx = label_map[target]
+
+    elif op == 'JNZ':
+        if len(tokens)!=2: raise ...
+        v = stack.pop()
+        if v == 0:
+            continue
+        target = tokens[1]
+        if target not in label_map:
+            raise ValueError...
+        idx = label_map[target]
+
+But careful: after setting idx, the for loop will increment to next line. That's fine.
+
+Potential issue: while executing JMP/JZ/JNZ we may want to skip subsequent lines until reaching target; but our approach sets idx to target and then loop continues from there (including that line). Good.
+
+Now produce final code.
+
+Edge Cases: label defined after use? Might cause error when referencing undefined label. That's okay.
+
+Return output list.
+
+Let's write final python function.

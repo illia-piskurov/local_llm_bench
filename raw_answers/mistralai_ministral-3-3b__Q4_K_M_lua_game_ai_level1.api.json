@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "mistralai/ministral-3-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```lua\nlocal BT = {}\n\n-- Execution statuses\nBT.SUCCESS = \"SUCCESS\"\nBT.FAILURE = \"FAILURE\"\nBT.RUNNING = \"RUNNING\"\n\n-- Base Node class (abstract)\nlocal function new_node()\n    return setmetatable({}, {\n        __index = function(self, key)\n            error(\"Attempt to access non-existent method: \" .. key)\n        end\n    })\nend\n\n-- Action Node\nfunction BT.Action(fn)\n    local node = new_node()\n\n    local function tick(ctx)\n        local result = fn(ctx)\n        if result == true then return BT.SUCCESS end\n        if result == false then return BT.FAILURE end\n        if result == BT.SUCCESS then return BT.SUCCESS end\n        if result == BT.FAILURE then return BT.FAILURE end\n        return BT.RUNNING\n    end\n\n    function node:tick(ctx)\n        return tick(ctx)\n    end\n\n    function node:reset()\n        -- No state to reset for Action nodes\n    end\n\n    return node\nend\n\n-- Condition Node\nfunction BT.Condition(predicate)\n    local node = new_node()\n\n    local function tick(ctx)\n        if predicate(ctx) then return BT.SUCCESS else return BT.FAILURE end\n    end\n\n    function node:tick(ctx)\n        return tick(ctx)\n    end\n\n    function node:reset()\n        -- No state to reset for Condition nodes\n    end\n\n    return node\nend\n\n-- Sequence Node (AND)\nfunction BT.Sequence(children)\n    local node = new_node()\n\n    local current_child_index = 1\n    local function tick(ctx)\n        if current_child_index > #children then return BT.FAILURE end\n\n        local child = children[current_child_index]\n        local result = child:tick(ctx)\n\n        if result == BT.RUNNING then\n            current_child_index = current_child_index + 1\n            return BT.RUNNING\n        elseif result == BT.SUCCESS then\n            current_child_index = current_child_index + 1\n            return BT.SUCCESS\n        else -- FAILURE\n            return BT.FAILURE\n        end\n    end\n\n    function node:tick(ctx)\n        return tick(ctx)\n    end\n\n    function node:reset()\n        current_child_index = 1\n    end\n\n    return node\nend\n\n-- Selector Node (OR / Fallback)\nfunction BT.Selector(children)\n    local node = new_node()\n\n    local current_child_index = 1\n    local function tick(ctx)\n        if current_child_index > #children then return BT.FAILURE end\n\n        local child = children[current_child_index]\n        local result = child:tick(ctx)\n\n        if result == BT.RUNNING then\n            current_child_index = current_child_index + 1\n            return BT.RUNNING\n        elseif result == BT.SUCCESS then\n            return BT.SUCCESS\n        else -- FAILURE\n            current_child_index = current_child_index + 1\n            return BT.FAILURE\n        end\n    end\n\n    function node:tick(ctx)\n        return tick(ctx)\n    end\n\n    function node:reset()\n        current_child_index = 1\n    end\n\n    return node\nend\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 1061,
+    "total_output_tokens": 690,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 23.451834306153312,
+    "time_to_first_token_seconds": 1.01553
+  }
+}

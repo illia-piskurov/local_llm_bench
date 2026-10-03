@@ -1,63 +1,76 @@
 from collections import deque
 
 def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
-    # Проверка на циклы зависимостей
+    # Check for cyclic dependencies
     visited = set()
     recursion_stack = set()
 
-    def has_cycle(task):
-        if task in recursion_stack:
+    def has_cycle(task_name):
+        if task_name in recursion_stack:
             return True
-        if task in visited:
+        if task_name in visited:
             return False
-        visited.add(task)
-        recursion_stack.add(task)
-        for dep in tasks.get(task, (0, [], 0))[1]:
+
+        visited.add(task_name)
+        recursion_stack.add(task_name)
+
+        duration, deps, _ = tasks[task_name]
+        for dep in deps:
             if has_cycle(dep):
                 return True
-        recursion_stack.remove(task)
+
+        recursion_stack.remove(task_name)
         return False
 
     for task in tasks:
         if has_cycle(task):
             return None
 
-    # Сортировка задач по приоритету и длительности
-    sorted_tasks = sorted(tasks.keys(), key=lambda x: (-tasks[x][2], tasks[x][0], x))
-
+    # Initialize data structures
     ready_queue = deque()
-    task_duration = {task: duration for task, (duration, _, _) in tasks.items()}
-    available_workers = workers
-
-    result = []
+    task_info = {task: (duration, deps, priority) for task, (duration, deps, priority) in tasks.items()}
+    completed_tasks = set()
     current_time = 0
-    active_tasks = set()
+    active_workers = 0
+    output = []
 
-    while ready_queue or active_tasks:
-        # Определяем задачи, готовые к выполнению в текущий момент времени
-        for task in sorted_tasks:
-            if all(dep not in active_tasks and dep != task for dep in tasks[task][1]):
-                ready_queue.append(task)
+    # Precompute dependencies and ready queue
+    for task in tasks:
+        duration, deps, _ = task_info[task]
+        if not deps:
+            ready_queue.append(task)
 
-        # Выполняем задачи по правилам
-        while available_workers > 0 and ready_queue:
-            current_task = ready_queue.popleft()
-            if current_task in active_tasks:
+    while ready_queue or active_workers < workers:
+        # Process completed tasks to update ready queue
+        while active_workers >= workers and ready_queue:
+            task = ready_queue.popleft()
+            duration, _, priority = task_info[task]
+
+            # Check if all dependencies are met
+            all_deps_met = True
+            for dep in task_info[task][1]:
+                if dep not in completed_tasks:
+                    all_deps_met = False
+                    break
+
+            if all_deps_met:
+                active_workers += 1
+                current_time += duration
+                output.append(task)
+                completed_tasks.add(task)
+
+        # Update ready queue based on completed tasks
+        for task in list(completed_tasks):
+            duration, deps, _ = task_info[task]
+            if not deps:
                 continue
 
-            active_tasks.add(current_task)
-            result.append((current_time, current_task))
-            current_time += task_duration[current_task]
-            available_workers -= 1
+            for dep in deps:
+                if dep in completed_tasks:
+                    ready_queue.append(task)
+                    break  # Only add once per dependency completion
 
-        # Если нет свободных рабочих мест и все задачи выполнены
-        if not ready_queue and not active_tasks:
-            break
+        # Sort ready queue by priority, duration, and name
+        ready_queue.sort(key=lambda x: (-task_info[x][2], task_info[x][0], x))
 
-    # Проверка на завершение всех задач
-    if len(result) != sum(1 for _ in tasks.values()):
-        return None
-
-    # Сортируем результаты по времени старта и возвращаем задачи в порядке выполнения
-    result.sort()
-    return [task for time, task in result]
+    return output

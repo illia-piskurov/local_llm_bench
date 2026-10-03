@@ -1,0 +1,19 @@
+Plan:
+1. Define constants and global state variables for the ring buffer (buffer array, head/write pointer, tail/read pointer, count).
+2. Implement `ringbuf_init()` to reset pointers and count.
+3. Implement `ringbuf_push(uint8_t byte)`: Check if full. If not, write at head, advance head, increment count. Return status.
+4. Implement `ringbuf_pop()`: Check if empty. If not, read from tail, advance tail, decrement count. Return value and status.
+5. Implement `ringbuf_available()`: Return the stored count.
+6. Implement `ringbuf_free_space()`: Calculate 512 - available count.
+
+Constraints check:
+- Fixed size (512 bytes).
+- Static memory only.
+- Pure C99 (`stdint.h`).
+- Functions signature matching requirements.
+
+Implementation details:
+The buffer will be an array of `uint8_t`.
+Pointers/indices should wrap around using modulo arithmetic or explicit checks against the size (512). Since we are tracking the count explicitly, simple index management is sufficient.
+
+Let's use indices for head and tail, and a counter for available elements.

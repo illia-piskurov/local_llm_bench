@@ -1,0 +1,42 @@
+We need to extend previous implementation. Provide full code including BT table? Probably include all nodes plus blackboard and decorators. Must be single code block. No extra explanation.
+
+Implement Blackboard: global BT.Blackboard = {} with methods new, get, set, watch. Use table for storage, callbacks per key.
+
+Implementation details:
+
+BT.Blackboard = {}
+function BT.Blackboard.new()
+    local bb = {
+        data = {},
+        watchers = {}, -- map key -> list of functions
+        function get(self, key, default)
+            return self.data[key] or default
+        end,
+        function set(self, key, value)
+            if value == self.data[key] then return end
+            self.data[key] = value
+            local old = self.data[key]
+            for _, cb in ipairs(self.watchers[key]) do cb(key, value, old) end
+        end,
+        function watch(self, key, callback)
+            table.insert(self.watchers[key], callback)
+        end
+    }
+    return bb
+end
+
+But need to ensure that set returns nothing.
+
+Now decorators: BT.Inverter = function(child) local node = { child=child, tick=function(self,ctx)=local status=self.child.tick(ctx); if status==BT.SUCCESS then return BT.FAILURE elseif status==BT.FAILURE then return BT.SUCCESS else return BT.RUNNING end; reset=function() self.child:reset() end } return node end
+
+BT.Cooldown = function(child, ticks) local node = { child=child, ticks=ticks, cooldown=0, tick=function(self,ctx)=if self.cooldown>0 then return BT.FAILURE else local status=self.child.tick(ctx); if status==BT.SUCCESS then self.cooldown=ticks; return BT.RUNNING elseif status==BT.FAILURE or status==false then return BT.FAILURE end end reset=function() self.cooldown=0; self.child:reset() end } return node end
+
+But need to ensure that after success, cooldown set and returns RUNNING. On next tick, if still >0, FAILURE.
+
+Now integrate with existing nodes? Probably just define them.
+
+Also preserve BT table definitions.
+
+Thus final code block includes all definitions.
+
+Let's produce final Lua code.

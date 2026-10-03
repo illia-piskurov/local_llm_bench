@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "c_framing",
+  "level": "level1",
+  "tested_at": "2026-10-03 19:51:15",
+  "passed": 3,
+  "total": 4,
+  "failures": [
+    "full_overflow_check: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

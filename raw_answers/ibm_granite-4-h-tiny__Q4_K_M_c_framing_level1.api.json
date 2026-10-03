@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```c\n#include <stdint.h>\n\n#define BUFFER_SIZE 512\n\nstatic uint8_t buffer[BUFFER_SIZE];\nstatic size_t head = 0;\nstatic size_t tail = 0;\n\nvoid ringbuf_init(void) {\n    head = 0;\n    tail = 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if ((head + 1) % BUFFER_SIZE == tail) {\n        return -1; // Buffer is full\n    }\n    buffer[head] = byte;\n    head = (head + 1) % BUFFER_SIZE;\n    return 0;\n}\n\nint ringbuf_pop(void) {\n    if (tail == head) {\n        return -1; // Buffer is empty\n    }\n    uint8_t byte = buffer[tail];\n    tail = (tail + 1) % BUFFER_SIZE;\n    return byte;\n}\n\nint ringbuf_available(void) {\n    return (head - tail + BUFFER_SIZE) % BUFFER_SIZE;\n}\n\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - ringbuf_available();\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 235,
+    "total_output_tokens": 220,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 44.91074143942823,
+    "time_to_first_token_seconds": 0.874499
+  }
+}

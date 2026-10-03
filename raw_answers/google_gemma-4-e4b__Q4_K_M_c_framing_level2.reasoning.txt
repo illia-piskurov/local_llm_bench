@@ -1,0 +1,40 @@
+Here's a plan to implement the `decode_packet` function while keeping the existing ring buffer structure intact.
+
+1.  **Analyze Packet Structure:**
+    *   Fixed header size: 3 bytes (Magic, Type, Length).
+    *   Total length: $L_{total} = 4 + \text{len}$.
+    *   Minimum packet size: 4 bytes (when len=0).
+    *   Format: `[AA] [Type] [Len] [Payload...][Checksum]`
+
+2.  **Analyze Decoding Logic (`decode_packet`):**
+    *   Input: `stream` (start of data), `stream_len` (total bytes available).
+    *   Output: `out_payload` (destination buffer), `out_type` (pointer for type).
+    *   Goal: Find the first valid packet starting from `stream`.
+
+3.  **Decoding Steps:**
+    *   The function must iterate through the stream, looking for the magic byte (0xAA).
+    *   If 0xAA is found at index $i$:
+        *   Check if enough data remains: We need at least 4 bytes ($1$ Magic + $1$ Type + $1$ Length + $1$ Checksum) plus `len` payload bytes.
+        *   Read the header:
+            *   Magic (must be 0xAA).
+            *   Type = `stream[i+1]`.
+            *   Length = `stream[i+2]`.
+        *   Calculate expected total length: $L_{expected} = \text{len} + 4$.
+        *   Check bounds: If $i + L_{expected} > \text{stream\_len}$, the packet is incomplete. Skip this potential start and continue searching from $i+1$.
+        *   If within bounds, extract payload and checksum:
+            *   Payload starts at $i+3$ and runs for `len` bytes.
+            *   Checksum byte is at $i + 3 + \text{len}$.
+        *   Validate Checksum: Calculate the XOR sum of the payload bytes. Compare it to the received checksum byte.
+        *   If valid: Success! Copy payload, set type, return `len`.
+        *   If invalid (checksum mismatch or insufficient data): This potential packet is corrupted. Skip this start position and continue searching from $i+1$.
+
+4.  **Implementation Details:**
+    *   The function signature uses pointers/const references, so we must handle indexing carefully.
+    *   We need a loop that advances the starting search index (`i`).
+
+5.  **Refining the Code Structure (Self-Correction/Review):**
+    *   The existing ring buffer functions are fine and should be kept.
+    *   I need to add `decode_packet` after the existing definitions.
+    *   Since the prompt requires returning *only* the C code, I must ensure all includes and static variables are present.
+
+Let's implement the logic using a loop structure for robustness against noise bytes. (The provided ring buffer functions use `int` return types, so we must adhere to that.)

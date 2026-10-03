@@ -1,0 +1,26 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "lua_game_ai",
+  "level": "level2",
+  "tested_at": "2026-10-03 20:54:32",
+  "passed": 0,
+  "total": 12,
+  "failures": [
+    "action_and_condition: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+    "sequence_all_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+    "sequence_short_circuit_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+    "sequence_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+    "selector_first_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+    "selector_all_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+    "selector_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+    "blackboard_get_set: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+    "blackboard_watchers: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+    "inverter_decorator: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+    "cooldown_decorator: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+    "composite_ai_tree: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

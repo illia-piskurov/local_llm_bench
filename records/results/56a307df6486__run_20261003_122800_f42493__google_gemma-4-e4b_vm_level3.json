@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261003_122800_f42493",
+  "host_id": "56a307df6486",
+  "model": "google/gemma-4-e4b",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-10-03 12:35:13",
+  "passed": 36,
+  "total": 37,
+  "failures": [
+    "negative_numbers: unexpected exception/timeout: ValueError: Line 1: PUSH requires a valid integer argument."
+  ],
+  "manual_score": null,
+  "comment": ""
+}

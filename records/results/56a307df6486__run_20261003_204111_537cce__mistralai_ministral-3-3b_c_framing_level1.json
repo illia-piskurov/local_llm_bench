@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "c_framing",
+  "level": "level1",
+  "tested_at": "2026-10-03 20:50:37",
+  "passed": 2,
+  "total": 4,
+  "failures": [
+    "pointer_wrap_around: assertion returned False",
+    "full_overflow_check: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

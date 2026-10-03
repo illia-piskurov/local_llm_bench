@@ -1,0 +1,162 @@
+-- Global execution statuses
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+-- Action node: invokes a function and returns its result as a BT status
+BT.Action = function(fn)
+    local node = {
+        fn = fn,
+        tick = function(self, ctx) local result = self.fn(ctx); if result == BT.SUCCESS or result == true then return BT.SUCCESS elseif result == BT.FAILURE or result == false then return BT.FAILURE else return BT.RUNNING end end,
+        reset = function() end
+    }
+    return node
+end
+
+-- Condition node: evaluates a predicate and returns SUCCESS/FAILURE
+BT.Condition = function(predicate)
+    local node = {
+        predicate = predicate,
+        tick = function(self, ctx) local ok = self.predicate(ctx); if ok then return BT.SUCCESS else return BT.FAILURE end,
+        reset = function() end
+    }
+    return node
+end
+
+-- Sequence node: logical AND of children (AND)
+BT.Sequence = function(children)
+    local idx = 1
+    local node = {
+        children = children,
+        idx = 1,
+        tick = function(self, ctx)
+            if self.idx > #self.children then return BT.SUCCESS end
+            local child = self.children[self.idx]
+            local status = child.tick(ctx)
+            if status == BT.FAILURE then return BT.FAILURE
+            elseif status == BT.RUNNING then return BT.RUNNING
+            else -- SUCCESS: advance to next node
+                self.idx = self.idx + 1
+                return BT.SUCCESS
+            end
+        end,
+        reset = function()
+            for _, child in ipairs(self.children) do child:reset() end
+            self.idx = 1
+        end
+    }
+    return node
+end
+
+-- Selector node: logical OR of children (OR / fallback)
+BT.Selector = function(children)
+    local idx = 1
+    local node = {
+        children = children,
+        idx = 1,
+        tick = function(self, ctx)
+            if self.idx > #self.children then return BT.SUCCESS end
+            local child = self.children[self.idx]
+            local status = child.tick(ctx)
+            if status == BT.SUCCESS then -- advance and succeed
+                self.idx = self.idx + 1
+                return BT.SUCCESS
+            elseif status == BT.RUNNING then -- keep same node running
+                return BT.RUNNING
+            else -- FAILURE: move to next child
+                self.idx = self.idx + 1
+            end
+        end,
+        reset = function()
+            for _, child in ipairs(self.children) do child:reset() end
+            self.idx = 1
+        end
+    }
+    return node
+end
+
+-- Blackboard (shared memory)
+BT.Blackboard = {}
+function BT.Blackboard.new()
+    local bb = {
+        data = {},
+        watchers = {}, -- key -> list of callbacks
+        get = function(self, k, d) return self.data[k] or d end,
+        set = function(self, k, v)
+            if v == self.data[k] then return end
+            self.data[k] = v
+            local old = self.data[k]
+            for _, cb in ipairs(self.watchers[k]) do cb(k, v, old) end
+        end,
+        watch = function(self, k, cb)
+            table.insert(self.watchers[k], cb)
+        end
+    }
+    return bb
+end
+
+-- Decorator: Inverter (single-child node)
+BT.Inverter = function(child)
+    local node = {
+        child = child,
+        tick = function(self, ctx) local status = self.child.tick(ctx); if status == BT.SUCCESS then return BT.FAILURE elseif status == BT.FAILURE then return BT.SUCCESS else return BT.RUNNING end end,
+        reset = function() self.child:reset() end
+    }
+    return node
+end
+
+-- Decorator: Cooldown (single-child node)
+BT.Cooldown = function(child, ticks)
+    local node = {
+        child = child,
+        ticks = ticks,
+        cooldown = 0,
+        tick = function(self, ctx) if self.cooldown > 0 then return BT.FAILURE end
+            local status = self.child.tick(ctx)
+            if status == BT.SUCCESS then
+                self.cooldown = self.ticks
+                return BT.RUNNING
+            elseif status == BT.FAILURE or status == false then
+                return BT.FAILURE
+            else -- RUNNING from child (should not happen for cooldown)
+                return BT.RUNNING
+            end
+        end,
+        reset = function() self.cooldown = 0; self.child:reset() end
+    }
+    return node
+end
+
+-- Async action node using coroutines
+BT.AsyncAction = function(coroutine_fn)
+    local node = {
+        co = nil,
+        waitTicks = 0,
+        tick = function(self, ctx)
+            if not self.co or coroutine.status(self.co) == "dead" then
+                self.co = coroutine.create(coroutine_fn)
+                self.waitTicks = 0
+            end
+            if self.waitTicks > 0 then
+                self.waitTicks = math.max(0, self.waitTicks - 1)
+                return BT.RUNNING
+            end
+            local result = coroutine.resume(self.co, ctx)
+            if result == "WAIT_TICKS" then
+                self.waitTicks = result[2]
+                return BT.RUNNING
+            else
+                -- result is SUCCESS/FAILURE or true/false (treated as status)
+                return result
+            end
+        end,
+        reset = function()
+            if self.co then coroutine.kill(self.co) end
+            self.waitTicks = 0
+        end
+    }
+    return node
+end
+
+-- Global table for the engine (optional)
+BT = {}

@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "lua_game_ai",
+  "level": "level2",
+  "tested_at": "2026-10-03 22:57:29",
+  "passed": 0,
+  "total": 12,
+  "failures": [
+    "Lua syntax error: error loading code: [string \"<python>\"]:20: unexpected symbol near ','"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

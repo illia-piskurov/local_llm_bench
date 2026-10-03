@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261003_195451_db47f1",
+  "host_id": "56a307df6486",
+  "model": "qwen/qwen3-vl-4b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-10-03 19:57:50",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: expected 5, got None",
+    "simple_chain: expected 9, got None",
+    "diamond_pick_longer_branch: expected 12, got None",
+    "independent_tasks: expected 7, got None",
+    "wide_graph: expected 19, got None"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,243 +1,306 @@
 ```python
-import sys
+import re
 
 def run(program: str) -> list[str]:
     """
-    Интерпретирует программу стекового языка, поддерживая метки и условные переходы.
-
-    Args:
-        program: Многострочный текст с инструкциями.
-
-    Returns:
-        Список строк, содержащих вывод команды PRINT.
-
-    Raises:
-        RuntimeError: Если произошла ошибка выполнения (нехватка данных на стеке, деление на ноль, неизвестная метка).
+    Runs the stack-based program and returns a list of printed strings.
+    Raises an exception on runtime error (stack underflow, division by zero).
+    Supports labels and conditional jumps.
     """
     stack = []
     output = []
-    lines = program.split('\n')
-    labels = {}  # Словарь для хранения {имя_метки: индекс_строки}
+    lines = [line.strip() for line in program.split('\n')]
 
-    # --- Первый проход: Сбор всех меток ---
-    for i, line in enumerate(lines):
-        stripped_line = line.strip()
-        if not stripped_line or stripped_line.startswith('#'):
+    # --- Phase 1: Pre-process Labels ---
+    label_map = {}
+    for i, raw_line in enumerate(lines):
+        line_num = i + 1
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
             continue
 
-        tokens = stripped_line.split()
-        if tokens and tokens[0] == "LABEL":
-            label_name = tokens[1]
-            if label_name in labels:
-                raise RuntimeError(f"Ошибка в строке {i + 1}: Метка '{label_name}' уже определена.")
-            labels[label_name] = i
+        parts = line.split()
+        if parts and parts[0] == "LABEL":
+            label_name = parts[1]
+            # Store the program counter index (i) for this label
+            label_map[label_name] = i
 
-    # --- Второй проход: Выполнение программы ---
-    current_index = 0
-    while current_index < len(lines):
-        line = lines[current_index]
-        line_number = current_index + 1
-        stripped_line = line.strip()
+    # --- Phase 2: Execution ---
+    program_counter = 0
+    max_lines = len(lines)
 
-        # Игнорирование пустых строк и комментариев
-        if not stripped_line or stripped_line.startswith('#'):
-            current_index += 1
+    while program_counter < max_lines:
+        line = lines[program_counter]
+        if not line or line.startswith("#"):
+            program_counter += 1
             continue
 
-        tokens = stripped_line.split()
-        if not tokens:
-            current_index += 1
-            continue
-
-        instruction = tokens[0]
-        next_index = current_index + 1 # По умолчанию, идем на следующую строку
+        parts = line.split()
+        command = parts[0]
+        args = parts[1:]
+        line_num = program_counter + 1 # Current instruction's line number
 
         try:
-            # --- Инструкции управления потоком ---
-            if instruction == "LABEL":
-                # LABEL <name> - просто регистрирует метку (уже сделано выше)
+            if command == "LABEL":
+                # LABEL instructions are handled during parsing and do nothing here
                 pass
 
-            elif instruction == "JMP":
-                target_label = tokens[1]
-                if target_label not in labels:
-                    raise NameError(f"Неизвестная метка перехода: {target_label}")
-                next_index = labels[target_label] # Устанавливаем индекс прыжка
-
-            elif instruction == "JZ":
-                target_label = tokens[1]
-                if target_label not in labels:
-                    raise NameError(f"Неизвестная метка перехода: {target_label}")
-                if len(stack) < 1:
-                    raise IndexError("Недостаточно элементов на стеке для JZ.")
-
-                condition = stack.pop()
-                if condition == 0:
-                    next_index = labels[target_label] # Успешный переход
+            elif command == "PUSH":
+                if args and args[0].isdigit():
+                    stack.append(int(args[0]))
                 else:
-                    # Не переходим, просто продолжаем выполнение с next_index
-                    pass
+                    raise ValueError("PUSH requires a valid integer argument.")
 
-            elif instruction == "JNZ":
-                target_label = tokens[1]
-                if target_label not in labels:
-                    raise NameError(f"Неизвестная метка перехода: {target_label}")
-                if len(stack) < 1:
-                    raise IndexError("Недостаточно элементов на стеке для JNZ.")
-
-                condition = stack.pop()
-                if condition != 0:
-                    next_index = labels[target_label] # Успешный переход
-                else:
-                    # Не переходим, просто продолжаем выполнение с next_index
-                    pass
-
-            # --- Стандартные инструкции стека ---
-            elif instruction == "PUSH":
-                if len(tokens) != 2:
-                    raise ValueError("PUSH требует один аргумент.")
-                value = int(tokens[1])
-                stack.append(value)
-
-            elif instruction == "POP":
+            elif command == "POP":
                 if not stack:
-                    raise IndexError("Недостаточно элементов на стеке для POP.")
+                    raise IndexError("Stack underflow: Cannot POP from an empty stack.")
                 stack.pop()
 
-            elif instruction == "DUP":
+            elif command == "ADD":
+                if len(stack) < 2:
+                    raise IndexError("Stack underflow: ADD requires at least two values.")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+
+            elif command == "SUB":
+                if len(stack) < 2:
+                    raise IndexError("Stack underflow: SUB requires at least two values.")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a - b)
+
+            elif command == "MUL":
+                if len(stack) < 2:
+                    raise IndexError("Stack underflow: MUL requires at least two values.")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+
+            elif command == "DIV":
+                if len(stack) < 2:
+                    raise IndexError("Stack underflow: DIV requires at least two values.")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise ZeroDivisionError("Runtime Error: Division by zero detected.")
+                # Integer division (floor division)
+                stack.append(a // b)
+
+            elif command == "DUP":
                 if not stack:
-                    raise IndexError("Недостаточно элементов на стеке для DUP.")
+                    raise IndexError("Stack underflow: DUP requires at least one value.")
                 stack.append(stack[-1])
 
-            elif instruction == "SWAP":
+            elif command == "SWAP":
                 if len(stack) < 2:
-                    raise IndexError("Недостаточно элементов на стеке для SWAP (требуется минимум 2).")
-                a = stack.pop()
-                b = stack.pop()
-                stack.append(a)
+                    raise IndexError("Stack underflow: SWAP requires at least two values.")
+                b = stack.pop() # Top element
+                a = stack.pop() # Second element
                 stack.append(b)
+                stack.append(a)
 
-            elif instruction == "PRINT":
+            elif command == "PRINT":
                 if not stack:
-                    raise IndexError("Недостаточно элементов на стеке для PRINT.")
+                    raise IndexError("Stack underflow: PRINT requires at least one value.")
+                # Print the top value without popping it
                 output.append(str(stack[-1]))
 
-            # --- Бинарные операции ---
-            elif instruction in ["ADD", "SUB", "MUL", "DIV"]:
-                if len(stack) < 2:
-                    raise IndexError(f"Недостаточно элементов на стеке для {instruction} (требуется минимум 2).")
+            # --- Control Flow Instructions ---
+            elif command == "JMP":
+                target_label = args[0]
+                if target_label not in label_map:
+                    raise NameError(f"Unknown label '{target_label}' for JMP.")
+                program_counter = label_map[target_label]
 
-                b = stack.pop()
-                a = stack.pop()
-                result = None
+            elif command == "JZ":
+                target_label = args[0]
+                if target_label not in label_map:
+                    raise NameError(f"Unknown label '{target_label}' for JZ.")
+                
+                if len(stack) < 1:
+                    raise IndexError("Stack underflow: JZ requires at least one value.")
 
-                if instruction == "ADD":
-                    result = a + b
-                elif instruction == "SUB":
-                    result = a - b
-                elif instruction == "MUL":
-                    result = a * b
-                elif instruction == "DIV":
-                    if b == 0:
-                        raise ZeroDivisionError("Деление на ноль.")
-                    # Целочисленное деление (a // b)
-                    result = a // b
+                value = stack.pop()
+                if value == 0:
+                    program_counter = label_map[target_label]
+                else:
+                    # If condition fails, fall through to the next instruction
+                    pass
 
-                stack.append(result)
+            elif command == "JNZ":
+                target_label = args[0]
+                if target_label not in label_map:
+                    raise NameError(f"Unknown label '{target_label}' for JNZ.")
+                
+                if len(stack) < 1:
+                    raise IndexError("Stack underflow: JNZ requires at least one value.")
 
+                value = stack.pop()
+                if value != 0:
+                    program_counter = label_map[target_label]
+                else:
+                    # If condition fails, fall through to the next instruction
+                    pass
+            
+            # --- End of Instructions ---
             else:
-                raise NameError(f"Неизвестная инструкция: {instruction}")
+                raise SyntaxError(f"Unknown command '{command}'")
 
-        except IndexError as e:
-            raise RuntimeError(f"Ошибка в строке {line_number}: {e}")
-        except ZeroDivisionError as e:
-            raise RuntimeError(f"Ошибка в строке {line_number}: Деление на ноль.")
-        except (ValueError, NameError) as e:
-             # Ошибки парсинга или неизвестных меток
-            raise RuntimeError(f"Ошибка в строке {line_number}: {e}")
+        except (IndexError, ZeroDivisionError, ValueError, NameError) as e:
+            # Re-raise specific errors with context and stop execution
+            raise type(e)(f"Line {line_num}: {e}")
 
-        # Обновляем индекс для следующей итерации. 
-        # Если произошел прыжок (JMP, JZ, JNZ), next_index уже установлен на целевой адрес.
-        current_index = next_index
+
+        # Increment PC unless a jump occurred (which already set the new PC)
+        program_counter += 1
 
     return output
 
 if __name__ == '__main__':
-    # --- Тест 1: Условный переход (JZ) ---
-    program_jz_test = """
-    PUSH 0
-    LABEL start
+    # Example 1: Basic arithmetic (Original Test)
+    program1 = """
     PUSH 5
     PUSH 3
     ADD       # Stack: [8]
-    PRINT     # Output: 8
-
-    PUSH 0   # Проверяемое значение для JZ
-    JZ skip  # Если 0, переходим к skip. Так как 0 == 0, прыгаем.
-    JMP end  # Этот код не должен выполниться
-
-skip:
-    PRINT     # Output: 1 (потому что мы сбросили стек и добавили 1)
-
-end:
-    PUSH 99 # Должно быть пропущено
-    """
-    print("--- Тест 1 (JZ - Успешный переход) ---")
-    try:
-        results = run(program_jz_test)
-        # Ожидаемый вывод: ['8', '1']
-        print("Вывод:", results)
-    except RuntimeError as e:
-        print("Ошибка выполнения:", e)
-
-    # --- Тест 2: Условный переход (JNZ) и цикл ---
-    program_jnz_test = """
-    PUSH 5   # Инициализация счетчика
-    LABEL loop_start
-    DUP       # Stack: [5, 5]
-    PUSH 1
-    SUB       # Stack: [4] (Счетчик уменьшается)
-
-    PUSH 0
-    JNZ loop_start # Пока не 0, продолжаем цикл. Pop'ит текущее значение (например, 4).
-
-    PRINT     # Вывод финального значения счетчика
-    """
-    print("\n--- Тест 2 (JNZ - Цикл) ---")
-    try:
-        results = run(program_jnz_test)
-        # Ожидаемый вывод: ['0'] (Счетчик дошел до нуля, и мы выводим его)
-        print("Вывод:", results)
-    except RuntimeError as e:
-        print("Ошибка выполнения:", e)
-
-    # --- Тест 3: Безусловный переход (JMP) ---
-    program_jmp_test = """
+    DUP       # Stack: [8, 8]
+    SUB       # Pop 8 (b), pop 8 (a). Push 0. Stack: [0]
+    PRINT     # Output: 0
     PUSH 10
-    LABEL start
-    ADD       # Эта инструкция должна быть пропущена
-    JMP end   # Прыгаем к концу
-
-end:
-    PRINT     # Вывод 10, так как ADD не выполнился.
+    POP       # Stack: []
     """
-    print("\n--- Тест 3 (JMP - Пропуск кода) ---")
+    print("--- Program 1 (Basic Arithmetic) ---")
     try:
-        results = run(program_jmp_test)
-        # Ожидаемый вывод: ['10']
-        print("Вывод:", results)
-    except RuntimeError as e:
-        print("Ошибка выполнения:", e)
+        results = run(program1)
+        print("Output:", results)
+    except Exception as e:
+        print("Error:", e)
 
-    # --- Тест 4: Неизвестная метка ---
-    program_error = """
+    # Example 2: Division by zero and stack underflow (Original Test)
+    program2 = """
+    PUSH 10
+    PUSH 0
+    DIV       # Should fail here (Line 3)
+    POP
+    """
+    print("\n--- Program 2 (Division by Zero) ---")
+    try:
+        run(program2)
+    except Exception as e:
+        print("Error:", e)
+
+    # Example 3: Stack underflow on PRINT (Original Test)
+    program3 = """
+    PUSH 5
+    POP       # Stack: []
+    PRINT     # Should fail here (Line 3)
+    """
+    print("\n--- Program 3 (Stack Underflow) ---")
+    try:
+        run(program3)
+    except Exception as e:
+        print("Error:", e)
+
+    # Example 4: SWAP and MUL (Original Test)
+    program4 = """
+    PUSH 2
+    PUSH 3
+    DUP       # Stack: [2, 3, 3]
+    SWAP      # Pop 3 (b), pop 3 (a). Push b=3, a=2. Stack: [2, 3]
+    MUL       # Pop 3 (b), pop 2 (a). Push 6. Stack: [6]
+    PRINT     # Output: 6
+    """
+    print("\n--- Program 4 (SWAP/MUL) ---")
+    try:
+        results = run(program4)
+        print("Output:", results)
+    except Exception as e:
+        print("Error:", e)
+
+    # Example 5: JMP and Labels
+    program5 = """
+    PUSH 10
+    LABEL start_calc
+    PUSH 2
+    PUSH 3
+    ADD       # Stack: [15]
+    JMP end_calc # Jump over the conditional logic
+    
+    PUSH 5
+    POP
+    
+    LABEL check_zero
+    PUSH 0
+    DUP
+    JZ skip_print # If top is 0, jump to skip_print
+    PRINT       # This line should not run if JZ succeeds
+    JMP end_calc
+
+skip_print:
+    PUSH 99
+    POP
+end_calc:
     PUSH 1
-    JMP missing_label
-    """
-    print("\n--- Тест 4 (Error - Missing Label) ---")
+    DUP
+"""
+    print("\n--- Program 5 (Labels and JMP) ---")
     try:
-        run(program_error)
-    except RuntimeError as e:
-        print("Перехвачена ошибка:", e)
+        results = run(program5)
+        # Expected output: [1] (from the final PUSH/DUP block)
+        print("Output:", results)
+    except Exception as e:
+        print("Error:", e)
+
+    # Example 6: JZ and JNZ flow control
+    program6 = """
+    PUSH 5
+    LABEL check_value
+    PUSH 0 # Value to test (0)
+    DUP
+    JNZ success_path # Since value is 0, this fails, falling through
+
+    PRINT       # This runs because the jump failed (value == 0)
+    JMP end_test
+
+success_path:
+    POP         # Should not run if JZ succeeds
+    PUSH 99     # If we reach here, it means value != 0.
+    
+end_test:
+    PRINT       # Final print
+"""
+    print("\n--- Program 6 (JZ/JNZ Flow Control - Test Case: Value=0) ---")
+    try:
+        results = run(program6)
+        # Expected output: ["5"] (from the initial PUSH 5, then PRINT at line 12)
+        print("Output:", results)
+    except Exception as e:
+        print("Error:", e)
+
+    # Example 7: JZ/JNZ flow control - Test Case: Value=5
+    program7 = """
+    PUSH 5
+    LABEL check_value
+    PUSH 5 # Value to test (5)
+    DUP
+    JZ skip_path # Since value is 5, this fails, falling through
+
+    PRINT       # This runs because the jump failed (value != 0)
+    JMP end_test
+
+skip_path:
+    POP         # Should not run if JZ succeeds
+    PUSH 99     # If we reach here, it means value == 0.
+    
+end_test:
+    PRINT       # Final print
+"""
+    print("\n--- Program 7 (JZ/JNZ Flow Control - Test Case: Value=5) ---")
+    try:
+        results = run(program7)
+        # Expected output: ["99"] (from the PUSH 99 block, which is skipped by JZ failure)
+        print("Output:", results)
+    except Exception as e:
+        print("Error:", e)
 
 ```

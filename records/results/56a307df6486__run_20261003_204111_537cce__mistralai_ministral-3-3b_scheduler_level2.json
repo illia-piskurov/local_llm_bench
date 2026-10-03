@@ -1,0 +1,17 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-10-03 20:43:38",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "simple_chain: expected 9, got 4",
+    "diamond_pick_longer_branch: expected 12, got 10",
+    "wide_graph: expected 19, got 10"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

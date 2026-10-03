@@ -1,0 +1,72 @@
+We need to extend implementation: keep existing functions plus new decode_packet. Must be pure C99 static memory only. No malloc. Provide code block only.
+
+Implementation details:
+
+- We have ring buffer already defined as static uint8_t data[512]; int head, tail, count; init resets.
+
+Now decode_packet takes stream pointer and length, out_payload array (size? unknown) and out_type pointer. Must locate first valid packet in the stream up to stream_len bytes.
+
+We need to scan for 0xAA marker at position i where i+4 <= stream_len. Then check type byte = stream[i+1], len byte = stream[i+2]; payload length = len (0..255). Need enough space: i + 3 + len + 1 <= stream_len => i + len + 4 <= stream_len.
+
+If valid, copy payload bytes to out_payload[0..len-1] (if len>0). Write type to *out_type. Return len.
+
+If invalid packet (wrong checksum?), they said "false 0xAA markers (corrupted length or checksum)" skip noise and find next valid packet. So we just need to detect if packet is valid: after reading payload, compute XOR of all payload bytes; compare with checksum byte at i+len+3? Wait total length = len +4 includes magic(1) type(1) len(1) payload(len) checksum(1). So checksum index = i + 3 + len. Actually positions: i=magic, i+1=type, i+2=len, i+3..i+len-1? Let's compute: payload length = len bytes starting at i+3 up to i+len+2 inclusive (since start i+3). Checksum byte at i+len+3. So checksum index = i + len + 3.
+
+Compute XOR of payload bytes; if matches checksum, packet valid.
+
+If not valid, treat as noise and continue scanning after this marker? Probably skip to next position after the whole attempted packet (i + len +4). Continue scanning.
+
+Implementation: loop i from 0 to stream_len-4 inclusive. At each i check data[stream[i]] == 0xAA. If yes, then type = stream[i+1]; len = stream[i+2]; if len > 255? but it's uint8_t so fine. Check if i + len + 3 < stream_len (i.e., checksum exists). Then compute XOR of payload bytes: for j=0..len-1, xor ^= stream[i+3+j]. If xor == stream[i+len+3] then valid.
+
+If valid: copy payload to out_payload[0..len-1]; *out_type = type; return len.
+
+If not valid: continue scanning after i + len +4? Actually we need to skip noise. So set i = i + len + 4 (or just loop continues). But careful not to go beyond stream_len.
+
+Edge cases: if no valid packet, return -1.
+
+Need static memory only; out_payload is user-provided pointer; we copy up to len bytes.
+
+Now produce final code block with all functions including decode_packet.
+
+Let's write code:
+
+#include <stdint.h>
+#define BUFFER_SIZE 512
+
+static uint8_t data[BUFFER_SIZE];
+int head = 0, tail = 0;
+int count = 0;
+
+void ringbuf_init(void) { ... }
+
+...
+
+int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type)
+{
+    if (!stream || !out_payload || !out_type) return -1; // maybe not needed but safe.
+
+    for (int i = 0; i + 4 <= stream_len; ++i) {
+        if (stream[i] != 0xAA) continue;
+        uint8_t type = stream[i+1];
+        uint8_t len = stream[i+2];
+        // ensure payload and checksum exist
+        if (i + len + 3 >= stream_len) continue;
+
+        int xor_val = 0;
+        for (int j = 0; j < len; ++j)
+            xor_val ^= stream[i+3+j];
+
+        if (xor_val == stream[i+len+3]) {
+            // valid packet
+            *out_type = type;
+            for (int j = 0; j < len; ++j)
+                out_payload[j] = stream[i+3+j];
+            return len;
+        }
+    }
+    return -1;
+}
+
+Now ensure no dynamic allocation.
+
+Return only code block.

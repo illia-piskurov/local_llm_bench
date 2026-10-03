@@ -1,0 +1,9 @@
+Here's a plan to implement the requested extensions:
+
+1.  **Update `QueryState`**: No changes needed here, as parameter handling remains consistent.
+2.  **Update `_compile_simple_condition`**: This function needs major updates to handle 'IN', 'IS NULL', 'IS NOT NULL', and 'LIKE' operators correctly, managing placeholders and parameters accordingly.
+3.  **Implement Join Logic**: A new section or helper function is needed to process the `joins` list and append them correctly after the `FROM` clause.
+4.  **Update `_compile_where_clause` / `_compile_logical_group`**: These functions rely on `_compile_simple_condition`, so they should automatically inherit the new logic.
+5.  **Update `compile_query`**: This main function needs to be restructured to handle the sequence: SELECT -> FROM -> JOINS -> WHERE -> GROUP BY -> ORDER BY -> LIMIT/OFFSET.
+
+Let's start implementing the changes.

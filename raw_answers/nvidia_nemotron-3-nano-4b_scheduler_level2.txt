@@ -1,24 +1,64 @@
 ```python
-def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
-    # 1. Perform topological sort on the dependency graph to detect cycles
-    topo = topo_sort(tasks)
-    if topo is None:
+from typing import Dict, List, Tuple
+
+def topo_sort(tasks: Dict[str, List[str]]) -> List[str] | None:
+    indeg = {t: 0 for t in tasks}
+    graph = {}
+    for task, deps in tasks.items():
+        graph[task] = []
+        for d in deps:
+            if d not in tasks:
+                continue
+            indeg[task] += 1
+            graph.setdefault(d, []).append(task)
+
+    queue = [t for t in tasks if indeg[t] == 0]
+    order: List[str] = []
+    while queue:
+        u = queue.pop(0)
+        order.append(u)
+        for v in graph.get(u, []):
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                queue.append(v)
+
+    return order if len(order) == len(tasks) else None
+
+
+def critical_path(tasks: Dict[str, Tuple[int, List[str]]]) -> int | None:
+    # Build indegree map and adjacency list
+    indeg = {t: 0 for t in tasks}
+    graph = {}
+    durations: Dict[str, int] = {}
+    best_pred_sum: Dict[str, int] = {}
+
+    for task, (d, deps) in tasks.items():
+        durations[task] = d
+        graph[task] = []
+        for d in deps:
+            if d not in tasks:
+                continue
+            indeg[task] += 1
+            graph.setdefault(d, []).append(task)
+
+    # Kahn's algorithm with DP tracking max sum of predecessor durations
+    queue = [t for t in tasks if indeg[t] == 0]
+    order: List[str] = []
+    while queue:
+        u = queue.pop(0)
+        order.append(u)
+        for v in graph.get(u, []):
+            # candidate sum up to v via u
+            cand = best_pred_sum[u] + durations[u]
+            if cand > best_pred_sum[v]:
+                best_pred_sum[v] = cand
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                queue.append(v)
+
+    if len(order) != len(tasks):
         return None
 
-    # 2. Compute earliest finish time for each task in topological order
-    finish: dict[str, int] = {}
-    max_path = 0
-    for t in topo:
-        dur, deps = tasks[t]
-        # If no dependencies, finish equals duration
-        if not deps:
-            f = dur
-        else:
-            # Take the maximum finish time among its predecessors
-            f = dur + max(finish[d] for d in deps)
-        finish[t] = f
-        if f > max_path:
-            max_path = f
-
-    return max_path
+    # Critical path length is max (best sum up to node + its own duration)
+    return max(best_pred_sum[t] + durations[t] for t in tasks)
 ```

@@ -1,0 +1,20 @@
+{
+  "model_instance_id": "google/gemma-4-e4b",
+  "output": [
+    {
+      "type": "reasoning",
+      "content": "Plan:\n1. Define constants and global state variables for the ring buffer (buffer array, head/write pointer, tail/read pointer, count).\n2. Implement `ringbuf_init()` to reset pointers and count.\n3. Implement `ringbuf_push(uint8_t byte)`: Check if full. If not, write at head, advance head, increment count. Return status.\n4. Implement `ringbuf_pop()`: Check if empty. If not, read from tail, advance tail, decrement count. Return value and status.\n5. Implement `ringbuf_available()`: Return the stored count.\n6. Implement `ringbuf_free_space()`: Calculate 512 - available count.\n\nConstraints check:\n- Fixed size (512 bytes).\n- Static memory only.\n- Pure C99 (`stdint.h`).\n- Functions signature matching requirements.\n\nImplementation details:\nThe buffer will be an array of `uint8_t`.\nPointers/indices should wrap around using modulo arithmetic or explicit checks against the size (512). Since we are tracking the count explicitly, simple index management is sufficient.\n\nLet's use indices for head and tail, and a counter for available elements."
+    },
+    {
+      "type": "message",
+      "content": "```c\n#include <stdint.h>\n#include <stddef.h> // For size_t if needed, but uint8_t array handles it fine\n\n// Define the fixed buffer size\n#define BUFFER_SIZE 512\n\n// Static memory storage for the ring buffer\nstatic uint8_t ringbuf_buffer[BUFFER_SIZE];\n\n// Indices tracking the read (tail) and write (head) positions\nstatic size_t head = 0; // Where the next byte will be written\nstatic size_t tail = 0; // Where the next byte will be read from\n\n// Current number of elements stored in the buffer\nstatic int count = 0;\n\n/**\n * @brief Initializes or resets the ring buffer.\n */\nvoid ringbuf_init(void) {\n    head = 0;\n    tail = 0;\n    count = 0;\n}\n\n/**\n * @brief Pushes one byte into the buffer.\n * \n * @param byte The byte to push.\n * @return int 0 on success, -1 if the buffer is full.\n */\nint ringbuf_push(uint8_t byte) {\n    if (count >= BUFFER_SIZE) {\n        // Buffer is full\n        return -1;\n    }\n\n    // Write the byte at the current head position\n    ringbuf_buffer[head] = byte;\n\n    // Advance the head pointer, wrapping around if necessary\n    head = (head + 1) % BUFFER_SIZE;\n\n    // Increment count\n    count++;\n    return 0;\n}\n\n/**\n * @brief Pops one byte from the buffer following FIFO ordering.\n * \n * @return int The popped byte value (0-255) on success, or -1 if the buffer is empty.\n */\nint ringbuf_pop(void) {\n    if (count == 0) {\n        // Buffer is empty\n        return -1;\n    }\n\n    // Read the byte from the current tail position\n    uint8_t byte = ringbuf_buffer[tail];\n\n    // Advance the tail pointer, wrapping around if necessary\n    tail = (tail + 1) % BUFFER_SIZE;\n\n    // Decrement count\n    count--;\n    \n    return (int)byte;\n}\n\n/**\n * @brief Returns the current number of bytes stored in the buffer.\n * \n * @return int The available count (0 to 512).\n */\nint ringbuf_available(void) {\n    return count;\n}\n\n/**\n * @brief Returns remaining free space in the buffer.\n * \n * @return int Remaining free space (BUFFER_SIZE - available).\n */\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - count;\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 286,
+    "total_output_tokens": 892,
+    "reasoning_output_tokens": 265,
+    "tokens_per_second": 18.192839318862546,
+    "time_to_first_token_seconds": 1.033885
+  }
+}

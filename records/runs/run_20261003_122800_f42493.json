@@ -1,0 +1,637 @@
+{
+  "id": "run_20261003_122800_f42493",
+  "host_id": "56a307df6486",
+  "model_key": "google/gemma-4-e4b",
+  "model_name": "Gemma 4 E4B",
+  "quantization": "Q4_K_M",
+  "backend": "LM Studio (69d945a)",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "google/gemma-4-e4b",
+      "display_name": "Gemma 4 E4B",
+      "architecture": "gemma4",
+      "quantization": "Q4_K_M",
+      "quantization_bits": 4,
+      "size_bytes": 6326918619,
+      "params_string": "7.5B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": "google"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "3824c37 (051cb8695784)",
+  "started_at": "2026-10-03 12:28:00",
+  "completed_at": "2026-10-03 13:20:45",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:29:35",
+      "passed": 17,
+      "total": 18,
+      "failures": [
+        "negative_numbers: unexpected exception/timeout: ValueError: Line 1: PUSH requires a valid integer argument."
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-10-03 12:32:27",
+      "passed": 26,
+      "total": 27,
+      "failures": [
+        "negative_numbers: unexpected exception/timeout: ValueError: Line 1: PUSH requires a valid integer argument."
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-03 12:35:13",
+      "passed": 36,
+      "total": 37,
+      "failures": [
+        "negative_numbers: unexpected exception/timeout: ValueError: Line 1: PUSH requires a valid integer argument."
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:36:41",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 12:40:50",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:43:17",
+      "passed": 5,
+      "total": 6,
+      "failures": [
+        "resource_limit_and_priority: expected ['compile', 'lint', 'test', 'package', 'deploy'], got ['compile', 'lint', 'compile', 'lint', 'package']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 12:47:11",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception: WASM computation fuel limit exceeded (infinite loop)",
+        "parallel_tasks_reduce_makespan: unexpected exception: WASM computation fuel limit exceeded (infinite loop)",
+        "dependencies_and_workers: unexpected exception: WASM computation fuel limit exceeded (infinite loop)",
+        "critical_path_longer_than_worker_parallelism: unexpected exception: WASM computation fuel limit exceeded (infinite loop)",
+        "wide_graph_with_unlocks: unexpected exception: WASM computation fuel limit exceeded (infinite loop)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:49:15",
+      "passed": 7,
+      "total": 15,
+      "failures": [
+        "simple_transaction_commit: expected ['10'], got ['', '10']",
+        "simple_transaction_rollback: expected ['5'], got ['', '5']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', '', '5']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '', '10', '', 'NULL']",
+        "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['', '2', '', '2']",
+        "rollback_after_commit_is_no_transaction: expected ['NO TRANSACTION'], got ['', 'NO TRANSACTION']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['2', '', '1', '2']",
+        "set_new_key_inside_transaction: expected ['100', '100'], got ['100', '', '100']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-10-03 12:52:23",
+      "passed": 9,
+      "total": 25,
+      "failures": [
+        "simple_transaction_commit: expected ['10'], got ['', '10']",
+        "simple_transaction_rollback: expected ['5'], got ['', '5']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', '', '5']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '', '10', '', 'NULL']",
+        "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['', '2', '', '2']",
+        "rollback_after_commit_is_no_transaction: expected ['NO TRANSACTION'], got ['', 'NO TRANSACTION']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['2', '', '1', '2']",
+        "set_new_key_inside_transaction: expected ['100', '100'], got ['100', '', '100']",
+        "count_basic: expected ['2'], got []",
+        "count_zero: expected ['0'], got []",
+        "count_respects_transaction: expected ['2', '1'], got ['']",
+        "count_after_delete: expected ['1'], got []",
+        "watch_set_new_key: expected ['WATCH a NULL -> 10'], got []",
+        "watch_set_change: expected ['WATCH a 5 -> 10'], got []",
+        "watch_delete: expected ['WATCH a 5 -> NULL'], got []",
+        "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got []"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-10-03 12:55:52",
+      "passed": 10,
+      "total": 30,
+      "failures": [
+        "simple_transaction_commit: expected ['10'], got ['', '10']",
+        "simple_transaction_rollback: expected ['5'], got ['', '5']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', '', '5']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '', '10', '', 'NULL']",
+        "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['', '2', '', '2']",
+        "rollback_after_commit_is_no_transaction: expected ['NO TRANSACTION'], got ['', 'NO TRANSACTION']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['2', '', '1', '2']",
+        "set_new_key_inside_transaction: expected ['100', '100'], got ['100', '', '100']",
+        "count_basic: expected ['2'], got []",
+        "count_zero: expected ['0'], got []",
+        "count_respects_transaction: expected ['2', '1'], got ['']",
+        "count_after_delete: expected ['1'], got []",
+        "watch_set_new_key: expected ['WATCH a NULL -> 10'], got []",
+        "watch_set_change: expected ['WATCH a 5 -> 10'], got []",
+        "watch_delete: expected ['WATCH a 5 -> NULL'], got []",
+        "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got []",
+        "snapshot_restores_full_state: expected ['2', '2'], got ['2', '', '2']",
+        "restore_preserves_open_transactions: expected ['1'], got ['', '', '1']",
+        "restore_keeps_watch_registrations: expected ['WATCH a NULL -> 1', 'WATCH a 1 -> 2', 'WATCH a 1 -> 3'], got []",
+        "snapshot_inside_nested_transactions: expected ['1', '2', '1', '2'], got ['', '1', '2', '', '1', '2']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:57:35",
+      "passed": 4,
+      "total": 6,
+      "failures": [
+        "where_and_or_nested: SQL: expected 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', got 'SELECT id, email FROM users WHERE (status = $1 (role = $2 age >= $3))'",
+        "multiple_and_conditions: SQL: expected 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', got 'SELECT * FROM logs WHERE (level = $1 code != $2 timestamp > $3)'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-10-03 12:59:44",
+      "passed": 4,
+      "total": 5,
+      "failures": [
+        "where_is_null_and_like: SQL: expected 'SELECT * FROM customers WHERE (deleted_at IS NULL AND email LIKE $1)', got 'SELECT * FROM customers WHERE (deleted_at IS NULL email LIKE $1)'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-10-03 13:02:09",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "select_expression_alias: SQL: expected 'SELECT orders.id, COUNT(items.id) AS item_count FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id', got 'SELECT orders.id, (COUNT(items.id)) AS item_count FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id'",
+        "having_clause: SQL: expected 'SELECT sales.category, SUM(sales.amount) AS total_sales FROM sales GROUP BY sales.category HAVING SUM(sales.amount) > $1', got 'SELECT sales.category, (SUM(sales.amount)) AS total_sales FROM sales HAVING SUM(sales.amount) > $1 GROUP BY sales.category'",
+        "where_subquery_in: params: expected ['gold'], got []",
+        "subquery_with_parent_params_order: SQL: expected 'SELECT * FROM posts WHERE (status = $1 AND author_id IN (SELECT id FROM banned_authors WHERE reason = $2) AND views > $3)', got 'SELECT * FROM posts WHERE (status = $1 author_id IN (SELECT id FROM banned_authors WHERE reason = $1) views > $2)'; params: expected ['published', 'spam', 500], got ['published', 500]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-10-03 13:03:00",
+      "passed": 4,
+      "total": 4,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-10-03 13:05:10",
+      "passed": 8,
+      "total": 8,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-10-03 13:07:52",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-10-03 13:09:17",
+      "passed": 7,
+      "total": 7,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-10-03 13:10:50",
+      "passed": 8,
+      "total": 12,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "concurrency_default_one: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-10-03 13:13:05",
+      "passed": 11,
+      "total": 17,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "index_passed: assertion returned False",
+        "already_aborted_signal: assertion returned False",
+        "mid_flight_abort: assertion returned False",
+        "settled_mixed_failures: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-10-03 13:14:44",
+      "passed": 0,
+      "total": 7,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:10: Execution instruction limit exceeded (infinite loop protection)",
+        "sequence_all_success: exception [string \"<python>\"]:10: Execution instruction limit exceeded (infinite loop protection)",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:10: Execution instruction limit exceeded (infinite loop protection)",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:10: Execution instruction limit exceeded (infinite loop protection)",
+        "selector_first_success: exception [string \"<python>\"]:10: Execution instruction limit exceeded (infinite loop protection)",
+        "selector_all_failure: exception [string \"<python>\"]:10: Execution instruction limit exceeded (infinite loop protection)",
+        "selector_resumes_running_child: exception [string \"<python>\"]:10: Execution instruction limit exceeded (infinite loop protection)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-10-03 13:16:54",
+      "passed": 0,
+      "total": 12,
+      "failures": [
+        "Lua syntax error: error loading code: [string \"<python>\"]:262: syntax error near '-'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-10-03 13:20:45",
+      "passed": 0,
+      "total": 16,
+      "failures": [
+        "Lua syntax error: error loading code: [string \"<python>\"]:274: syntax error near '-'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:29:33",
+      "stats": {
+        "input_tokens": 293,
+        "total_output_tokens": 1823,
+        "reasoning_output_tokens": 421,
+        "tokens_per_second": 19.791296971593738,
+        "time_to_first_token_seconds": 1.069686,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-10-03 12:32:25",
+      "stats": {
+        "input_tokens": 1839,
+        "total_output_tokens": 2808,
+        "reasoning_output_tokens": 255,
+        "tokens_per_second": 17.114228119930342,
+        "time_to_first_token_seconds": 5.452955,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-03 12:35:10",
+      "stats": {
+        "input_tokens": 2999,
+        "total_output_tokens": 2634,
+        "reasoning_output_tokens": 756,
+        "tokens_per_second": 17.35741155045754,
+        "time_to_first_token_seconds": 9.730866,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:36:40",
+      "stats": {
+        "input_tokens": 188,
+        "total_output_tokens": 1550,
+        "reasoning_output_tokens": 490,
+        "tokens_per_second": 18.047578893989137,
+        "time_to_first_token_seconds": 0.735977,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 12:40:50",
+      "stats": {
+        "input_tokens": 1391,
+        "total_output_tokens": 3912,
+        "reasoning_output_tokens": 1770,
+        "tokens_per_second": 16.064286258729883,
+        "time_to_first_token_seconds": 4.294983,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:43:16",
+      "stats": {
+        "input_tokens": 246,
+        "total_output_tokens": 2642,
+        "reasoning_output_tokens": 1101,
+        "tokens_per_second": 18.30338108496719,
+        "time_to_first_token_seconds": 0.889971,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 12:47:10",
+      "stats": {
+        "input_tokens": 1985,
+        "total_output_tokens": 3832,
+        "reasoning_output_tokens": 723,
+        "tokens_per_second": 16.898200836074103,
+        "time_to_first_token_seconds": 5.693932,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:49:14",
+      "stats": {
+        "input_tokens": 337,
+        "total_output_tokens": 2267,
+        "reasoning_output_tokens": 922,
+        "tokens_per_second": 18.814105265168042,
+        "time_to_first_token_seconds": 1.1778510000000002,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-10-03 12:52:20",
+      "stats": {
+        "input_tokens": 1901,
+        "total_output_tokens": 3021,
+        "reasoning_output_tokens": 642,
+        "tokens_per_second": 16.831863323664656,
+        "time_to_first_token_seconds": 5.44857,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-10-03 12:55:49",
+      "stats": {
+        "input_tokens": 2859,
+        "total_output_tokens": 3607,
+        "reasoning_output_tokens": 626,
+        "tokens_per_second": 18.30784098479491,
+        "time_to_first_token_seconds": 8.851933,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-03 12:57:34",
+      "stats": {
+        "input_tokens": 375,
+        "total_output_tokens": 1769,
+        "reasoning_output_tokens": 547,
+        "tokens_per_second": 17.724662249442904,
+        "time_to_first_token_seconds": 1.238195,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-10-03 12:59:43",
+      "stats": {
+        "input_tokens": 1868,
+        "total_output_tokens": 2156,
+        "reasoning_output_tokens": 212,
+        "tokens_per_second": 17.57394989675855,
+        "time_to_first_token_seconds": 5.3705050000000005,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-10-03 13:02:08",
+      "stats": {
+        "input_tokens": 2483,
+        "total_output_tokens": 2539,
+        "reasoning_output_tokens": 423,
+        "tokens_per_second": 18.60032577833001,
+        "time_to_first_token_seconds": 7.576911,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-10-03 13:02:59",
+      "stats": {
+        "input_tokens": 286,
+        "total_output_tokens": 892,
+        "reasoning_output_tokens": 265,
+        "tokens_per_second": 18.192839318862546,
+        "time_to_first_token_seconds": 1.033885,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-10-03 13:05:05",
+      "stats": {
+        "input_tokens": 1257,
+        "total_output_tokens": 2054,
+        "reasoning_output_tokens": 684,
+        "tokens_per_second": 16.96520608940662,
+        "time_to_first_token_seconds": 3.7002800000000002,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-10-03 13:07:52",
+      "stats": {
+        "input_tokens": 1987,
+        "total_output_tokens": 2984,
+        "reasoning_output_tokens": 595,
+        "tokens_per_second": 19.220869459477253,
+        "time_to_first_token_seconds": 6.0303379999999995,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-10-03 13:09:17",
+      "stats": {
+        "input_tokens": 239,
+        "total_output_tokens": 1541,
+        "reasoning_output_tokens": 966,
+        "tokens_per_second": 18.49558452748754,
+        "time_to_first_token_seconds": 0.9361430000000001,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-10-03 13:10:50",
+      "stats": {
+        "input_tokens": 1078,
+        "total_output_tokens": 1579,
+        "reasoning_output_tokens": 339,
+        "tokens_per_second": 17.706257364422918,
+        "time_to_first_token_seconds": 3.238928,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-10-03 13:13:05",
+      "stats": {
+        "input_tokens": 1782,
+        "total_output_tokens": 2449,
+        "reasoning_output_tokens": 474,
+        "tokens_per_second": 19.028274819341377,
+        "time_to_first_token_seconds": 5.467178,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-10-03 13:14:43",
+      "stats": {
+        "input_tokens": 542,
+        "total_output_tokens": 1867,
+        "reasoning_output_tokens": 213,
+        "tokens_per_second": 19.570754002208705,
+        "time_to_first_token_seconds": 2.0990770000000003,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-10-03 13:16:54",
+      "stats": {
+        "input_tokens": 2529,
+        "total_output_tokens": 2198,
+        "reasoning_output_tokens": 132,
+        "tokens_per_second": 17.904833876473795,
+        "time_to_first_token_seconds": 7.35867,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-10-03 13:20:45",
+      "stats": {
+        "input_tokens": 2740,
+        "total_output_tokens": 4146,
+        "reasoning_output_tokens": 98,
+        "tokens_per_second": 18.712943011770392,
+        "time_to_first_token_seconds": 8.510327,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

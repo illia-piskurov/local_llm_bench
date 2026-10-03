@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "c_framing",
+  "level": "level2",
+  "tested_at": "2026-10-03 19:51:29",
+  "passed": 4,
+  "total": 8,
+  "failures": [
+    "full_overflow_check: assertion returned False",
+    "clean_packet: assertion returned False",
+    "with_junk_prefix: assertion returned False",
+    "recover_after_false_magic: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

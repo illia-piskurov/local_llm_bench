@@ -1,0 +1,59 @@
+Here's a plan to implement the nested transaction key-value store:
+
+1.  **Data Structure:** We need a way to store the state of the KV store at different levels of nesting. A stack structure is ideal for managing transactions. Each level needs its own copy of the data or, more efficiently, a record of changes (a delta).
+2.  **Transaction Management:**
+    *   We will use a list/stack (`self.transaction_stack`) to hold the state snapshots or change sets.
+    *   The base layer (global storage) is implicitly handled by the stack structure.
+3.  **State Representation:** Instead of copying the entire dictionary on every `BEGIN`, which is expensive, we will maintain a history of changes for each transaction level.
+
+Let's refine the state management:
+
+*   `self.storage`: The current effective view of the data (the root/global state).
+*   `self.transaction_stack`: A list of dictionaries. Each dictionary represents the *changes* made within that specific transaction scope.
+
+When a transaction starts (`BEGIN`), we push an empty change set onto the stack.
+
+**How to handle reads (GET):**
+To get the value for key `K`, we must check:
+1. The current transaction's changes (top of the stack).
+2. If not found, the parent transaction's changes.
+3. ... until the global storage is reached.
+4. Finally, if still not found, check the base storage.
+
+**How to handle writes (SET/DELETE):**
+When a write occurs, it only modifies the *current* change set (the top of the stack).
+
+**COMMIT:**
+The changes from the innermost transaction must be merged into its parent's scope.
+1. Pop the current change set (`C_inner`).
+2. If there is a parent scope (`P`), merge `C_inner` into `P`'s change set.
+3. If this was the outermost transaction (no parent), apply `C_inner` permanently to the global storage.
+
+**ROLLBACK:**
+1. Pop the current change set. All changes are discarded.
+
+Let's implement the class structure and methods.
+
+---
+*Self-Correction/Refinement on State:* Using a single dictionary for the base state (`self.storage`) and having the stack hold *deltas* is complex because merging deltas requires careful handling of overwrites (e.g., if T1 sets K=A, and T2 sets K=B, when T2 commits to T1, T1 must now reflect K=B).
+
+A simpler approach for implementation clarity, given the constraints, is to make each transaction level store a *copy* of the state it inherits, plus its own changes. However, since we are aiming for efficiency and complexity management, let's stick to the delta approach but ensure the `GET` logic correctly traverses the stack.
+
+**Revised State Structure:**
+1. `self.storage`: The base dictionary (global persistent state).
+2. `self.transaction_stack`: A list of dictionaries. Each element is a *copy* of the entire KV store state at the moment `BEGIN` was called, plus subsequent modifications. This simplifies merging and rollback significantly, though it uses more memory than pure delta tracking.
+
+Let's use this snapshot approach for robustness.
+
+---
+Implementation details:
+
+1. **Initialization:** `self.storage = {}`, `self.transaction_stack = []`.
+2. **`BEGIN`:** Push a deep copy of the current effective state onto the stack.
+3. **`COMMIT`:** Pop the top state (`S_inner`). Merge `S_inner` into the parent state (or global storage if no parent). If merging, we must ensure that keys set in the inner scope overwrite those in the outer scope.
+4. **`ROLLBACK`:** Simply pop the stack. No action needed on the data structure itself, as the popped state is discarded.
+5. **`GET/SET/DELETE`:** Always operate on the *current effective state*.
+
+The current effective state is always `self.transaction_stack[-1]` if the stack is not empty, otherwise it's `self.storage`. We must ensure that modifications happen on a mutable copy of this effective state.
+
+Let's proceed with the code structure.

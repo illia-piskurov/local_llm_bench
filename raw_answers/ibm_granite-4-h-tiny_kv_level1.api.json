@@ -3,15 +3,14 @@
   "output": [
     {
       "type": "message",
-      "content": "```python\nclass InMemoryKVStore:\n    def __init__(self):\n        self.store = {}\n        self.transactions = []\n\n    def run(self, program: str) -> list[str]:\n        output = []\n        for line in program.strip().splitlines():\n            if not line:\n                continue\n\n            parts = line.split()\n            command = parts[0]\n\n            try:\n                if command == \"SET\":\n                    key, value = parts[1], parts[2]\n                    self.store[key] = value\n                elif command == \"GET\":\n                    key = parts[1]\n                    output.append(self.store.get(key, \"NULL\"))\n                elif command == \"DELETE\":\n                    key = parts[1]\n                    if key in self.store:\n                        del self.store[key]\n                elif command == \"BEGIN\":\n                    self.transactions.append(dict(self.store))\n                elif command == \"COMMIT\":\n                    if not self.transactions:\n                        output.append(\"NO TRANSACTION\")\n                    else:\n                        self.store.update(self.transactions.pop())\n                elif command == \"ROLLBACK\":\n                    if not self.transactions:\n                        output.append(\"NO TRANSACTION\")\n                    else:\n                        for key in list(self.store.keys()):\n                            if key in self.transactions[-1]:\n                                del self.store[key]\n                else:\n                    raise ValueError(f\"Unknown command: {command}\")\n            except IndexError:\n                pass\n\n        return output\n\n\ndef run(program: str) -> list[str]:\n    store = InMemoryKVStore()\n    return store.run(program)\n```"
+      "content": "```python\nclass InMemoryKVStore:\n    def __init__(self):\n        self.store = {}\n        self.transactions = []\n\n    def execute(self, line):\n        parts = line.split()\n        cmd = parts[0]\n        if cmd == \"SET\":\n            key, value = parts[1], parts[2]\n            self.store[key] = value\n        elif cmd == \"GET\":\n            key = parts[1]\n            return [self.store.get(key, \"NULL\")]\n        elif cmd == \"DELETE\":\n            key = parts[1]\n            if key in self.store:\n                del self.store[key]\n        elif cmd == \"BEGIN\":\n            self.transactions.append({})\n        elif cmd == \"COMMIT\":\n            if not self.transactions:\n                return [\"NO TRANSACTION\"]\n            txn = self.transactions.pop()\n            if self.transactions:\n                parent_txn = self.transactions[-1]\n                parent_txn.update(txn)\n            else:\n                self.store.update(txn)\n        elif cmd == \"ROLLBACK\":\n            if not self.transactions:\n                return [\"NO TRANSACTION\"]\n            self.transactions.pop()\n\n    def run(self, program):\n        output = []\n        for line in program.strip().splitlines():\n            if not line:\n                continue\n            result = self.execute(line)\n            if isinstance(result, list):\n                output.extend(result)\n        return output\n\ndef run(program: str) -> list[str]:\n    kv_store = InMemoryKVStore()\n    return kv_store.run(program)\n```"
     }
   ],
   "stats": {
-    "input_tokens": 563,
-    "total_output_tokens": 303,
+    "input_tokens": 319,
+    "total_output_tokens": 301,
     "reasoning_output_tokens": 0,
-    "tokens_per_second": 43.555734953434175,
-    "time_to_first_token_seconds": 1.80808
-  },
-  "response_id": "resp_de14342d9a0c4d69bb93579b1225612ec480bdcbf1c71994"
+    "tokens_per_second": 44.37558668223559,
+    "time_to_first_token_seconds": 0.956647
+  }
 }
