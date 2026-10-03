@@ -1,0 +1,17 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-10-03 19:48:44",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "dependency_unlocks_later: expected ['a', 'b', 'c'], got ['c', 'b', 'a']",
+    "resource_limit_and_priority: expected ['compile', 'lint', 'test', 'package', 'deploy'], got ['package', 'test', 'lint', 'deploy', 'compile']",
+    "simultaneous_unlocks: expected ['root', 'c', 'd', 'b'], got ['d', 'c', 'root', 'b']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

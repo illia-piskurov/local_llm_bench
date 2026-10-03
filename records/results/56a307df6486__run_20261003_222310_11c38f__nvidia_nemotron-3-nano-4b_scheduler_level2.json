@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-10-03 22:29:17",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception/timeout: KeyError: a",
+    "simple_chain: expected 9, got None",
+    "diamond_pick_longer_branch: unexpected exception/timeout: KeyError: a",
+    "independent_tasks: unexpected exception/timeout: KeyError: b",
+    "wide_graph: unexpected exception/timeout: KeyError: compile"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

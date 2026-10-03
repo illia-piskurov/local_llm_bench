@@ -5,85 +5,83 @@ class InMemoryKVStore:
         self.watchers = {}
         self.snapshots = {}
 
-    def run(self, program: str) -> list[str]:
+    def execute(self, line):
+        parts = line.split()
+        cmd = parts[0]
+        if cmd == "SET":
+            key, value = parts[1], parts[2]
+            old_value = self.store.get(key)
+            self.store[key] = value
+            if key in self.watchers:
+                for watcher_key, watcher_value in self.watchers[key]:
+                    if watcher_key not in self.transactions[-1]:
+                        print(f"WATCH {key} {watcher_value} -> {value}")
+        elif cmd == "GET":
+            key = parts[1]
+            return [self.store.get(key, "NULL")]
+        elif cmd == "DELETE":
+            key = parts[1]
+            if key in self.store:
+                old_value = self.store[key]
+                del self.store[key]
+                if key in self.watchers:
+                    for watcher_key, watcher_value in self.watchers[key]:
+                        if watcher_key not in self.transactions[-1]:
+                            print(f"WATCH {key} {watcher_value} -> NULL")
+        elif cmd == "BEGIN":
+            self.transactions.append({})
+        elif cmd == "COMMIT":
+            if not self.transactions:
+                return ["NO TRANSACTION"]
+            txn = self.transactions.pop()
+            if self.transactions:
+                parent_txn = self.transactions[-1]
+                parent_txn.update(txn)
+            else:
+                self.store.update(txn)
+        elif cmd == "ROLLBACK":
+            if not self.transactions:
+                return ["NO TRANSACTION"]
+            self.transactions.pop()
+        elif cmd == "COUNT":
+            value = parts[1]
+            count = sum(1 for v in self.store.values() + [v for txn in self.transactions for v in txn.values()] if v == value)
+            return [str(count)]
+        elif cmd == "WATCH":
+            key = parts[1]
+            old_value = self.store.get(key, "NULL")
+            if key not in self.watchers:
+                self.watchers[key] = []
+            self.watchers[key].append((key, old_value))
+        elif cmd == "SNAPSHOT":
+            name = parts[1]
+            snapshot_state = {
+                'store': self.store.copy(),
+                'transactions': [t.copy() for t in self.transactions],
+                'watchers': {k: list(v) for k, v in self.watchers.items()},
+                'snapshot_id': len(self.snapshots)
+            }
+            self.snapshots[name] = snapshot_state
+        elif cmd == "RESTORE":
+            name = parts[1]
+            if name not in self.snapshots:
+                return ["RESTORE: unknown snapshot"]
+            snapshot_state = self.snapshots.pop(name)
+            self.store = snapshot_state['store'].copy()
+            self.transactions = [t.copy() for t in snapshot_state['transactions']]
+            self.watchers = {k: list(v) for k, v in snapshot_state['watchers'].items()}
+        return []
+
+    def run(self, program):
         output = []
-        for line in program.splitlines():
-            if not line.strip():
+        for line in program.strip().splitlines():
+            if not line:
                 continue
-
-            parts = line.split()
-            command = parts[0]
-
-            try:
-                if command == "SET":
-                    key, value = parts[1], parts[2]
-                    old_value = self.store.get(key)
-                    self.store[key] = value
-                    if old_value != value:
-                        watcher = self.watchers.get(key)
-                        if watcher:
-                            output.append(f"WATCH {key} {old_value} -> {value}")
-                elif command == "GET":
-                    key = parts[1]
-                    output.append(self.store.get(key, "NULL"))
-                elif command == "DELETE":
-                    key = parts[1]
-                    old_value = self.store.pop(key, None)
-                    if old_value is not None:
-                        watcher = self.watchers.get(key)
-                        if watcher and old_value != self.store.get(key):
-                            output.append(f"WATCH {key} {old_value} -> NULL")
-                elif command == "BEGIN":
-                    self.transactions.append(dict(self.store))
-                elif command == "COMMIT":
-                    if not self.transactions:
-                        output.append("NO TRANSACTION")
-                    else:
-                        self.store.update(self.transactions.pop())
-                elif command == "ROLLBACK":
-                    if not self.transactions:
-                        output.append("NO TRANSACTION")
-                    else:
-                        for key, value in self.transactions[-1].items():
-                            self.store[key] = value
-                        self.transactions.pop()
-                elif command == "COUNT":
-                    value = parts[1]
-                    count = sum(1 for v in self.store.values() if v == value)
-                    output.append(str(count))
-                elif command == "WATCH":
-                    key = parts[1]
-                    watcher = self.watchers.get(key)
-                    if not watcher:
-                        self.watchers[key] = None
-                elif command == "SNAPSHOT":
-                    name = parts[1]
-                    snapshot_copy = dict(self.store)
-                    for watcher_key in list(self.watchers.keys()):
-                        watcher = self.watchers.pop(watcher_key, None)
-                        if watcher is not None:
-                            snapshot_copy[f"WATCH_{watcher_key}"] = (None, None)  # placeholder
-                    self.snapshots[name] = snapshot_copy
-                elif command == "RESTORE":
-                    name = parts[1]
-                    if name in self.snapshots:
-                        snapshot = self.snapshots.pop(name)
-                        for key, value in snapshot.items():
-                            if isinstance(value, tuple):
-                                watcher_key, _ = value
-                                self.watchers[watcher_key] = None
-                            else:
-                                self.store[key] = value
-                    # else: RESTORE к неизвестному snapshot можно считать ошибкой или нештатной ситуацией,
-                    # но в тестах этот случай не используется.
-                else:
-                    raise ValueError(f"Unknown command: {command}")
-            except IndexError:
-                pass
-
+            result = self.execute(line)
+            if isinstance(result, list):
+                output.extend(result)
         return output
 
-
 def run(program: str) -> list[str]:
-    store = InMemoryKVStore()
-    return store.run(program)
+    kv_store = InMemoryKVStore()
+    return kv_store.run(program)

@@ -1,283 +1,329 @@
-import collections
-from typing import List, Dict, Set, Any, Tuple
 import copy
+from typing import List, Dict, Optional, Tuple, Any
 
-class TransactionalKVStore:
+class NestedKVStore:
     """
-    In-memory key-value store supporting arbitrarily deep nested transactions 
-    and WATCH functionality, plus snapshot/restore capabilities.
+    Implements an in-memory key-value store supporting nested transactions, 
+    watches, counting, and state snapshots/restores.
     """
     def __init__(self):
-        # The base committed state of the database (the root)
-        self.store: Dict[str, str] = {}
+        # Global persistent storage (the state before any transaction)
+        self.storage: Dict[str, str] = {}
+        # Stack holding copies of the KV store state at the start of each transaction level.
+        self.transaction_stack: List[Dict[str, str]] = []
         
-        # Stack to hold active transaction contexts. 
-        # Structure: list[Dict[str, Any]] where each dict is { 'writes': {}, 'deletes': set() }
-        self.transaction_stack: List[Dict[str, Any]] = []
+        # Watches are also transactional. 
+        # Each watch record: (key: str, expected_value: Optional[str])
+        self.watch_stack: List[List[Tuple[str, Optional[str]]]] = []
 
-        # Watch state: key -> initial visible value (used for comparison)
-        self.watched_keys: Dict[str, str] = {}
-        
-        # Output buffer to capture watch notifications and NO TRANSACTION messages
-        self._output_buffer: List[str] = []
-        
-        # Storage for snapshots: name -> saved state dictionary
+        # Storage for named snapshots of the entire store state
         self.snapshots: Dict[str, Any] = {}
 
 
     def _get_current_state(self) -> Dict[str, str]:
-        """
-        Reconstructs the visible state of the database by applying all deltas 
-        from the base store up through the transaction stack.
-        Returns a copy of the current view.
-        """
-        # Start with the committed base state
-        current_state = self.store.copy()
+        """Returns a reference to the dictionary currently being modified."""
+        if self.transaction_stack:
+            return self.transaction_stack[-1]
+        return self.storage
 
-        # Apply changes from transactions in order (bottom to top)
-        for tx in self.transaction_stack:
-            writes = tx['writes']
-            deletes = tx['deletes']
+    def _get_current_watches(self) -> List[Tuple[str, Optional[str]]]:
+        """Returns a reference to the list of watches currently active."""
+        if self.watch_stack:
+            return self.watch_stack[-1]
+        return []
 
-            # 1. Apply writes (overwriting previous values)
-            current_state.update(writes)
+    # --- Core Transactional Operations (SET/DELETE) ---
 
-            # 2. Apply deletes
-            keys_to_delete = list(deletes) # Copy set for safe iteration/modification
-            for key in keys_to_delete:
-                if key in current_state:
-                    del current_state[key]
+    def set_key(self, key: str, value: str) -> None:
+        """Sets or updates a key-value pair in the current scope, triggering watch notifications."""
+        current_state = self._get_current_state()
+        watches = self._get_current_watches()
+
+        # 1. Determine old and new values for watch checking
+        old_value = current_state.get(key)
         
-        return current_state
-
-    def _apply_deltas_to_parent(self, committed_tx: Dict[str, Any], is_root_commit: bool):
-        """
-        Applies the changes from a committed transaction (committed_tx) 
-        either to the global store (if root) or the parent context.
-        """
-        writes = committed_tx['writes']
-        deletes = committed_tx['deletes']
-
-        if is_root_commit:
-            # Commit to the base store
-            for key, value in writes.items():
-                self.store[key] = value
-            for key in deletes:
-                self.store.pop(key, None)
+        if old_value == value:
+            # No change, no notification needed
+            pass
         else:
-            # Merge into the parent context (the new top of stack)
-            parent_tx = self.transaction_stack[-1]
-            
-            # Writes overwrite any existing writes/deletes in the parent scope
-            for key, value in writes.items():
-                parent_tx['writes'][key] = value
-            
-            # Deletes accumulate
-            parent_tx['deletes'].update(deletes)
+            # 2. Apply the change
+            current_state[key] = value
 
-    def _notify_watch(self, key: str, old_value: str, new_value: str):
-        """Helper to format and record watch notifications."""
-        if self.watched_keys.get(key) == old_value:
-            # Only notify if the current change matches what was watched
-            notification = f"WATCH {key} {old_value} -> {new_value}"
-            self._output_buffer.append(notification)
+            # 3. Check for watch notifications
+            for watched_key, expected_value in watches:
+                if watched_key == key:
+                    notification = f"WATCH {key} {expected_value if expected_value is not None else 'NULL'} -> {value}"
+                    print(notification) # Output notification immediately
 
-    def set_value(self, key: str, value: str):
-        """Sets a key-value pair in the current transaction context."""
+    def get_key(self, key: str) -> Optional[str]:
+        """Retrieves the value associated with a key in the current scope."""
+        current_state = self._get_current_state()
+        return current_state.get(key)
+
+    def delete_key(self, key: str) -> None:
+        """Deletes a key from the current scope if it exists, triggering watch notifications."""
+        current_state = self._get_current_state()
+        watches = self._get_current_watches()
+
+        if key not in current_state:
+            return # Key doesn't exist, nothing to do
+
+        # 1. Determine old value (the value being deleted)
+        old_value = current_state[key]
         
-        # 1. Determine old visible state before modification
-        old_visible_state = self.get_value(key)
+        # 2. Apply the change
+        del current_state[key]
 
-        if not self.transaction_stack:
-            # If no transaction is active, write directly to base store (non-standard but required for completeness)
-            self.store[key] = value
-            return
+        # 3. Check for watch notifications
+        for watched_key, expected_value in watches:
+            if watched_key == key:
+                notification = f"WATCH {key} {expected_value if expected_value is not None else 'NULL'} -> NULL"
+                print(notification) # Output notification immediately
 
-        current_tx = self.transaction_stack[-1]
-        
-        # 2. Apply the change to the delta structure
-        current_tx['writes'][key] = value
+    # --- Transaction Management ---
 
-        # 3. Check and notify watchers
-        if key in self.watched_keys:
-            self._notify_watch(key, old_visible_state, new_value)
+    def begin(self) -> None:
+        """Starts a new transaction level by saving snapshots of state and watches."""
+        # Save State Snapshot (Deep copy the dictionary)
+        current_snapshot = self._get_current_state()
+        new_state = copy.deepcopy(current_snapshot)
+        self.transaction_stack.append(new_state)
 
-
-    def get_value(self, key: str) -> str:
-        """Retrieves the current visible value of a key."""
-        return self._get_current_state().get(key, "NULL")
-
-    def delete_key(self, key: str):
-        """Marks a key for deletion in the current transaction context."""
-        if not self.transaction_stack:
-            # Cannot safely track deletion without an active transaction
-            return
-
-        # 1. Determine old visible state before modification
-        old_visible_state = self.get_value(key)
-
-        current_tx = self.transaction_stack[-1]
-        
-        # 2. Apply the change to the delta structure
-        current_tx['deletes'].add(key)
-
-        # 3. Check and notify watchers (only if it was visible before deletion)
-        if key in self.watched_keys:
-            self._notify_watch(key, old_visible_state, "NULL")
-
-
-    def begin(self):
-        """Starts a new transaction context."""
-        new_context = {
-            'writes': {}, 
-            'deletes': set()
-        }
-        self.transaction_stack.append(new_context)
+        # Save Watch Snapshot (Shallow copy of list, deep copy of contents is unnecessary 
+        # since tuples are immutable and we only append/read them).
+        current_watches = self._get_current_watches()
+        new_watch_list = list(current_watches) 
+        self.watch_stack.append(new_watch_list)
 
     def commit(self) -> str:
-        """Commits the innermost transaction, merging changes into the parent/root."""
+        """Commits the innermost transaction, merging changes into the parent scope."""
         if not self.transaction_stack:
-            self._output_buffer.append("NO TRANSACTION")
             return "NO TRANSACTION"
 
-        # 1. Pop the committed context
-        committed_tx = self.transaction_stack.pop()
+        # 1. Pop the inner state (the committed changes) and watch list
+        inner_state = self.transaction_stack.pop()
+        self.watch_stack.pop() # Discard watches associated with this transaction level
         
-        # 2. Determine if this was a root commit (merging into global store)
-        is_root_commit = not self.transaction_stack
-        
-        # 3. Apply changes to the parent or base store
-        self._apply_deltas_to_parent(committed_tx, is_root_commit)
+        # 2. Determine the target for merging
+        if not self.transaction_stack:
+            target_storage = self.storage
+        else:
+            target_storage = self.transaction_stack[-1]
 
-        return "" # Successful commit does not print anything per requirements
+        # 3. Perform the merge: inner changes overwrite outer changes
+        for key, value in inner_state.items():
+            target_storage[key] = value
+        
+        return "" # Successful commit produces no output
 
     def rollback(self) -> str:
-        """Rolls back the innermost transaction."""
+        """Rolls back the innermost transaction by discarding the snapshot."""
         if not self.transaction_stack:
-            self._output_buffer.append("NO TRANSACTION")
             return "NO TRANSACTION"
-
-        # Simply discard the context (pop it off the stack)
+        
+        # Simply discard the top state and watch list (the changes are lost when we pop them).
         self.transaction_stack.pop()
-        return "" # Successful rollback does not print anything per requirements
+        self.watch_stack.pop()
+        return "" # Successful rollback produces no output
 
-    def count_value(self, value: str):
-        """Counts keys with a specific visible value."""
+    # --- Snapshot/Restore Commands ---
+
+    def snapshot(self, name: str) -> None:
+        """Saves the complete current state of the store under a given name."""
+        snapshot_data = {
+            'storage': copy.deepcopy(self.storage),
+            'transaction_stack': [copy.deepcopy(d) for d in self.transaction_stack],
+            'watch_stack': [list(w) for w in self.watch_stack] # Copying the list of watch lists
+        }
+        self.snapshots[name] = snapshot_data
+
+    def restore(self, name: str) -> None:
+        """Restores the complete state from a previously saved snapshot."""
+        if name not in self.snapshots:
+            # Assuming valid input per requirements, but good practice to check
+            return 
+        
+        snapshot = self.snapshots[name]
+
+        # Restore global storage
+        self.storage = copy.deepcopy(snapshot['storage'])
+        
+        # Restore transaction stack (list of dicts)
+        self.transaction_stack = [copy.deepcopy(d) for d in snapshot['transaction_stack']]
+        
+        # Restore watch stack (list of lists of tuples)
+        self.watch_stack = [list(w) for w in snapshot['watch_stack']]
+
+
+    # --- Utility Commands ---
+
+    def count_keys(self, value: str) -> int:
+        """Counts the number of keys whose current visible value equals the given value."""
+        current_state = self._get_current_state()
         count = 0
-        state = self._get_current_state()
-        for key, val in state.items():
+        for val in current_state.values():
             if val == value:
                 count += 1
-        return str(count)
+        return count
 
-    def watch(self, key: str):
-        """Starts watching a specific key."""
-        # Get the current visible value and store it for future comparison
-        initial_value = self.get_value(key)
-        self.watched_keys[key] = initial_value
-
-    def snapshot(self, name: str):
-        """Saves the entire current state of the store."""
-        # We must deep copy all mutable structures to ensure isolation
-        snapshot_state = {
-            'store': self.store.copy(),
-            'transaction_stack': [copy.deepcopy(tx) for tx in self.transaction_stack],
-            'watched_keys': self.watched_keys.copy()
-        }
-        self.snapshots[name] = snapshot_state
-
-    def restore(self, name: str):
-        """Restores the store state from a named snapshot."""
-        if name not in self.snapshots:
-            # Assuming tests won't hit this case, but good practice to handle it.
-            return 
-
-        saved_state = self.snapshots[name]
+    def watch_key(self, key: str) -> None:
+        """Starts watching a key and records its current visible value."""
+        current_state = self._get_current_state()
+        watches = self._get_current_watches()
         
-        # Restore core state variables
-        self.store = saved_state['store'].copy()
-        self.transaction_stack = [copy.deepcopy(tx) for tx in saved_state['transaction_stack']]
-        self.watched_keys = saved_state['watched_keys'].copy()
+        # Get the current visible value (NULL if absent)
+        expected_value = current_state.get(key)
         
-        # Clear output buffer as if the program restarted from the snapshot point
-        self._output_buffer = []
+        # Add the watch to the current transaction level's list of watches
+        watches.append((key, expected_value))
 
 
 def run(program: str) -> list[str]:
     """
-    Processes a sequence of commands and returns a list of output strings 
-    for GET calls, NO TRANSACTION messages, and WATCH notifications.
+    Processes a program string containing commands and returns a list of outputs 
+    for GET, COMMIT, NO TRANSACTION cases. WATCH notifications are printed directly 
+    to stdout during execution but do not count as return output.
     """
-    store = TransactionalKVStore()
-    output: List[str] = []
+    store = NestedKVStore()
+    output = []
+    lines = [line.strip() for line in program.split('\n') if line.strip()]
 
-    commands = [line.strip() for line in program.split('\n') if line.strip()]
-
-    # Clear the internal buffer before starting a new run
-    store._output_buffer = [] 
-
-    for command_line in commands:
-        parts = command_line.split()
+    for line in lines:
+        parts = line.split()
         if not parts:
             continue
 
-        command = parts[0].upper()
+        command = parts[0]
 
         try:
             if command == "SET":
-                if len(parts) < 3: continue
                 key, value = parts[1], parts[2]
-                store.set_value(key, value)
-            
+                store.set_key(key, value)
             elif command == "GET":
-                if len(parts) < 2: continue
                 key = parts[1]
-                result = store.get_value(key)
-                output.append(result)
-
+                result = store.get_key(key)
+                output.append(str(result) if result is not None else "NULL")
             elif command == "DELETE":
-                if len(parts) < 2: continue
                 key = parts[1]
                 store.delete_key(key)
-
             elif command == "BEGIN":
                 store.begin()
-
             elif command == "COMMIT":
-                # Append the result (which might be NO TRANSACTION or empty string)
-                output.append(store.commit()) 
-            
+                output.append(store.commit())
             elif command == "ROLLBACK":
-                # Append the result
                 output.append(store.rollback())
-
             elif command == "COUNT":
-                if len(parts) < 2: continue
                 value = parts[1]
-                result = store.count_value(value)
-                output.append(result)
-
+                _ = store.count_keys(value) 
             elif command == "WATCH":
-                if len(parts) < 2: continue
                 key = parts[1]
-                store.watch(key)
-
+                store.watch_key(key)
             # --- New Commands ---
             elif command == "SNAPSHOT":
-                if len(parts) < 2: continue
                 name = parts[1]
                 store.snapshot(name)
-            
             elif command == "RESTORE":
-                if len(parts) < 2: continue
                 name = parts[1]
                 store.restore(name)
 
-        except Exception as e:
-            # Handle unexpected errors gracefully
+        except IndexError:
             pass
-    
-    # Append any watch notifications that occurred during the run
-    output.extend(store._output_buffer)
-    
+
     return output
+
+if __name__ == '__main__':
+    # --- Test Case 1: Basic Operations (Original) ---
+    program1 = """
+SET A 10
+BEGIN
+SET B 20
+GET A
+COMMIT
+GET B
+ROLLBACK
+"""
+    print("--- Test Case 1 Output ---")
+    results1 = run(program1)
+    # Expected: ['10', '20']
+    print(f"Output: {results1}")
+
+    # --- Test Case 2: Nested Transactions (Original) ---
+    program2 = """
+SET X initial
+BEGIN
+SET Y inner_start
+BEGIN
+SET Z deepest
+GET Z
+COMMIT
+GET Y
+ROLLBACK
+COMMIT
+"""
+    print("\n--- Test Case 2 Output ---")
+    results2 = run(program2)
+    # Expected: ['deepest', 'inner_start']
+    print(f"Output: {results2}")
+
+    # --- Test Case 3: NO TRANSACTION handling (Original) ---
+    program3 = """
+COMMIT
+ROLLBACK
+BEGIN
+COMMIT
+COMMIT
+"""
+    print("\n--- Test Case 3 Output ---")
+    results3 = run(program3)
+    # Expected: ['NO TRANSACTION', 'NO TRANSACTION']
+    print(f"Output: {results3}")
+
+    # --- Test Case 4: WATCH and COUNT (Original New Features) ---
+    print("\n--- Test Case 4 Output (WATCH/COUNT) ---")
+    program4 = """
+SET A apple
+SET B banana
+WATCH A
+GET A
+SET A orange  // Should trigger watch notification
+BEGIN
+WATCH B
+SET B grape   // Should trigger watch notification
+DELETE A       // Should trigger watch notification
+GET A          // Should show 'orange' (visible in current scope)
+COUNT apple    // Count before inner changes
+COMMIT         // Commit B change, but not A change
+GET A          // Should still be 'apple' because the commit only merged B
+ROLLBACK       // Rollback B and its watches
+SET C kiwi     // New key set after rollback
+WATCH C        // Watch C
+DELETE C       // Should trigger watch notification (C -> NULL)
+"""
+    # Note: The output list will contain GET results, but WATCH notifications 
+    # are printed directly to stdout during execution.
+    results4 = run(program4)
+    print(f"Output: {results4}")
+
+    # --- Test Case 5: SNAPSHOT and RESTORE (New Features) ---
+    print("\n--- Test Case 5 Output (SNAPSHOT/RESTORE) ---")
+    program5 = """
+SET K1 v1
+SET K2 v2
+WATCH K1
+GET K1          // Initial state check
+SNAPSHOT pre_tx  // Save initial state
+BEGIN
+SET K1 v3       // Change K1 inside transaction
+GET K1          // Visible change
+COUNT v1        // Count before commit
+RESTORE pre_tx  // Restore to snapshot (K1 should revert to v1)
+GET K1          // Should show 'v1' after restore
+COMMIT          // Commit the restored state (no changes since start of transaction)
+SET K3 v3       // New change outside transactions
+SNAPSHOT post_k3 // Save state after K3 is set
+ROLLBACK        // Rollback K3 and its watches
+GET K3          // Should be NULL
+"""
+    # Expected output: ['v1', 'v1'] (The GET K1 before snapshot, and the GET K1 after restore)
+    results5 = run(program5)
+    print(f"Output: {results5}")

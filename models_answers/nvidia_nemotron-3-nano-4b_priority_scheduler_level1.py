@@ -1,37 +1,27 @@
 def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
-    indeg = {t: 0 for t in tasks}
-    for deps in tasks.values():
-        indeg.update(deps)
-    rem = {t: d for t, (d, _, _) in tasks.items()}
-    total = len(tasks)
-    completed = 0
-    order = []
-    running = set()
-    ready = []                     # heap key = (-priority, duration, name)
+    all_tasks = set(tasks.keys())
+    started = []
+    time = 0
 
-    import heapq
-    for t in indeg:
-        if indeg[t] == 0:
-            d, priority, name = tasks[t]
-            heapq.heappush(ready, (-priority, d, name))
+    while True:
+        # tasks that are not yet started and whose dependencies are satisfied
+        ready = [
+            t for t in all_tasks
+            if t not in started
+            and all(d == '' or d in started for d in tasks[t][1])
+        ]
+        if not ready:
+            break
 
-    while completed < total:
-        # finish tasks that have remaining time == 1
-        to_remove = [t for t in list(running) if rem[t] == 1]
-        for t in to_remove:
-            running.remove(t)
-            completed += 1
-            d, priority, name = tasks[t]
-            for dep in tasks[t][1]:
-                indeg[dep] -= 1
-                if indeg[dep] == 0 and dep not in running:
-                    heapq.heappush(ready, (-priority, d, dep))
+        # sort by priority (desc), duration (asc), name (asc)
+        ready.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))
 
-        # start new tasks up to the worker limit
-        while len(running) < workers and ready:
-            _, dur, name = heapq.heappop(ready)
-            running.add(name)
-            order.append(name)
-            rem[name] = dur
+        selected = ready[:workers]
+        started.extend(selected)
 
-    return None if completed != total else order
+        if selected:
+            min_dur = min(tasks[t][0] for t in selected)
+            time += min_dur
+
+    # if any task remains unstarted, there is a cycle
+    return None if len(started) != len(all_tasks) else started

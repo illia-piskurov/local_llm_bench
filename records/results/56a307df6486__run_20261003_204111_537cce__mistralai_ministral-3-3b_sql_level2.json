@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-10-03 20:47:54",
+  "passed": 0,
+  "total": 5,
+  "failures": [
+    "left_join_with_group_by: exception/timeout: ValueError: need more than 0 values to unpack",
+    "multiple_joins_inner_and_left: exception/timeout: ValueError: need more than 0 values to unpack",
+    "where_in_operator: exception/timeout: KeyError: select",
+    "where_is_null_and_like: exception/timeout: KeyError: select",
+    "where_is_not_null: exception/timeout: KeyError: select"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

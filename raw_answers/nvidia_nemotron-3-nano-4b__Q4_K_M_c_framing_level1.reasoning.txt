@@ -1,0 +1,13 @@
+We need to output just C code in a single code block. Implement ring buffer with static array 512 bytes. Use two indices: head and tail for FIFO. Need init resets both to 0 and count=0? Or we can use count variable. Simpler: have int count; uint8_t data[BUFFER_SIZE]; int head = 0, tail = 0; ringbuf_init sets count=0, head=tail=0.
+
+push: if count == BUFFER_SIZE return -1 else data[head] = byte; head=(head+1)%BUFFER_SIZE; count++; return 0.
+
+pop: if count==0 return -1 else byte=data[tail]; tail=(tail+1)%BUFFER_SIZE; count--; return byte.
+
+available returns count. free_space returns BUFFER_SIZE - count.
+
+All functions int except push/pop? Actually they said returns 0 on success, or -1 if full/empty. So pop returns byte value (0..255) on success, else -1. That's fine.
+
+Implement as C99 with stdint.h for uint8_t.
+
+Provide code block only.

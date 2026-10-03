@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "js_async",
+  "level": "level3",
+  "tested_at": "2026-10-03 22:54:19",
+  "passed": 0,
+  "total": 17,
+  "failures": [
+    "JavaScript syntax error: SyntaxError: cannot mix ?? with && or ||\n    at <input>:7\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

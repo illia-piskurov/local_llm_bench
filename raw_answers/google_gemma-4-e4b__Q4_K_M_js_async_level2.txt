@@ -1,0 +1,135 @@
+```javascript
+async function pMap(items, mapper, options) {
+    if (!Array.isArray(items)) {
+        throw new TypeError("Items must be an array.");
+    }
+
+    const N = items.length;
+    if (N === 0) {
+        return [];
+    }
+
+    // --- Option Parsing and Defaults ---
+    let concurrencyLimit = 1;
+    let retries = 0;
+    let backoffMs = 0;
+    let timeoutMs = 0;
+
+    const getOptions = (opts) => {
+        if (typeof opts === 'number' && Number.isInteger(opts) && opts > 0) {
+            return { concurrency: Math.min(opts, N), retries: 0, backoffMs: 0, timeoutMs: 0 };
+        } else if (typeof opts === 'object' && opts !== null) {
+            const limit = typeof opts.concurrency === 'number' ? Math.min(Math.max(1, opts.concurrency), N) : N;
+            const r = Number.isInteger(opts.retries) && opts.retries >= 0 ? opts.retries : 0;
+            const b = typeof opts.backoffMs === 'number' && opts.backoffMs >= 0 ? opts.backoffMs : 0;
+            const t = typeof opts.timeoutMs === 'number' && opts.timeoutMs > 0 ? opts.timeoutMs : 0;
+
+            return { concurrency: limit, retries: r, backoffMs: b, timeoutMs: t };
+        }
+        // Default case (options undefined/invalid)
+        return { concurrency: 1, retries: 0, backoffMs: 0, timeoutMs: 0 };
+    };
+
+    const opts = getOptions(options);
+    concurrencyLimit = opts.concurrency;
+    retries = opts.retries;
+    backoffMs = opts.backoffMs;
+    timeoutMs = opts.timeoutMs;
+
+
+    // --- Helper Functions ---
+
+    /** Creates a delay promise */
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    /** Executes the mapper with retries, backoff, and timeout handling. */
+    async function executeTaskWithRetryAndTimeout(item, index) {
+        let lastError = null;
+        let attempt = 0;
+
+        while (attempt <= retries) {
+            try {
+                // 1. Timeout implementation
+                const taskPromise = mapper(item, index);
+                
+                let timeoutPromise;
+                if (timeoutMs > 0) {
+                    timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+                    );
+                } else {
+                    // If no timeout is set, use a promise that never rejects naturally.
+                    timeoutPromise = Promise.resolve();
+                }
+
+                const result = await Promise.race([taskPromise, timeoutPromise]);
+                return result; // Success! Return the result immediately.
+
+            } catch (e) {
+                lastError = e;
+                attempt++;
+
+                // If this was the last attempt allowed, throw the error immediately.
+                if (attempt > retries) {
+                    throw new Error(`Task failed after ${retries + 1} attempts for index ${index}. Last error: ${e.message}`);
+                }
+
+                // Calculate backoff delay: base * 2^(attempt - 1)
+                const delay = backoffMs * Math.pow(2, attempt - 1);
+                console.warn(`Task failed at index ${index}. Retrying in ${delay}ms...`);
+                await sleep(delay);
+            }
+        }
+    }
+
+    // --- Main Logic ---
+
+    const results = new Array(N);
+    let currentIndex = 0;
+
+    /**
+     * Processes the next batch of tasks up to concurrencyLimit.
+     * @returns {Promise<void>} A promise that resolves when all items are processed.
+     */
+    async function processBatch() {
+        if (currentIndex >= N) {
+            return Promise.resolve(); // All done
+        }
+
+        const batchEnd = Math.min(currentIndex + concurrencyLimit, N);
+        const tasksToRun = [];
+
+        // Create promises for the current batch
+        for (let i = currentIndex; i < batchEnd; i++) {
+            // Wrap the execution in an IIFE to capture 'i' correctly and ensure proper error propagation.
+            tasksToRun.push((async () => {
+                try {
+                    // Execute the task with all retry/timeout logic built-in
+                    results[i] = await executeTaskWithRetryAndTimeout(items[i], i);
+                } catch (e) {
+                    // If any single task fails permanently, we must reject immediately.
+                    throw e; 
+                }
+            })());
+        }
+
+        currentIndex = batchEnd;
+
+        // Wait for the current batch to complete. Promise.all ensures that if one rejects, 
+        // the entire processBatch promise rejects instantly.
+        await Promise.all(tasksToRun);
+
+        // Recursively call processBatch to handle the next chunk of tasks
+        return processBatch();
+    }
+
+    try {
+        // Start the processing loop and wait for all batches to complete
+        await processBatch();
+        return results;
+    } catch (error) {
+        // Re-throw any error encountered during mapping/processing
+        throw error;
+    }
+}
+```

@@ -1,0 +1,37 @@
+We need to output Lua code defining BT table and node classes/functions. Provide global BT = {} with constants. Implement Action, Condition, Sequence, Selector as constructors returning nodes with tick and reset methods.
+
+Implementation details:
+
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+Action: constructor takes fn (function(ctx) -> boolean or BT status). Node has tick(self, ctx) returns status. reset() clears internal state? For Action no memory.
+
+Condition similar but predicate returns boolean; node tick calls predicate and returns SUCCESS/FAILURE.
+
+Sequence: children table of nodes. Internal index idx = 1. tick: if self.idx > #children => return BT.SUCCESS (finished). else run child = children[self.idx]; call child.tick(ctx) -> status. If status == BT.FAILURE => return BT.FAILURE; if status == BT.RUNNING => remember idx+1? Actually spec: remembers current node index and returns RUNNING. On next tick, resumes from that node without re-executing previously succeeded children! So we need to store idx (current child). When child returns RUNNING, we set self.idx = idx + 1? But then on next tick we resume from that node; but spec says "remembers current node index and returns BT.RUNNING. On next tick, resumes from it without re-executing previously succeeded children!" So if child returns RUNNING, we keep idx as is (point to same node) for next tick? Actually typical behavior: you run child, it runs continuously until success or failure; when it returns RUNNING, the parent continues with that child on subsequent ticks. So we should store idx = current index (the child). When child returns SUCCESS => advance idx+1 and return SUCCESS. If child returns FAILURE => stop and return FAILURE. If child returns RUNNING => keep idx same, return RUNNING.
+
+Implementation: self.idx = 1 initially. tick: if self.idx > #children => return BT.SUCCESS (finished). else node = children[self.idx]; status = node.tick(ctx); if status == BT.FAILURE => return BT.FAILURE; elseif status == BT.RUNNING => return BT.RUNNING; else -- SUCCESS => advance idx: self.idx = self.idx + 1; return BT.SUCCESS.
+
+reset() sets idx=1.
+
+Selector similar but OR logic: if any child returns SUCCESS => stop and SUCCESS. If child returns RUNNING => keep idx same, return RUNNING. If all fail => FAILURE.
+
+Implementation of Selector: idx = 1. tick: if self.idx > #children => return BT.SUCCESS (all failed). else node = children[self.idx]; status = node.tick(ctx); if status == BT.SUCCESS => advance idx+1; return BT.SUCCESS; elseif status == BT.RUNNING => keep idx same; return BT.RUNNING; else -- FAILURE => advance idx+1; continue.
+
+reset() sets idx=1.
+
+Now define constructors:
+
+BT.Action = function(fn) local node = { fn = fn, tick = function(self, ctx) local result = self.fn(ctx); if result == BT.SUCCESS or result == true then return BT.SUCCESS elseif result == BT.FAILURE or result == false then return BT.FAILURE else return BT.RUNNING end end, reset = function() end } return node end
+
+BT.Condition = function(predicate) local node = { predicate = predicate, tick = function(self, ctx) local ok = self.predicate(ctx); if ok then return BT.SUCCESS else return BT.FAILURE end, reset = function() end } return node end
+
+BT.Sequence = function(children) local idx = 1; local node = { children = children, idx = 1, tick = function(self, ctx) if self.idx > #self.children then return BT.SUCCESS end local child = self.children[self.idx]; local status = child.tick(ctx); if status == BT.FAILURE then return BT.FAILURE elseif status == BT.RUNNING then return BT.RUNNING else -- SUCCESS advance idx; self.idx = self.idx + 1; return BT.SUCCESS end end, reset = function() self.idx = 1 end } return node end
+
+BT.Selector = function(children) local idx = 1; local node = { children = children, idx = 1, tick = function(self, ctx) if self.idx > #self.children then return BT.SUCCESS end local child = self.children[self.idx]; local status = child.tick(ctx); if status == BT.SUCCESS then -- advance and succeed self.idx = self.idx + 1; return BT.SUCCESS elseif status == BT.RUNNING then -- keep idx same return BT.RUNNING else -- FAILURE advance idx self.idx = self.idx + 1 end end, reset = function() self.idx = 1 end } return node end
+
+BT table constants.
+
+Now output only code block.

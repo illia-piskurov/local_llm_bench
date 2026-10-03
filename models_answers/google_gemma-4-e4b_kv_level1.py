@@ -1,171 +1,160 @@
 import copy
-from typing import List, Dict, Any
 
-class TransactionalKVStore:
+class NestedKVStore:
     """
-    In-memory key-value store supporting nested transactions (ACID properties simulated).
-    Uses a stack of dictionaries to manage isolated transaction scopes.
+    Implements an in-memory key-value store supporting nested transactions.
+    Uses a stack of snapshots to manage transaction states.
     """
     def __init__(self):
-        # The root state is implicitly the first element on the stack.
-        # We initialize it with an empty dictionary, representing the global scope.
-        self.transaction_stack: List[Dict[str, Any]] = [dict()]
+        # Global persistent storage (the state before any transaction)
+        self.storage = {}
+        # Stack holding copies of the KV store state at the start of each transaction level.
+        # The top element is the current working state.
+        self.transaction_stack = []
 
-    def _get_current_state(self) -> Dict[str, Any]:
-        """Returns a reference to the current working copy (top of the stack)."""
-        return self.transaction_stack[-1]
+    def _get_current_state(self):
+        """Returns a reference to the dictionary currently being modified."""
+        if self.transaction_stack:
+            return self.transaction_stack[-1]
+        return self.storage
 
-    def set(self, key: str, value: Any):
-        """Sets a key-value pair in the current transaction scope."""
-        self._get_current_state()[key] = value
+    def set_key(self, key: str, value: str) -> None:
+        """Sets or updates a key-value pair in the current scope."""
+        current_state = self._get_current_state()
+        # Since we are modifying the state directly (which is either the global storage 
+        # or the top element of the stack), this change is immediately visible.
+        current_state[key] = value
 
-    def get(self, key: str) -> str:
-        """Retrieves the value of a key from the current transaction scope."""
-        if key not in self._get_current_state():
-            return "NULL"
-        # We must ensure that all values are returned as strings for consistency with the prompt's output requirement.
-        return str(self._get_current_state()[key])
+    def get_key(self, key: str) -> str | None:
+        """Retrieves the value associated with a key in the current scope."""
+        current_state = self._get_current_state()
+        return current_state.get(key)
 
-    def delete(self, key: str):
-        """Deletes a key from the current transaction scope."""
-        if key in self._get_current_state():
-            del self._get_current_state()[key]
+    def delete_key(self, key: str) -> None:
+        """Deletes a key from the current scope if it exists."""
+        current_state = self._get_current_state()
+        if key in current_state:
+            del current_state[key]
 
     def begin(self) -> None:
-        """Starts a new (potentially nested) transaction by pushing a snapshot of the current state."""
-        # Create a deep copy of the current effective state to ensure isolation.
-        snapshot = copy.deepcopy(self._get_current_state())
-        self.transaction_stack.append(snapshot)
+        """Starts a new transaction level by saving a snapshot of the current state."""
+        # Save a deep copy of the current effective state onto the stack.
+        current_snapshot = self._get_current_state()
+        new_state = copy.deepcopy(current_snapshot)
+        self.transaction_stack.append(new_state)
 
     def commit(self) -> str:
         """Commits the innermost transaction, merging changes into the parent scope."""
-        if len(self.transaction_stack) <= 1:
+        if not self.transaction_stack:
             return "NO TRANSACTION"
 
-        # The current state (top of stack) is committed to the parent state (second to top).
+        # 1. Pop the inner state (the committed changes)
         inner_state = self.transaction_stack.pop()
-        parent_state = self._get_current_state()
+        
+        # 2. Determine the target for merging
+        if not self.transaction_stack:
+            # This was the outermost transaction, merge into global storage
+            target_storage = self.storage
+        else:
+            # Merge into the parent's current working state (the new top of stack)
+            target_storage = self.transaction_stack[-1]
 
-        # Merge changes from inner_state into parent_state.
-        # This simulates merging the transaction results up the stack.
+        # 3. Perform the merge: inner changes overwrite outer changes
         for key, value in inner_state.items():
-            parent_state[key] = value
-
-        return "" # Successful commit produces no output line
+            target_storage[key] = value
+        
+        return "" # Successful commit produces no output
 
     def rollback(self) -> str:
-        """Rolls back the innermost transaction by discarding the top snapshot."""
-        if len(self.transaction_stack) <= 1:
+        """Rolls back the innermost transaction by discarding the snapshot."""
+        if not self.transaction_stack:
             return "NO TRANSACTION"
-
-        # Simply pop the top level, effectively discarding all changes made since BEGIN.
+        
+        # Simply discard the top state (the changes are lost when we pop it).
         self.transaction_stack.pop()
-        return "" # Successful rollback produces no output line
+        return "" # Successful rollback produces no output
 
-    def run(self, program: str) -> List[str]:
-        """
-        Processes a string of commands and returns a list of output lines 
-        (only for GET or NO TRANSACTION).
-        """
-        output = []
-        lines = [line.strip() for line in program.split('\n')]
+def run(program: str) -> list[str]:
+    """
+    Processes a program string containing commands and returns a list of outputs 
+    for GET, COMMIT, and NO TRANSACTION cases.
+    """
+    store = NestedKVStore()
+    output = []
+    lines = [line.strip() for line in program.split('\n') if line.strip()]
 
-        for line in lines:
-            if not line:
-                continue
+    for line in lines:
+        parts = line.split()
+        if not parts:
+            continue
 
-            parts = line.split()
-            command = parts[0].upper()
+        command = parts[0]
 
-            try:
-                if command == "SET" and len(parts) == 3:
-                    key, value_str = parts[1], parts[2]
-                    # Attempt to convert simple numeric strings back to numbers if possible, 
-                    # otherwise treat them as strings. For simplicity in this simulation, we keep everything as string/object.
-                    try:
-                        value = int(value_str)
-                    except ValueError:
-                        value = value_str
-                    self.set(key, value)
+        try:
+            if command == "SET":
+                key, value = parts[1], parts[2]
+                store.set_key(key, value)
+            elif command == "GET":
+                key = parts[1]
+                result = store.get_key(key)
+                output.append(str(result) if result is not None else "NULL")
+            elif command == "DELETE":
+                key = parts[1]
+                store.delete_key(key)
+            elif command == "BEGIN":
+                store.begin()
+            elif command == "COMMIT":
+                output.append(store.commit())
+            elif command == "ROLLBACK":
+                output.append(store.rollback())
+        except IndexError:
+            # Handle malformed commands gracefully if necessary, though input is assumed clean
+            pass
 
-                elif command == "GET" and len(parts) == 2:
-                    key = parts[1]
-                    output.append(self.get(key))
+    return output
 
-                elif command == "DELETE" and len(parts) == 2:
-                    key = parts[1]
-                    self.delete(key)
-
-                elif command == "BEGIN":
-                    self.begin()
-
-                elif command == "COMMIT":
-                    result = self.commit()
-                    if result:
-                        output.append(result)
-
-                elif command == "ROLLBACK":
-                    result = self.rollback()
-                    if result:
-                        output.append(result)
-            except IndexError:
-                # Handle malformed commands gracefully if needed, but based on prompt constraints, 
-                # we assume input structure is correct for the defined commands.
-                pass
-
-        return output
-
-
-# Example Usage (for testing purposes, not part of the final class definition):
 if __name__ == '__main__':
-    store = TransactionalKVStore()
+    # Example Usage (for testing purposes)
     program1 = """
-SET a 10
-GET a
+SET A 10
 BEGIN
-SET b 20
-GET b
+SET B 20
+GET A
 COMMIT
-GET a
+GET B
 ROLLBACK
-GET b
 """
     print("--- Test Case 1 ---")
-    results1 = store.run(program1)
-    for r in results1:
-        print(r)
-    # Expected output: 10, 20, 10 (b is rolled back)
+    results1 = run(program1)
+    print(f"Output: {results1}") # Expected: ['10', '20']
 
-    store = TransactionalKVStore()
+    # Example Usage (Nested Transactions)
     program2 = """
-SET x initial
+SET X initial
 BEGIN
-SET y inner_set
-GET y
+SET Y inner_start
 BEGIN
-SET z nested_set
-GET z
+SET Z deepest
+GET Z
 COMMIT
-GET y
+GET Y
 ROLLBACK
-GET z
 COMMIT
 """
-    print("\n--- Test Case 2 (Nested) ---")
-    results2 = store.run(program2)
-    for r in results2:
-        print(r)
-    # Expected output: inner_set, nested_set, inner_set (z is rolled back), NULL (commit of z fails to change y/x because it was rolled back)
+    print("\n--- Test Case 2 ---")
+    results2 = run(program2)
+    # Expected: ['deepest', 'inner_start'] (Z is visible in the innermost scope, then Y after inner commit)
+    print(f"Output: {results2}")
 
-    store = TransactionalKVStore()
+    # Example Usage (NO TRANSACTION handling)
     program3 = """
-BEGIN
+COMMIT
 ROLLBACK
-GET a
+BEGIN
+COMMIT
 COMMIT
 """
-    print("\n--- Test Case 3 (No Transaction) ---")
-    results3 = store.run(program3)
-    for r in results3:
-        print(r)
-    # Expected output: NO TRANSACTION, NO TRANSACTION
+    print("\n--- Test Case 3 ---")
+    results3 = run(program3)
+    # Expected: ['NO TRANSACTION', 'NO TRANSACTION']
+    print(f"Output: {results3}")

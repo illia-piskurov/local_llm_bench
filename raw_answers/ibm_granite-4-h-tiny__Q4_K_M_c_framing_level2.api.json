@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```c\n#include <stdint.h>\n\n#define BUFFER_SIZE 512\n\nstatic uint8_t buffer[BUFFER_SIZE];\nstatic size_t head = 0;\nstatic size_t tail = 0;\n\nvoid ringbuf_init(void) {\n    head = 0;\n    tail = 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if ((head + 1) % BUFFER_SIZE == tail) {\n        return -1; // Buffer is full\n    }\n    buffer[head] = byte;\n    head = (head + 1) % BUFFER_SIZE;\n    return 0;\n}\n\nint ringbuf_pop(void) {\n    if (tail == head) {\n        return -1; // Buffer is empty\n    }\n    uint8_t byte = buffer[tail];\n    tail = (tail + 1) % BUFFER_SIZE;\n    return byte;\n}\n\nint ringbuf_available(void) {\n    return (head - tail + BUFFER_SIZE) % BUFFER_SIZE;\n}\n\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - ringbuf_available();\n}\n\n#include <stdint.h>\n\n#define MAGIC_BYTE 0xAA\n\nint decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {\n    size_t i = 0;\n    while (i + 4 <= stream_len) {\n        if (stream[i] == MAGIC_BYTE && ringbuf_available() >= (size_t)(3 + stream[i+1] + 1)) {\n            uint8_t payload_length = stream[i+1];\n            uint8_t checksum = stream[i+2 + payload_length];\n\n            // Verify checksum\n            uint8_t calculated_checksum = 0;\n            for (int j = i + 2; j < i + 2 + payload_length; ++j) {\n                calculated_checksum ^= stream[j];\n            }\n            if (calculated_checksum != checksum) {\n                i += payload_length + 4;\n                continue;\n            }\n\n            // Valid packet found, copy payload\n            for (int j = 0; j < payload_length; ++j) {\n                out_payload[j] = stream[i+2+j];\n            }\n            *out_type = stream[i+1];\n            return payload_length;\n        } else {\n            i++;\n        }\n    }\n    return -1; // No valid packet found\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 759,
+    "total_output_tokens": 488,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 44.23414303614256,
+    "time_to_first_token_seconds": 1.913187
+  }
+}

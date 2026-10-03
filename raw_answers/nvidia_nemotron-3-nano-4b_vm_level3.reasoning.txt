@@ -1,0 +1,189 @@
+We need to extend implementation with subroutines, comparison ops, named variables. Must keep existing behavior unchanged. Return only code in single python block.
+
+We must implement call stack: CALL pushes return address (line index?) onto call stack and jumps to label name. RET pops return address and jumps to it (the instruction immediately following CALL). If empty raise error.
+
+Comparison ops pop two values b then a, push 1 if condition else 0.
+
+Named variables memory dict mapping var name to value. STORE: pop value store into variable; LOAD: push variable's value onto stack; if not stored yet raise error.
+
+Need to preserve existing instructions unchanged.
+
+Implementation details:
+
+We have label_map for labels (LABEL). For CALL and RET, we need to jump to label lines using label_map.
+
+When CALL <name> is encountered: push current line index+1? Actually return address is the instruction after CALL. So call stack stores next line index (i.e., where to resume). Then set idx = label_map[name] - 1? Since loop will continue after it; we need to jump to that line, then continue loop increments idx normally.
+
+Implementation: when encountering CALL:
+
+- push current line index+1 onto call_stack.
+- target = label_map[tokens[1]]
+- idx = target - 1 (so next iteration will be at that line)
+- continue
+
+When RET encountered:
+
+- if not call_stack: raise error
+- return_address = call_stack.pop()
+- idx = return_address - 1
+- continue
+
+Comparison ops: pop b then a, push result.
+
+Need to handle errors for insufficient stack length.
+
+Named variables: memory dict. STORE var: pop value store into memory[var] = value. LOAD var: if var not in memory raise error; else push memory[var].
+
+Potential issues: variable names may be same as label? Probably fine.
+
+We must ensure that when we jump via CALL/RET, the loop continues after target line (i.e., idx set to target-1). That's consistent with earlier jumps.
+
+Implementation modifications:
+
+Add call_stack = [] at start.
+
+Add memory dict.
+
+Update elif op == 'CALL' etc.
+
+Also need to handle errors for undefined label in CALL.
+
+Similarly RET error if empty.
+
+Comparison ops: after popping, check stack length >=2 else raise.
+
+Now produce final code block with function run(program: str) -> list[str].
+
+Let's craft code:
+
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    stack = []
+    output = []
+    label_map = {}
+    call_stack = []          # stores line indices (1-based)
+    memory = {}              # var name -> value
+
+    for idx, line in enumerate(lines):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        tokens = line.split()
+        op = tokens[0]
+
+        # LABEL
+        if op == 'LABEL':
+            name = tokens[1]
+            label_map[name] = idx + 1
+            continue
+
+        # CALL / RET
+        elif op == 'CALL':
+            target_name = tokens[1]
+            if target_name not in label_map:
+                raise ValueError(f"Line {idx+1}: undefined label '{target_name}'")
+            call_stack.append(idx + 2)   # return to line after CALL (i.e., idx+2)
+            idx = label_map[target_name] - 1
+            continue
+        elif op == 'RET':
+            if not call_stack:
+                raise ValueError(f"Line {idx+1}: RET with empty call stack")
+            return_addr = call_stack.pop()
+            idx = return_addr - 1
+            continue
+
+        # Comparison ops
+        elif op in ('EQ', 'GT', 'LT'):
+            if len(tokens) != 3:
+                raise ValueError(f"Line {idx+1}: {op} expects two values, got {len(stack)}")
+            b = stack.pop()
+            a = stack.pop()
+            result = 1 if (op == 'EQ' and a == b) or (op == 'GT' and a > b) or (op == 'LT' and a < b) else 0
+            stack.append(result)
+            continue
+
+        # Named variables
+        elif op == 'STORE':
+            var = tokens[1]
+            if not stack:
+                raise ValueError(f"Line {idx+1}: STORE on empty stack")
+            value = stack.pop()
+            memory[var] = value
+            continue
+        elif op == 'LOAD':
+            var = tokens[1]
+            if var not in memory:
+                raise ValueError(f"Line {idx+1}: LOAD from undefined variable '{var}'")
+            stack.append(memory[var])
+            continue
+
+        # Existing instructions unchanged...
+        elif op == 'PUSH':
+            n = int(tokens[1])
+            stack.append(n)
+
+        elif op == 'POP':
+            if not stack:
+                raise ValueError(f"Line {idx+1}: POP on empty stack")
+            stack.pop()
+
+        elif op == 'ADD':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx+1}: ADD requires two values, got {len(stack)}")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a + b)
+
+        elif op == 'SUB':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx+1}: SUB requires two values, got {len(stack)}")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+
+        elif op == 'MUL':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx+1}: MUL requires two values, got {len(stack)}")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a * b)
+
+        elif op == 'DIV':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx+1}: DIV requires two values, got {len(stack)}")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise ValueError(f"Line {idx+1}: division by zero")
+            stack.append(a // b)
+
+        elif op == 'DUP':
+            if not stack:
+                raise ValueError(f"Line {idx+1}: DUP on empty stack")
+            stack.append(stack[-1])
+
+        elif op == 'SWAP':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx+1}: SWAP requires two values, got {len(stack)}")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a)
+            stack.append(b)
+
+        elif op == 'PRINT':
+            if not stack:
+                raise ValueError(f"Line {idx+1}: PRINT on empty stack")
+            output.append(str(stack[-1]))
+
+        else:
+            raise ValueError(f"Line {idx+1}: unknown instruction '{op}'")
+
+    return output
+
+Check that CALL pushes idx+2 (line after CALL). Since loop increments idx each iteration, we set idx = label_map[target_name] - 1. That will execute target line next.
+
+RET pops and sets idx accordingly.
+
+Potential issue: call_stack stores idx+2 which is the line index where execution resumes. Yes.
+
+Now produce final answer as single python block.

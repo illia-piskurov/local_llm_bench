@@ -1,0 +1,220 @@
+```lua
+-- Global Behavior Tree namespace
+BT = {}
+
+-- Execution statuses
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+--- Helper function to check if a status string matches one of the defined constants
+local function is_status(s)
+    return s == BT.SUCCESS or s == BT.FAILURE or s == BT.RUNNING
+end
+
+-- -----------------------------------------------------------------------------
+-- Node Implementations
+-- -----------------------------------------------------------------------------
+
+--- Action Node: Executes a given function (fn).
+-- @param fn A function that takes the context and returns a boolean, string, or nil.
+function BT.Action(fn)
+    local self = {
+        _fn = fn,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        -- Execute the underlying function
+        local result = self._fn(ctx)
+
+        if type(result) == "boolean" then
+            if result then
+                return BT.SUCCESS
+            else
+                return BT.FAILURE
+            end
+        elseif type(result) == "string" and is_status(result) then
+            -- If the function explicitly returns a status string
+            return result
+        elseif result == nil then
+             -- Defaulting to failure if no explicit return value is given (safer default)
+             return BT.FAILURE
+        end
+
+        -- Handle cases where the function might return true/false implicitly
+        if result == true or result == "SUCCESS" then
+            return BT.SUCCESS
+        elseif result == false or result == "FAILURE" then
+            return BT.FAILURE
+        else
+            -- If it returned something unexpected, treat as failure for safety
+            return BT.FAILURE
+        end
+    end
+
+    function self:reset()
+        -- Actions are stateless by definition
+    end
+
+    return self
+end
+
+
+--- Condition Node: Checks a predicate function.
+-- @param predicate A function that takes the context and returns a boolean.
+function BT.Condition(predicate)
+    local self = {
+        _predicate = predicate,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        -- Predicates must return a boolean
+        if self._predicate(ctx) then
+            return BT.SUCCESS
+        else
+            return BT.FAILURE
+        end
+    end
+
+    function self:reset()
+        -- Conditions are stateless by definition
+    end
+
+    return self
+end
+
+
+--- Composite Node Base Methods (Shared logic for state management)
+BT.NodeMethods = {}
+
+-- -----------------------------------------------------------------------------
+-- Sequence Node (AND): Executes children until failure or completion.
+-- -----------------------------------------------------------------------------
+function BT.Sequence(children)
+    local self = {
+        _children = children,
+        _current_child_index = 1, -- State tracking: Start at the first child
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    -- Overriding the tick method to implement Sequence logic
+    function self:tick(ctx)
+        local children = self._children
+        local index = self._current_child_index
+
+        if not children or #children == 0 then
+            return BT.FAILURE -- Cannot execute sequence with no children
+        end
+
+        -- If we are starting fresh (or reset), start at the first child
+        if index < 1 then
+             self._current_child_index = 1
+             index = 1
+        end
+
+        local child = children[index]
+        local status = child:tick(ctx)
+
+        if status == BT.FAILURE then
+            -- Failure immediately halts the sequence
+            return BT.FAILURE
+        elseif status == BT.RUNNING then
+            -- Running means we remember our position and wait for next tick
+            return BT.RUNNING
+        else -- SUCCESS
+            -- Success: Check if this was the last child
+            if index == #children then
+                -- All children succeeded
+                self._current_child_index = 1 -- Reset state upon full success
+                return BT.SUCCESS
+            else
+                -- Successful, but more children remain. Move to the next one for the *next* tick.
+                self._current_child_index = index + 1
+                -- Crucially: We must re-run the current child's logic on the next tick if we want it to continue running.
+                -- However, standard BT implementation dictates that successful children are considered done for this cycle.
+                -- Since we only advance the pointer and return SUCCESS here, the caller (the engine) will call us again.
+                return BT.RUNNING -- Signal RUNNING so the parent knows state was maintained/advanced
+            end
+        end
+    end
+
+    function self:reset()
+        self._current_child_index = 1
+    end
+
+    return self
+end
+
+
+-- -----------------------------------------------------------------------------
+-- Selector Node (OR): Executes children until success or exhaustion.
+-- -----------------------------------------------------------------------------
+function BT.Selector(children)
+    local self = {
+        _children = children,
+        _current_child_index = 1, -- State tracking: Start at the first child
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    -- Overriding the tick method to implement Selector logic
+    function self:tick(ctx)
+        local children = self._children
+        local index = self._current_child_index
+
+        if not children or #children == 0 then
+            return BT.FAILURE -- Cannot execute selector with no children
+        end
+
+        -- If we are starting fresh (or reset), start at the first child
+        if index < 1 then
+             self._current_child_index = 1
+             index = 1
+        end
+
+        local child = children[index]
+        local status = child:tick(ctx)
+
+        if status == BT.SUCCESS then
+            -- Success immediately halts the selector and returns success
+            return BT.SUCCESS
+        elseif status == BT.RUNNING then
+            -- Running means we remember our position and wait for next tick
+            return BT.RUNNING
+        else -- FAILURE
+            -- Failure: Check if this was the last child
+            if index == #children then
+                -- All children failed
+                self._current_child_index = 1 -- Reset state upon full failure
+                return BT.FAILURE
+            else
+                -- Failed, but more children remain. Keep position and wait for next tick.
+                -- We return RUNNING to signal that the selector is still active/waiting on this child's completion.
+                return BT.RUNNING
+            end
+        end
+    end
+
+    function self:reset()
+        self._current_child_index = 1
+    end
+
+    return self
+end
+
+
+-- Expose all nodes under the global table
+BT.Action = function(fn) return BT.Action(fn) end
+BT.Condition = function(predicate) return BT.Condition(predicate) end
+BT.Sequence = function(children) return BT.Sequence(children) end
+BT.Selector = function(children) return BT.Selector(children) end
+
+-- Note: The actual implementation of the composite nodes (Sequence/Selector) 
+-- relies on Lua's metatable mechanism to override the :tick method, 
+-- which is handled by setting __index = BT.NodeMethods and defining the methods above.
+```

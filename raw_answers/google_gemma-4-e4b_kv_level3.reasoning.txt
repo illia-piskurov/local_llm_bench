@@ -1,0 +1,48 @@
+The user wants to extend the `NestedKVStore` class with two new commands: `SNAPSHOT <name>` and `RESTORE <name>`.
+
+These commands require saving and restoring the entire internal state of the store, which includes:
+1.  `self.storage`: Global persistent storage.
+2.  `self.transaction_stack`: The stack of transaction states (dictionaries).
+3.  `self.watch_stack`: The stack of watch records (lists of tuples).
+
+The `SNAPSHOT` command must save this entire state structure under a given name, overwriting previous snapshots if necessary.
+
+The `RESTORE` command must load the saved state and replace all current internal attributes (`storage`, `transaction_stack`, `watch_stack`) with the snapshot's data.
+
+Let's analyze the implementation details for `SNAPSHOT` and `RESTORE`.
+
+### 1. State Management
+We need a place to store snapshots. A dictionary mapping names (strings) to saved states seems appropriate. Since the state is complex, we should save all necessary components: storage, transaction stack, and watch stack.
+
+I will add `self.snapshots: Dict[str, Any]` to `__init__`.
+
+### 2. SNAPSHOT <name>
+1.  Save the current values of `self.storage`, `self.transaction_stack`, and `self.watch_stack` into a dictionary structure associated with `<name>` in `self.snapshots`.
+2.  Since the stacks contain mutable objects (dictionaries and lists), deep copying is crucial to ensure that future modifications do not affect the saved snapshot.
+
+### 3. RESTORE <name>
+1.  Retrieve the state from `self.snapshots[<name>]`.
+2.  Overwrite:
+    *   `self.storage = loaded_storage`
+    *   `self.transaction_stack = loaded_transaction_stack`
+    *   `self.watch_stack = loaded_watch_stack`
+
+### 4. Integration into `run()`
+1.  Update the `NestedKVStore.__init__` to include snapshot storage.
+2.  Implement `snapshot(name: str)` and `restore(name: str)` methods in `NestedKVStore`.
+3.  Handle these new commands in the `run(program: str)` function.
+
+Let's start modifying the code structure.
+
+---
+*Self-Correction/Refinement during implementation:*
+When saving the state, I must ensure that deep copies are used for all mutable structures (dictionaries and lists) to prevent aliasing issues.
+
+The existing `NestedKVStore` uses:
+- `self.storage`: Dict[str, str]
+- `self.transaction_stack`: List[Dict[str, str]]
+- `self.watch_stack`: List[List[Tuple[str, Optional[str]]]]
+
+I need to handle the snapshot storage structure carefully.
+
+Let's implement the changes.

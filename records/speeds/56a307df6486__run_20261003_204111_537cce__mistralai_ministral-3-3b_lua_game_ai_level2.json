@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "lua_game_ai",
+  "level": "level2",
+  "tested_at": "2026-10-03 20:54:32",
+  "stats": {
+    "input_tokens": 2072,
+    "total_output_tokens": 1141,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 22.266650483629697,
+    "time_to_first_token_seconds": 2.7962029999999998,
+    "model_load_time_seconds": null
+  }
+}

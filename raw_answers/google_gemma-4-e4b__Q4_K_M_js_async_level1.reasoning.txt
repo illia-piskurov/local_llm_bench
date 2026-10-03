@@ -1,0 +1,58 @@
+Here's a plan to implement `pMap`:
+
+1.  **Analyze Requirements:**
+    *   Signature: `async function pMap(items, mapper, options)`
+    *   Input validation/Handling: Empty `items` -> return `[]`.
+    *   Concurrency Control: Limit concurrent calls using a semaphore or similar mechanism.
+    *   Order Preservation: Results must be stored in an array indexed by the original item index.
+    *   Error Handling: Fail fast (reject immediately) upon any mapper rejection/exception.
+
+2.  **Handle Options and Concurrency:**
+    *   Determine `concurrency` limit. Default is 1 if options is missing or undefined. If it's a number, use it; otherwise, check for `{ concurrency: N }`.
+
+3.  **Implement the Core Logic (Concurrency Management):**
+    *   We need to process tasks sequentially in batches defined by the concurrency limit.
+    *   A common pattern for limited concurrency is using an array of promises and managing a worker pool or queue.
+    *   Since we must maintain order, we will use `Promise.all` on the final results, but the execution needs throttling.
+
+4.  **Detailed Implementation Strategy (The Worker Pool/Queue):**
+    *   We can create an array of promises representing all tasks.
+    *   Instead of running them all at once, we'll process them in chunks of size `concurrency`.
+    *   A more robust approach is to use a queue structure that tracks active workers and waits for slots to open up.
+
+5.  **Refining the Concurrency Loop (Using `Promise.all` with Throttling):**
+    *   We can process the tasks iteratively. We'll maintain an array of running promises (`activePromises`).
+    *   When a slot opens up (a promise resolves/rejects), we immediately start the next task from the queue.
+
+6.  **Error Handling Integration:**
+    *   If any worker rejects, the entire `pMap` must reject immediately. This suggests wrapping the execution in a structure that propagates errors instantly.
+
+7.  **Step-by-step Code Construction (Self-Correction/Refinement):**
+
+    *   *Initial setup:* Handle defaults and empty array check.
+    *   *The worker function:* We need a mechanism to process tasks one by one, respecting the limit.
+    *   Let's use an index `i` to track which item we are currently processing.
+    *   We will maintain an array of promises (`results`) and start up to `concurrency` workers initially.
+
+    *(Self-Correction on Error Handling):* If we use a simple loop with `await Promise.all(...)`, the error handling is clean, but it doesn't enforce concurrency limits naturally unless we manage the promise creation explicitly.
+
+    *Alternative Approach: Using an Iterator/Queue:*
+    1. Initialize results array of size N.
+    2. Create a queue of indices (0 to N-1).
+    3. Start `concurrency` workers. Each worker pulls an index, executes the mapper, and stores the result in the correct slot.
+    4. Use `Promise.all` on the initial set of promises created by the workers until all tasks are done.
+
+Let's implement this using a controlled loop structure that manages active promises.
+
+*(Final check on error handling):* If one promise rejects, we must ensure the entire function rejects immediately, even if other running tasks haven't finished. `Promise.all` handles this naturally (it fails fast). We just need to make sure our concurrency mechanism feeds into a single `Promise.all`.
+
+Let's use an array of promises and manage their execution flow using `Promise.race` or similar logic, but since we must wait for *all* results, managing the pool size is key.
+
+The most straightforward way to enforce limited concurrency while maintaining order and handling errors is often a recursive/queue-based approach combined with `Promise.all`.
+
+Let's stick to the worker pool pattern:
+
+1. Initialize an array of promises (`promises`).
+2. Use a loop structure that processes tasks in batches, ensuring we never have more than `concurrency` active promises at any time.
+
+This requires careful management of the promise chain. We will use `Promise.allSettled` logic internally but must re-throw errors immediately upon rejection. Since we need strict failure propagation, standard `await Promise.all()` is best, provided we feed it only a limited number of tasks at a time.

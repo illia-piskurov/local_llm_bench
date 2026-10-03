@@ -1,0 +1,124 @@
+local BT = {}
+
+-- Execution statuses
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+-- Base Node class (abstract)
+local function new_node()
+    return setmetatable({}, {
+        __index = function(self, key)
+            error("Attempt to access non-existent method: " .. key)
+        end
+    })
+end
+
+-- Action Node
+function BT.Action(fn)
+    local node = new_node()
+
+    local function tick(ctx)
+        local result = fn(ctx)
+        if result == true then return BT.SUCCESS end
+        if result == false then return BT.FAILURE end
+        if result == BT.SUCCESS then return BT.SUCCESS end
+        if result == BT.FAILURE then return BT.FAILURE end
+        return BT.RUNNING
+    end
+
+    function node:tick(ctx)
+        return tick(ctx)
+    end
+
+    function node:reset()
+        -- No state to reset for Action nodes
+    end
+
+    return node
+end
+
+-- Condition Node
+function BT.Condition(predicate)
+    local node = new_node()
+
+    local function tick(ctx)
+        if predicate(ctx) then return BT.SUCCESS else return BT.FAILURE end
+    end
+
+    function node:tick(ctx)
+        return tick(ctx)
+    end
+
+    function node:reset()
+        -- No state to reset for Condition nodes
+    end
+
+    return node
+end
+
+-- Sequence Node (AND)
+function BT.Sequence(children)
+    local node = new_node()
+
+    local current_child_index = 1
+    local function tick(ctx)
+        if current_child_index > #children then return BT.FAILURE end
+
+        local child = children[current_child_index]
+        local result = child:tick(ctx)
+
+        if result == BT.RUNNING then
+            current_child_index = current_child_index + 1
+            return BT.RUNNING
+        elseif result == BT.SUCCESS then
+            current_child_index = current_child_index + 1
+            return BT.SUCCESS
+        else -- FAILURE
+            return BT.FAILURE
+        end
+    end
+
+    function node:tick(ctx)
+        return tick(ctx)
+    end
+
+    function node:reset()
+        current_child_index = 1
+    end
+
+    return node
+end
+
+-- Selector Node (OR / Fallback)
+function BT.Selector(children)
+    local node = new_node()
+
+    local current_child_index = 1
+    local function tick(ctx)
+        if current_child_index > #children then return BT.FAILURE end
+
+        local child = children[current_child_index]
+        local result = child:tick(ctx)
+
+        if result == BT.RUNNING then
+            current_child_index = current_child_index + 1
+            return BT.RUNNING
+        elseif result == BT.SUCCESS then
+            return BT.SUCCESS
+        else -- FAILURE
+            current_child_index = current_child_index + 1
+            return BT.FAILURE
+        end
+    end
+
+    function node:tick(ctx)
+        return tick(ctx)
+    end
+
+    function node:reset()
+        current_child_index = 1
+    end
+
+    return node
+end

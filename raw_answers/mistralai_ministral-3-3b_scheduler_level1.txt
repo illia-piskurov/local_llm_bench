@@ -2,26 +2,26 @@
 from collections import deque
 
 def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    # Build adjacency list and in-degree count
+    adj = {task: [] for task in tasks}
     in_degree = {task: 0 for task in tasks}
-    graph = {task: [] for task in tasks}
 
-    # Подсчёт степени входа и построение графа
-    for task, dependencies in tasks.items():
-        for dep in dependencies:
-            if dep not in tasks:
-                return None  # цикл или несуществующая задача
-            graph[dep].append(task)
+    for task, deps in tasks.items():
+        for dep in deps:
+            if dep not in adj:
+                return None  # Invalid dependency (not in tasks)
+            adj[dep].append(task)
             in_degree[task] += 1
 
-    # Начальный набор задач без зависимостей
-    queue = deque([task for task in in_degree if in_degree[task] == 0])
+    # Initialize queue with tasks having no dependencies
+    queue = deque([task for task in tasks if in_degree[task] == 0])
     result = []
 
     while queue:
         current = queue.popleft()
         result.append(current)
 
-        for neighbor in graph[current]:
+        for neighbor in adj[current]:
             in_degree[neighbor] -= 1
             if in_degree[neighbor] == 0:
                 queue.append(neighbor)

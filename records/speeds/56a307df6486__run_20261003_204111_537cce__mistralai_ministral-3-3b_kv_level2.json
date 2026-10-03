@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-10-03 20:45:33",
+  "stats": {
+    "input_tokens": 1623,
+    "total_output_tokens": 928,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 24.470410298035606,
+    "time_to_first_token_seconds": 2.001893,
+    "model_load_time_seconds": null
+  }
+}

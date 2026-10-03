@@ -1,0 +1,116 @@
+```c
+#include <stdint.h>
+
+#define BUFFER_SIZE 512
+
+static uint8_t data[BUFFER_SIZE];
+int head = 0, tail = 0;
+int count = 0;
+
+void ringbuf_init(void) {
+    count = 0;
+    head = 0;
+    tail = 0;
+}
+
+int ringbuf_push(uint8_t byte) {
+    if (count == BUFFER_SIZE)
+        return -1;
+    data[head] = byte;
+    head = (head + 1) % BUFFER_SIZE;
+    count++;
+    return 0;
+}
+
+int ringbuf_pop(void) {
+    if (count == 0)
+        return -1;
+    int value = data[tail];
+    tail = (tail + 1) % BUFFER_SIZE;
+    count--;
+    return value;
+}
+
+int ringbuf_available(void) {
+    return count;
+}
+
+int ringbuf_free_space(void) {
+    return BUFFER_SIZE - count;
+}
+
+/* Binary packet decoder */
+int decode_packet(const uint8_t *stream, int stream_len,
+                  uint8_t *out_payload, int *out_type)
+{
+    if (!stream || !out_payload || !out_type)
+        return -1;
+
+    for (int i = 0; i + 4 <= stream_len; ++i) {
+        if (stream[i] != 0xAA)
+            continue;
+        uint8_t type = stream[i + 1];
+        uint8_t len = stream[i + 2];
+
+        /* Ensure payload and checksum are present */
+        if (i + len + 3 >= stream_len)
+            continue;
+
+        int xor_val = 0;
+        for (int j = 0; j < len; ++j)
+            xor_val ^= stream[i + 3 + j];
+
+        if (xor_val == stream[i + len + 3]) {
+            *out_type = type;
+            for (int j = 0; j < len; ++j)
+                out_payload[j] = stream[i + 3 + j];
+            return len;
+        }
+    }
+    return -1;
+}
+
+/* Streaming parser */
+void feed_bytes(const uint8_t *data, int len) {
+    while (len > 0 && ringbuf_free_space() > 0) {
+        ringbuf_push(data[0]);
+        data++;
+        len--;
+    }
+}
+
+int get_next_packet(uint8_t *out_payload, int *out_type) {
+    if (!out_payload || !out_type)
+        return -1;
+
+    for (int i = 0; i < count; ++i) {
+        if (data[i] != 0xAA)
+            continue;
+        uint8_t type = data[i + 1];
+        uint8_t len = data[i + 2];
+
+        /* Check that payload and checksum fit within buffer */
+        if (i + len + 3 > count)
+            continue;
+
+        int xor_val = 0;
+        for (int j = 0; j < len; ++j)
+            xor_val ^= data[i + 3 + j];
+
+        if (xor_val == data[i + len + 3]) {
+            *out_type = type;
+            for (int j = 0; j < len; ++j)
+                out_payload[j] = data[i + 3 + j];
+            /* Remove the consumed bytes from ring buffer */
+            int removed = i + len + 4;
+            while (removed > 0) {
+                if (count == 0) break;
+                ringbuf_pop();
+                removed--;
+            }
+            return len;
+        }
+    }
+    return -1;
+}
+```

@@ -1,0 +1,167 @@
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    stack = []
+    output = []
+    current_line = 0
+    labels = {}
+    line_numbers = {}
+    call_stack = []
+    variables = {}
+    
+    for i, line in enumerate(lines):
+        # Skip empty lines and comments
+        if not line.strip() or line.strip().startswith("#"):
+            continue
+        
+        parts = line.split()
+        instruction = parts[0]
+        
+        if instruction == "LABEL":
+            label_name = parts[1]
+            labels[label_name] = i + 1  # Store line number (1-indexed)
+            
+        elif instruction == "JMP":
+            label_name = parts[1]
+            if label_name not in labels:
+                raise ValueError(f"Line {current_line + 1}: Undefined label: {label_name}")
+            current_line = labels[label_name] - 1  # Convert to 0-indexed
+            
+        elif instruction == "JZ":
+            label_name = parts[1]
+            if label_name not in labels:
+                raise ValueError(f"Line {current_line + 1}: Undefined label: {label_name}")
+            if len(stack) == 0:
+                raise ValueError(f"Line {current_line + 1}: Stack is empty for JZ")
+            value = stack.pop()
+            if value == 0:
+                current_line = labels[label_name] - 1  # Convert to 0-indexed
+            else:
+                # Continue to next line
+                pass
+                
+        elif instruction == "JNZ":
+            label_name = parts[1]
+            if label_name not in labels:
+                raise ValueError(f"Line {current_line + 1}: Undefined label: {label_name}")
+            if len(stack) == 0:
+                raise ValueError(f"Line {current_line + 1}: Stack is empty for JNZ")
+            value = stack.pop()
+            if value != 0:
+                current_line = labels[label_name] - 1  # Convert to 0-indexed
+            else:
+                # Continue to next line
+                pass
+                
+        elif instruction == "CALL":
+            label_name = parts[1]
+            if label_name not in labels:
+                raise ValueError(f"Line {current_line + 1}: Undefined label: {label_name}")
+            call_stack.append(current_line + 1)  # Store return address (1-indexed)
+            current_line = labels[label_name] - 1  # Convert to 0-indexed
+            
+        elif instruction == "RET":
+            if len(call_stack) == 0:
+                raise ValueError(f"Line {current_line + 1}: Call stack is empty, cannot RET")
+            return_address = call_stack.pop()
+            current_line = return_address - 1  # Convert to 0-indexed
+            
+        elif instruction == "EQ":
+            if len(stack) < 2:
+                raise ValueError(f"Line {current_line + 1}: Stack has less than 2 elements for EQ")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(1 if a == b else 0)
+            
+        elif instruction == "GT":
+            if len(stack) < 2:
+                raise ValueError(f"Line {current_line + 1}: Stack has less than 2 elements for GT")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(1 if a > b else 0)
+            
+        elif instruction == "LT":
+            if len(stack) < 2:
+                raise ValueError(f"Line {current_line + 1}: Stack has less than 2 elements for LT")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(1 if a < b else 0)
+            
+        elif instruction == "STORE":
+            var_name = parts[1]
+            if len(stack) == 0:
+                raise ValueError(f"Line {current_line + 1}: Stack is empty, cannot STORE")
+            value = stack.pop()
+            variables[var_name] = value
+            
+        elif instruction == "LOAD":
+            var_name = parts[1]
+            if var_name not in variables:
+                raise ValueError(f"Line {current_line + 1}: Variable {var_name} has not been stored yet")
+            stack.append(variables[var_name])
+            
+        else:
+            # Handle existing instructions
+            if instruction == "PUSH":
+                try:
+                    n = int(parts[1])
+                    stack.append(n)
+                except ValueError:
+                    raise ValueError(f"Line {current_line + 1}: Invalid number for PUSH")
+                    
+            elif instruction == "POP":
+                if len(stack) == 0:
+                    raise ValueError(f"Line {current_line + 1}: Stack is empty, cannot POP")
+                stack.pop()
+                
+            elif instruction == "ADD":
+                if len(stack) < 2:
+                    raise ValueError(f"Line {current_line + 1}: Stack has less than 2 elements for ADD")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+                
+            elif instruction == "SUB":
+                if len(stack) < 2:
+                    raise ValueError(f"Line {current_line + 1}: Stack has less than 2 elements for SUB")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a - b)
+                
+            elif instruction == "MUL":
+                if len(stack) < 2:
+                    raise ValueError(f"Line {current_line + 1}: Stack has less than 2 elements for MUL")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+                
+            elif instruction == "DIV":
+                if len(stack) < 2:
+                    raise ValueError(f"Line {current_line + 1}: Stack has less than 2 elements for DIV")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise ValueError(f"Line {current_line + 1}: Division by zero")
+                stack.append(a // b)
+                
+            elif instruction == "DUP":
+                if len(stack) == 0:
+                    raise ValueError(f"Line {current_line + 1}: Stack is empty, cannot DUP")
+                stack.append(stack[-1])
+                
+            elif instruction == "SWAP":
+                if len(stack) < 2:
+                    raise ValueError(f"Line {current_line + 1}: Stack has less than 2 elements for SWAP")
+                stack[-1], stack[-2] = stack[-2], stack[-1]
+                
+            elif instruction == "PRINT":
+                if len(stack) == 0:
+                    raise ValueError(f"Line {current_line + 1}: Stack is empty, cannot PRINT")
+                output.append(str(stack[-1]))
+                # Do not pop the value
+                
+            else:
+                raise ValueError(f"Line {current_line + 1}: Unknown instruction: {instruction}")
+        
+        current_line += 1
+    
+    return output

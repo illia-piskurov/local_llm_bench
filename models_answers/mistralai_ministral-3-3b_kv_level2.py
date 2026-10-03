@@ -1,136 +1,125 @@
-class TransactionDB:
+import sys
+
+class InMemoryKeyValueStore:
     def __init__(self):
         self.global_store = {}
-        self.stack = []  # Stack of nested transactions
-        self.watched_keys = {}  # {key: (old_value, is_watching)}
-        self.output = []
+        self.transactions = []
+        self.watched_keys = {}  # Maps keys to their current watched state (old_value)
+
+    def _push_transaction(self):
+        self.transactions.append({})
+
+    def _pop_transaction(self):
+        if not self.transactions:
+            return None
+        return self.transactions.pop()
 
     def run(self, program: str) -> list[str]:
         output = []
         commands = [cmd.strip() for cmd in program.split('\n') if cmd.strip()]
-        current_transaction = None
-        transaction_stack = []
+        current_transactions = []
 
+        # Parse and execute commands
         for cmd in commands:
             parts = cmd.split()
             if not parts:
                 continue
 
             if parts[0] == 'BEGIN':
-                new_tx = {'store': {}, 'parent': current_transaction}
-                transaction_stack.append(new_tx)
-                current_transaction = new_tx
+                self._push_transaction()
+                current_transactions.append(self.transactions[-1])
 
             elif parts[0] == 'COMMIT':
-                if not transaction_stack:
-                    output.append("NO TRANCTION")
-                    continue
-                tx = transaction_stack.pop()
-                if tx['parent'] is None:  # Global commit
-                    self.global_store.update(tx['store'])
+                if len(current_transactions) < 2 or not self.transactions[-1]:
+                    output.append("NO TRANSACTION")
                 else:
-                    tx['parent']['store'].update(tx['store'])
+                    parent = current_transactions.pop()
+                    changes = self._pop_transaction()
+                    for key, value in changes.items():
+                        if key in parent:
+                            parent[key] = value
+                        else:
+                            parent[key] = value
 
             elif parts[0] == 'ROLLBACK':
-                if not transaction_stack:
-                    output.append("NO TRANCTION")
-                    continue
-                tx = transaction_stack.pop()
-                tx['store'] = {}
+                if not self.transactions[-1]:
+                    output.append("NO TRANSACTION")
+                else:
+                    self._pop_transaction()
 
             elif parts[0] == 'SET' and len(parts) >= 3:
                 key, value = parts[1], parts[2]
-                current_tx = transaction_stack[-1] if transaction_stack else self.global_store
+                current_store = self.transactions[-1] if self.transactions else self.global_store
+                old_value = current_store.get(key)
 
-                # Apply SET to the most recent transaction
-                old_value = current_tx.get(key)
-                current_tx[key] = value
+                # Check watched keys for notifications
+                for watched_key in list(self.watched_keys.keys()):
+                    if watched_key == key:
+                        new_value = value if value != "NULL" else None  # Handle NULL case
+                        if self.watched_keys[watched_key] != new_value:
+                            output.append(f"WATCH {key} {self.watched_keys[watched_key]} -> {new_value}")
+                            self.watched_keys[watched_key] = new_value
 
-                # Check for watched keys and notify
-                if key in self.watched_keys:
-                    old_watch_val, is_watching = self.watched_keys[key]
-                    new_watch_val = str(value) if value != "NULL" else "NULL"
-                    if old_watch_val != new_watch_val or (old_watch_val == value and value != "NULL"):
-                        output.append(f"WATCH {key} {old_watch_val} -> {new_watch_val}")
+                current_store[key] = value
 
             elif parts[0] == 'GET':
                 key = parts[1]
-                tx = None
-                for t in reversed(transaction_stack):
-                    if key in t['store']:
-                        tx = t
+                # Check all transactions from innermost to outermost
+                for store in reversed(self.transactions):
+                    if key in store:
+                        output.append(store[key])
                         break
-                if tx:
-                    output.append(tx['store'].get(key, "NULL"))
-                elif key in self.global_store:
-                    output.append(self.global_store.get(key, "NULL"))
                 else:
-                    output.append("NULL")
+                    if key in self.global_store:
+                        output.append(self.global_store[key])
+                    else:
+                        output.append("NULL")
 
             elif parts[0] == 'DELETE' and len(parts) >= 2:
                 key = parts[1]
-                # Delete from the most recent transaction first
-                for t in reversed(transaction_stack):
-                    if key in t['store']:
-                        old_value = t[key]
-                        del t[key]
-                        break
-                elif key in self.global_store:
-                    old_value = self.global_store.pop(key, None)
+                current_store = self.transactions[-1] if self.transactions else self.global_store
+                old_value = current_store.get(key, "NULL")
+                del current_store[key]
 
-                # Check for watched keys and notify
-                if key in self.watched_keys:
-                    old_watch_val, is_watching = self.watched_keys[key]
-                    new_watch_val = "NULL" if not any(t.get(key) == "NULL" or t.get(key) == str(old_value)
-                                                     for t in (transaction_stack[-1] if transaction_stack else [self.global_store])) else "NULL"
-                    output.append(f"WATCH {key} {old_watch_val} -> {new_watch_val}")
+                # Check watched keys for notifications
+                for watched_key in list(self.watched_keys.keys()):
+                    if watched_key == key:
+                        output.append(f"WATCH {key} {old_value} -> NULL")
 
             elif parts[0] == 'COUNT' and len(parts) >= 2:
                 value = parts[1]
                 count = 0
-                # Check current transaction first
-                for t in transaction_stack:
-                    if value in t['store'].values():
-                        count += t['store'].values().__len__()
-                # Then check global store
-                if value in self.global_store.values():
-                    count += self.global_store.values().__len__()
-
-                # Count only unique keys with this value (avoid double counting)
-                tx_keys = set()
-                for t in transaction_stack:
-                    for k, v in t['store'].items():
-                        if v == value and k not in tx_keys:
-                            count += 1
-                            tx_keys.add(k)
-
-                global_keys = {k: self.global_store[k] for k, v in self.global_store.items() if v == value}
-                count += len(global_keys)
+                # Check all transactions from innermost to outermost
+                for store in reversed(self.transactions):
+                    if value in store.values():
+                        count += store.values().count(value)
+                else:
+                    if value in self.global_store.values():
+                        count += self.global_store.values().count(value)
                 output.append(str(count))
 
             elif parts[0] == 'WATCH' and len(parts) >= 2:
                 key = parts[1]
                 current_value = None
-                # Find the most recent transaction that has this key
-                for t in reversed(transaction_stack):
-                    if key in t['store']:
-                        current_value = t[key]
+                # Check all transactions from innermost to outermost
+                for store in reversed(self.transactions):
+                    if key in store:
+                        current_value = store[key]
                         break
-                elif key in self.global_store:
-                    current_value = self.global_store[key]
+                else:
+                    if key in self.global_store:
+                        current_value = self.global_store[key]
 
-                self.watched_keys[key] = (current_value, True)
+                self.watched_keys[key] = current_value
 
         return output
 
-# Пример использования для тестирования:
-db = TransactionDB()
-program = """
-BEGIN
-SET a 10
-WATCH a
-GET a
-COMMIT
-COUNT 10
-"""
-print(db.run(program))
+def main():
+    store = InMemoryKeyValueStore()
+    program = sys.stdin.read().strip()
+    results = store.run(program)
+    for res in results:
+        print(res)
+
+if __name__ == "__main__":
+    main()

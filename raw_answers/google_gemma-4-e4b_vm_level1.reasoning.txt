@@ -1,0 +1,26 @@
+Here's a plan to implement the stack interpreter:
+
+1.  **Structure:** Define the main function `run(program: str) -> list[str]`.
+2.  **Initialization:** Initialize the stack (a list) and the output list.
+3.  **Parsing:** Process the input program line by line, keeping track of the current line number for error reporting.
+4.  **Preprocessing/Filtering:** Skip empty lines and comments (`#`).
+5.  **Execution Loop:** For each valid instruction:
+    *   Parse the instruction (command and arguments).
+    *   Implement logic for each supported opcode, handling stack checks and specific arithmetic rules.
+6.  **Error Handling:** Implement robust `try...except` or explicit checks for:
+    *   Insufficient stack depth.
+    *   Division by zero.
+
+Let's detail the instruction implementations:
+
+*   `PUSH <n>`: Push integer `n`.
+*   `POP`: Pop and discard. Check if stack is empty.
+*   `ADD`: Pop $b$, pop $a$. Push $a + b$. Check depth $\ge 2$.
+*   `SUB`: Pop $b$, pop $a$. Push $a - b$. Check depth $\ge 2$.
+*   `MUL`: Pop $b$, pop $a$. Push $a \times b$. Check depth $\ge 2$.
+*   `DIV`: Pop $b$, pop $a$. Check if $b=0$ (division by zero). Push $a // b$. Check depth $\ge 2$.
+*   `DUP`: Duplicate top element. Check depth $\ge 1$.
+*   `SWAP`: Swap top two elements. Check depth $\ge 2$.
+*   `PRINT`: Print top element. Check depth $\ge 1$.
+
+The error handling needs to be precise, reporting the line number where the failure occurred. I will use a helper function or structure to manage this complexity.

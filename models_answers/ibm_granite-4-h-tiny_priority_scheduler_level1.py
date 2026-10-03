@@ -11,48 +11,50 @@ def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> li
     
     def topological_sort():
         queue = deque([task for task in tasks if indegree[task] == 0])
-        sorted_tasks = []
+        order = []
         
         while queue:
             current = min(queue, key=lambda t: (-tasks[t][2], tasks[t][0], t))
-            sorted_tasks.append(current)
             queue.remove(current)
+            order.append(current)
             
             for neighbor in graph[current]:
                 indegree[neighbor] -= 1
                 if indegree[neighbor] == 0:
                     queue.append(neighbor)
         
-        return sorted_tasks if len(sorted_tasks) == len(tasks) else None
+        return order if len(order) == len(tasks) else None
     
-    order = topological_sort()
+    sorted_tasks = topological_sort()
     
-    if not order:
+    if sorted_tasks is None:
         return None
     
-    schedule = []
     current_time = 0
-    available_workers = workers
+    running_tasks = []
+    result = []
     
-    while order or any(indegree[task] == 0 for task in tasks):
-        ready_tasks = [task for task in order if indegree[task] == 0]
+    while sorted_tasks or running_tasks:
+        ready_tasks = [task for task in sorted_tasks if all(dep_task not in running_tasks for dep_task in tasks[task][1])]
         
-        if not ready_tasks:
-            current_time += 1
-            continue
-        
+        # Schedule new tasks based on priority, duration, and name
         ready_tasks.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))
         
-        while available_workers > 0 and ready_tasks:
+        while workers > 0 and ready_tasks:
             task = ready_tasks.pop(0)
-            schedule.append((task, current_time))
-            
-            for neighbor in graph[task]:
-                indegree[neighbor] -= 1
-            
-            if indegree[task] == 0:
-                order.remove(task)
+            running_tasks.append(task)
+            sorted_tasks.remove(task)
+            result.append((task, current_time))
+            workers -= 1
         
-        current_time += 1
+        # Advance time
+        if running_tasks:
+            next_end_time = min(tasks[task][0] for task in running_tasks)
+            current_time += next_end_time
+            for i, (task, start_time) in enumerate(result):
+                if tasks[task][0] == next_end_time and task in running_tasks:
+                    result[i] = (task, current_time)
+                    running_tasks.remove(task)
+                    workers += 1
     
-    return [task for task, _ in schedule]
+    return [task for task, _ in sorted(result, key=lambda x: x[1])]

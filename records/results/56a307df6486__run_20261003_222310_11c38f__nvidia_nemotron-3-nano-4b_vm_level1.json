@@ -1,0 +1,13 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-10-03 22:24:05",
+  "passed": 18,
+  "total": 18,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

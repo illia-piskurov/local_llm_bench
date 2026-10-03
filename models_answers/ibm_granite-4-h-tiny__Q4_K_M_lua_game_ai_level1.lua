@@ -1,0 +1,95 @@
+local BT = {}
+
+-- Execution statuses
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+-- Action node
+function BT.Action(fn)
+    return {
+        tick = function(ctx)
+            local result = fn(ctx)
+            if result == true or result == BT.SUCCESS then
+                return BT.SUCCESS
+            elseif result == false or result == BT.FAILURE then
+                return BT.FAILURE
+            else
+                return BT.RUNNING
+            end
+        end,
+        reset = function() end
+    }
+end
+
+-- Condition check node
+function BT.Condition(predicate)
+    return {
+        tick = function(ctx)
+            if predicate(ctx) then
+                return BT.SUCCESS
+            else
+                return BT.FAILURE
+            end
+        end,
+        reset = function() end
+    }
+end
+
+-- Sequence node (logical AND)
+function BT.Sequence(children)
+    local index = 1
+    return {
+        tick = function(ctx)
+            while true do
+                if index > #children then
+                    return BT.SUCCESS
+                elseif index < 1 then
+                    error("Invalid sequence index")
+                end
+                
+                local result = children[index]:tick(ctx)
+                if result == BT.FAILURE then
+                    return BT.FAILURE
+                elseif result == BT.RUNNING then
+                    return BT.RUNNING
+                end
+                
+                index = index + 1
+            end
+        end,
+        reset = function()
+            index = 1
+        end
+    }
+end
+
+-- Selector node (logical OR / Fallback)
+function BT.Selector(children)
+    local index = 1
+    return {
+        tick = function(ctx)
+            while true do
+                if index > #children then
+                    return BT.FAILURE
+                elseif index < 1 then
+                    error("Invalid selector index")
+                end
+                
+                local result = children[index]:tick(ctx)
+                if result == BT.SUCCESS then
+                    return BT.SUCCESS
+                elseif result == BT.RUNNING then
+                    return BT.RUNNING
+                end
+                
+                index = index + 1
+            end
+        end,
+        reset = function()
+            index = 1
+        end
+    }
+end
+
+return BT

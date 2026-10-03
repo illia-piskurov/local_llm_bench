@@ -3,16 +3,14 @@
   "output": [
     {
       "type": "message",
-      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    def dfs(task):\n        if memo[task] is not None:\n            return memo[task]\n        max_duration = 0\n        for dep in tasks.get(task, []):\n            duration = dfs(dep)\n            if duration is None:\n                return None  # cycle detected\n            max_duration = max(max_duration, duration)\n        memo[task] = max_duration + tasks[task][0]\n        return memo[task]\n\n    memo = {task: None for task in tasks}\n    result = None\n\n    for task in tasks:\n        duration = dfs(task)\n        if duration is None:\n            return None  # cycle detected\n        if result is None or duration > result:\n            result = duration\n\n    return result\n```"
+      "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    def dfs(task):\n        if task in memo:\n            return memo[task]\n        duration, deps = tasks[task]\n        max_dep_duration = 0\n        for dep in deps:\n            max_dep_duration = max(max_dep_duration, dfs(dep))\n        memo[task] = duration + max_dep_duration\n        return memo[task]\n\n    memo = {}\n    if topo_sort(tasks) is None:\n        return None\n\n    result = 0\n    for task in tasks:\n        result = max(result, dfs(task))\n    return result\n```"
     }
   ],
   "stats": {
-    "input_tokens": 685,
-    "total_output_tokens": 176,
+    "input_tokens": 424,
+    "total_output_tokens": 138,
     "reasoning_output_tokens": 0,
-    "tokens_per_second": 19.79272295799546,
-    "time_to_first_token_seconds": 7.376808,
-    "model_load_time_seconds": 4.015
-  },
-  "response_id": "resp_988d4078a7d8c2163af075b6b194936bfa30026698076ada"
+    "tokens_per_second": 45.5724683745365,
+    "time_to_first_token_seconds": 1.041367
+  }
 }

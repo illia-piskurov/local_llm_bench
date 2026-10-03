@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "lua_game_ai",
+  "level": "level1",
+  "tested_at": "2026-10-03 22:55:58",
+  "stats": {
+    "input_tokens": 543,
+    "total_output_tokens": 1695,
+    "reasoning_output_tokens": 1082,
+    "tokens_per_second": 17.502949825655534,
+    "time_to_first_token_seconds": 1.280683,
+    "model_load_time_seconds": null
+  }
+}

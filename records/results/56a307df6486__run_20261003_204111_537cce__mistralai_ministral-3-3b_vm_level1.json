@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-10-03 20:41:32",
+  "passed": 14,
+  "total": 18,
+  "failures": [
+    "div_order: expected ['5'], got ['0']",
+    "div_truncate: expected ['3'], got ['0']",
+    "div_by_zero: expected error, but execution succeeded (['0'])",
+    "complex_chain: expected ['10'], got ['0']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

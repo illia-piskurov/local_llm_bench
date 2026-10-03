@@ -1,0 +1,34 @@
+Plan:
+1. Implement the `topo_sort` function signature.
+2. Use Kahn's algorithm (or DFS-based approach) for topological sorting. Since we need to detect cycles and manage dependencies efficiently, Kahn's algorithm using in-degrees is often cleaner for this specific problem structure.
+
+Kahn's Algorithm Steps:
+1. Initialize the graph representation (adjacency list: what tasks depend on me).
+2. Calculate the in-degree for every task (number of prerequisites it has).
+3. Initialize a queue with all tasks having an in-degree of 0 (no dependencies).
+4. While the queue is not empty:
+    a. Dequeue a task `T`. Add `T` to the result list.
+    b. For every neighbor `N` that depends on `T`:
+        i. Decrement the in-degree of `N`.
+        ii. If the in-degree of `N` becomes 0, enqueue `N`.
+5. Check for cycles: If the number of tasks in the result list is less than the total number of unique tasks, a cycle exists. Return `None`. Otherwise, return the result list.
+
+Refining Input Handling:
+The input `tasks` is `{task_name: [dependency1, dependency2]}`.
+
+Step 1 & 2 (Graph and In-Degrees):
+We need to identify all unique tasks first.
+We need a map of in-degrees (`in_degree[task] = count`).
+We need an adjacency list representing the graph structure (which tasks are unlocked when task `T` finishes). Let's call it `adj`.
+
+Iterate through `tasks`:
+For each `task` and its dependencies `deps`:
+    a. Initialize `in_degree[task]` based on `len(deps)`.
+    b. For each `dep` in `deps`:
+        i. Ensure `dep` is tracked as a task (even if it has no listed dependencies itself).
+        ii. Add an edge: `adj[dep].append(task)` (meaning `task` depends on `dep`).
+
+Step 3 & 4 (Kahn's):
+Use a queue/deque for tasks with in-degree 0. Process until empty.
+
+Let's implement this structure.

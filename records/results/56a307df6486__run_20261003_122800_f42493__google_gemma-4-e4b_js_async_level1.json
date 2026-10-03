@@ -1,0 +1,13 @@
+{
+  "run_id": "run_20261003_122800_f42493",
+  "host_id": "56a307df6486",
+  "model": "google/gemma-4-e4b",
+  "benchmark": "js_async",
+  "level": "level1",
+  "tested_at": "2026-10-03 13:09:17",
+  "passed": 7,
+  "total": 7,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

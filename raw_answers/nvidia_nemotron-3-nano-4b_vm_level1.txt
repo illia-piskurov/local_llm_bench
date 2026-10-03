@@ -4,71 +4,73 @@ def run(program: str) -> list[str]:
     stack = []
     output = []
 
-    for idx, raw in enumerate(lines, start=1):
-        line = raw.strip()
+    for idx, line in enumerate(lines, start=1):
+        line = line.strip()
         if not line or line.startswith('#'):
             continue
 
         tokens = line.split()
-        cmd = tokens[0]
+        op = tokens[0]
 
-        if cmd == 'PUSH':
+        if op == 'PUSH':
             n = int(tokens[1])
             stack.append(n)
 
-        elif cmd == 'POP':
+        elif op == 'POP':
             if not stack:
-                raise Exception(f'Stack underflow at line {idx}')
+                raise ValueError(f"Line {idx}: POP on empty stack")
             stack.pop()
 
-        elif cmd == 'ADD':
+        elif op == 'ADD':
             if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {idx}')
+                raise ValueError(f"Line {idx}: ADD requires two values, got {len(stack)}")
             b = stack.pop()
             a = stack.pop()
             stack.append(a + b)
 
-        elif cmd == 'SUB':
+        elif op == 'SUB':
             if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {idx}')
+                raise ValueError(f"Line {idx}: SUB requires two values, got {len(stack)}")
             b = stack.pop()
             a = stack.pop()
             stack.append(a - b)
 
-        elif cmd == 'MUL':
+        elif op == 'MUL':
             if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {idx}')
+                raise ValueError(f"Line {idx}: MUL requires two values, got {len(stack)}")
             b = stack.pop()
             a = stack.pop()
             stack.append(a * b)
 
-        elif cmd == 'DIV':
+        elif op == 'DIV':
             if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {idx}')
+                raise ValueError(f"Line {idx}: DIV requires two values, got {len(stack)}")
             b = stack.pop()
             a = stack.pop()
             if b == 0:
-                raise Exception(f'Division by zero at line {idx}')
+                raise ValueError(f"Line {idx}: division by zero")
             stack.append(a // b)
 
-        elif cmd == 'DUP':
+        elif op == 'DUP':
             if not stack:
-                raise Exception(f'Stack underflow at line {idx}')
+                raise ValueError(f"Line {idx}: DUP on empty stack")
             stack.append(stack[-1])
 
-        elif cmd == 'SWAP':
+        elif op == 'SWAP':
             if len(stack) < 2:
-                raise Exception(f'Stack underflow at line {idx}')
+                raise ValueError(f"Line {idx}: SWAP requires two values, got {len(stack)}")
             a = stack.pop()
             b = stack.pop()
             stack.append(a)
             stack.append(b)
 
-        elif cmd == 'PRINT':
+        elif op == 'PRINT':
+            if not stack:
+                raise ValueError(f"Line {idx}: PRINT on empty stack")
             output.append(str(stack[-1]))
 
         else:
-            raise Exception(f'Unknown command "{cmd}" at line {idx}')
+            raise ValueError(f"Line {idx}: unknown instruction '{op}'")
 
     return output
 ```

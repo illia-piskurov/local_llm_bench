@@ -1,0 +1,116 @@
+The user wants me to extend the existing solution by adding a `critical_path` function.
+This function calculates the length of the critical path given task durations and dependencies.
+
+Signature: `def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None`
+
+Input structure: `tasks[task_name] = (duration, [dependencies])`
+
+Constraints:
+1. Must be in a single Python file block.
+2. No external dependencies.
+3. If there is a cycle, return `None`.
+4. The core logic relies on topological sorting and dynamic programming/memoization to calculate the longest path.
+
+Steps for Critical Path Method (CPM):
+1. **Topological Sort:** First, we must ensure the graph is acyclic. We can reuse or adapt the logic from `topo_sort`.
+2. **Calculate Earliest Finish Time (EF) / Longest Path:** Since we are looking for the longest path, we need to calculate the maximum time required to complete a task, which depends on the completion times of its prerequisites.
+
+Let $D(T)$ be the duration of task $T$.
+Let $LPT(T)$ be the length of the longest path leading up to and including task $T$.
+
+If $T$ has dependencies $P_1, P_2, ..., P_k$:
+$$LPT(T) = D(T) + \max(\{0\} \cup \{LPT(P_i)\})$$
+
+The critical path length for the entire project is $\max(LPT(T))$ over all tasks $T$.
+
+Implementation details:
+1. Initialize graph structures (adjacency list, in-degrees).
+2. Use Kahn's algorithm (or DFS with memoization) to process nodes in topological order. Since we need to calculate path lengths based on prerequisites, processing them in an order where dependencies are calculated first is crucial. Kahn's algorithm naturally handles this.
+3. Maintain a dictionary/map to store the maximum time required to reach each task (`max_time`).
+
+Let's adapt the structure:
+
+**1. Initialization:**
+   - Identify all tasks and their durations.
+   - Build `adj` (dependency -> dependent).
+   - Calculate initial `in_degree`.
+   - Initialize `max_time[task]` = 0 for all tasks.
+
+**2. Topological Sort & Calculation:**
+   - Use a queue initialized with tasks having in-degree 0.
+   - When processing task $T$:
+     a. The time to start $T$ is $\max(LPT(\text{dependencies}))$. Since we process dependencies first, this value should be available when $T$'s prerequisites are met.
+     b. Wait, the standard CPM calculation usually calculates the Earliest Start Time (ES) and Earliest Finish Time (EF).
+
+Let's refine the path length tracking:
+We need `max_time[task]` to store the maximum time required for all dependencies of `task` to finish.
+
+When processing a task $T$:
+1. If $T$ has no dependencies, its start time is 0. Its completion time is $D(T)$.
+2. When we process a dependency $P$, and $T$ depends on $P$. We update the potential start time of $T$.
+
+A simpler approach using Kahn's algorithm:
+1. Initialize `max_time[task]` = 0 for all tasks. This will store the maximum completion time among all prerequisites *plus* the duration of the task itself, if we process it correctly.
+
+Let's track `earliest_start_time[T]`.
+When $P$ is processed and $T$ depends on $P$:
+`earliest_start_time[T]` must be updated to $\max(\text{current } EST[T], \text{completion time of } P)$.
+
+Completion Time of $P = EST[P] + D(P)$. (Wait, this is circular. We need the path length *up to* $P$).
+
+Let's define `path_length[task]` as the maximum total duration from any starting point through all dependencies leading up to and including that task.
+
+1. Initialize `path_length[T] = D(T)` for all tasks (assuming they start immediately).
+2. Use Kahn's algorithm. When processing $P$:
+   - For every neighbor $N$ of $P$:
+     - Update the potential path length leading to $N$. The new path length through $P$ is `path_length[P] + D(N)`.
+     - We must take the maximum: `path_length[N] = max(path_length[N], path_length[P] + D(N))`.
+
+Wait, this definition is flawed. If $T$ depends on $P_1$ and $P_2$, $D(T)$ is added only once. The start time of $T$ must be $\max(\text{Completion Time}(P_1), \text{Completion Time}(P_2))$.
+
+Let's use the standard CPM approach:
+`ES[T]` = Earliest Start Time for T.
+`EF[T]` = Earliest Finish Time for T.
+$D(T)$ is duration. $EF(T) = ES(T) + D(T)$.
+
+1. Initialize `ES[T] = 0` for all tasks.
+2. Use Kahn's algorithm. When processing task $P$:
+   - For every neighbor $N$ of $P$:
+     - Update $ES[N]$: $ES[N] = \max(ES[N], EF[P])$.
+
+We need to calculate $EF[P]$ before we process its neighbors. Since Kahn's processes nodes when all dependencies are met, this works naturally if we track the maximum required start time for each node.
+
+Let's refine the state tracking:
+`earliest_start_time`: Dictionary mapping task -> ES time. Initialize to 0.
+`max_duration_to_reach[T]`: This will store $ES(T)$.
+
+When processing a dependency $P$:
+1. Calculate $EF(P) = \text{Current } ES(P) + D(P)$. (We must ensure $ES(P)$ is finalized before this step).
+2. For neighbor $N$: Update $ES(N) = \max(ES(N), EF(P))$.
+
+Since Kahn's algorithm processes nodes only when all dependencies are met, we can calculate the final $ES$ and $EF$ for a node right after it is dequeued (if we process in dependency order).
+
+Let's stick to the structure of `topo_sort` but add duration tracking.
+
+**Data Structures:**
+1. `in_degree`: Same as before.
+2. `adj`: Same as before.
+3. `durations`: Dictionary mapping task -> duration.
+4. `earliest_start_time`: Dictionary mapping task -> ES time (initialized to 0).
+
+**Algorithm Flow:**
+1. Initialize structures and calculate initial in-degrees.
+2. Queue starts with tasks having in-degree 0.
+3. Loop:
+   a. Dequeue $P$.
+   b. Calculate $EF(P) = \text{ES}(P) + D(P)$. (Note: If $P$ had no dependencies, $\text{ES}(P)=0$).
+   c. For every neighbor $N$:
+      i. Update $ES(N)$: $ES(N) = \max(ES(N), EF(P))$.
+      ii. Decrement $in\_degree[N]$.
+      iii. If $in\_degree[N] == 0$, enqueue $N$.
+
+4. After the loop, if no cycle: The critical path length is $\max(EF(T))$ over all tasks $T$. Since we calculate $ES$ and $D$ for every task, we can track this maximum during the process or iterate through all tasks at the end.
+
+Let's implement this structure. We need to handle the input format: `tasks[task] = (duration, [deps])`.
+
+The overall code must include both functions.

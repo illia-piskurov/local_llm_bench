@@ -1,0 +1,659 @@
+{
+  "id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model_key": "nvidia/nemotron-3-nano-4b",
+  "model_name": "Nemotron 3 Nano 4B",
+  "quantization": "Q4_K_M",
+  "backend": "LM Studio (69d945a)",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "nvidia/nemotron-3-nano-4b",
+      "display_name": "Nemotron 3 Nano 4B",
+      "architecture": "nemotron_h",
+      "quantization": "Q4_K_M",
+      "quantization_bits": 4,
+      "size_bytes": 2837173509,
+      "params_string": "4.0B",
+      "max_context_length": 1048576,
+      "format": "gguf",
+      "publisher": "nvidia"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "3824c37 (051cb8695784)",
+  "started_at": "2026-10-03 22:23:10",
+  "completed_at": "2026-10-03 22:59:58",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:24:05",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:25:39",
+      "passed": 20,
+      "total": 27,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: undefined label 'skip'",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: undefined label 'zero'",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 5: undefined label 'end'",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: undefined label 'nz'",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 5: undefined label 'end'",
+        "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+        "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:27:44",
+      "passed": 25,
+      "total": 37,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: unknown instruction 'JMP'",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: unknown instruction 'JZ'",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: unknown instruction 'JZ'",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: unknown instruction 'JNZ'",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: unknown instruction 'JNZ'",
+        "countdown_loop: unexpected exception/timeout: ValueError: Line 8: unknown instruction 'JNZ'",
+        "count_up_loop: unexpected exception/timeout: ValueError: Line 10: unknown instruction 'JNZ'",
+        "call_ret_basic: unexpected exception/timeout: ValueError: Line 2: undefined label 'double'",
+        "call_ret_nested: unexpected exception/timeout: ValueError: Line 1: undefined label 'func_a'",
+        "comparison_eq_gt_lt: unexpected exception/timeout: ValueError: Line 3: EQ expects two values, got 2",
+        "recursive_factorial: unexpected exception/timeout: ValueError: Line 2: undefined label 'fact'",
+        "recursive_fibonacci: unexpected exception/timeout: ValueError: Line 2: undefined label 'fib'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:28:09",
+      "passed": 7,
+      "total": 10,
+      "failures": [
+        "simple_chain: invalid topological order: None",
+        "diamond: invalid topological order: None",
+        "multiple_roots: invalid topological order: None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:29:17",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception/timeout: KeyError: a",
+        "simple_chain: expected 9, got None",
+        "diamond_pick_longer_branch: unexpected exception/timeout: KeyError: a",
+        "independent_tasks: unexpected exception/timeout: KeyError: b",
+        "wide_graph: unexpected exception/timeout: KeyError: compile"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:30:07",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:31:42",
+      "passed": 4,
+      "total": 6,
+      "failures": [
+        "dependencies_and_workers: unexpected exception: TypeError: 'int' object isn't iterable",
+        "wide_graph_with_unlocks: unexpected exception: TypeError: 'int' object isn't iterable"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:33:40",
+      "passed": 3,
+      "total": 15,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: IndexError: list index out of range",
+        "get_missing: unexpected exception/timeout: IndexError: list index out of range",
+        "delete_then_get: unexpected exception/timeout: IndexError: list index out of range",
+        "delete_missing_key_noop: unexpected exception/timeout: IndexError: list index out of range",
+        "overwrite_set: unexpected exception/timeout: IndexError: list index out of range",
+        "simple_transaction_commit: unexpected exception/timeout: IndexError: list index out of range",
+        "simple_transaction_rollback: unexpected exception/timeout: IndexError: list index out of range",
+        "rollback_restores_delete: unexpected exception/timeout: IndexError: list index out of range",
+        "nested_transactions: unexpected exception/timeout: IndexError: list index out of range",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: IndexError: list index out of range",
+        "multiple_keys_independent: unexpected exception/timeout: IndexError: list index out of range",
+        "set_new_key_inside_transaction: unexpected exception/timeout: IndexError: list index out of range"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:35:22",
+      "passed": 9,
+      "total": 25,
+      "failures": [
+        "basic_set_get: expected ['10'], got ['NULL']",
+        "overwrite_set: expected ['2'], got ['NULL']",
+        "simple_transaction_commit: expected ['10'], got ['WATCH a NULL -> 10', 'NULL']",
+        "simple_transaction_rollback: expected ['5'], got ['WATCH a NULL -> 10', 'NULL']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', 'NULL']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['WATCH a NULL -> 10', 'WATCH a NULL -> 20', '20', '10', 'NULL']",
+        "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['WATCH a NULL -> 1', 'WATCH a NULL -> 2', '2', 'NULL']",
+        "rollback_after_commit_is_no_transaction: expected ['NO TRANSACTION'], got ['WATCH a NULL -> 1', 'NO TRANSACTION']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['WATCH a NULL -> 99', 'NULL', 'NULL', 'NULL']",
+        "set_new_key_inside_transaction: expected ['100', '100'], got ['WATCH x NULL -> 100', '100', 'NULL']",
+        "count_basic: expected ['2'], got ['0']",
+        "count_respects_transaction: expected ['2', '1'], got ['WATCH b NULL -> 1', '1', '0']",
+        "count_after_delete: expected ['1'], got ['0']",
+        "watch_set_new_key: expected ['WATCH a NULL -> 10'], got []",
+        "watch_set_change: expected ['WATCH a 5 -> 10'], got []",
+        "watch_delete: expected ['WATCH a 5 -> NULL'], got []"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:37:25",
+      "passed": 9,
+      "total": 30,
+      "failures": [
+        "basic_set_get: expected ['10'], got ['NULL']",
+        "overwrite_set: expected ['2'], got ['NULL']",
+        "simple_transaction_commit: expected ['10'], got ['WATCH a NULL -> 10', 'NULL']",
+        "simple_transaction_rollback: expected ['5'], got ['WATCH a NULL -> 10', 'NULL']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', 'NULL']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['WATCH a NULL -> 10', 'WATCH a NULL -> 20', '20', '10', 'NULL']",
+        "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['WATCH a NULL -> 1', 'WATCH a NULL -> 2', '2', 'NULL']",
+        "rollback_after_commit_is_no_transaction: expected ['NO TRANSACTION'], got ['WATCH a NULL -> 1', 'NO TRANSACTION']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['WATCH a NULL -> 99', 'NULL', 'NULL', 'NULL']",
+        "set_new_key_inside_transaction: expected ['100', '100'], got ['WATCH x NULL -> 100', '100', 'NULL']",
+        "count_basic: expected ['2'], got ['0']",
+        "count_respects_transaction: expected ['2', '1'], got ['WATCH b NULL -> 1', '1', '0']",
+        "count_after_delete: expected ['1'], got ['0']",
+        "watch_set_new_key: expected ['WATCH a NULL -> 10'], got []",
+        "watch_set_change: expected ['WATCH a 5 -> 10'], got []",
+        "watch_delete: expected ['WATCH a 5 -> NULL'], got []",
+        "snapshot_restores_full_state: expected ['2', '2'], got ['WATCH a NULL -> 2', 'WATCH a 2 -> 3', '2', 'NULL']",
+        "snapshot_is_deep_copied: expected ['1', '2'], got ['NULL', 'NULL']",
+        "restore_preserves_open_transactions: expected ['1'], got ['WATCH a NULL -> 1', 'WATCH a 1 -> 2', 'NULL']",
+        "restore_keeps_watch_registrations: expected ['WATCH a NULL -> 1', 'WATCH a 1 -> 2', 'WATCH a 1 -> 3'], got []",
+        "snapshot_inside_nested_transactions: expected ['1', '2', '1', '2'], got ['WATCH a NULL -> 1', 'WATCH b NULL -> 2', 'WATCH a NULL -> 3', 'NULL', '2', '1', '2']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:39:11",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "select_specific_columns: SQL: expected 'SELECT id, email, created_at FROM users', got 'SELECT id email created_at FROM users'",
+        "simple_where_equality: exception/timeout: ValueError: Unsupported condition: status = $placeholder",
+        "where_and_or_nested: exception/timeout: ValueError: Unsupported condition: {'AND': [{'value': 'active', 'field': 'status', 'op': '='}, {'OR': [{'value': 'admin', 'field': 'role', 'op': '='}, {'value': 21, 'field': 'age', 'op': '>='}]}]}",
+        "order_by_limit_offset: SQL: expected 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', got 'SELECT * FROM articles ORDER BY views DESC AND id ASC LIMIT 10 OFFSET 20'",
+        "multiple_and_conditions: exception/timeout: ValueError: Unsupported condition: {'AND': [{'value': 'error', 'field': 'level', 'op': '='}, {'value': 404, 'field': 'code', 'op': '!='}, {'value': 1000, 'field': 'timestamp', 'op': '>'}]}"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:41:19",
+      "passed": 0,
+      "total": 5,
+      "failures": [
+        "left_join_with_group_by: exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "multiple_joins_inner_and_left: exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "where_in_operator: exception/timeout: TypeError: _compile_condition() takes 3 positional arguments but 1 were given",
+        "where_is_null_and_like: exception/timeout: TypeError: _compile_condition() takes 3 positional arguments but 1 were given",
+        "where_is_not_null: exception/timeout: TypeError: _compile_condition() takes 3 positional arguments but 1 were given"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:43:55",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "select_expression_alias: exception/timeout: WASM trap: guest exited with code 1",
+        "having_clause: exception/timeout: WASM trap: guest exited with code 1",
+        "where_subquery_in: exception/timeout: WASM trap: guest exited with code 1",
+        "subquery_with_parent_params_order: exception/timeout: WASM trap: guest exited with code 1"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:44:22",
+      "passed": 4,
+      "total": 4,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:45:43",
+      "passed": 8,
+      "total": 8,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:47:07",
+      "passed": 9,
+      "total": 10,
+      "failures": [
+        "sequential_packets: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:49:47",
+      "passed": 0,
+      "total": 7,
+      "failures": [
+        "JavaScript syntax error: SyntaxError: cannot mix ?? with && or ||\n    at <input>:7\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:51:30",
+      "passed": 0,
+      "total": 12,
+      "failures": [
+        "JavaScript syntax error: SyntaxError: cannot mix ?? with && or ||\n    at <input>:7\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:54:19",
+      "passed": 0,
+      "total": 17,
+      "failures": [
+        "JavaScript syntax error: SyntaxError: cannot mix ?? with && or ||\n    at <input>:7\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:55:58",
+      "passed": 0,
+      "total": 7,
+      "failures": [
+        "Lua syntax error: error loading code: [string \"<python>\"]:25: unexpected symbol near ','"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:57:29",
+      "passed": 0,
+      "total": 12,
+      "failures": [
+        "Lua syntax error: error loading code: [string \"<python>\"]:20: unexpected symbol near ','"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:59:58",
+      "passed": 0,
+      "total": 16,
+      "failures": [
+        "Lua syntax error: error loading code: [string \"<python>\"]:20: unexpected symbol near ','"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:24:04",
+      "stats": {
+        "input_tokens": 291,
+        "total_output_tokens": 1198,
+        "reasoning_output_tokens": 662,
+        "tokens_per_second": 22.575135312192618,
+        "time_to_first_token_seconds": 1.0673430000000002,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:25:37",
+      "stats": {
+        "input_tokens": 966,
+        "total_output_tokens": 1968,
+        "reasoning_output_tokens": 1062,
+        "tokens_per_second": 21.967655034687226,
+        "time_to_first_token_seconds": 1.999817,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:27:40",
+      "stats": {
+        "input_tokens": 1338,
+        "total_output_tokens": 2571,
+        "reasoning_output_tokens": 1569,
+        "tokens_per_second": 21.88241676631113,
+        "time_to_first_token_seconds": 2.691895,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:28:08",
+      "stats": {
+        "input_tokens": 182,
+        "total_output_tokens": 515,
+        "reasoning_output_tokens": 288,
+        "tokens_per_second": 22.441178462249244,
+        "time_to_first_token_seconds": 0.5802670000000001,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:29:17",
+      "stats": {
+        "input_tokens": 539,
+        "total_output_tokens": 1485,
+        "reasoning_output_tokens": 964,
+        "tokens_per_second": 22.203334426144348,
+        "time_to_first_token_seconds": 1.283794,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:30:07",
+      "stats": {
+        "input_tokens": 230,
+        "total_output_tokens": 1079,
+        "reasoning_output_tokens": 852,
+        "tokens_per_second": 22.328494995641595,
+        "time_to_first_token_seconds": 0.657062,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:31:41",
+      "stats": {
+        "input_tokens": 635,
+        "total_output_tokens": 2031,
+        "reasoning_output_tokens": 1431,
+        "tokens_per_second": 22.21181804616992,
+        "time_to_first_token_seconds": 1.4006859999999999,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:33:39",
+      "stats": {
+        "input_tokens": 344,
+        "total_output_tokens": 2569,
+        "reasoning_output_tokens": 2267,
+        "tokens_per_second": 22.17736161870421,
+        "time_to_first_token_seconds": 0.881317,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:35:20",
+      "stats": {
+        "input_tokens": 854,
+        "total_output_tokens": 2032,
+        "reasoning_output_tokens": 1516,
+        "tokens_per_second": 20.893674190669746,
+        "time_to_first_token_seconds": 1.822928,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:37:22",
+      "stats": {
+        "input_tokens": 980,
+        "total_output_tokens": 2340,
+        "reasoning_output_tokens": 1673,
+        "tokens_per_second": 19.916005545113205,
+        "time_to_first_token_seconds": 2.0560650000000003,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:39:11",
+      "stats": {
+        "input_tokens": 360,
+        "total_output_tokens": 2030,
+        "reasoning_output_tokens": 1531,
+        "tokens_per_second": 19.36278256373891,
+        "time_to_first_token_seconds": 0.8869049999999999,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:41:19",
+      "stats": {
+        "input_tokens": 1112,
+        "total_output_tokens": 2317,
+        "reasoning_output_tokens": 1459,
+        "tokens_per_second": 18.545183967464254,
+        "time_to_first_token_seconds": 2.313939,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:43:54",
+      "stats": {
+        "input_tokens": 1367,
+        "total_output_tokens": 2741,
+        "reasoning_output_tokens": 1019,
+        "tokens_per_second": 18.058573748476746,
+        "time_to_first_token_seconds": 2.7748209999999998,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:44:22",
+      "stats": {
+        "input_tokens": 267,
+        "total_output_tokens": 479,
+        "reasoning_output_tokens": 245,
+        "tokens_per_second": 18.72744943774751,
+        "time_to_first_token_seconds": 0.750112,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:45:43",
+      "stats": {
+        "input_tokens": 815,
+        "total_output_tokens": 1434,
+        "reasoning_output_tokens": 983,
+        "tokens_per_second": 18.135047178394835,
+        "time_to_first_token_seconds": 1.731635,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:47:07",
+      "stats": {
+        "input_tokens": 1023,
+        "total_output_tokens": 1462,
+        "reasoning_output_tokens": 687,
+        "tokens_per_second": 18.00633068570843,
+        "time_to_first_token_seconds": 2.113279,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:49:47",
+      "stats": {
+        "input_tokens": 234,
+        "total_output_tokens": 2824,
+        "reasoning_output_tokens": 2618,
+        "tokens_per_second": 17.716719965250377,
+        "time_to_first_token_seconds": 0.654463,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:51:30",
+      "stats": {
+        "input_tokens": 692,
+        "total_output_tokens": 1789,
+        "reasoning_output_tokens": 1408,
+        "tokens_per_second": 17.71090074738912,
+        "time_to_first_token_seconds": 1.509032,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:54:19",
+      "stats": {
+        "input_tokens": 904,
+        "total_output_tokens": 2919,
+        "reasoning_output_tokens": 2502,
+        "tokens_per_second": 17.479825283455465,
+        "time_to_first_token_seconds": 1.8893019999999998,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-10-03 22:55:58",
+      "stats": {
+        "input_tokens": 543,
+        "total_output_tokens": 1695,
+        "reasoning_output_tokens": 1082,
+        "tokens_per_second": 17.502949825655534,
+        "time_to_first_token_seconds": 1.280683,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-10-03 22:57:29",
+      "stats": {
+        "input_tokens": 1475,
+        "total_output_tokens": 1527,
+        "reasoning_output_tokens": 484,
+        "tokens_per_second": 17.443163691517533,
+        "time_to_first_token_seconds": 2.942557,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-10-03 22:59:58",
+      "stats": {
+        "input_tokens": 1695,
+        "total_output_tokens": 2493,
+        "reasoning_output_tokens": 1177,
+        "tokens_per_second": 17.180775638663967,
+        "time_to_first_token_seconds": 3.394091,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

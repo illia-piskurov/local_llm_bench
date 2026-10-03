@@ -1,0 +1,69 @@
+We need to produce combined code: plan_order unchanged plus new functions critical_path and makespan. Must be deterministic scheduling as described. Need to implement makespan using same rules; we can reuse logic from plan_order but compute total completion time (makespan). However plan_order returns list of tasks in order they start? Actually it returns started list which is order of starting tasks, not finish times. Makespan = max finish time among tasks.
+
+We need deterministic scheduling: at each step select up to workers ready tasks sorted as described; run them concurrently for min duration among selected; advance time by that min duration; record finish times per task (start + duration). Then makespan is max finish.
+
+Implementation details:
+
+- We'll maintain start_time dict, finish_time dict.
+- At each iteration: compute ready tasks (not started and deps satisfied).
+- Sort as described.
+- Select up to workers.
+- For selected tasks, if any not yet have start time, set start = current time; else they already started earlier? Actually a task may be ready but already started earlier due to being in previous batch? In our algorithm, once a task is added to started list, we don't schedule again. So each task runs exactly once when selected. So start_time[t] = current time at selection.
+
+- Then finish = start + duration.
+- Update max_finish.
+
+- Advance time by min_duration among selected tasks (since they run concurrently). But if a task's duration > min_duration, it will finish later; but we already recorded its finish time as start+duration. However after advancing time, the next iteration uses current time which is min_duration? Actually we need to simulate real timeline: all selected tasks run for their full durations, not just min. The schedule: they start at same timestamp, each runs its own duration; the system advances by max of those durations? But rule: "When multiple tasks are ready to run, select first ... If there is a cyclic dependency ...". Execution rules: tasks run non-preemptively; at most workers simultaneously. So if we have tasks with different durations, they finish at different times. The next iteration's time should be the earliest finishing task? Actually after min duration passes, some tasks may still running. But our algorithm selects ready tasks based on start time = current time (when they become ready). If a task started earlier and is longer, it will continue beyond current time; but we treat its finish as start+duration which could be > current time.
+
+Thus to compute makespan correctly, we need to simulate timeline: at each step, select up to workers ready tasks, set their start = current_time (if not already started). Then advance current_time by min_duration among selected? That would incorrectly think they all finish at same time. Better approach: after selecting tasks, we should schedule them and then move time forward by the minimum duration among selected tasks because that's when some may finish; but other longer tasks continue beyond that point, but they are already started earlier, so their start is earlier than current_time? Actually if a task started at t0 with duration d > min_duration, its finish = t0 + d. That could be > current_time (which is min_duration). So we need to keep track of each task's finish time; the next iteration's current_time should be max_finish among tasks that have finished? But there may still be running tasks.
+
+Simplify: We can simulate by always advancing time to the earliest finishing task, then check ready tasks again. That is typical event-driven simulation.
+
+Implementation:
+
+- Use priority queue of events (finish_time, task). Initially no tasks.
+- At each step, compute ready tasks as before; if any ready and workers available, schedule them: set start = current_time, finish = start + duration, add to pq, mark started. Workers used = len(selected).
+- Then pop earliest event from pq (finish time), decrement worker count? Actually after finishing a task, we free a slot. But we need to know when next batch can be scheduled.
+
+Simpler: Use while loop: compute ready tasks; if any and workers>0, schedule them with start = current_time; update max_finish; then advance current_time by min_duration among selected (since that's when at least one finishes). This is okay because other longer tasks continue beyond that point but they are already started earlier. The next iteration will compute ready tasks again (some may still be running? No, we only schedule each task once). So after advancing time to min_duration, some tasks may have finished; but we don't need to track them.
+
+Thus makespan = max_finish computed earlier.
+
+Implementation steps:
+
+def critical_path(tasks): build graph, detect cycle via DFS, compute longest path sum durations. Return None if cycle else length.
+
+def makespan(tasks,d): simulate as above.
+
+Now produce final code block with all three functions.
+
+Edge cases: tasks dict may have empty deps list; dependencies are strings? In plan_order they treat d == '' or d in started for dep satisfied. So dependency names are task keys (strings). We'll follow same.
+
+Implement critical_path:
+
+- Build adjacency list.
+- Use visited set, recursion to detect cycle and compute longest path length (sum durations).
+- For each node not visited, do DFS returning max length from that node; if cycle detected return None globally.
+
+Implementation details: function dfs(node) returns (max_len, has_cycle). If node in current_path -> cycle True. Else mark visited, for each dep d: if d not in tasks? assume valid. Recursively get len_d = duration of d + dfs(d)[0]. Keep max. Return (max_len, False). If any child returns cycle True propagate.
+
+If overall has_cycle return None else max_len.
+
+Now makespan simulation:
+
+def makespan(tasks,d): all_tasks set; started=set(); start_time={}; finish={}; time=0; max_finish=0; while True: ready = [t for t in all_tasks if t not in started and all(d == '' or d in started for d in tasks[t][1])]; if not ready: break; ready.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t)); selected = ready[:d]; # schedule them
+for t in selected:
+    start_time[t]=time
+    finish[t]=time + tasks[t][0]
+    max_finish=max(max_finish,finish[t])
+started.update(selected)
+# advance time by min duration among selected (they run concurrently)
+min_dur = min(tasks[t][0] for t in selected)
+time += min_dur
+
+if len(started)!=len(all_tasks): return None
+return max_finish
+
+But note: if a task's duration > min_dur, its finish time is start+duration which may be > current time; that's fine.
+
+Now produce final code block with all functions.

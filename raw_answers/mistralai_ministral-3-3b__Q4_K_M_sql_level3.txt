@@ -1,0 +1,334 @@
+```python
+def compile_query(query: dict) -> dict:
+    def _build_where_clause(cond):
+        if isinstance(cond, dict) and 'AND' in cond:
+            return f"({', '.join(_build_where_clause(c) for c in cond['AND'])}) AND"
+        elif isinstance(cond, dict) and 'OR' in cond:
+            return f"({', '.join(_build_where_clause(c) for c in cond['OR'])}) OR"
+        elif isinstance(cond, dict) and 'IN_SUBQUERY' in cond:  # Handle subquery IN
+            field = cond['field']
+            subquery_sql = compile_subquery(cond['query'])
+            return f"{field} IN ({subquery_sql})"
+        else:
+            field, op, value = cond
+            if isinstance(value, dict) and 'expr' in value:  # Handle computed expressions (e.g., COUNT)
+                expr = value['expr']
+                alias = value.get('as', '')
+                return f"{expr} {f'AS {alias}' if alias else ''}"
+            elif op == '=':
+                return f"{field} = ?"
+            elif op == '!=':
+                return f"{field} != ?"
+            elif op == '>':
+                return f"{field} > ?"
+            elif op == '<':
+                return f"{field} < ?"
+            elif op == '>=':
+                return f"{field} >= ?"
+            elif op == '<=':
+                return f"{field} <= ?"
+            elif op == 'IN':
+                params = []
+                def _collect_in_params(v):
+                    if isinstance(v, list):
+                        for item in v:
+                            params.append(item)
+                    else:
+                        params.append(v)
+                _collect_in_params(value)
+                placeholders = ', '.join(['?'] * len(params))
+                return f"{field} IN ({placeholders})"
+            elif op == 'IS NULL':
+                return f"{field} IS NULL"
+            elif op == 'IS NOT NULL':
+                return f"{field} IS NOT NULL"
+            elif op == 'LIKE':
+                return f"{field} LIKE ?"
+            else:
+                raise ValueError(f"Unsupported operator: {op}")
+
+    def _build_join_clause(joins):
+        if not joins:
+            return ""
+        clauses = []
+        for join in joins:
+            join_type = join.get('type', 'INNER')
+            table = join['table']
+            on_cond = join['on']
+            left_col, right_col = next(iter(on_cond.items()))
+            clauses.append(f"{join_type} JOIN {table} ON {left_col} = {right_col}")
+        return ", ".join(clauses)
+
+    def _build_group_by_clause(group_columns):
+        if not group_columns:
+            return ""
+        return "GROUP BY " + ", ".join(group_columns)
+
+    def compile_subquery(query: dict) -> str:
+        def _collect_params_for_subquery(cond, params):
+            nonlocal param_idx
+            if isinstance(cond, dict) and 'AND' in cond:
+                for c in cond['AND']:
+                    _collect_params_for_subquery(c, params)
+            elif isinstance(cond, dict) and 'OR' in cond:
+                for c in cond['OR']:
+                    _collect_params_for_subquery(c, params)
+            elif isinstance(cond, dict) and 'IN_SUBQUERY' in cond:
+                _collect_params_for_subquery(cond['query'], params)
+            else:
+                _, op, value = cond
+                if op == '=' or op == '!=' or op == '>' or op == '<' or op == '>=' or op == '<=':
+                    params.append(value)
+                elif op == 'IN':
+                    def _collect_in_params(v):
+                        if isinstance(v, list):
+                            for item in v:
+                                params.append(item)
+                        else:
+                            params.append(v)
+                    _collect_in_params(value)
+                elif op == 'LIKE':
+                    params.append(value)
+
+        param_idx = 1
+        params = []
+        _collect_params_for_subquery(query.get('where', {}), params)
+
+        select_clause = "SELECT " + (", ".join(query['select']) if query['select'] else "*")
+        where_clause = ""
+        join_clause = ""
+        group_by_clause = ""
+
+        if 'where' in query:
+            where_clause = _build_where_clause(query['where'])
+
+        if 'joins' in query:
+            join_clause = _build_join_clause(query['joins'])
+
+        if 'groupBy' in query:
+            group_by_clause = _build_group_by_clause(query['groupBy'])
+
+        order_by_clause = ""
+        if 'orderBy' in query:
+            def _build_order_by_clause(order_conditions):
+                clauses = []
+                for cond in order_conditions:
+                    field, dir_ = cond.get('field'), cond.get('dir', 'ASC')
+                    clauses.append(f"{field} {'DESC' if dir_ == 'DESC' else 'ASC'}")
+                return ", ".join(clauses)
+            order_by_clause = f"ORDER BY {_build_order_by_clause(query['orderBy'])}"
+
+        limit_clause = ""
+        offset_clause = ""
+        if 'limit' in query:
+            limit_clause = f"LIMIT {query['limit']}"
+        if 'offset' in query:
+            offset_clause = f"OFFSET {query['offset']}"
+
+        sql = f"SELECT {select_clause} FROM {query['table']}"
+        if join_clause:
+            sql += " " + join_clause
+        if where_clause:
+            sql += " WHERE " + where_clause
+        if group_by_clause:
+            sql += " " + group_by_clause
+        if order_by_clause:
+            sql += " " + order_by_clause
+        if limit_clause:
+            sql += " " + limit_clause
+        if offset_clause:
+            sql += " " + offset_clause
+
+        return sql.replace("?", f"${param_idx}", 1)
+
+    def _build_having_clause(having_cond):
+        if isinstance(having_cond, dict) and 'AND' in having_cond:
+            return f"({', '.join(_build_having_clause(c) for c in having_cond['AND'])}) AND"
+        elif isinstance(having_cond, dict) and 'OR' in having_cond:
+            return f"({', '.join(_build_having_clause(c) for c in having_cond['OR'])}) OR"
+        else:
+            field, op, value = having_cond
+            if isinstance(value, dict) and 'expr' in value:  # Handle computed expressions (e.g., SUM)
+                expr = value['expr']
+                alias = value.get('as', '')
+                return f"{expr} {f'AS {alias}' if alias else ''}"
+            elif op == '=':
+                return f"{field} = ?"
+            elif op == '!=':
+                return f"{field} != ?"
+            elif op == '>':
+                return f"{field} > ?"
+            elif op == '<':
+                return f"{field} < ?"
+            elif op == '>=':
+                return f"{field} >= ?"
+            elif op == '<=':
+                return f"{field} <= ?"
+            elif op == 'IN':
+                params = []
+                def _collect_in_params(v):
+                    if isinstance(v, list):
+                        for item in v:
+                            params.append(item)
+                    else:
+                        params.append(v)
+                _collect_in_params(value)
+                placeholders = ', '.join(['?'] * len(params))
+                return f"{field} IN ({placeholders})"
+            elif op == 'IS NULL':
+                return f"{field} IS NULL"
+            elif op == 'IS NOT NULL':
+                return f"{field} IS NOT NULL"
+            elif op == 'LIKE':
+                return f"{field} LIKE ?"
+            else:
+                raise ValueError(f"Unsupported operator: {op}")
+
+    # Build SQL parts
+    select_clause = "SELECT "
+    where_clause = ""
+    join_clause = ""
+    group_by_clause = ""
+    having_clause = ""
+
+    if 'select' in query and isinstance(query['select'][0], dict) and 'expr' in query['select'][0]:
+        select_clauses = []
+        for item in query['select']:
+            if isinstance(item, dict):
+                expr = item['expr']
+                alias = item.get('as', '')
+                select_clauses.append(f"{expr} {f'AS {alias}' if alias else ''}")
+            else:
+                select_clauses.append(str(item))
+        select_clause += ", ".join(select_clauses)
+    else:
+        select_clause += (", ".join(query['select']) if query['select'] else "*")
+
+    if 'where' in query:
+        where_clause = _build_where_clause(query['where'])
+
+    if 'joins' in query:
+        join_clause = _build_join_clause(query['joins'])
+
+    if 'groupBy' in query:
+        group_by_clause = _build_group_by_clause(query['groupBy'])
+
+    if 'having' in query:
+        having_clause = f"HAVING {_build_having_clause(query['having'])}"
+
+    order_by_clause = ""
+    if 'orderBy' in query:
+        def _build_order_by_clause(order_conditions):
+            clauses = []
+            for cond in order_conditions:
+                field, dir_ = cond.get('field'), cond.get('dir', 'ASC')
+                clauses.append(f"{field} {'DESC' if dir_ == 'DESC' else 'ASC'}")
+            return ", ".join(clauses)
+        order_by_clause = f"ORDER BY {_build_order_by_clause(query['orderBy'])}"
+
+    limit_clause = ""
+    offset_clause = ""
+    if 'limit' in query:
+        limit_clause = f"LIMIT {query['limit']}"
+    if 'offset' in query:
+        offset_clause = f"OFFSET {query['offset']}"
+
+    sql = f"SELECT {select_clause} FROM {query['table']}"
+    params = []
+    param_idx = 1
+
+    def _collect_params(cond):
+        nonlocal params, param_idx
+        if isinstance(cond, dict) and 'AND' in cond:
+            for c in cond['AND']:
+                _collect_params(c)
+        elif isinstance(cond, dict) and 'OR' in cond:
+            for c in cond['OR']:
+                _collect_params(c)
+        elif isinstance(cond, dict) and 'IN_SUBQUERY' in cond:
+            subquery_sql = compile_subquery(cond['query'])
+            params.extend([f"${param_idx}" for _ in range(len(subquery_sql.split('?')))])
+            param_idx += len(subquery_sql.split('?'))
+        elif isinstance(cond, dict) and 'expr' in cond:  # Handle computed expressions
+            pass  # No parameters needed for expressions like COUNT()
+        else:
+            _, op, value = cond
+            if op == '=' or op == '!=' or op == '>' or op == '<' or op == '>=' or op == '<=':
+                params.append(value)
+            elif op == 'IN':
+                def _collect_in_params(v):
+                    nonlocal param_idx
+                    if isinstance(v, list):
+                        for item in v:
+                            params.append(item)
+                    else:
+                        params.append(v)
+                _collect_in_params(value)
+            elif op == 'LIKE':
+                params.append(value)
+
+    # Collect parameters from WHERE and HAVING clauses
+    if where_clause:
+        def _build_where_params(cond):
+            nonlocal param_idx, params
+            if isinstance(cond, dict) and 'AND' in cond:
+                for c in cond['AND']:
+                    _build_where_params(c)
+            elif isinstance(cond, dict) and 'OR' in cond:
+                for c in cond['OR']:
+                    _build_where_params(c)
+            else:
+                _, op, value = cond
+                if op == '=' or op == '!=' or op == '>' or op == '<' or op == '>=' or op == '<=':
+                    params.append(value)
+                elif op == 'IN':
+                    def _collect_in_params(v):
+                        nonlocal param_idx
+                        if isinstance(v, list):
+                            for item in v:
+                                params.append(item)
+                        else:
+                            params.append(v)
+                    _collect_in_params(value)
+                elif op == 'LIKE':
+                    params.append(value)
+
+        _build_where_params(query.get('where', {}))
+
+    # Collect parameters from HAVING clause
+    if having_clause and query.get('having'):
+        def _build_having_params(cond):
+            nonlocal param_idx, params
+            if isinstance(cond, dict) and 'AND' in cond:
+                for c in cond['AND']:
+                    _build_having_params(c)
+            elif isinstance(cond, dict) and 'OR' in cond:
+                for c in cond['OR']:
+                    _build_having_params(c)
+            else:
+                _, op, value = cond
+                if op == '=' or op == '!=' or op == '>' or op == '<' or op == '>=' or op == '<=':
+                    params.append(value)
+                elif op == 'IN':
+                    def _collect_in_params(v):
+                        nonlocal param_idx
+                        if isinstance(v, list):
+                            for item in v:
+                                params.append(item)
+                        else:
+                            params.append(v)
+                    _collect_in_params(value)
+                elif op == 'LIKE':
+                    params.append(value)
+
+        _build_having_params(query['having'])
+
+    sql += " WHERE " + where_clause if where_clause else ""
+    sql += " GROUP BY " + group_by_clause if group_by_clause else ""
+    sql += " HAVING " + having_clause if having_clause and query.get('having') else ""
+    sql += " " + order_by_clause if order_by_clause else ""
+    sql += " " + limit_clause if limit_clause else ""
+    sql += " " + offset_clause if offset_clause else ""
+
+    return {"sql": sql.replace("?", f"${param_idx}", 1), "params": params}
+```

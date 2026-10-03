@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261003_195451_db47f1",
+  "host_id": "56a307df6486",
+  "model": "qwen/qwen3-vl-4b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-10-03 20:27:10",
+  "passed": 0,
+  "total": 0,
+  "failures": [
+    "[TRUNCATED] priority_scheduler/level1: unclosed code fence in the response; still truncated at max_tokens=65536 (retry cap 65536)"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

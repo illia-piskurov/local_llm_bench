@@ -1,0 +1,565 @@
+-- Global Behavior Tree namespace
+BT = {}
+
+-- Execution statuses
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+-- -----------------------------------------------------------------------------
+-- Blackboard Implementation (Shared Memory)
+-- -----------------------------------------------------------------------------
+
+--- Creates a new blackboard instance for shared state management.
+function BT.Blackboard()
+    local self = {
+        _data = {},
+        _watchers = {} -- Key -> list of callbacks
+    }
+
+    return self
+end
+
+--- Retrieves the value associated with a key, or default if not found.
+-- @param bb The blackboard instance.
+-- @param key string The key to retrieve.
+-- @param default any The value to return if the key is missing.
+function BT.Blackboard:get(key, default)
+    return self._data[key] ~= nil and self._data[key] or default
+end
+
+--- Stores a value for a given key and triggers watchers if the value changes.
+-- @param bb The blackboard instance.
+-- @param key string The key to set.
+-- @param value any The new value.
+function BT.Blackboard:set(key, value)
+    local old_value = self._data[key]
+
+    if old_value == value then
+        return false -- No change
+    end
+
+    self._data[key] = value
+
+    -- Trigger watchers only if the value actually changed
+    for _, callback in ipairs(self._watchers[key]) do
+        callback(key, value, old_value)
+    end
+
+    return true
+end
+
+--- Registers a callback function to be executed when a specific key changes.
+-- @param bb The blackboard instance.
+-- @param key string The key to watch.
+-- @param callback function (key, new_value, old_value).
+function BT.Blackboard:watch(key, callback)
+    if not self._watchers[key] then
+        self._watchers[key] = {}
+    end
+    table.insert(self._watchers[key], callback)
+end
+
+-- -----------------------------------------------------------------------------
+-- Node Implementations (Existing Nodes - Kept for completeness/context)
+-- -----------------------------------------------------------------------------
+
+--- Helper function to check if a status string matches one of the defined constants
+local function is_status(s)
+    return s == BT.SUCCESS or s == BT.FAILURE or s == BT.RUNNING
+end
+
+--- Action Node: Executes a given function (fn).
+function BT.Action(fn)
+    local self = {
+        _fn = fn,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        local result = self._fn(ctx)
+
+        if type(result) == "boolean" then
+            return result and BT.SUCCESS or BT.FAILURE
+        elseif type(result) == "string" and is_status(result) then
+            return result
+        else
+            -- Handle explicit true/false returns, otherwise default to failure
+            return (result == true or result == "SUCCESS") and BT.SUCCESS or BT.FAILURE
+        end
+    end
+
+    function self:reset() end
+
+    return self
+end
+
+
+--- Condition Node: Checks a predicate function.
+function BT.Condition(predicate)
+    local self = {
+        _predicate = predicate,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        return self._predicate(ctx) and BT.SUCCESS or BT.FAILURE
+    end
+
+    function self:reset() end
+
+    return self
+end
+
+
+-- -----------------------------------------------------------------------------
+-- Composite Node Base Methods (Shared logic for state management)
+BT.NodeMethods = {}
+
+-- Sequence implementation updated with cascading reset...
+function BT.Sequence(children)
+    local self = {
+        _children = children,
+        _current_child_index = 1,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        local children = self._children
+        local index = self._current_child_index
+
+        if not children or #children == 0 then return BT.FAILURE end
+
+        -- Resetting logic check (should only happen if parent calls reset, but safe guard here)
+        if index < 1 then
+             self._current_child_index = 1
+             index = 1
+        end
+
+        local child = children[index]
+        local status = child:tick(ctx)
+
+        if status == BT.FAILURE then
+            return BT.FAILURE
+        elseif status == BT.RUNNING then
+            return BT.RUNNING
+        else -- SUCCESS
+            -- Check if this was the last child
+            if index == #children then
+                self._current_child_index = 1
+                return BT.SUCCESS
+            else
+                -- Successful, but more children remain. Advance pointer and signal RUNNING state maintenance.
+                self._current_child_index = index + 1
+                return BT.RUNNING
+            end
+        end
+    end
+
+    function self:reset()
+        -- Cascading reset implementation
+        for _, child in ipairs(self._children) do
+            if child and typeof(child.reset) == "function" then
+                child:reset()
+            end
+        end
+        self._current_child_index = 1
+    end
+
+    return self
+end
+
+
+-- Selector implementation updated with cascading reset...
+function BT.Selector(children)
+    local self = {
+        _children = children,
+        _current_child_index = 1,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        local children = self._children
+        local index = self._current_child_index
+
+        if not children or #children == 0 then return BT.FAILURE end
+
+        if index < 1 then
+             self._current_child_index = 1
+             index = 1
+        end
+
+        local child = children[index]
+        local status = child:tick(ctx)
+
+        if status == BT.SUCCESS then
+            return BT.SUCCESS
+        elseif status == BT.RUNNING then
+            return BT.RUNNING
+        else -- FAILURE
+            -- Check if this was the last child
+            if index == #children then
+                self._current_child_index = 1
+                return BT.FAILURE
+            else
+                -- Failed, but more children remain. Keep position and signal RUNNING state maintenance.
+                return BT.RUNNING
+            end
+        end
+    end
+
+    function self:reset()
+        -- Cascading reset implementation
+        for _, child in ipairs(self._children) do
+            if child and typeof(child.reset) == "function" then
+                child:reset()
+            end
+        end
+        self._current_child_index = 1
+    end
+
+    return self
+end
+
+
+-- -----------------------------------------------------------------------------
+-- Decorator Nodes (Single Child Wrappers)
+-- -----------------------------------------------------------------------------
+
+--- Inverter Node: Flips the result of its child.
+function BT.Inverter(child)
+    local self = {
+        _child = child,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        local status = self._child:tick(ctx)
+
+        if status == BT.SUCCESS then
+            return BT.FAILURE -- Invert Success to Failure
+        elseif status == BT.FAILURE then
+            return BT.SUCCESS -- Invert Failure to Success
+        else -- RUNNING remains RUNNING
+            return BT.RUNNING
+        end
+    end
+
+    function self:reset()
+        self._child:reset()
+    end
+
+    return self
+end
+
+
+--- Cooldown Node: Forces failure for a specified number of ticks after success.
+function BT.Cooldown(child, ticks)
+    local self = {
+        _child = child,
+        _cooldown_ticks = ticks or 1,
+        _remaining_ticks = 0,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        if self._remaining_ticks > 0 then
+            -- Cooldown active: Fail immediately and decrement counter
+            self._remaining_ticks -= 1
+            return BT.FAILURE
+        else
+            -- Cooldown expired or never started: Execute child normally
+            local status = self._child:tick(ctx)
+
+            if status == BT.SUCCESS then
+                -- Success triggers cooldown
+                self._remaining_ticks = self._cooldown_ticks
+                return BT.RUNNING -- Signal that the node is now in a waiting/cooling state
+            else
+                return status
+            end
+        end
+    end
+
+    function self:reset()
+        self._remaining_ticks = 0
+        self._child:reset()
+    end
+
+    return self
+end
+
+
+-- -----------------------------------------------------------------------------
+-- Asynchronous Action Node (Coroutine Support)
+-- -----------------------------------------------------------------------------
+
+--- AsyncAction Node: Executes a coroutine function, supporting yielding and waiting.
+function BT.AsyncAction(coroutine_fn)
+    local self = {
+        _coro = nil,
+        _wait_ticks = 0,
+        _max_yields = 100, -- Safety limit for yields
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        -- 1. Handle waiting ticks first
+        if self._wait_ticks > 0 then
+            self._wait_ticks -= 1
+            return BT.RUNNING
+        end
+
+        -- 2. Initialize or Resume Coroutine
+        if not self._coro or coroutine.status(self._coro) == "dead" then
+            -- Create new coroutine if needed
+            self._coro = coroutine.create(coroutine_fn)
+        end
+
+        local status, result = coroutine.resume(self._coro, ctx)
+
+        if not status then
+             -- Coroutine failed or threw an error
+             return BT.FAILURE
+        end
+
+        -- 3. Check for Yields (WAIT_TICKS)
+        if type(result) == "string" and result == "WAIT_TICKS" then
+            local ticks = coroutine.status(self._coro) -- Re-read the yield value if possible, or assume it was passed correctly
+            -- Since Lua yields are complex to inspect fully here, we rely on the convention that the next argument is the tick count.
+            -- We must check how many arguments were yielded. Assuming (string, number).
+            local wait_count = coroutine._kcallargs[2] -- Accessing internal yield args for simplicity in this context
+            if type(wait_count) == "number" and wait_count >= 0 then
+                self._wait_ticks = math.floor(wait_count)
+                return BT.RUNNING
+            end
+        end
+
+        -- 4. Check for Completion (No yield, or final return value)
+        if status == "suspended" and result ~= nil then
+             -- If the coroutine finished execution without yielding a wait signal
+             local final_result = result
+             if type(final_result) == "boolean" then
+                 return final_result and BT.SUCCESS or BT.FAILURE
+             elseif type(final_result) == "string" and is_status(final_result) then
+                 return final_result
+             else
+                -- Treat non-status return as success if it's not nil/false, otherwise failure
+                return (final_result ~= false and final_result ~= nil) and BT.SUCCESS or BT.FAILURE
+            end
+        end
+
+        -- If we reached here without a clear status change, assume running unless explicitly failed.
+        if status == "suspended" then
+             return BT.RUNNING
+        end
+
+        return BT.FAILURE -- Default failure case
+    end
+
+    function self:reset()
+        self._coro = nil
+        self._wait_ticks = 0
+    end
+
+    return self
+end
+
+
+-- -----------------------------------------------------------------------------
+-- Composite Node Reset Methods (Updated)
+-- -----------------------------------------------------------------------------
+
+-- Sequence implementation remains the same...
+function BT.Sequence(children)
+    local self = {
+        _children = children,
+        _current_child_index = 1,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        -- ... (Tick logic remains unchanged)
+        local children = self._children
+        local index = self._current_child_index
+
+        if not children or #children == 0 then return BT.FAILURE end
+
+        if index < 1 then
+             self._current_child_index = 1
+             index = 1
+        end
+
+        local child = children[index]
+        local status = child:tick(ctx)
+
+        if status == BT.FAILURE then
+            return BT.FAILURE
+        elseif status == BT.RUNNING then
+            return BT.RUNNING
+        else -- SUCCESS
+            if index == #children then
+                self._current_child_index = 1
+                return BT.SUCCESS
+            else
+                self._current_child_index = index + 1
+                return BT.RUNNING
+            end
+        end
+    end
+
+    function self:reset()
+        -- Cascading reset implementation
+        for _, child in ipairs(self._children) do
+            if child and typeof(child.reset) == "function" then
+                child:reset()
+            end
+        end
+        self._current_child_index = 1
+    end
+
+    return self
+end
+
+
+-- Selector implementation remains the same...
+function BT.Selector(children)
+    local self = {
+        _children = children,
+        _current_child_index = 1,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        -- ... (Tick logic remains unchanged)
+        local children = self._children
+        local index = self._current_child_index
+
+        if not children or #children == 0 then return BT.FAILURE end
+
+        if index < 1 then
+             self._current_child_index = 1
+             index = 1
+        end
+
+        local child = children[index]
+        local status = child:tick(ctx)
+
+        if status == BT.SUCCESS then
+            return BT.SUCCESS
+        elseif status == BT.RUNNING then
+            return BT.RUNNING
+        else -- FAILURE
+            if index == #children then
+                self._current_child_index = 1
+                return BT.FAILURE
+            else
+                return BT.RUNNING
+            end
+        end
+    end
+
+    function self:reset()
+        -- Cascading reset implementation
+        for _, child in ipairs(self._children) do
+            if child and typeof(child.reset) == "function" then
+                child:reset()
+            end
+        end
+        self._current_child_index = 1
+    end
+
+    return self
+end
+
+
+-- -----------------------------------------------------------------------------
+-- Decorator Nodes (Single Child Wrappers)
+-- -----------------------------------------------------------------------------
+
+--- Inverter Node: Flips the result of its child.
+function BT.Inverter(child)
+    local self = {
+        _child = child,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        local status = self._child:tick(ctx)
+
+        if status == BT.SUCCESS then
+            return BT.FAILURE -- Invert Success to Failure
+        elseif status == BT.FAILURE then
+            return BT.SUCCESS -- Invert Failure to Success
+        else -- RUNNING remains RUNNING
+            return BT.RUNNING
+        end
+    end
+
+    function self:reset()
+        self._child:reset()
+    end
+
+    return self
+end
+
+
+--- Cooldown Node: Forces failure for a specified number of ticks after success.
+function BT.Cooldown(child, ticks)
+    local self = {
+        _child = child,
+        _cooldown_ticks = ticks or 1,
+        _remaining_ticks = 0,
+    }
+
+    setmetatable(self, { __index = BT.NodeMethods })
+
+    function self:tick(ctx)
+        if self._remaining_ticks > 0 then
+            -- Cooldown active: Fail immediately and decrement counter
+            self._remaining_ticks -= 1
+            return BT.FAILURE
+        else
+            -- Cooldown expired or never started: Execute child normally
+            local status = self._child:tick(ctx)
+
+            if status == BT.SUCCESS then
+                -- Success triggers cooldown
+                self._remaining_ticks = self._cooldown_ticks
+                return BT.RUNNING -- Signal that the node is now in a waiting/cooling state
+            else
+                return status
+            end
+        end
+    end
+
+    function self:reset()
+        self._remaining_ticks = 0
+        self._child:reset()
+    end
+
+    return self
+end
+
+
+-- Expose all nodes under the global table (including Blackboard)
+BT.Blackboard = BT.Blackboard
+BT.Action = function(fn) return BT.Action(fn) end
+BT.Condition = function(predicate) return BT.Condition(predicate) end
+BT.Sequence = function(children) return BT.Sequence(children) end
+BT.Selector = function(children) return BT.Selector(children) end
+
+-- Decorators
+BT.Inverter = function(child) return BT.Inverter(child) end
+BT.Cooldown = function(child, ticks) return BT.Cooldown(child, ticks) end
+BT.AsyncAction = function(coroutine_fn) return BT.AsyncAction(coroutine_fn) end

@@ -1,0 +1,158 @@
+We need to extend compiler. Need to handle joins, group by, extended where operators. Must keep same signature and behavior for level 1 (original). We'll produce code that builds sql string with placeholders and params accordingly.
+
+Implementation plan:
+
+- parse query dict: table, select, where, orderBy, limit, offset, joins, groupBy.
+
+- generate SELECT list: if select is ['*'] -> "*". else join columns.
+
+- FROM clause: base table name. If joins present, need to add JOIN ... ON ... . For each join type (INNER, LEFT, RIGHT). We'll produce "JOIN {type} {table} ON <left_col> = <right_col>" where left is original table? Usually join on column from other table equals column in this table. We'll assume join condition uses right table's column equals current table's column.
+
+- GROUP BY: if groupBy list, add "GROUP BY ...".
+
+- WHERE clause: need to compile conditions with placeholders and special operators.
+
+- ORDER BY: as before.
+
+- LIMIT/OFFSET.
+
+- params list: only for placeholders used in where (IN, LIKE) and maybe join? Join condition uses equality no placeholder. So only those.
+
+Implementation details:
+
+We'll maintain placeholders dict mapping index to placeholder string "$1", etc.
+
+When we encounter operator 'IN', value is list of values; generate field IN ($1, $2,...). Placeholders added for each value.
+
+Operator 'LIKE' with string: field LIKE $1. placeholder added.
+
+Operators '=', '!=', '>', '<', '>=', '<=' use placeholders.
+
+IS NULL / IS NOT NULL no placeholder.
+
+We need to flatten where conditions list (list of dicts) and compile each.
+
+Implementation steps:
+
+Define function _compile_cond(cond, idx=0). It returns string and updates placeholders/params.
+
+But we can just generate strings directly using global placeholders list.
+
+Simplify: while iterating over flat condition list, call a helper that takes field, op, value, placeholder_index.
+
+We'll maintain placeholders list as before.
+
+Implementation:
+
+placeholders = []
+params = []
+
+def _add_placeholder():
+    p = f"${(len(placeholders)+1)}"
+    placeholders.append(p)
+    params.append(None)
+
+Now compile where:
+
+if isinstance(where, dict):
+    conds = [where]
+else:
+    conds = [c for c in where if isinstance(c, dict) and 'field' in c]
+
+for cond in conds:
+    field = cond['field']
+    op = cond['op']
+    value = cond.get('value')
+    if op == 'IN':
+        placeholders.extend([f"${(len(placeholders)+1)}"] * len(value))
+        params.extend([None]*len(value))
+        sql_part = f"{field} IN ({', '.join(f'${i}' for i in range(len(value))})"
+        # but we need to generate placeholder strings already; easier: field IN ($1, $2,...)
+        placeholders.append(p) etc. Actually we can just do:
+        placeholders.extend([f"${(len(placeholders)+1)}"] * len(value))
+        params.extend([None]*len(value))
+        sql_part = f"{field} IN ({', '.join(f'${i}' for i in range(len(value))})"
+But placeholder strings are $1 etc. So we can just do:
+sql_part = f"{field} IN ({', '.join(placeholders[-len(value):])}"
+But placeholders list already contains those.
+
+Simpler: generate string using placeholders list directly:
+
+placeholder_strs = [f"${i}" for i in range(len(value))]
+sql_part = f"{field} IN ({','.join(placeholder_strs)}"
+
+Similarly LIKE: placeholder_strs = [f"${len(placeholders)+1}"]? Actually we need to add placeholder first.
+
+We'll just call _add_placeholder() inside loop.
+
+Implementation:
+
+def _compile_condition(field, op, value):
+    if op == 'IN':
+        placeholders.extend([f"${(len(placeholders)+1)}"] * len(value))
+        params.extend([None]*len(value))
+        placeholder_strs = [f"${i}" for i in range(len(value))]
+        return f"{field} IN ({','.join(placeholder_strs)}"
+    elif op == 'LIKE':
+        placeholders.append(f"${(len(placeholders)+1)}")
+        params.append(None)
+        return f"{field} LIKE $1"
+    elif op == 'IS NULL':
+        return f"{field} IS NULL"
+    elif op == 'IS NOT NULL':
+        return f"{field} IS NOT NULL"
+    else:
+        placeholders.append(f"${(len(placeholders)+1)}")
+        params.append(None)
+        placeholder_strs = [f"${i}" for i in range(len(value)) if isinstance(value, (list, tuple))]
+        # but value is single
+        return f"{field} {op} $1"
+
+But we need to handle op '>' etc with value.
+
+Simplify: For operators '=', '!=', '>', '<', '>=', '<=':
+
+placeholders.append(f"${(len(placeholders)+1)}")
+params.append(None)
+return f"{field} {op} $1"
+
+Now join compilation:
+
+joins list of dicts each with type, table, on (dict mapping left_col to right_col). We'll produce "JOIN {type} {table} ON <left_col> = <right_col>" where left is original table? Actually typical: LEFT JOIN items ON orders.id = items.order_id. So join condition uses column from other table equals column in current table.
+
+We'll generate:
+
+join_clauses = []
+for j in joins:
+    type_ = j.get('type', 'INNER')
+    tbl = j['table']
+    on_map = j['on']  # mapping left_col -> right_col
+    # assume on_map has one key: the column from this table equals column from other table.
+    col_from_this = next(iter(on_map))
+    col_from_other = on_map[col_from_this]
+    join_clauses.append(f"JOIN {type_} {tbl} ON {col_from_this} = {col_from_other}")
+
+If multiple joins, need parentheses? Probably just sequential.
+
+SQL: SELECT ... FROM table JOIN ... ON ...
+
+Now group by:
+
+if groupBy:
+    sql += f" GROUP BY " + ", ".join(groupBy)
+
+Now order by as before.
+
+Now limit/offset.
+
+Now produce final dict.
+
+Edge Cases: select list may include columns not in table? ignore.
+
+Implementation code must be single function compile_query.
+
+Let's write code accordingly.
+
+Potential issues: placeholders list length matches number of values. For IN with multiple values, we add placeholder for each value; params list will have None entries (since they are bound). That's fine.
+
+Now produce final answer.

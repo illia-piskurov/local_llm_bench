@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "qwen/qwen3-vl-4b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    if not tasks:\n        return []\n    \n    # Build the graph and calculate in-degrees\n    graph = {}\n    in_degree = {}\n    for task in tasks:\n        graph[task] = tasks[task]\n        in_degree[task] = len(tasks[task])\n    \n    # Initialize result list\n    result = []\n    \n    # Use a queue for tasks with no dependencies\n    from collections import deque\n    queue = deque()\n    for task in tasks:\n        if in_degree[task] == 0:\n            queue.append(task)\n    \n    # Process tasks\n    while queue:\n        task = queue.popleft()\n        result.append(task)\n        \n        # Reduce in-degree of all neighbors\n        for neighbor in graph.get(task, []):\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n    \n    # Check for cycles\n    if len(result) != len(tasks):\n        return None\n    \n    return result\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 170,
+    "total_output_tokens": 230,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 25.190302283627407,
+    "time_to_first_token_seconds": 0.462484
+  }
+}

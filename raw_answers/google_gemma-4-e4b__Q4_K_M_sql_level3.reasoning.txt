@@ -1,0 +1,24 @@
+The user wants to extend the existing SQL compiler with support for three main features:
+1.  **Computed Expressions/Aliases in SELECT:** Handling `{ expr: str, as: str }` objects in the `select` list.
+2.  **HAVING Clause:** Adding a `having` parameter that uses the same condition compilation logic as `where`.
+3.  **Subqueries in WHERE:** Allowing a specific structure in the `where` clause to embed a nested query (`{ field: str, op: 'IN', query: dict }`).
+
+I need to modify the existing code structure while maintaining the `compile_query` signature and ensuring parameter handling remains correct across all new features.
+
+**Plan:**
+1.  Update `compile_query`:
+    *   Modify SELECT clause compilation to handle expressions with aliases.
+    *   Add logic for the HAVING clause after WHERE.
+2.  Update `_compile_where_clause` (or related functions):
+    *   Check if a simple condition is an IN subquery type and, if so, recursively call `compile_query` on the nested query dictionary.
+
+Let's start implementing the changes.
+
+---
+*Self-Correction/Refinement during implementation:*
+
+1.  **SELECT Clause:** The existing code assumes `select` is a list of strings. I need to iterate through it and check if elements are dicts (`{expr: str, as: str}`).
+2.  **HAVING Clause:** This is straightforward; I just need to call the existing `_compile_where_clause` logic using the `having` input parameter.
+3.  **Subqueries in WHERE:** The structure for a subquery condition will be `{ field: str, op: 'IN', query: dict }`. When this is detected in `_compile_simple_condition`, I must extract the `query` dictionary and call `compile_query(query)` to get the SQL fragment and parameters.
+
+Let's integrate these changes into the provided code structure.

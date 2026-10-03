@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-10-03 19:48:26",
+  "passed": 6,
+  "total": 10,
+  "failures": [
+    "self_cycle: expected None (cycle), got ['a']",
+    "two_node_cycle: expected None (cycle), got ['b', 'a']",
+    "long_cycle: expected None (cycle), got ['d', 'c', 'b', 'a']",
+    "cycle_with_extra_nodes: expected None (cycle), got ['a', 'b', 'c', 'd']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-10-03 20:47:01",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "simple_select_all: exception/timeout: KeyError: select",
+    "select_specific_columns: exception/timeout: ValueError: need more than 0 values to unpack",
+    "simple_where_equality: exception/timeout: KeyError: select",
+    "where_and_or_nested: exception/timeout: ValueError: Unsupported operator: field",
+    "order_by_limit_offset: exception/timeout: KeyError: select",
+    "multiple_and_conditions: exception/timeout: KeyError: select"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

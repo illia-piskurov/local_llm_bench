@@ -1,0 +1,39 @@
+```python
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    if not tasks:
+        return []
+    
+    # Build the graph and calculate in-degrees
+    graph = {}
+    in_degree = {}
+    for task in tasks:
+        graph[task] = tasks[task]
+        in_degree[task] = len(tasks[task])
+    
+    # Initialize result list
+    result = []
+    
+    # Use a queue for tasks with no dependencies
+    from collections import deque
+    queue = deque()
+    for task in tasks:
+        if in_degree[task] == 0:
+            queue.append(task)
+    
+    # Process tasks
+    while queue:
+        task = queue.popleft()
+        result.append(task)
+        
+        # Reduce in-degree of all neighbors
+        for neighbor in graph.get(task, []):
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+    
+    # Check for cycles
+    if len(result) != len(tasks):
+        return None
+    
+    return result
+```

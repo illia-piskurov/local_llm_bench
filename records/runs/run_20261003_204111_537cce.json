@@ -1,0 +1,773 @@
+{
+  "id": "run_20261003_204111_537cce",
+  "host_id": "56a307df6486",
+  "model_key": "mistralai/ministral-3-3b",
+  "model_name": "Ministral 3 3B",
+  "quantization": "Q4_K_M",
+  "backend": "LM Studio (69d945a)",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "mistralai/ministral-3-3b",
+      "display_name": "Ministral 3 3B",
+      "architecture": "mistral3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": 4,
+      "size_bytes": 2986817071,
+      "params_string": "3B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": "mistralai"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "3824c37 (051cb8695784)",
+  "started_at": "2026-10-03 20:41:11",
+  "completed_at": "2026-10-03 20:55:39",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:41:32",
+      "passed": 14,
+      "total": 18,
+      "failures": [
+        "div_order: expected ['5'], got ['0']",
+        "div_truncate: expected ['3'], got ['0']",
+        "div_by_zero: expected error, but execution succeeded (['0'])",
+        "complex_chain: expected ['10'], got ['0']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:42:10",
+      "passed": 16,
+      "total": 27,
+      "failures": [
+        "div_order: expected ['5'], got ['0']",
+        "div_truncate: expected ['3'], got ['0']",
+        "div_by_zero: expected error, but execution succeeded (['0'])",
+        "complex_chain: expected ['10'], got ['0']",
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Undefined label 'skip' at line 2",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Undefined label 'zero' at line 2",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Undefined label 'zero' at line 2",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Undefined label 'nz' at line 2",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Undefined label 'nz' at line 2",
+        "countdown_loop: unexpected exception/timeout: ValueError: Undefined label 'loop' at line 8",
+        "count_up_loop: unexpected exception/timeout: ValueError: Undefined label 'loop' at line 10"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:43:07",
+      "passed": 7,
+      "total": 37,
+      "failures": [
+        "push_print: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "add: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "sub_order: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "mul: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "div_order: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "div_truncate: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "dup: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "swap: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "pop: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "comments_and_blank_lines: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "multiple_prints: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "print_does_not_pop: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "negative_numbers: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "empty_program: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "complex_chain: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "unconditional_jump_skips_code: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "jz_taken_when_zero: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "countdown_loop: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "count_up_loop: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "call_ret_basic: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "call_ret_nested: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "comparison_eq_gt_lt: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "store_and_load: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "store_overwrite: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "recursive_factorial: unexpected exception/timeout: NameError: local variable referenced before assignment",
+        "recursive_fibonacci: unexpected exception/timeout: NameError: local variable referenced before assignment"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:43:17",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:43:38",
+      "passed": 3,
+      "total": 6,
+      "failures": [
+        "simple_chain: expected 9, got 4",
+        "diamond_pick_longer_branch: expected 12, got 10",
+        "wide_graph: expected 19, got 10"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:43:58",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: unexpected exception: AttributeError: 'deque' object has no attribute 'sort'",
+        "dependency_unlocks_later: unexpected exception: AttributeError: 'deque' object has no attribute 'sort'",
+        "single_worker_duration_tiebreak: unexpected exception: AttributeError: 'deque' object has no attribute 'sort'",
+        "resource_limit_and_priority: unexpected exception: AttributeError: 'deque' object has no attribute 'sort'",
+        "simultaneous_unlocks: unexpected exception: AttributeError: 'deque' object has no attribute 'sort'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:44:30",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception: NameError: name 'plan_order' isn't defined",
+        "parallel_tasks_reduce_makespan: unexpected exception: NameError: name 'plan_order' isn't defined",
+        "dependencies_and_workers: unexpected exception: NameError: name 'plan_order' isn't defined",
+        "critical_path_longer_than_worker_parallelism: unexpected exception: NameError: name 'plan_order' isn't defined",
+        "wide_graph_with_unlocks: unexpected exception: NameError: name 'plan_order' isn't defined",
+        "cycle_returns_none: unexpected exception: NameError: name 'plan_order' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:44:53",
+      "passed": 0,
+      "total": 15,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "get_missing: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "delete_then_get: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "delete_missing_key_noop: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "overwrite_set: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "commit_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "simple_transaction_commit: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "simple_transaction_rollback: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_restores_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "nested_transactions: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "multiple_keys_independent: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "set_new_key_inside_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:45:35",
+      "passed": 0,
+      "total": 25,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "get_missing: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "delete_then_get: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "delete_missing_key_noop: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "overwrite_set: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "commit_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "simple_transaction_commit: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "simple_transaction_rollback: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_restores_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "nested_transactions: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "multiple_keys_independent: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "set_new_key_inside_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_basic: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_zero: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_respects_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_after_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_set_new_key: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_set_change: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_no_change_no_notification: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_unrelated_key_silent: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_inside_transaction_fires: unexpected exception/timeout: NameError: name 'run' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:46:31",
+      "passed": 0,
+      "total": 30,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "get_missing: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "delete_then_get: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "delete_missing_key_noop: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "overwrite_set: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "commit_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "simple_transaction_commit: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "simple_transaction_rollback: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_restores_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "nested_transactions: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "multiple_keys_independent: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "set_new_key_inside_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_basic: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_zero: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_respects_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_after_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_set_new_key: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_set_change: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_no_change_no_notification: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_unrelated_key_silent: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_inside_transaction_fires: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "snapshot_restores_full_state: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "snapshot_is_deep_copied: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "restore_preserves_open_transactions: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "restore_keeps_watch_registrations: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "snapshot_inside_nested_transactions: unexpected exception/timeout: NameError: name 'run' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:47:01",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "simple_select_all: exception/timeout: KeyError: select",
+        "select_specific_columns: exception/timeout: ValueError: need more than 0 values to unpack",
+        "simple_where_equality: exception/timeout: KeyError: select",
+        "where_and_or_nested: exception/timeout: ValueError: Unsupported operator: field",
+        "order_by_limit_offset: exception/timeout: KeyError: select",
+        "multiple_and_conditions: exception/timeout: KeyError: select"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:47:54",
+      "passed": 0,
+      "total": 5,
+      "failures": [
+        "left_join_with_group_by: exception/timeout: ValueError: need more than 0 values to unpack",
+        "multiple_joins_inner_and_left: exception/timeout: ValueError: need more than 0 values to unpack",
+        "where_in_operator: exception/timeout: KeyError: select",
+        "where_is_null_and_like: exception/timeout: KeyError: select",
+        "where_is_not_null: exception/timeout: KeyError: select"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:50:23",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "select_expression_alias: exception/timeout: TypeError: join expects a list of str/bytes objects consistent with self object",
+        "having_clause: exception/timeout: TypeError: join expects a list of str/bytes objects consistent with self object",
+        "where_subquery_in: exception/timeout: ValueError: Unsupported operator: field",
+        "subquery_with_parent_params_order: exception/timeout: KeyError: select"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:50:37",
+      "passed": 2,
+      "total": 4,
+      "failures": [
+        "pointer_wrap_around: assertion returned False",
+        "full_overflow_check: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:51:19",
+      "passed": 0,
+      "total": 8,
+      "failures": [
+        "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level2.c:78:5: error: call to undeclared library function 'memcpy' with type 'void *(void *, const void *, unsigned long)'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   78 |     memcpy(out_payload, &stream[pos + 3], len);\n      |     ^\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level2.c:78:5: note: include the header <string.h> or explicitly provide a declaration for 'memcpy'\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level2.c:99:64: error: use of undeclared identifier 'NULL'\n   99 |                 if (validate_packet(packet_start, 0, out_type, NULL, NULL, 0)) {\n      |                                                                ^~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level2.c:99:70: error: use of undeclared identifier 'NULL'\n   99 |                 if (validate_packet(packet_start, 0, out_type, NULL, NULL, 0)) {\n      |                                                                      ^~~~\n3 errors generated.\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:52:08",
+      "passed": 0,
+      "total": 10,
+      "failures": [
+        "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:10:8: error: unknown type name 'bool'\n   10 | static bool is_full = false;\n      |        ^\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:10:23: error: use of undeclared identifier 'false'\n   10 | static bool is_full = false;\n      |                       ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:15:15: error: use of undeclared identifier 'false'\n   15 |     is_full = false;\n      |               ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:27:19: error: use of undeclared identifier 'false'\n   27 |         is_full = false;\n      |                   ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:41:19: error: use of undeclared identifier 'false'\n   41 |         is_full = false;\n      |                   ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:57:8: error: unknown type name 'bool'\n   57 | static bool validate_packet(const uint8_t *stream, size_t pos,\n      |        ^\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:60:62: error: use of undeclared identifier 'false'\n   60 |     if (pos + 4 > BUFFER_SIZE || stream[pos] != 0xAA) return false;\n      |                                                              ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:67:16: error: use of undeclared identifier 'false'\n   67 |         return false;\n      |                ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:75:56: error: use of undeclared identifier 'false'\n   75 |     if (stream[pos + 4] != calculated_checksum) return false;\n      |                                                        ^~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:79:12: error: use of undeclared identifier 'true'\n   79 |     return true;\n      |            ^~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\mistralai_ministral-3-3b__Q4_K_M_c_framing_level3.c:97:5: error: use of undeclared identifier 'bool'\n   97 |     bool packet_found = false;\n      |     ^~~~\n11 errors generated.\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:52:14",
+      "passed": 4,
+      "total": 7,
+      "failures": [
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "mapper_rejection: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:52:36",
+      "passed": 2,
+      "total": 12,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "index_passed: assertion returned False",
+        "mapper_rejection: assertion returned False",
+        "retry_transient_failure: assertion returned False",
+        "retry_exhausted: assertion returned False",
+        "exponential_backoff: assertion returned False",
+        "task_timeout: assertion returned False",
+        "timeout_triggers_retry: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:53:08",
+      "passed": 3,
+      "total": 17,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "index_passed: assertion returned False",
+        "mapper_rejection: assertion returned False",
+        "retry_transient_failure: assertion returned False",
+        "retry_exhausted: assertion returned False",
+        "exponential_backoff: assertion returned False",
+        "task_timeout: assertion returned False",
+        "timeout_triggers_retry: assertion returned False",
+        "mid_flight_abort: assertion returned False",
+        "settled_all_success: exception object of type 'NoneType' has no len()",
+        "settled_mixed_failures: exception object of type 'NoneType' has no len()",
+        "settled_with_retries: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:53:38",
+      "passed": 0,
+      "total": 7,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "sequence_all_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "selector_first_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_all_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:54:32",
+      "passed": 0,
+      "total": 12,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "sequence_all_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "selector_first_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_all_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "blackboard_get_set: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "blackboard_watchers: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "inverter_decorator: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "cooldown_decorator: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "composite_ai_tree: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:55:39",
+      "passed": 0,
+      "total": 16,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "sequence_all_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "selector_first_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_all_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "blackboard_get_set: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "blackboard_watchers: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "inverter_decorator: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "cooldown_decorator: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "composite_ai_tree: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "async_action_wait_ticks: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "async_action_state_mutation: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "tree_reset_interrupt: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "full_npc_game_loop: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:41:30",
+      "stats": {
+        "input_tokens": 809,
+        "total_output_tokens": 519,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 29.005103666368292,
+        "time_to_first_token_seconds": 1.334293,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:42:07",
+      "stats": {
+        "input_tokens": 1469,
+        "total_output_tokens": 902,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 26.468777741173895,
+        "time_to_first_token_seconds": 1.6513250000000002,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:43:04",
+      "stats": {
+        "input_tokens": 1854,
+        "total_output_tokens": 1314,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 25.52267096442787,
+        "time_to_first_token_seconds": 2.385212,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:43:16",
+      "stats": {
+        "input_tokens": 700,
+        "total_output_tokens": 230,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 28.105146138168823,
+        "time_to_first_token_seconds": 0.366597,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:43:38",
+      "stats": {
+        "input_tokens": 1062,
+        "total_output_tokens": 536,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 27.032493613131262,
+        "time_to_first_token_seconds": 1.021711,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:43:57",
+      "stats": {
+        "input_tokens": 748,
+        "total_output_tokens": 513,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 27.542794347745208,
+        "time_to_first_token_seconds": 0.447047,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:44:28",
+      "stats": {
+        "input_tokens": 1441,
+        "total_output_tokens": 745,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 25.891691227522642,
+        "time_to_first_token_seconds": 1.6291600000000002,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:44:51",
+      "stats": {
+        "input_tokens": 862,
+        "total_output_tokens": 551,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 26.389175371376062,
+        "time_to_first_token_seconds": 0.638794,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:45:33",
+      "stats": {
+        "input_tokens": 1623,
+        "total_output_tokens": 928,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 24.470410298035606,
+        "time_to_first_token_seconds": 2.001893,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:46:29",
+      "stats": {
+        "input_tokens": 1912,
+        "total_output_tokens": 1210,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 23.556799681918907,
+        "time_to_first_token_seconds": 2.4823589999999998,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:47:01",
+      "stats": {
+        "input_tokens": 878,
+        "total_output_tokens": 726,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 25.42645335240072,
+        "time_to_first_token_seconds": 0.64467,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:47:54",
+      "stats": {
+        "input_tokens": 1859,
+        "total_output_tokens": 1160,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 23.00921593545635,
+        "time_to_first_token_seconds": 2.400353,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:50:22",
+      "stats": {
+        "input_tokens": 2188,
+        "total_output_tokens": 3084,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 21.297221130573657,
+        "time_to_first_token_seconds": 3.0549920000000004,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:50:37",
+      "stats": {
+        "input_tokens": 785,
+        "total_output_tokens": 328,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 24.526634086996044,
+        "time_to_first_token_seconds": 0.476661,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:51:19",
+      "stats": {
+        "input_tokens": 1429,
+        "total_output_tokens": 931,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 22.977100971758425,
+        "time_to_first_token_seconds": 1.558185,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:52:08",
+      "stats": {
+        "input_tokens": 2023,
+        "total_output_tokens": 1031,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 22.683159187966684,
+        "time_to_first_token_seconds": 2.7299029999999997,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:52:14",
+      "stats": {
+        "input_tokens": 752,
+        "total_output_tokens": 146,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 24.652845431419692,
+        "time_to_first_token_seconds": 0.45284800000000003,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:52:36",
+      "stats": {
+        "input_tokens": 1152,
+        "total_output_tokens": 473,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 23.50251158195804,
+        "time_to_first_token_seconds": 1.1187470000000002,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:53:08",
+      "stats": {
+        "input_tokens": 1516,
+        "total_output_tokens": 698,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 23.12195717780357,
+        "time_to_first_token_seconds": 1.7639010000000002,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-10-03 20:53:38",
+      "stats": {
+        "input_tokens": 1061,
+        "total_output_tokens": 690,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 23.451834306153312,
+        "time_to_first_token_seconds": 1.01553,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-10-03 20:54:32",
+      "stats": {
+        "input_tokens": 2072,
+        "total_output_tokens": 1141,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 22.266650483629697,
+        "time_to_first_token_seconds": 2.7962029999999998,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-10-03 20:55:39",
+      "stats": {
+        "input_tokens": 2313,
+        "total_output_tokens": 1394,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 21.889932453922714,
+        "time_to_first_token_seconds": 3.298018,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

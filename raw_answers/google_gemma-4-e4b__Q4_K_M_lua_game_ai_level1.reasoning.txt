@@ -1,0 +1,10 @@
+Here's a plan to implement the Behavior Tree engine components in Lua:
+
+1.  **Setup Global Table:** Define `BT` and its constants (`SUCCESS`, `FAILURE`, `RUNNING`).
+2.  **Context Handling:** Assume a context object `ctx` is passed during `tick`. This object needs to be mutable for state tracking (especially for composite nodes).
+3.  **Implement Base Node Structure:** All nodes should have a `tick(ctx)` method and a `reset()` method.
+4.  **Action Node (`BT.Action`):** Simple wrapper around a function call, mapping boolean/string results to BT statuses.
+5.  **Condition Node (`BT.Condition`):** Wrapper around a predicate (function), checking truthiness.
+6.  **Composite Nodes:** These are the most complex parts as they require state management (tracking which child to run next).
+
+Let's start coding, ensuring proper encapsulation and adherence to the specified logic for `RUNNING` states in composite nodes.

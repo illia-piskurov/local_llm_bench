@@ -1,0 +1,81 @@
+We need to implement plan_order function. Input: dict mapping task name -> (duration, deps list of strings, priority). workers int. Output list of task names in order they start? Actually "return only the Python code". The function returns list[str] | None.
+
+Implementation details:
+
+- Need topological sort with dependencies; detect cycle => return None.
+- Also need to schedule tasks respecting priorities and durations, limited concurrency.
+
+We must produce a single python file with function definition. Probably also helper functions inside same file.
+
+Algorithm: Simulate time steps? Since non-preemptive, each task runs for its duration continuously. We can simulate events: at any moment, ready tasks are those whose deps finished and not yet started. Choose up to workers highest priority etc.
+
+We need output list of tasks in order they start (including ties). So we produce sequence of starts.
+
+Implementation approach:
+
+- Use a queue of tasks with their start time? Simpler: simulate by maintaining current time, ready set.
+
+Pseudo:
+
+time = 0
+started = []
+while there are tasks not started:
+    # compute ready tasks: those whose deps all finished (i.e., task not in started and all its dependencies are in started)
+    ready = [t for t in tasks if not started[t] and all(d in started or d == ''? Actually deps list of strings; need to check each dep is either already started or not present? If dep not defined, treat as no dependency.
+        ]
+    # sort ready by priority descending, then duration ascending, then name asc
+    ready.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))
+    # select up to workers
+    selected = ready[:workers]
+    # start them at current time
+    for t in selected:
+        started.append(t)
+        # record start order? We'll output later.
+    # advance time by min duration among selected tasks (since they run concurrently)
+    if selected:
+        min_dur = min(tasks[t][0] for t in selected)
+        time += min_dur
+    else:
+        break
+
+But this may not respect that a task's start is at exact timestamp; we need to output list of starts in order. The above adds tasks as they are started (multiple at same time). That matches requirement: if multiple tasks start at same timestamp, append them to returned list following tie-breaking rule.
+
+Thus final result = started list.
+
+But need to detect cycles: after topological sort? Our simulation may get stuck if cycle prevents any task ready. At end, if len(started) != total tasks => cycle => return None.
+
+Edge Cases: tasks dict keys are names; dependencies may reference other tasks not in dict? Probably only valid.
+
+Implementation details:
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    # compute total tasks
+    all_tasks = set(tasks.keys())
+    started = []
+    time = 0
+
+    while True:
+        ready = [t for t in all_tasks if t not in started and all(d == '' or d in started for d in tasks[t][1])]
+        if not ready:
+            break
+        # sort
+        ready.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))
+        selected = ready[:workers]
+        # start them
+        started.extend(selected)
+        # advance time by min duration
+        if selected:
+            min_dur = min(tasks[t][0] for t in selected)
+            time += min_dur
+
+    if len(started) != len(all_tasks):
+        return None
+    return started
+
+But need to ensure that tasks with no dependencies are considered ready.
+
+Potential issue: a task may have dependency on itself? That's cycle; our check will not include it because its dep is itself, which is not in started => not ready. So loop ends early and len(started) < total -> return None.
+
+Works.
+
+Now produce single python file with function definition only (no extra code). Provide as code block.

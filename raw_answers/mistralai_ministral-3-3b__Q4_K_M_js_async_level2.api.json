@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "mistralai/ministral-3-3b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```javascript\nasync function pMap(items, mapper, options = { concurrency: 1 }) {\n    const concurrency = typeof options === 'number' ? options : options.concurrency || 1;\n    const retries = options.retries !== undefined ? options.retries : 0;\n    const backoffMs = options.backoffMs !== undefined ? options.backoffMs : 0;\n    const timeoutMs = options.timeoutMs !== undefined ? options.timeoutMs : 0;\n\n    if (items.length === 0) return [];\n\n    const results = new Array(items.length);\n    let nextIndex = 0;\n    const activeTasks = new Set();\n    const semaphore = new Promise((resolve) => setTimeout(resolve, 0));\n\n    async function processNext() {\n        if (nextIndex >= items.length || activeTasks.size >= concurrency) return;\n\n        const item = items[nextIndex];\n        try {\n            const controller = new AbortController();\n            const timeoutId = timeoutMs > 0 ? setTimeout(() => controller.abort(), timeoutMs) : null;\n            const taskPromise = mapper(item, nextIndex)\n                .then(result => {\n                    clearTimeout(timeoutId);\n                    results[nextIndex] = result;\n                    return Promise.resolve();\n                })\n                .catch(error => {\n                    if (error.name === 'AbortError') throw new Error(\"Timeout\");\n                    activeTasks.delete(taskPromise);\n                    throw error;\n                });\n\n            const taskPromiseWithRetry = async () => {\n                let attempt = 0;\n                while (attempt <= retries) {\n                    try {\n                        await taskPromise;\n                        return;\n                    } catch (error) {\n                        if (attempt === retries) throw error;\n\n                        const delay = backoffMs * Math.pow(2, attempt);\n                        await new Promise(resolve => setTimeout(resolve, delay));\n                        attempt++;\n                    }\n                }\n            };\n\n            activeTasks.add(taskPromiseWithRetry());\n            taskPromiseWithRetry().finally(() => {\n                clearTimeout(timeoutId);\n                activeTasks.delete(taskPromiseWithRetry());\n                nextIndex++;\n                processNext();\n            });\n        } catch (error) {\n            throw error;\n        }\n    }\n\n    await processNext();\n    return results;\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 1152,
+    "total_output_tokens": 473,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 23.50251158195804,
+    "time_to_first_token_seconds": 1.1187470000000002
+  }
+}

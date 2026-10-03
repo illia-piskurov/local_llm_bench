@@ -1,0 +1,142 @@
+We need to produce updated implementation including coroutine-based async actions and cascading tree reset. Also keep previous nodes (Action, Condition, Sequence, Selector, Blackboard, Inverter, Cooldown). Need to modify Action node to support coroutine? Actually AsyncAction is separate node type: BT.AsyncAction(coroutine_fn). So we need a new node class.
+
+Also cascade reset for composite nodes: when resetting Sequence or Selector, call child.reset recursively. Also maybe other composites? Only those two.
+
+Implement BT.AsyncAction = function(coroutine_fn) returns node with coroutine handling.
+
+Implementation details:
+
+- Node has state: co = coroutine.create(coroutine_fn), waitTicks = 0 (if waiting). tick(ctx):
+   - If not co or dead -> create new co, set waitTicks=0.
+   - If waitTicks > 0 -> decrement and return RUNNING.
+   - Resume co with ctx.
+   - If result is a table? Actually coroutine_fn may yield "WAIT_TICKS", n. So we need to check if result == "WAIT_TICKS". If yes, set waitTicks = n; return RUNNING.
+   - Else (result is SUCCESS/FAILURE) -> return that status.
+
+- reset(): co = nil; waitTicks=0; child? Not needed.
+
+But also need to handle when coroutine finishes: after resume returns result. Should we store result? Node tick will just return it.
+
+Edge cases: if node already has a running coroutine, we may want to reuse same coroutine (no new). So keep co reference.
+
+Now cascade reset: modify Sequence and Selector reset functions to call child.reset recursively.
+
+Also need to ensure that when resetting composite nodes, children are also reset.
+
+Implementation:
+
+BT.Sequence = function(children) ... tick as before. reset = function() for i=1,#self.children do self.children[i]:reset() end; self.idx=1 end
+
+Similarly Selector.
+
+Now produce final code block with all definitions.
+
+Also keep Blackboard unchanged.
+
+Potential conflict: Action node uses coroutine? Actually AsyncAction is separate, not Action. So Action remains as before (sync). Good.
+
+Now produce final Lua code.
+
+Let's craft:
+
+BT = {}
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+-- Action node (sync)
+BT.Action = function(fn) ... end
+
+But we need to define Action as earlier. Keep same.
+
+Similarly Condition, Sequence, Selector unchanged except reset modifications.
+
+Implement BT.AsyncAction:
+
+BT.AsyncAction = function(coroutine_fn)
+    local node = {
+        co = nil,
+        waitTicks = 0,
+        tick = function(self, ctx)
+            if not self.co or coroutine.status(self.co) == "dead" then
+                self.co = coroutine.create(coroutine_fn)
+                self.waitTicks = 0
+            end
+            if self.waitTicks > 0 then
+                self.waitTicks = math.max(0, self.waitTicks - 1)
+                return BT.RUNNING
+            end
+            local result = coroutine.resume(self.co, ctx)
+            if result == "WAIT_TICKS" then
+                self.waitTicks = result[2]
+                return BT.RUNNING
+            else
+                -- result is SUCCESS/FAILURE or true/false? We'll treat as status.
+                return result
+            end
+        end,
+        reset = function()
+            if self.co then coroutine.kill(self.co) end
+            self.waitTicks = 0
+        end
+    }
+    return node
+end
+
+Now cascade reset for Sequence and Selector.
+
+BT.Sequence = function(children)
+    local idx = 1
+    local node = {
+        children = children,
+        idx = 1,
+        tick = function(self, ctx)
+            if self.idx > #self.children then return BT.SUCCESS end
+            local child = self.children[self.idx]
+            local status = child.tick(ctx)
+            if status == BT.FAILURE then return BT.FAILURE
+            elseif status == BT.RUNNING then return BT.RUNNING
+            else -- SUCCESS: advance
+                self.idx = self.idx + 1
+                return BT.SUCCESS
+            end
+        end,
+        reset = function()
+            for _, child in ipairs(self.children) do child:reset() end
+            self.idx = 1
+        end
+    }
+    return node
+end
+
+BT.Selector = function(children)
+    local idx = 1
+    local node = {
+        children = children,
+        idx = 1,
+        tick = function(self, ctx)
+            if self.idx > #self.children then return BT.SUCCESS end
+            local child = self.children[self.idx]
+            local status = child.tick(ctx)
+            if status == BT.SUCCESS then
+                self.idx = self.idx + 1
+                return BT.SUCCESS
+            elseif status == BT.RUNNING then
+                return BT.RUNNING
+            else -- FAILURE: move to next
+                self.idx = self.idx + 1
+            end
+        end,
+        reset = function()
+            for _, child in ipairs(self.children) do child:reset() end
+            self.idx = 1
+        end
+    }
+    return node
+end
+
+BT.Condition, BT.Inverter, BT.Cooldown unchanged.
+
+Now ensure Blackboard unchanged.
+
+Let's produce final code block.

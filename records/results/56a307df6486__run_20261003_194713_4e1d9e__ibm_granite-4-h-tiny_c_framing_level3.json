@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "c_framing",
+  "level": "level3",
+  "tested_at": "2026-10-03 19:51:51",
+  "passed": 0,
+  "total": 10,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\ibm_granite-4-h-tiny__Q4_K_M_c_framing_level3.c:92:25: error: too few arguments to function call, expected 2, have 0\n   92 |             ringbuf_pop();\n      |             ~~~~~~~~~~~ ^\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\ibm_granite-4-h-tiny__Q4_K_M_c_framing_level3.c:33:5: note: 'ringbuf_pop' declared here\n   33 | int ringbuf_pop(uint8_t *data, int len) {\n      |     ^           ~~~~~~~~~~~~~~~~~~~~~~\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\ibm_granite-4-h-tiny__Q4_K_M_c_framing_level3.c:103:25: error: too few arguments to function call, expected 2, have 0\n  103 |             ringbuf_pop();\n      |             ~~~~~~~~~~~ ^\nC:\\Starlord\\Programming\\local_llm_bench\\models_answers\\ibm_granite-4-h-tiny__Q4_K_M_c_framing_level3.c:33:5: note: 'ringbuf_pop' declared here\n   33 | int ringbuf_pop(uint8_t *data, int len) {\n      |     ^           ~~~~~~~~~~~~~~~~~~~~~~\n2 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

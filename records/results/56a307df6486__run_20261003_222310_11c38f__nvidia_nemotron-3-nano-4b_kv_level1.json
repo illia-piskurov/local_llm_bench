@@ -1,0 +1,26 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-10-03 22:33:40",
+  "passed": 3,
+  "total": 15,
+  "failures": [
+    "basic_set_get: unexpected exception/timeout: IndexError: list index out of range",
+    "get_missing: unexpected exception/timeout: IndexError: list index out of range",
+    "delete_then_get: unexpected exception/timeout: IndexError: list index out of range",
+    "delete_missing_key_noop: unexpected exception/timeout: IndexError: list index out of range",
+    "overwrite_set: unexpected exception/timeout: IndexError: list index out of range",
+    "simple_transaction_commit: unexpected exception/timeout: IndexError: list index out of range",
+    "simple_transaction_rollback: unexpected exception/timeout: IndexError: list index out of range",
+    "rollback_restores_delete: unexpected exception/timeout: IndexError: list index out of range",
+    "nested_transactions: unexpected exception/timeout: IndexError: list index out of range",
+    "nested_commit_propagates_to_outer_only: unexpected exception/timeout: IndexError: list index out of range",
+    "multiple_keys_independent: unexpected exception/timeout: IndexError: list index out of range",
+    "set_new_key_inside_transaction: unexpected exception/timeout: IndexError: list index out of range"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

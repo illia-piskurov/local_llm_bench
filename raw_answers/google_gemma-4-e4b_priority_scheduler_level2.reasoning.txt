@@ -1,0 +1,41 @@
+The user wants me to extend the existing class/module structure (which is currently just functions) by adding two new functions: `critical_path` and `makespan`.
+
+I must ensure that all three functions (`plan_order`, `critical_path`, `makespan`) are implemented correctly within a single Python code block.
+
+### 1. Analyzing `critical_path(tasks)`
+
+*   **Goal:** Find the longest path in the dependency graph, where path length is the sum of task durations.
+*   **Constraint:** Must handle cycles (return `None`).
+*   **Method:** This is a standard problem solvable with Dynamic Programming or memoized DFS on a Directed Acyclic Graph (DAG).
+
+1.  **Cycle Detection:** First, check for cycles using DFS (similar to the cycle detection in `plan_order`). If a cycle exists, return `None`.
+2.  **Path Calculation:** Define $L(T)$ as the length of the longest path ending at task $T$.
+    $L(T) = \text{Duration}(T) + \max(\{0\} \cup \{L(D) \mid D \text{ is a dependency of } T\})$
+3.  **Result:** The critical path length is $\max_{T} L(T)$.
+
+### 2. Analyzing `makespan(tasks, workers)`
+
+*   **Goal:** Calculate the total time elapsed until all tasks are finished (the completion time of the last task).
+*   **Constraint:** Must use the exact scheduling rules defined in `plan_order` (dependencies, limited workers, deterministic tie-breaking: highest priority, shortest duration, alphabetical name).
+*   **Method:** This requires simulating the entire process, similar to `plan_order`, but instead of tracking the start order, we track time and wait until all tasks are finished.
+
+1.  **Simulation Structure:** Use the same simulation loop as `plan_order`.
+2.  **State Tracking:** Need `current_time`, `running_tasks` (task -> finish\_time), `ready_queue`, `dependencies_remaining`, etc.
+3.  **Time Advancement:** The core logic remains: advance time to the next completion event if no tasks can start immediately, or schedule immediately if workers are available and tasks are ready.
+4.  **Termination:** The simulation ends when all tasks have been processed (i.e., `len(started_tasks) == N` AND `running_tasks` is empty).
+5.  **Result:** The final value of `current_time` after the last task finishes is the makespan.
+
+### Implementation Details & Refactoring
+
+I will reuse the dependency graph setup and cycle detection logic from `plan_order` for efficiency and consistency across all three functions. Since they are standalone functions, I should encapsulate helper logic or ensure necessary state variables are passed/recalculated.
+
+Let's structure the code:
+1.  Keep `plan_order`.
+2.  Implement `critical_path`.
+3.  Implement `makespan`.
+
+---
+*Self-Correction during implementation:* The cycle detection in `plan_order` uses DFS on dependencies (A depends on B, C). If A -> B is an edge, the cycle check must follow this dependency structure. My existing cycle check seems correct for detecting cycles in the prerequisite graph. I will reuse that logic.
+
+---
+Starting the combined code block construction.

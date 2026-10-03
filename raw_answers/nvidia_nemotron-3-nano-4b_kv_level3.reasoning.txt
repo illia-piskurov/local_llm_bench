@@ -1,0 +1,195 @@
+We need to modify implementation to support snapshot/restore. Need to store snapshots as dict mapping name->snapshot object containing state: global_store (dict), stack (list of dicts), watch_set (set). Also maybe other internal structures? The run function uses global_store, stack, outputs, watch_set. So snapshot must capture those plus maybe any other needed for future execution.
+
+When SNAPSHOT <name> is executed, we need to save current state: global_store copy, stack copy (list of dicts), watch_set copy, also perhaps the list outputs? But outputs are already emitted; they shouldn't affect later. However restart after restore must continue from that point, so internal structures must be as saved.
+
+Thus snapshot object can store:
+
+- global_store: dict
+- stack: list[dict]
+- watch_set: set
+- maybe also a flag for open transactions? Already captured in stack.
+
+When RESTORE <name> is executed, we need to replace current state with that snapshot. So we must clear current global_store, stack, watch_set, and outputs? But outputs already emitted; after restore, new commands will produce new outputs. The run function returns list of strings (outputs). If we replace internal structures, the rest of program will continue using those restored values.
+
+Thus in run loop, when encountering SNAPSHOT:
+
+- name = tokens[1]
+- snapshot = snapshots[name]  # dict with fields
+- global_store = snapshot['global_store'] copy? Should be a new dict.
+- stack = snapshot['stack'] copy (list of dicts)
+- watch_set = snapshot['watch_set'] copy
+
+But note that after restore, we may have further commands; they will use these restored structures.
+
+Also need to handle nested transactions: snapshot includes current stack depth. That's fine.
+
+Implementation details:
+
+We'll maintain a global variable snapshots = {} (dict name->snapshot dict). At start of run, snapshots empty.
+
+When SNAPSHOT <name> executed:
+
+- snapshot_data = {
+    'global_store': copy.deepcopy(global_store),
+    'stack': list(map(lambda d: {k:v}, stack)), # deep copy each dict
+    'watch_set': set(watch_set)
+  }
+- snapshots[name] = snapshot_data
+
+When RESTORE <name> executed:
+
+- if name not in snapshots: maybe ignore? but spec says not tested.
+- snapshot_data = snapshots[name]
+- global_store = snapshot_data['global_store']
+- stack = snapshot_data['stack']   # replace current stack
+- watch_set = snapshot_data['watch_set']
+
+But note that after restore, we may have further commands; they will use these restored structures.
+
+Potential issue: The run function uses 'global_store' as final values after all commits. That's fine.
+
+Also need to ensure that after restore, any subsequent SET/DELETE etc will work with the restored stack and global_store.
+
+Edge Cases:
+
+- If we snapshot while there are open transactions (stack not empty). That's okay; snapshot includes current stack.
+
+- After restore, if we have further nested BEGIN/CLOSE? The code doesn't have CLOSE command. So fine.
+
+Now implement modifications to run function accordingly.
+
+We'll need import copy for deepcopy maybe. Use copy.deepcopy.
+
+But note that global_store is a dict of values (strings). Deepcopy works.
+
+Implementation:
+
+At top: snapshots = {}
+
+Inside loop, when cmd == "SNAPSHOT":
+
+- name = tokens[1]
+- snapshot_data = {
+    'global_store': copy.deepcopy(global_store),
+    'stack': [dict(d) for d in stack],
+    'watch_set': set(watch_set)
+  }
+- snapshots[name] = snapshot_data
+
+When cmd == "RESTORE":
+
+- name = tokens[1]
+- if name not in snapshots: maybe ignore? but spec says not tested.
+- snapshot_data = snapshots[name]
+- global_store = snapshot_data['global_store']
+- stack = snapshot_data['stack']   # replace
+- watch_set = snapshot_data['watch_set']
+
+But note that after restore, we may have further commands; they will use these restored structures.
+
+Potential issue: The run function uses 'global_store' as final values after all commits. That's fine.
+
+Now ensure that outputs list is not affected by restore (it already contains previous outputs). Good.
+
+Now produce final code block with modifications only? We need to return full function code.
+
+Thus final answer: Provide entire run function with snapshot/restore support, preserving other commands.
+
+Let's write code:
+
+```python
+import copy
+
+def run(program: str) -> list[str]:
+    stack = []                     # each element is a dict for the current transaction
+    global_store = {}              # final values after all commits (not used directly)
+    outputs = []
+    watch_set = set()              # keys that are being watched
+    snapshots = {}                 # name -> snapshot dict
+
+    for line in program.splitlines():
+        if not line.strip():
+            continue
+        tokens = line.split()
+        cmd = tokens[0]
+
+        if cmd == "SET":
+            key, value = tokens[1], tokens[2]
+            if stack:
+                cur_dict = stack[-1]
+                old_val = cur_dict.get(key, "NULL")
+                if old_val != value:                     # emit WATCH notification
+                    outputs.append(f"WATCH {key} {old_val} -> {value}")
+                cur_dict[key] = value
+
+        elif cmd == "GET":
+            key = tokens[1]
+            val = stack[-1].get(key, "NULL") if stack else "NULL"
+            outputs.append(val)
+
+        elif cmd == "DELETE":
+            key = tokens[1]
+            if stack:
+                cur_dict = stack[-1]
+                if key in cur_dict:
+                    old_val = cur_dict.pop(key)
+                    outputs.append(f"WATCH {key} {old_val} -> NULL")
+
+        elif cmd == "BEGIN":
+            stack.append({})
+
+        elif cmd == "COMMIT":
+            if not stack:
+                outputs.append("NO TRANSACTION")
+                continue
+            inner = stack.pop()
+            if stack:                     # merge into parent transaction
+                outer = stack[-1]
+                outer.update(inner)
+            else:                          # outermost transaction, effects become global
+                global_store.update(inner)
+
+        elif cmd == "ROLLBACK":
+            if not stack:
+                outputs.append("NO TRANSACTION")
+                continue
+            inner = stack.pop()           # discard changes
+
+        elif cmd == "COUNT":
+            value = tokens[1]
+            cur_dict = stack[-1] if stack else {}
+            cnt = sum(1 for k in cur_dict.keys() if cur_dict[k] == value)
+            if not cur_dict and value == "NULL":   # count global keys with NULL value
+                cnt += len(global_store)          # all global keys have NULL current value
+            outputs.append(str(cnt))
+
+        elif cmd == "WATCH":
+            watch_set.add(tokens[1])
+
+        elif cmd == "SNAPSHOT":
+            name = tokens[1]
+            snapshot_data = {
+                'global_store': copy.deepcopy(global_store),
+                'stack': [dict(d) for d in stack],
+                'watch_set': set(watch_set)
+            }
+            snapshots[name] = snapshot_data
+
+        elif cmd == "RESTORE":
+            name = tokens[1]
+            if name not in snapshots:
+                # silently ignore or could raise, but spec says not tested
+                continue
+            snapshot_data = snapshots[name]
+            global_store = snapshot_data['global_store']
+            stack = snapshot_data['stack']          # replace current stack depth
+            watch_set = snapshot_data['watch_set']
+
+    return outputs
+```
+
+Check that after restore, any subsequent commands will use restored structures.
+
+Potential issue: The run function uses 'global_store' as final values; after restore we may have already committed some global values earlier. That's fine.
+
+Now produce answer only code block.

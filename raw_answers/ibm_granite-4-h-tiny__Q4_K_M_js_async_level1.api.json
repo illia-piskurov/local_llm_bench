@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "ibm/granite-4-h-tiny",
+  "output": [
+    {
+      "type": "message",
+      "content": "```javascript\nasync function pMap(items, mapper, options = {}) {\n  const { concurrency } = typeof options === 'number' ? { concurrency: options } : options;\n  if (items.length === 0) return [];\n\n  const results = new Array(items.length).fill(undefined);\n  let index = 0;\n\n  async function processItem(itemIndex) {\n    while (true) {\n      await new Promise(resolve => setTimeout(resolve, 0));\n      if (index >= items.length) break;\n      try {\n        results[index] = await mapper(items[index], index);\n        index++;\n      } catch (error) {\n        return Promise.reject(error);\n      }\n    }\n  }\n\n  const promises = [];\n  while (index < items.length) {\n    for (let i = 0; i < concurrency && index < items.length; i++) {\n      promises.push(processItem(index));\n    }\n    await Promise.race(promises);\n    promises.splice(0, promises.length);\n  }\n\n  return results;\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 215,
+    "total_output_tokens": 210,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 44.947406158310784,
+    "time_to_first_token_seconds": 0.8584109999999999
+  }
+}

@@ -1,0 +1,30 @@
+Here's a plan to implement the new features (COUNT and WATCH):
+
+1.  **Analyze `WATCH`:** This is the most complex addition. It requires tracking watched keys and their *current* visible values. Since transactions modify state, we need to track the value at the moment `WATCH` is called, and then compare subsequent changes against that tracked value.
+    *   We need a mechanism to store active watches (e.g., a dictionary mapping key names to watch objects/state).
+    *   The watch object must know:
+        *   The key being watched.
+        *   The current expected value (the value when `WATCH` was called, or the last known stable value).
+        *   A way to handle nested transactions correctly (i.e., changes in a child transaction affect the watch immediately, but if that child rolls back, the watch must revert to the parent's state).
+
+2.  **Refining State Management for `WATCH`:** The current state management uses `self.transaction_stack`. When we are inside a transaction, the visible state is `self.transaction_stack[-1]`.
+    *   We need to store watches *per transaction level*. If I start watching A in T1, and then enter T2, the watch must persist but operate on the state of T2.
+
+3.  **Implementing Watch Logic:**
+    *   `WATCH <key>`: Store the current visible value for `<key>`. This watch needs to be associated with the *current transaction level*.
+    *   `SET/DELETE`: Before modifying the state, check all active watches. If the change affects a watched key, calculate `old_value` and `new_value`, and output the notification string.
+
+4.  **Analyze `COUNT`:** This is simpler. It requires iterating over *all* keys currently visible in the scope (the top of the stack or global storage) and counting how many have the specified value.
+
+5.  **Integration into `NestedKVStore`:**
+    *   Add state variables for watches (`self.watches`). Since watches are transactional, they should probably be managed within the transaction stack structure, but let's simplify: we will store a list of active watch records on the current scope/transaction level.
+    *   Update `set_key`, `delete_key` to handle watch notifications.
+    *   Implement `watch_key`.
+    *   Implement `count_keys`.
+
+Let's refine the structure for watches:
+
+*   We will use a dictionary `self.watches` which stores active watches. Since watches are transactional, we must ensure that when a transaction starts (`BEGIN`), we save the current watch list state, and when it rolls back, we restore it.
+*   A Watch record needs to store: `key`, `expected_value`.
+
+Let's proceed with modifications. (Self-correction: The prompt implies WATCH notifications are immediate and do not affect the return value of `run()`, only GET/COMMIT/ROLLBACK outputs are collected.)

@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-10-03 19:49:16",
+  "passed": 11,
+  "total": 15,
+  "failures": [
+    "simple_transaction_rollback: expected ['5'], got ['10']",
+    "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', 'NULL']",
+    "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '20', '20']",
+    "multiple_keys_independent: expected ['2', '1', '2'], got ['2', '99', '2']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

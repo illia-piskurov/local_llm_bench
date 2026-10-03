@@ -1,0 +1,28 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "kv",
+  "level": "level3",
+  "tested_at": "2026-10-03 19:49:55",
+  "passed": 16,
+  "total": 30,
+  "failures": [
+    "simple_transaction_rollback: expected ['5'], got ['10']",
+    "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', 'NULL']",
+    "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '20', '20']",
+    "multiple_keys_independent: expected ['2', '1', '2'], got ['2', '99', '2']",
+    "count_basic: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+    "count_zero: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+    "count_respects_transaction: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+    "count_after_delete: unexpected exception/timeout: TypeError: unsupported types for __add__: 'dict_view', 'list'",
+    "watch_set_new_key: unexpected exception/timeout: IndexError: list index out of range",
+    "watch_set_change: unexpected exception/timeout: IndexError: list index out of range",
+    "watch_no_change_no_notification: unexpected exception/timeout: IndexError: list index out of range",
+    "watch_delete: unexpected exception/timeout: IndexError: list index out of range",
+    "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got []",
+    "restore_keeps_watch_registrations: unexpected exception/timeout: IndexError: list index out of range"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

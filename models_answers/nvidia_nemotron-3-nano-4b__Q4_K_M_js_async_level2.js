@@ -1,0 +1,46 @@
+async function pMap(items, mapper, options = {}) {
+  if (!Array.isArray(items)) throw new Error('items must be an array');
+  const n = items.length;
+  if (n === 0) return [];
+
+  // Determine concurrency limit
+  let max = typeof options === 'number' ? options : (options && options.concurrency ?? 1);
+  if (max < 1) throw new Error('concurrency must be >= 1');
+
+  const results = new Array(n);
+
+  // Retry helper with exponential backoff and timeout handling
+  const attempt = async function (i) {
+    let attemptsLeft = (options.retries ?? 0) + 1;
+    while (attemptsLeft > 0) {
+      try {
+        return await mapper(i);
+      } catch (err) {
+        // If a timeout was thrown, treat it as normal error for retry
+        if (options.timeoutMs > 0 && err.message === 'Timeout') {}
+        attemptsLeft--;
+        if (attemptsLeft <= 0) throw err;
+        const backoff = (options.backoffMs ?? 0) * Math.pow(2, attemptsLeft - 1);
+        await new Promise(r => setTimeout(r, backoff));
+      }
+    }
+  };
+
+  let active = 0;
+  const pending = [...Array(n).keys()];
+
+  async function run() {
+    while (active < max && pending.length) {
+      const i = pending.shift();
+      active++;
+      attempt(i)
+        .then(res => { results[i] = res; })
+        .catch(err => { throw err; }) // propagate final error
+        .finally(() => { active--; run(); });
+    }
+  }
+
+  await run();
+
+  return results;
+}

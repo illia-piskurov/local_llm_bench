@@ -1,0 +1,267 @@
+#include <stdint.h>
+#include <stddef.h> // For size_t
+#include <string.h> // For memcpy (though manual copy is fine)
+
+// Define the fixed buffer size
+#define BUFFER_SIZE 512
+
+// Static memory storage for the ring buffer
+static uint8_t ringbuf_buffer[BUFFER_SIZE];
+
+// Indices tracking the read (tail) and write (head) positions
+static size_t head = 0; // Where the next byte will be written
+static size_t tail = 0; // Where the next byte will be read from
+
+// Current number of elements stored in the buffer
+static int count = 0;
+
+/**
+ * @brief Initializes or resets the ring buffer.
+ */
+void ringbuf_init(void) {
+    head = 0;
+    tail = 0;
+    count = 0;
+}
+
+/**
+ * @brief Pushes one byte into the buffer.
+ * 
+ * @param byte The byte to push.
+ * @return int 0 on success, -1 if the buffer is full.
+ */
+int ringbuf_push(uint8_t byte) {
+    if (count >= BUFFER_SIZE) {
+        // Buffer is full
+        return -1;
+    }
+
+    // Write the byte at the current head position
+    ringbuf_buffer[head] = byte;
+
+    // Advance the head pointer, wrapping around if necessary
+    head = (head + 1) % BUFFER_SIZE;
+
+    // Increment count
+    count++;
+    return 0;
+}
+
+/**
+ * @brief Pops one byte from the buffer following FIFO ordering.
+ * 
+ * @return int The popped byte value (0-255) on success, or -1 if the buffer is empty.
+ */
+int ringbuf_pop(void) {
+    if (count == 0) {
+        // Buffer is empty
+        return -1;
+    }
+
+    // Read the byte from the current tail position
+    uint8_t byte = ringbuf_buffer[tail];
+
+    // Advance the tail pointer, wrapping around if necessary
+    tail = (tail + 1) % BUFFER_SIZE;
+
+    // Decrement count
+    count--;
+    
+    return (int)byte;
+}
+
+/**
+ * @brief Returns the current number of bytes stored in the buffer.
+ * 
+ * @return int The available count (0 to 512).
+ */
+int ringbuf_available(void) {
+    return count;
+}
+
+/**
+ * @brief Returns remaining free space in the buffer.
+ * 
+ * @return int Remaining free space (BUFFER_SIZE - available).
+ */
+int ringbuf_free_space(void) {
+    return BUFFER_SIZE - count;
+}
+
+
+/**
+ * @brief Feeds incoming bytes into the ring buffer, discarding excess data on overflow.
+ * 
+ * @param data Pointer to the incoming byte stream.
+ * @param len Number of bytes in the stream.
+ */
+void feed_bytes(const uint8_t *data, int len) {
+    for (int i = 0; i < len; ++i) {
+        if (ringbuf_push(data[i]) != 0) {
+            // Buffer overflow, stop feeding remaining bytes
+            break;
+        }
+    }
+}
+
+
+/**
+ * @brief Decodes a packet from a byte stream, skipping noise bytes.
+ * 
+ * Packet format: [0xAA] [type] [len] [payload (len B)] [checksum]
+ * 
+ * @param stream Pointer to the start of the data stream.
+ * @param stream_len Total length of the data stream available.
+ * @param out_payload Buffer to store the extracted payload.
+ * @param out_type Pointer to store the message type.
+ * @return int The length of the successfully decoded payload (>= 0), or -1 if no valid packet is found or insufficient data exists.
+ */
+int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {
+    // Minimum required bytes for a packet (Magic + Type + Len + Checksum) = 4 bytes
+    if (stream_len < 4) {
+        return -1;
+    }
+
+    // Start searching from the beginning of the stream
+    for (int i = 0; i <= stream_len - 4; ++i) {
+        // 1. Check for Magic Byte
+        if (stream[i] != 0xAA) {
+            continue; // Not a potential start, skip to next byte
+        }
+
+        // Potential packet found starting at index i
+        const uint8_t *current = stream + i;
+
+        // Read header fields
+        uint8_t type = current[1];
+        uint8_t len = current[2];
+        
+        // Calculate total expected length: 3 (header) + len (payload) + 1 (checksum)
+        int required_len = 4 + len;
+
+        // 2. Check if the full packet fits within the stream bounds
+        if ((i + required_len) > stream_len) {
+            // Packet is incomplete, cannot decode this one.
+            continue;
+        }
+
+        // 3. Validate Checksum
+        uint8_t calculated_checksum = 0;
+        
+        // Payload bytes are from index i+3 up to i+2+len
+        for (int j = 0; j < len; ++j) {
+            calculated_checksum ^= current[3 + j];
+        }
+
+        // Checksum byte is at the end of the packet: i + 3 + len
+        uint8_t received_checksum = current[3 + len];
+
+        if (calculated_checksum != received_checksum) {
+            // Checksum mismatch, corrupted packet. Skip this start position.
+            continue;
+        }
+
+        // --- SUCCESS: Valid Packet Found ---
+
+        // 4. Copy Payload
+        memcpy(out_payload, current + 3, len);
+
+        // 5. Set Type
+        *out_type = type;
+
+        // Return the payload length
+        return len;
+    }
+
+    // If loop finishes without finding a valid packet
+    return -1;
+}
+
+
+/**
+ * @brief Checks the ring buffer for a completed, valid packet. 
+ * If found, pops it and returns its payload length. Otherwise, discards noise or returns -1.
+ * 
+ * @param out_payload Buffer to store the extracted payload.
+ * @param out_type Pointer to store the message type.
+ * @return int The length of the successfully decoded payload (>= 0), or -1 if no valid packet is found or insufficient data exists.
+ */
+int get_next_packet(uint8_t *out_payload, int *out_type) {
+    if (ringbuf_available() < 4) {
+        // Not enough bytes even for the minimum header/checksum
+        return -1;
+    }
+
+    // We need to scan the buffer contents without popping until a valid packet is found.
+    // The scanning process will use temporary reads relative to 'tail'.
+    
+    int current_scan_offset = 0; // Offset from tail (0 to count-1)
+    const int max_search_bytes = ringbuf_available();
+
+    while (current_scan_offset <= max_search_bytes - 4) {
+        // --- Step 1: Check for Magic Byte (0xAA) ---
+        uint8_t magic = ringbuf_buffer[(tail + current_scan_offset) % BUFFER_SIZE];
+        if (magic != 0xAA) {
+            current_scan_offset++; // Noise byte, discard it conceptually and move scanner forward
+            continue;
+        }
+
+        // Potential packet found starting at current_scan_offset.
+        
+        // --- Step 2: Read Header Fields (Type, Length) ---
+        uint8_t type = ringbuf_buffer[(tail + current_scan_offset + 1) % BUFFER_SIZE];
+        uint8_t len = ringbuf_buffer[(tail + current_scan_offset + 2) % BUFFER_SIZE];
+        
+        // Calculate total expected length: 3 (header) + len (payload) + 1 (checksum)
+        int required_len = 4 + len;
+
+        // --- Step 3: Check Buffer Bounds ---
+        if (required_len > max_search_bytes - current_scan_offset) {
+            // Packet is incomplete, wait for more data. Stop searching.
+            return -1;
+        }
+
+        // --- Step 4: Validate Checksum and Payload ---
+        uint8_t calculated_checksum = 0;
+        int checksum_valid = 1;
+        
+        // Calculate XOR sum of payload bytes (from offset + 3 up to offset + 2 + len)
+        for (int j = 0; j < len; ++j) {
+            uint8_t byte = ringbuf_buffer[(tail + current_scan_offset + 3 + j) % BUFFER_SIZE];
+            calculated_checksum ^= byte;
+        }
+
+        // Read the received checksum byte (at offset + 3 + len)
+        uint8_t received_checksum = ringbuf_buffer[(tail + current_scan_offset + 3 + len) % BUFFER_SIZE];
+
+        if (calculated_checksum != received_checksum) {
+            checksum_valid = 0; // Checksum mismatch
+        }
+
+        // --- Step 5: Process Result ---
+        if (checksum_valid) {
+            // SUCCESS: Valid Packet Found! Consume and return.
+
+            // 1. Copy Payload
+            memcpy(out_payload, &ringbuf_buffer[(tail + current_scan_offset + 3) % BUFFER_SIZE], len);
+
+            // 2. Set Type
+            *out_type = type;
+
+            // 3. Consume the entire packet (required_len bytes) from the ring buffer
+            for (int k = 0; k < required_len; ++k) {
+                ringbuf_pop();
+            }
+
+            return len; // Return payload length
+
+        } else {
+            // Failure: Checksum mismatch or other corruption.
+            // We discard only the magic byte and advance the scanner to look for the next potential start.
+            current_scan_offset++; 
+        }
+    }
+
+    // If loop finishes without finding a valid packet (either due to noise/corruption, or insufficient data)
+    return -1;
+}

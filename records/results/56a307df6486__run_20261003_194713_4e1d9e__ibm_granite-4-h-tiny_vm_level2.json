@@ -1,0 +1,21 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-10-03 19:47:49",
+  "passed": 20,
+  "total": 27,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Error at line 1: Undefined label: skip",
+    "jz_taken_when_zero: unexpected exception/timeout: ValueError: Error at line 1: Undefined label: zero",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Error at line 1: Undefined label: zero",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Error at line 1: Undefined label: nz",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Error at line 1: Undefined label: nz",
+    "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+    "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

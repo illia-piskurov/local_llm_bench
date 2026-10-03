@@ -1,0 +1,152 @@
+import sys
+
+class InMemoryKeyValueStore:
+    def __init__(self):
+        self.global_store = {}
+        self.transactions = []
+        self.watched_keys = {}  # Maps keys to their current watched state (old_value)
+        self.snapshots = {}     # Stores snapshots by name: {name: {'global': dict, 'transactions': list, 'watched': dict}}
+
+    def _push_transaction(self):
+        self.transactions.append({})
+
+    def _pop_transaction(self):
+        if not self.transactions:
+            return None
+        return self.transactions.pop()
+
+    def _save_snapshot(self, name):
+        snapshot = {
+            'global': self.global_store.copy(),
+            'transactions': [t.copy() for t in self.transactions],
+            'watched': {k: v for k, v in self.watched_keys.items()}
+        }
+        self.snapshots[name] = snapshot
+
+    def _load_snapshot(self, name):
+        if name not in self.snapshots:
+            return False  # Invalid snapshot
+        snapshot = self.snapshots[name]
+        self.global_store = snapshot['global'].copy()
+        self.transactions = [t.copy() for t in snapshot['transactions']]
+        self.watched_keys = {k: v for k, v in snapshot['watched'].items()}
+        return True
+
+    def run(self, program: str) -> list[str]:
+        output = []
+        commands = [cmd.strip() for cmd in program.split('\n') if cmd.strip()]
+        current_transactions = []
+
+        # Parse and execute commands
+        for cmd in commands:
+            parts = cmd.split()
+            if not parts:
+                continue
+
+            if parts[0] == 'BEGIN':
+                self._push_transaction()
+                current_transactions.append(self.transactions[-1])
+
+            elif parts[0] == 'COMMIT':
+                if len(current_transactions) < 2 or not self.transactions[-1]:
+                    output.append("NO TRANSACTION")
+                else:
+                    parent = current_transactions.pop()
+                    changes = self._pop_transaction()
+                    for key, value in changes.items():
+                        if key in parent:
+                            parent[key] = value
+                        else:
+                            parent[key] = value
+
+            elif parts[0] == 'ROLLBACK':
+                if not self.transactions[-1]:
+                    output.append("NO TRANSACTION")
+                else:
+                    self._pop_transaction()
+
+            elif parts[0] == 'SET' and len(parts) >= 3:
+                key, value = parts[1], parts[2]
+                current_store = self.transactions[-1] if self.transactions else self.global_store
+                old_value = current_store.get(key)
+
+                # Check watched keys for notifications
+                for watched_key in list(self.watched_keys.keys()):
+                    if watched_key == key:
+                        new_value = value if value != "NULL" else None  # Handle NULL case
+                        if self.watched_keys[watched_key] != new_value:
+                            output.append(f"WATCH {key} {self.watched_keys[watched_key]} -> {new_value}")
+                            self.watched_keys[watched_key] = new_value
+
+                current_store[key] = value
+
+            elif parts[0] == 'GET':
+                key = parts[1]
+                # Check all transactions from innermost to outermost
+                for store in reversed(self.transactions):
+                    if key in store:
+                        output.append(store[key])
+                        break
+                else:
+                    if key in self.global_store:
+                        output.append(self.global_store[key])
+                    else:
+                        output.append("NULL")
+
+            elif parts[0] == 'DELETE' and len(parts) >= 2:
+                key = parts[1]
+                current_store = self.transactions[-1] if self.transactions else self.global_store
+                old_value = current_store.get(key, "NULL")
+                del current_store[key]
+
+                # Check watched keys for notifications
+                for watched_key in list(self.watched_keys.keys()):
+                    if watched_key == key:
+                        output.append(f"WATCH {key} {old_value} -> NULL")
+
+            elif parts[0] == 'COUNT' and len(parts) >= 2:
+                value = parts[1]
+                count = 0
+                # Check all transactions from innermost to outermost
+                for store in reversed(self.transactions):
+                    if value in store.values():
+                        count += store.values().count(value)
+                else:
+                    if value in self.global_store.values():
+                        count += self.global_store.values().count(value)
+                output.append(str(count))
+
+            elif parts[0] == 'WATCH' and len(parts) >= 2:
+                key = parts[1]
+                current_value = None
+                # Check all transactions from innermost to outermost
+                for store in reversed(self.transactions):
+                    if key in store:
+                        current_value = store[key]
+                        break
+                else:
+                    if key in self.global_store:
+                        current_value = self.global_store[key]
+
+                self.watched_keys[key] = current_value
+
+            elif parts[0] == 'SNAPSHOT' and len(parts) >= 2:
+                name = parts[1]
+                self._save_snapshot(name)
+
+            elif parts[0] == 'RESTORE' and len(parts) >= 2:
+                name = parts[1]
+                if not self._load_snapshot(name):
+                    output.append(f"ERROR: Unknown snapshot '{name}'")
+
+        return output
+
+def main():
+    store = InMemoryKeyValueStore()
+    program = sys.stdin.read().strip()
+    results = store.run(program)
+    for res in results:
+        print(res)
+
+if __name__ == "__main__":
+    main()

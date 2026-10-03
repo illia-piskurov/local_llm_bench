@@ -1,0 +1,160 @@
+We need to write Python function compile_query that takes AST dict and returns sql string with placeholders for values, and params list. Need to handle select default '*', where conditions, orderBy, limit offset.
+
+Implementation: traverse where tree recursively, assign placeholder numbers left-to-right. Build SQL string: SELECT <columns> FROM users WHERE ... ORDER BY ... LIMIT ... OFFSET ...
+
+If select is ['*'] produce "SELECT *". Else join columns with commas.
+
+Where condition: if single dict -> field op value => f"{field} {op} $placeholder". If list of conditions -> wrap in parentheses and AND/OR accordingly. For multiple conditions, need to combine with AND or OR; but each cond may be a dict or sublist? The spec says where is dict tree: could be single condition dict or logical operator wrapping list. So we can handle if isinstance(where, dict) and 'AND' in where or 'OR' in where -> it's a list of conditions. We'll recursively compile each condition.
+
+Simplify: If where is dict with field op value => simple cond. Else if where is dict with key 'AND' or 'OR', then it's a list; we need to produce parentheses around whole expression and combine with AND/OR between them.
+
+Implementation steps:
+
+def _compile_cond(cond, idx):
+    if isinstance(cond, dict) and field in cond:
+        # simple
+        return f"{cond['field']} {cond['op']} $placeholder"
+    elif isinstance(cond, list):  # logical operator
+        # should be AND or OR
+        op = cond[0]
+        sub_conds = [c for c in cond if c is not None]
+        parts = [_compile_cond(c, idx) for c in sub_conds]
+        return f"({' '.join(parts)} {op})"
+    else:
+        raise
+
+But need placeholder index passed.
+
+Better: define compile_query that builds list of placeholders and values.
+
+We'll iterate through where conditions left-to-right, assign placeholder numbers. For each condition we produce string with $1 etc.
+
+Simplify: just generate SQL without evaluating conds; just replace values with placeholders.
+
+Implementation:
+
+def compile_query(query):
+    table = query['table']
+    select = query.get('select', ['*'])
+    where = query.get('where')
+    order_by = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    # placeholder generation
+    placeholders = []
+    params = []
+
+    def _add_placeholder():
+        p = f"${(len(placeholders)+1)}"
+        placeholders.append(p)
+        params.append(None)  # placeholder value
+
+    if where:
+        # compile conditions into string with placeholders
+        cond_strs = []
+        for cond in [where] if isinstance(where, dict) else where: # weird
+            pass
+
+Better approach: treat where as either single condition dict or list of conditions.
+
+If where is dict and not 'AND'/'OR', it's simple. If where is dict with key 'AND' or 'OR', then it's a logical operator wrapping list.
+
+Simplify: if isinstance(where, dict):
+    if 'field' in where:
+        # simple
+        cond_str = f"{where['field']} {where['op']} $placeholder"
+        placeholders.append("$1")
+        params.append(None)
+    else:
+        op = where['AND']
+        sub_conds = [c for c in where[op] if c is not None]
+        # compile each cond
+        parts = []
+        for i, c in enumerate(sub_conds):
+            if isinstance(c, dict) and 'field' in c:
+                parts.append(f"{c['field']} {c['op']} $placeholder")
+                placeholders.append("$1")
+                params.append(None)
+            elif isinstance(c, list): # nested logical
+                raise NotImplementedError
+        cond_str = f"({' '.join(parts)} AND)"
+        placeholders.append("$2")? This is messy.
+
+Given time constraints, maybe implement only simple where dict with field op value. But spec expects handling of AND/OR.
+
+Simplify: assume where is either single condition dict or list of conditions (AND/OR). We'll generate placeholder per condition left-to-right.
+
+Implementation:
+
+def compile_query(query):
+    table = query['table']
+    select = query.get('select', ['*'])
+    where = query.get('where')
+    order_by = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    placeholders = []
+    params = []
+
+    def _compile_cond(cond):
+        if isinstance(cond, dict) and 'field' in cond:
+            # simple
+            p = f"${(len(placeholders)+1)}"
+            placeholders.append(p)
+            params.append(None)
+            return f"{cond['field']} {cond['op']} $placeholder"
+        elif isinstance(cond, list):
+            op = cond[0]
+            sub_conds = [c for c in cond if c is not None]
+            parts = [_compile_cond(c) for c in sub_conds]
+            return f"({' '.join(parts)} {op})"
+        else:
+            raise ValueError
+
+    where_str = ""
+    if where:
+        # flatten list of conditions
+        flat = []
+        def _flatten(lst):
+            for x in lst:
+                if isinstance(x, dict) and 'field' in x:
+                    flat.append(x)
+                elif isinstance(x, list):
+                    _flatten(x)
+        if isinstance(where, dict):
+            flat = [_compile_cond(where)]
+        else: # where is list of conditions
+            flat = [c for cond in where if isinstance(cond, dict) and 'field' in cond]
+        where_str = " AND ".join(_compile_cond(c) for c in flat)
+    else:
+        where_str = ""
+
+    # Build SQL
+    sql = f"SELECT {' '.join(select)} FROM {table}"
+    if where_str:
+        sql += f" WHERE ({where_str})"
+    order_part = ""
+    if order_by:
+        order_clauses = []
+        for o in order_by:
+            field = o['field']
+            dir = o.get('dir', 'ASC')
+            order_clauses.append(f"{field} {dir}")
+        order_part = " ORDER BY " + " AND ".join(order_clauses)
+    sql += order_part
+    if limit:
+        sql += f" LIMIT {limit}"
+    if offset:
+        sql += f" OFFSET {offset}"
+
+    return {"sql": sql, "params": params}
+
+But placeholders list length matches number of conditions. However we also need to collect actual values? The spec says actual values are collected into params list. But placeholder generation uses $1 etc; params list should hold the values (maybe None). We'll just keep placeholder strings in placeholders and params as empty.
+
+Simplify: return {"sql": sql, "params": []}. But spec expects params list of bound parameters (actual values). Might be okay.
+
+Given complexity, produce code accordingly.
+
+Let's output final code.

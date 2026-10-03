@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261003_222310_11c38f",
+  "host_id": "56a307df6486",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-10-03 22:39:11",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "select_specific_columns: SQL: expected 'SELECT id, email, created_at FROM users', got 'SELECT id email created_at FROM users'",
+    "simple_where_equality: exception/timeout: ValueError: Unsupported condition: status = $placeholder",
+    "where_and_or_nested: exception/timeout: ValueError: Unsupported condition: {'AND': [{'value': 'active', 'field': 'status', 'op': '='}, {'OR': [{'value': 'admin', 'field': 'role', 'op': '='}, {'value': 21, 'field': 'age', 'op': '>='}]}]}",
+    "order_by_limit_offset: SQL: expected 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', got 'SELECT * FROM articles ORDER BY views DESC AND id ASC LIMIT 10 OFFSET 20'",
+    "multiple_and_conditions: exception/timeout: ValueError: Unsupported condition: {'AND': [{'value': 'error', 'field': 'level', 'op': '='}, {'value': 404, 'field': 'code', 'op': '!='}, {'value': 1000, 'field': 'timestamp', 'op': '>'}]}"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

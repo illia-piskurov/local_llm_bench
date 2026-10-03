@@ -1,0 +1,178 @@
+We need to implement an in-memory key-value store with nested transactions. Commands: SET <key> <value>, GET <key>, DELETE <key>. BEGIN starts new transaction (nested). COMMIT merges innermost changes into parent transaction, not directly global storage if it's a nested transaction? Actually requirement: "commit the innermost open transaction, merging its changes into the parent transaction (not directly into global storage if it is a nested transaction)". Means if there are multiple transactions, commit merges inner to outer, but does not affect global storage unless no outer? If outermost transaction commits, then changes go to global storage. ROLLBACK discards innermost changes.
+
+We need to output for GET commands (value or "NULL") and for COMMIT/ROLLBACK when they output "NO TRANSACTION". So we must collect outputs in list.
+
+Implementation: Use a stack of transactions. Each transaction is a dict mapping keys to values, plus maybe a flag if it's outermost? We'll treat each transaction as its own dict; changes are visible via GET immediately (i.e., when evaluating commands within that transaction). But after COMMIT, the innermost transaction merges into parent: we need to update parent's dict with inner's entries. If there is no outer transaction (stack empty), then commit outputs "NO TRANSACTION". Similarly rollback discards changes; if stack empty? Actually rollback only affects innermost open transaction; if none, output "NO TRANSACTION".
+
+We must handle nested: BEGIN starts new transaction on top of stack. If there is already a transaction (i.e., not outermost?), we push new dict onto stack.
+
+When COMMIT: pop innermost transaction? Actually commit merges changes into parent, but does it remove the transaction from stack? Probably yes; after commit, that transaction is closed and its changes are merged into parent. So we need to merge inner dict into outer (if any). If no outer, then output "NO TRANSACTION". Also if there was only one transaction (outermost), merging into global storage: but requirement says not directly into global storage if it's a nested transaction; outermost is considered nested? Probably still treat as nested. So we just merge into parent (which may be None). If no parent, output "NO TRANSACTION". Also after commit, the inner dict is discarded.
+
+ROLLBACK: pop innermost transaction and discard its changes (i.e., remove it from stack). Output "NO TRANSACTION" if none open? Actually rollback discards innermost; if there are no open transactions, output "NO TRANSACTION". So we need to check before popping.
+
+Implementation details:
+
+Data structures:
+- global_store: dict for outermost changes after all commits.
+But requirement: GET must see current value even within transaction. That suggests that each transaction's store is separate from global? Actually if a transaction modifies key, GET should return new value immediately (i.e., within same transaction). So we need per-transaction storage.
+
+When COMMIT merges inner into outer, the outer transaction's storage gets updated accordingly. After commit, the inner dict is gone; its changes are now part of outer.
+
+If there is no outer transaction (stack empty), then after commit, those changes become global? But requirement says "not directly into global storage if it is a nested transaction". So maybe outermost transaction is still considered nested? If stack empty means only one transaction open, which is the current one; committing merges its changes into global? The phrase "if there are no open transactions — output 'NO TRANSACTION'" for COMMIT. That suggests that if there is a transaction but it's the only one (i.e., outermost), then commit would merge into parent? But there is no parent, so maybe we treat as merging into global storage and output "NO TRANSACTION". So after commit, those changes are stored globally.
+
+Thus we can maintain a stack of dicts. When COMMIT:
+- inner = stack.pop()
+- if stack: outer = stack[-1]; merge inner into outer (outer.update(inner))
+- else: # no parent; these changes become global? But requirement says output "NO TRANSACTION". So we just store them globally maybe.
+But after commit, the transaction is closed; its dict removed.
+
+When ROLLBACK:
+- if stack empty: output "NO TRANSACTION"
+- else: pop inner and discard (no merging). Output nothing? Only output when no open transactions. So if there are open transactions, rollback discards innermost but does not produce output unless none.
+
+But requirement: "ROLLBACK — rollback the innermost open transaction, discarding all changes made within it. If there are no open transactions — output 'NO TRANSACTION'". So only when there are no open transactions we output "NO TRANSACTION". So if stack empty before rollback? Actually if there is a transaction to rollback, after rollback it's removed; but still there may be outer. Output nothing.
+
+Implementation: We'll have a list outputs = [].
+
+We need to parse program string line by line.
+
+Commands:
+SET key value -> store in current transaction dict.
+GET key -> output value or "NULL". Append to outputs.
+DELETE key -> remove from current transaction dict (if exists). No output.
+
+BEGIN -> push new empty dict onto stack. If there is already a transaction? We'll just push; outer remains previous.
+
+COMMIT:
+- if not stack: outputs.append("NO TRANSACTION")
+- else:
+   inner = stack.pop()
+   if stack:
+       outer = stack[-1]
+       outer.update(inner)  # merge
+   else:
+       # no parent, these changes become global? But output "NO TRANSACTION"
+       # maybe store them globally for future GETs.
+       # We'll keep a global dict after all commits.
+       # Let's maintain global_store as dict of final values.
+       global_store.update(inner)
+   # inner discarded
+- No other output.
+
+ROLLBACK:
+- if not stack: outputs.append("NO TRANSACTION")
+- else:
+   inner = stack.pop()
+   # discard changes; no merging
+   # If outer exists, its dict unchanged.
+   # Output nothing unless after rollback there are no open transactions? Not required.
+
+But need to ensure that GET sees current transaction's values. So each transaction has its own dict; when evaluating commands within it, we use that dict.
+
+When COMMIT merges inner into outer, the outer dict now contains those changes, so subsequent GETs in outer will see them.
+
+Edge Cases:
+- Nested BEGIN: stack grows.
+- DELETE inside transaction removes key from that transaction only (not affecting others).
+- GET across transactions? If a key is set in inner but not committed yet, GET should return value because it's visible immediately. That's fine as we use current transaction dict for GET.
+
+But what about GET after COMMIT merges into outer: the outer dict now has value; subsequent GET will see that (since outer is current). Good.
+
+Now implement run(program) -> list[str].
+
+Parsing: split lines, ignore empty.
+
+We'll maintain:
+- stack = []  # list of dicts
+- global_store = {}  # final values after all commits
+
+But note: if there are multiple COMMITs merging into each other? Actually commit only merges innermost into parent; outer may still be open. After outer is committed, its changes become global.
+
+Implementation steps:
+
+Initialize:
+stack = []
+global_store = {}
+outputs = []
+
+For each line in program.splitlines():
+   if not line.strip(): continue
+   tokens = line.split()
+   cmd = tokens[0]
+   if cmd == "SET":
+       key = tokens[1]; value = tokens[2]
+       stack[-1][key] = value  # assume there is a transaction; but what if no transaction? Probably program always has BEGIN before SET.
+   elif cmd == "GET":
+       key = tokens[1]
+       val = stack[-1].get(key, "NULL")
+       outputs.append(val)
+   elif cmd == "DELETE":
+       key = tokens[1]
+       if key in stack[-1]:
+           del stack[-1][key]
+   elif cmd == "BEGIN":
+       # push new dict
+       stack.append({})
+   elif cmd == "COMMIT":
+       if not stack:
+           outputs.append("NO TRANSACTION")
+           continue
+       inner = stack.pop()
+       if stack:
+           outer = stack[-1]
+           outer.update(inner)
+       else:
+           global_store.update(inner)
+       # no output unless earlier condition? Already handled.
+   elif cmd == "ROLLBACK":
+       if not stack:
+           outputs.append("NO TRANSACTION")
+           continue
+       inner = stack.pop()
+       # discard; no merging
+
+But need to ensure that after COMMIT, the transaction is removed from stack (popped). Good.
+
+Potential issue: If there are multiple nested transactions and we commit innermost into parent, but later rollback outer? That's fine.
+
+Now test scenario:
+
+Program:
+BEGIN
+SET a 10
+GET a   -> output "10"
+COMMIT   # merges inner into global (no parent) => outputs "NO TRANSACTION"? Actually stack empty after pop, so we go to else: global_store.update(inner). No output. So outputs list has ["10"].
+
+Now RUN returns ["10"].
+
+Another scenario:
+BEGIN
+SET a 10
+BEGIN
+SET b 20
+GET b   -> "20"
+ROLLBACK (innermost) discards b changes, no output.
+COMMIT (now innermost is the outer transaction? Actually after rollback, stack has only outer transaction with a=10. COMMIT merges inner (outer) into global? Since it's outermost, we go to else: global_store.update(inner). Output "NO TRANSACTION". So outputs list ["20","NO TRANSACTION"].
+
+But GET after commit? Not needed.
+
+Now scenario with nested commits:
+BEGIN
+SET a 10
+BEGIN
+SET b 20
+COMMIT   # merges inner into outer, stack now has outer dict with a=10,b=20. No output.
+GET b -> "20"
+COMMIT   # now innermost is outer transaction; merge into global (no parent) => outputs "NO TRANSACTION". So outputs ["20","NO TRANSACTION"].
+
+Now scenario where GET after COMMIT merges but still visible? Yes.
+
+Implementation seems fine.
+
+Edge: DELETE inside transaction removes key from that dict only, not affecting others.
+
+Now produce final code in single file with function run(program) -> list[str].
+
+We'll include no external dependencies.
+
+Let's write code.

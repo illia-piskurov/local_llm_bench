@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261003_122800_f42493",
+  "host_id": "56a307df6486",
+  "model": "google/gemma-4-e4b",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-10-03 12:59:44",
+  "passed": 4,
+  "total": 5,
+  "failures": [
+    "where_is_null_and_like: SQL: expected 'SELECT * FROM customers WHERE (deleted_at IS NULL AND email LIKE $1)', got 'SELECT * FROM customers WHERE (deleted_at IS NULL email LIKE $1)'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

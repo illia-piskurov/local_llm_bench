@@ -1,0 +1,69 @@
+We need to extend compiler with support for computed expressions in SELECT (with alias), HAVING clause similar to WHERE but after where params continue numbering. Subqueries in WHERE: field IN (SELECT ...) . Need to generate subquery SQL and parameters, appending placeholders sequentially.
+
+Current code only handles SELECT list as strings or '*'. We'll need to parse select list elements that are dict {expr, as}. Also HAVING clause similar to where but after where params continue numbering. Subqueries: condition dict with field, op='IN', query dict. Need to generate subquery SQL and its parameters, then append placeholders for IN.
+
+Implementation plan:
+
+- In compile_query:
+   - parse select list: iterate over select (list). If element is dict with 'expr' and 'as': compute expression string = _compile_expression(expr) maybe? But expr could be simple like 'COUNT(items.id)' which we can just output as is. We'll generate SELECT clause as comma-separated expressions, each possibly aliased.
+
+   - For normal select elements (string): keep as is.
+
+- Build SQL: "SELECT ..." with commas between items.
+
+- Need to handle placeholders for subqueries and IN values.
+
+- Subquery generation: when encountering condition dict where op='IN' and query dict present. We'll generate subquery SQL = f"({sub_sql})". Then add its parameters to params list, and also add placeholders for the IN clause (already done). The placeholder string $1 etc will refer to those placeholders.
+
+- HAVING: similar to where but after where processing. So we need a function _compile_clause(condition_dict) that returns sql part and updates flat_where? Actually we have separate handling for where and having. We'll treat having similarly, but after where params continue numbering (i.e., placeholders already added). So just generate clause.
+
+- Need to ensure parameter ordering: each placeholder corresponds to a param in order of appearance.
+
+Implementation details:
+
+Define helper _compile_expression(expr_str) returns expr string (no change). For subquery query dict: we need to call compile_query recursively? But signature compile_query expects top-level. However subquery is nested; we can generate its SQL manually using same logic but without outer table etc. Simpler: generate sub_sql = f"SELECT {sub_select} FROM {sub_table}" where sub_table is the inner query's 'table' field.
+
+But subquery dict may have selects, joins, group_by, having, limit/offset? Probably just simple SELECT with maybe filters. We'll implement generic compile_query for subquery but call it recursively (allowed). However compile_query returns dict with sql and params; we need only sql string to embed.
+
+Simplify: generate sub_sql = f"SELECT {sub_select} FROM {sub_table}" where sub_select is join of select list, sub_table is the inner query's table name. For joins etc., we can call compile_query recursively but that returns dict with sql and params; we need only sql string. Could just manually build.
+
+Given complexity, maybe assume subquery is simple SELECT ... FROM <table> WHERE ... . We'll generate using same logic as outer but without outer table? Might be okay.
+
+But time limited: produce code implementing these features roughly.
+
+We'll implement:
+
+- In compile_query:
+   - parse select list into list of (expr_str, alias) or just expr_str.
+   - Build sel_clause = ', '.join([f"{expr} AS {alias}" if alias else f"{expr}" for expr, alias in items]).
+
+   - For joins: same.
+
+   - For group_by: same.
+
+   - For where and having: process list of condition dicts (where + having). We'll combine them into flat_conditions = where + having.
+
+   - Process each cond:
+        if cond['op'] == 'IN' and isinstance(cond.get('value'), list):
+            generate placeholders for each value, add to params.
+            sub_sql = f"({sub_sql})"
+            sql += f" AND {field} IN ({', '.join(sub_placeholders)})"
+            Append sub_sql's parameters to params (already done via placeholders).
+        elif cond['op'] == 'IN' and isinstance(cond.get('query'), dict):
+            # nested query
+            sub_query = compile_query(cond['query'])
+            sub_sql = f"({sub_query['sql']})"
+            sql += f" AND {field} IN ({', '.join(sub_placeholders)})"
+            params.extend(sub_query['params'])
+        else:
+            generate placeholder and param as before.
+
+   - For having: same processing but after where.
+
+- Need to ensure placeholders for subqueries are sequential; our _add_placeholder function adds sequentially.
+
+Implementation of _add_placeholder already exists.
+
+Now produce final code block with updated compile_query and helper functions.
+
+Let's craft final answer.

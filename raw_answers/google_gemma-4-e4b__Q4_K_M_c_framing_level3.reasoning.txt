@@ -1,0 +1,27 @@
+Here's a plan to implement the streaming parser logic:
+
+1.  **Analyze Requirements:** The goal is to adapt the packet decoding logic (`decode_packet`) into a stateful stream processing function (`get_next_packet`) that operates on a ring buffer, handling fragmentation and noise skipping automatically.
+2.  **Implement `feed_bytes`:** This function must safely write incoming data chunks into the existing `ringbuf_buffer`, respecting the overflow condition defined by `ringbuf_push`.
+3.  **Implement `get_next_packet` (The Core Logic):**
+    *   This function needs to repeatedly scan the available data in the ring buffer (`tail` to `head`).
+    *   Since we are dealing with a stream, we cannot simply pass pointers and lengths; we must read bytes sequentially from the buffer using `ringbuf_pop` (conceptually, but since we need to *peek* first, we'll simulate reading/scanning without popping until success).
+    *   **Scanning Strategy:** We need an internal pointer/index that tracks our current scanning position within the available data.
+    *   **Packet Structure Check:**
+        *   Check for `0xAA` (Magic). If not found, advance the scanner by one byte (discarding noise) and restart the check.
+        *   If `0xAA` is found, read Type, Length (`len`).
+        *   Calculate required total length: $L_{req} = 4 + len$.
+        *   Check if enough data ($L_{req}$) is available in the buffer. If not, stop and return -1 (incomplete).
+        *   If enough data exists, read the payload bytes and calculate the checksum.
+        *   Read the final byte (Checksum) and validate it.
+    *   **Success Handling:** If valid:
+        *   We must *consume* exactly $L_{req}$ bytes from the buffer using `ringbuf_pop`.
+        *   Copy the payload data.
+        *   Set the type.
+        *   Return `len`.
+    *   **Failure/Noise Handling (Crucial):** If a packet fails validation (checksum mismatch, or if we decide to skip this potential start point), we must discard only the initial magic byte (`0xAA`) and restart the scan from the next byte in the buffer. This is how noise skipping works in a stream context.
+
+4.  **Refining `get_next_packet` Implementation Details:**
+    *   Since the ring buffer functions are designed for single-byte operations, we need helper logic to peek at bytes without popping them until a full packet is confirmed.
+    *   We will use temporary variables and indices relative to the current `tail`.
+
+Let's start coding, ensuring all existing functions remain intact.

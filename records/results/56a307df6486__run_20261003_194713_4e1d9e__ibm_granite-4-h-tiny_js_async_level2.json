@@ -1,0 +1,25 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "js_async",
+  "level": "level2",
+  "tested_at": "2026-10-03 19:52:06",
+  "passed": 1,
+  "total": 12,
+  "failures": [
+    "order_preservation: assertion returned False",
+    "concurrency_limit: assertion returned False",
+    "concurrency_as_number: assertion returned False",
+    "concurrency_default_one: assertion returned False",
+    "index_passed: assertion returned False",
+    "mapper_rejection: assertion returned False",
+    "retry_transient_failure: assertion returned False",
+    "retry_exhausted: assertion returned False",
+    "exponential_backoff: assertion returned False",
+    "task_timeout: assertion returned False",
+    "timeout_triggers_retry: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

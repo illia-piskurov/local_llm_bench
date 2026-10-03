@@ -1,0 +1,18 @@
+Here's a plan to implement the extended `pMap` function:
+
+1.  **Analyze Requirements:** The core structure (concurrency control, order preservation) must remain. We need to wrap the execution of the `mapper` call with retry logic, backoff delay, and timeout handling.
+2.  **Handle Options Parsing:** Update the options parsing to correctly extract `retries`, `backoffMs`, and `timeoutMs`.
+3.  **Implement Task Execution Wrapper (`executeTaskWithRetryAndTimeout`):** This is the most complex part. It needs to handle:
+    *   The actual `mapper(item, index)` call.
+    *   A timeout mechanism (using `Promise.race` with a delay promise).
+    *   A retry loop (up to `retries + 1` attempts).
+    *   Exponential backoff delay (`setTimeout`).
+4.  **Integrate into `processBatch`:** The existing batch processing logic will call this new wrapper function for each item, ensuring that if any task fails permanently (after all retries), the entire `pMap` rejects immediately.
+
+Let's start structuring the code.
+
+*(Self-Correction/Refinement during implementation):*
+*   The original `processBatch` uses recursion and `Promise.all`. This structure is good for concurrency control.
+*   The error handling must be robust: if a task fails *after* all retries, it must throw an error that propagates up to the main `try/catch` block of `pMap`, causing immediate rejection.
+
+Let's implement the helper function first.

@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261003_194713_4e1d9e",
+  "host_id": "56a307df6486",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "lua_game_ai",
+  "level": "level3",
+  "tested_at": "2026-10-03 19:53:24",
+  "stats": {
+    "input_tokens": 1484,
+    "total_output_tokens": 1059,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 41.65353838737735,
+    "time_to_first_token_seconds": 2.769442,
+    "model_load_time_seconds": null
+  }
+}

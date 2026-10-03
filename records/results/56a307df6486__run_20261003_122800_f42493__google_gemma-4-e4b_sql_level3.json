@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261003_122800_f42493",
+  "host_id": "56a307df6486",
+  "model": "google/gemma-4-e4b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-10-03 13:02:09",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "select_expression_alias: SQL: expected 'SELECT orders.id, COUNT(items.id) AS item_count FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id', got 'SELECT orders.id, (COUNT(items.id)) AS item_count FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id'",
+    "having_clause: SQL: expected 'SELECT sales.category, SUM(sales.amount) AS total_sales FROM sales GROUP BY sales.category HAVING SUM(sales.amount) > $1', got 'SELECT sales.category, (SUM(sales.amount)) AS total_sales FROM sales HAVING SUM(sales.amount) > $1 GROUP BY sales.category'",
+    "where_subquery_in: params: expected ['gold'], got []",
+    "subquery_with_parent_params_order: SQL: expected 'SELECT * FROM posts WHERE (status = $1 AND author_id IN (SELECT id FROM banned_authors WHERE reason = $2) AND views > $3)', got 'SELECT * FROM posts WHERE (status = $1 author_id IN (SELECT id FROM banned_authors WHERE reason = $1) views > $2)'; params: expected ['published', 'spam', 500], got ['published', 500]"
+  ],
+  "manual_score": null,
+  "comment": ""
+}
