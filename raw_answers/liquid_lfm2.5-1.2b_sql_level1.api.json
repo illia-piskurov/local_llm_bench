@@ -1,0 +1,17 @@
+{
+  "model_instance_id": "liquid/lfm2.5-1.2b",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nimport re\n\ndef compile_query(query: dict) -> dict:\n    table = query.get('table', '')\n    select = query.get('select', ['*'])\n    where = query.get('where', {})\n    orderby = query.get('orderBy', [])\n    limit = query.get('limit')\n    offset = query.get('offset')\n\n    # Parse where conditions\n    conditions = []\n    if 'where' in query:\n        cond_dict = query['where']\n        for field, op, value in cond_dict.items():\n            if isinstance(value, dict):\n                cond = parse_condition(field, op, value)\n                conditions.append(cond)\n            else:\n                conditions.append(f\"{field} {op} {value}\")\n    \n    # Handle AND and OR\n    if isinstance(where, dict):\n        cond_list = []\n        for cond in where.values():\n            cond_list.append(parse_condition(cond))\n        conditions = [cond for cond in cond_list if cond]\n    else:\n        conditions = [parse_condition(field, op, value) for field, op, value in where.items()]\n\n    # Build parameter list\n    params = []\n    if conditions:\n        param_placeholders = [f\"${{i+1}}\" for i in range(len(conditions))]\n        params = [f\"{field}={value}\" for field, value in conditions]\n    else:\n        params = []\n\n    # Apply orderby\n    if orderby:\n        for field, dir in orderby:\n            params.append(f\"{field} {dir}\")\n\n    # Apply limit and offset\n    if limit is not None:\n        params.append(str(limit))\n    if offset is not None:\n        params.append(str(offset))\n\n    # Build SQL\n    sql = f\"SELECT {', '.join(select)} FROM {table}\"\n    if conditions:\n        sql += \" WHERE \"\n        for cond in conditions:\n            sql += f\"({cond})\"\n    if params:\n        sql += \" PARAMETERS\"\n    sql = sql.replace(' ', '')\n\n    return {\"sql\": sql, \"params\": params}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 488,
+    "total_output_tokens": 460,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 70.683460467845,
+    "time_to_first_token_seconds": 0.462
+  },
+  "response_id": "resp_03111da66f35e3e8ee147ce556bd056510d0606059ecc52f"
+}

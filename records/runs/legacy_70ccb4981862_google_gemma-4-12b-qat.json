@@ -1,0 +1,92 @@
+{
+  "id": "legacy_70ccb4981862_google_gemma-4-12b-qat",
+  "host_id": "70ccb4981862",
+  "model_key": "google/gemma-4-12b-qat",
+  "model_name": "google/gemma-4-12b-qat",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-10-02 11:37:28",
+  "completed_at": "2026-10-02 11:37:28",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-15 23:34:42",
+      "passed": 15,
+      "total": 15,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-15 23:45:41",
+      "passed": 25,
+      "total": 25,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-08-15 23:59:00",
+      "passed": 30,
+      "total": 30,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-16 00:09:19",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-16 00:25:49",
+      "passed": 5,
+      "total": 6,
+      "failures": [
+        "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=8, cp=8"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-02 11:37:29",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-02 11:37:28",
+      "stats": {
+        "input_tokens": 426,
+        "total_output_tokens": 5634,
+        "reasoning_output_tokens": 5091,
+        "tokens_per_second": 11.800272364866316,
+        "time_to_first_token_seconds": 4.057603,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

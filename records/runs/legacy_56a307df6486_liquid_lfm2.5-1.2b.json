@@ -1,0 +1,309 @@
+{
+  "id": "legacy_56a307df6486_liquid_lfm2.5-1.2b",
+  "host_id": "56a307df6486",
+  "model_key": "liquid/lfm2.5-1.2b",
+  "model_name": "liquid/lfm2.5-1.2b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-08-17 22:35:37",
+  "completed_at": "2026-08-17 22:35:37",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-17 22:35:37",
+      "passed": 0,
+      "total": 15,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:35:54",
+      "passed": 0,
+      "total": 25,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-08-17 22:36:18",
+      "passed": 0,
+      "total": 30,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 22:34:34",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'",
+        "dependency_unlocks_later: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'",
+        "single_worker_duration_tiebreak: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'",
+        "resource_limit_and_priority: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'",
+        "simultaneous_unlocks: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'",
+        "cycle_returns_none: неожиданное исключение: plan_order.<locals>.has_cycle() missing 2 required positional arguments: 'visited' and 'stack'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:34:57",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: неожиданное исключение: not enough values to unpack (expected 4, got 3)",
+        "parallel_tasks_reduce_makespan: неожиданное исключение: not enough values to unpack (expected 4, got 3)",
+        "dependencies_and_workers: неожиданное исключение: list index out of range",
+        "critical_path_longer_than_worker_parallelism: неожиданное исключение: not enough values to unpack (expected 4, got 3)",
+        "wide_graph_with_unlocks: неожиданное исключение: list index out of range"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 22:17:23",
+      "passed": 6,
+      "total": 10,
+      "failures": [
+        "simple_chain: невалидный топологический порядок: ['c', 'b', 'a']",
+        "diamond: невалидный топологический порядок: ['d', 'b', 'c', 'a']",
+        "multiple_roots: невалидный топологический порядок: ['d', 'c', 'a', 'b']",
+        "wide_graph: невалидный топологический порядок: ['deploy', 'package', 'test', 'lint', 'compile']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:33:11",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: неожиданное исключение: 'tuple' object has no attribute 'items'",
+        "simple_chain: неожиданное исключение: 'tuple' object has no attribute 'items'",
+        "diamond_pick_longer_branch: неожиданное исключение: 'tuple' object has no attribute 'items'",
+        "independent_tasks: неожиданное исключение: 'tuple' object has no attribute 'items'",
+        "wide_graph: неожиданное исключение: 'tuple' object has no attribute 'items'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-10-02 10:51:48",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "simple_select_all: SQL: ожидали 'SELECT * FROM products', получили 'SELECT*FROMproducts'",
+        "select_specific_columns: SQL: ожидали 'SELECT id, email, created_at FROM users', получили 'SELECTid,email,created_atFROMusers'",
+        "simple_where_equality: исключение/таймаут: not enough values to unpack (expected 3, got 2)",
+        "where_and_or_nested: исключение/таймаут: not enough values to unpack (expected 3, got 2)",
+        "order_by_limit_offset: SQL: ожидали 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', получили 'SELECT*FROMarticlesPARAMETERS'; params: ожидали [], получили ['field dir', 'field dir', '10', '20']",
+        "multiple_and_conditions: исключение/таймаут: not enough values to unpack (expected 3, got 2)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-10-02 10:52:07",
+      "passed": 0,
+      "total": 11,
+      "failures": [
+        "simple_select_all: SQL: ожидали 'SELECT * FROM products', получили 'SELECT*FROMproducts'",
+        "select_specific_columns: SQL: ожидали 'SELECT id, email, created_at FROM users', получили 'SELECTid,email,created_atFROMusers'",
+        "simple_where_equality: исключение/таймаут: not enough values to unpack (expected 3, got 2)",
+        "where_and_or_nested: исключение/таймаут: not enough values to unpack (expected 3, got 2)",
+        "order_by_limit_offset: исключение/таймаут: cannot access local variable 'params' where it is not associated with a value",
+        "multiple_and_conditions: исключение/таймаут: not enough values to unpack (expected 3, got 2)",
+        "left_join_with_group_by: исключение/таймаут: too many values to unpack (expected 2)",
+        "multiple_joins_inner_and_left: SQL: ожидали 'SELECT posts.title, users.name FROM posts INNER JOIN users ON posts.author_id = users.id LEFT JOIN comments ON posts.id = comments.post_id', получили 'SELECTposts.title,users.nameFROMposts'",
+        "where_in_operator: исключение/таймаут: not enough values to unpack (expected 3, got 2)",
+        "where_is_null_and_like: исключение/таймаут: not enough values to unpack (expected 3, got 2)",
+        "where_is_not_null: исключение/таймаут: not enough values to unpack (expected 3, got 2)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-08-17 22:31:36",
+      "passed": 0,
+      "total": 18,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:31:57",
+      "passed": 0,
+      "total": 27,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-10-02 10:51:21",
+      "passed": 0,
+      "total": 37,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция run(program: str) -> list[str]"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-17 22:35:37",
+      "stats": {
+        "input_tokens": 524,
+        "total_output_tokens": 523,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 48.81780178945713,
+        "time_to_first_token_seconds": 0.7334489999999999,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:35:54",
+      "stats": {
+        "input_tokens": 1353,
+        "total_output_tokens": 688,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 47.647395972853175,
+        "time_to_first_token_seconds": 0.9789070000000001,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-08-17 22:36:18",
+      "stats": {
+        "input_tokens": 1387,
+        "total_output_tokens": 921,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 46.78751392131742,
+        "time_to_first_token_seconds": 0.999878,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 22:34:31",
+      "stats": {
+        "input_tokens": 319,
+        "total_output_tokens": 467,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 53.41184455117409,
+        "time_to_first_token_seconds": 0.257168,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:34:52",
+      "stats": {
+        "input_tokens": 1042,
+        "total_output_tokens": 833,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 52.16942776337952,
+        "time_to_first_token_seconds": 0.868894,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-17 22:17:19",
+      "stats": {
+        "input_tokens": 280,
+        "total_output_tokens": 169,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 56.84296844071665,
+        "time_to_first_token_seconds": 0.063506,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:33:09",
+      "stats": {
+        "input_tokens": 646,
+        "total_output_tokens": 197,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 57.62313068516534,
+        "time_to_first_token_seconds": 0.062887,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-08-17 22:31:36",
+      "stats": {
+        "input_tokens": 415,
+        "total_output_tokens": 684,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 55.51159084451551,
+        "time_to_first_token_seconds": 0.322834,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-08-17 22:31:57",
+      "stats": {
+        "input_tokens": 1295,
+        "total_output_tokens": 947,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 52.918097816226,
+        "time_to_first_token_seconds": 1.105218,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

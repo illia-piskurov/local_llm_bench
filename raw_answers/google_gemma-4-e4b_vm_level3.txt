@@ -1,0 +1,212 @@
+```python
+import sys
+
+def run(program: str) -> list[str]:
+    """
+    Интерпретирует программу стекового языка, поддерживая метки, условные переходы,
+    подпрограммы, операции сравнения и именованные переменные.
+
+    Args:
+        program: Многострочный текст с инструкциями.
+
+    Returns:
+        Список строк, содержащих вывод команды PRINT.
+
+    Raises:
+        RuntimeError: Если произошла ошибка выполнения (нехватка данных на стеке, деление на ноль и т.д.).
+    """
+    stack = []
+    output = []
+    lines = program.split('\n')
+    labels = {}  # {имя_метки: индекс_строки}
+    memory = {}  # Именованные переменные {имя: значение}
+    call_stack = [] # Стек вызовов для адресов возврата
+
+    # --- Первый проход: Сбор всех меток ---
+    for i, line in enumerate(lines):
+        stripped_line = line.strip()
+        if not stripped_line or stripped_line.startswith('#'):
+            continue
+
+        tokens = stripped_line.split()
+        if tokens and tokens[0] == "LABEL":
+            label_name = tokens[1]
+            if label_name in labels:
+                raise RuntimeError(f"Ошибка в строке {i + 1}: Метка '{label_name}' уже определена.")
+            labels[label_name] = i
+
+    # --- Второй проход: Выполнение программы ---
+    current_index = 0
+    while current_index < len(lines):
+        line = lines[current_index]
+        line_number = current_index + 1
+        stripped_line = line.strip()
+
+        # Игнорирование пустых строк и комментариев
+        if not stripped_line or stripped_line.startswith('#'):
+            current_index += 1
+            continue
+
+        tokens = stripped_line.split()
+        if not tokens:
+            current_index += 1
+            continue
+
+        instruction = tokens[0]
+        next_index = current_index + 1 # По умолчанию, идем на следующую строку
+
+        try:
+            # --- Инструкции управления потоком и подпрограммы ---
+            if instruction == "LABEL":
+                # LABEL <name> - просто регистрирует метку (уже сделано выше)
+                pass
+
+            elif instruction == "JMP":
+                target_label = tokens[1]
+                if target_label not in labels:
+                    raise NameError(f"Неизвестная метка перехода: {target_label}")
+                next_index = labels[target_label]
+
+            elif instruction == "JZ":
+                target_label = tokens[1]
+                if target_label not in labels:
+                    raise NameError(f"Неизвестная метка перехода: {target_label}")
+                if len(stack) < 1:
+                    raise IndexError("Недостаточно элементов на стеке для JZ.")
+
+                condition = stack.pop()
+                if condition == 0:
+                    next_index = labels[target_label]
+
+            elif instruction == "JNZ":
+                target_label = tokens[1]
+                if target_label not in labels:
+                    raise NameError(f"Неизвестная метка перехода: {target_label}")
+                if len(stack) < 1:
+                    raise IndexError("Недостаточно элементов на стеке для JNZ.")
+
+                condition = stack.pop()
+                if condition != 0:
+                    next_index = labels[target_label]
+
+            elif instruction == "CALL":
+                target_label = tokens[1]
+                if target_label not in labels:
+                    raise NameError(f"Неизвестная метка подпрограммы: {target_label}")
+                # Сохраняем адрес возврата (следующая строка после CALL)
+                call_stack.append(current_index + 1)
+                next_index = labels[target_label]
+
+            elif instruction == "RET":
+                if not call_stack:
+                    raise RuntimeError("Ошибка выполнения: RET вызван, но стек вызовов пуст.")
+                # Возвращаемся к сохраненному адресу
+                next_index = call_stack.pop()
+
+            # --- Операции памяти и сравнения ---
+            elif instruction == "STORE":
+                if not stack:
+                    raise IndexError("Недостаточно элементов на стеке для STORE.")
+                var_name = tokens[1]
+                value = stack.pop()
+                memory[var_name] = value
+
+            elif instruction == "LOAD":
+                if tokens[1] not in memory:
+                    raise NameError(f"Переменная '{tokens[1]}' не определена.")
+                value = memory[tokens[1]]
+                stack.append(value)
+
+            elif instruction == "EQ":
+                if len(stack) < 2:
+                    raise IndexError("Недостаточно элементов на стеке для EQ.")
+                b = stack.pop()
+                a = stack.pop()
+                result = 1 if a == b else 0
+                stack.append(result)
+
+            elif instruction == "GT":
+                if len(stack) < 2:
+                    raise IndexError("Недостаточно элементов на стеке для GT.")
+                b = stack.pop()
+                a = stack.pop()
+                result = 1 if a > b else 0
+                stack.append(result)
+
+            elif instruction == "LT":
+                if len(stack) < 2:
+                    raise IndexError("Недостаточно элементов на стеке для LT.")
+                b = stack.pop()
+                a = stack.pop()
+                result = 1 if a < b else 0
+                stack.append(result)
+
+            # --- Стандартные инструкции стека и операции ---
+            elif instruction == "PUSH":
+                if len(tokens) != 2:
+                    raise ValueError("PUSH требует один аргумент.")
+                value = int(tokens[1])
+                stack.append(value)
+
+            elif instruction == "POP":
+                if not stack:
+                    raise IndexError("Недостаточно элементов на стеке для POP.")
+                stack.pop()
+
+            elif instruction == "DUP":
+                if not stack:
+                    raise IndexError("Недостаточно элементов на стеке для DUP.")
+                stack.append(stack[-1])
+
+            elif instruction == "SWAP":
+                if len(stack) < 2:
+                    raise IndexError("Недостаточно элементов на стеке для SWAP (требуется минимум 2).")
+                a = stack.pop()
+                b = stack.pop()
+                stack.append(a)
+                stack.append(b)
+
+            elif instruction == "PRINT":
+                if not stack:
+                    raise IndexError("Недостаточно элементов на стеке для PRINT.")
+                output.append(str(stack[-1]))
+
+            # --- Бинарные операции ---
+            elif instruction in ["ADD", "SUB", "MUL", "DIV"]:
+                if len(stack) < 2:
+                    raise IndexError(f"Недостаточно элементов на стеке для {instruction} (требуется минимум 2).")
+
+                b = stack.pop()
+                a = stack.pop()
+                result = None
+
+                if instruction == "ADD":
+                    result = a + b
+                elif instruction == "SUB":
+                    result = a - b
+                elif instruction == "MUL":
+                    result = a * b
+                elif instruction == "DIV":
+                    if b == 0:
+                        raise ZeroDivisionError("Деление на ноль.")
+                    # Целочисленное деление (a // b)
+                    result = a // b
+
+                stack.append(result)
+
+            else:
+                raise NameError(f"Неизвестная инструкция: {instruction}")
+
+        except IndexError as e:
+            raise RuntimeError(f"Ошибка в строке {line_number}: {e}")
+        except ZeroDivisionError as e:
+            raise RuntimeError(f"Ошибка в строке {line_number}: Деление на ноль.")
+        except (ValueError, NameError) as e:
+             # Ошибки парсинга или неизвестных меток/переменных
+            raise RuntimeError(f"Ошибка в строке {line_number}: {e}")
+
+        # Обновляем индекс для следующей итерации.
+        current_index = next_index
+
+    return output
+```

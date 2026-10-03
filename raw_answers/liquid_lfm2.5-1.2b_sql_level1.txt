@@ -1,0 +1,62 @@
+```python
+import re
+
+def compile_query(query: dict) -> dict:
+    table = query.get('table', '')
+    select = query.get('select', ['*'])
+    where = query.get('where', {})
+    orderby = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    # Parse where conditions
+    conditions = []
+    if 'where' in query:
+        cond_dict = query['where']
+        for field, op, value in cond_dict.items():
+            if isinstance(value, dict):
+                cond = parse_condition(field, op, value)
+                conditions.append(cond)
+            else:
+                conditions.append(f"{field} {op} {value}")
+    
+    # Handle AND and OR
+    if isinstance(where, dict):
+        cond_list = []
+        for cond in where.values():
+            cond_list.append(parse_condition(cond))
+        conditions = [cond for cond in cond_list if cond]
+    else:
+        conditions = [parse_condition(field, op, value) for field, op, value in where.items()]
+
+    # Build parameter list
+    params = []
+    if conditions:
+        param_placeholders = [f"${{i+1}}" for i in range(len(conditions))]
+        params = [f"{field}={value}" for field, value in conditions]
+    else:
+        params = []
+
+    # Apply orderby
+    if orderby:
+        for field, dir in orderby:
+            params.append(f"{field} {dir}")
+
+    # Apply limit and offset
+    if limit is not None:
+        params.append(str(limit))
+    if offset is not None:
+        params.append(str(offset))
+
+    # Build SQL
+    sql = f"SELECT {', '.join(select)} FROM {table}"
+    if conditions:
+        sql += " WHERE "
+        for cond in conditions:
+            sql += f"({cond})"
+    if params:
+        sql += " PARAMETERS"
+    sql = sql.replace(' ', '')
+
+    return {"sql": sql, "params": params}
+```

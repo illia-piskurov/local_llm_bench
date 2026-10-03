@@ -1,0 +1,59 @@
+Thinking Process:
+
+1.  **Understand the Goal:** Implement a fixed-size ring buffer (circular buffer) in C99 using only static memory and specific functions for initialization, push, pop, availability, and free space calculation.
+
+2.  **Define Constraints & Structure:**
+    *   Buffer size: 512 bytes.
+    *   No dynamic allocation (static memory).
+    *   Data type: `uint8_t` (bytes).
+    *   Need to manage read/write pointers (indices).
+
+3.  **Design the Data Structure (Static Memory):**
+    *   We need the buffer itself and indices to track the head (read) and tail (write).
+    *   Since we are using static memory, the state variables must also be static or global within the scope of the implementation.
+
+4.  **Determine Indexing Strategy:**
+    *   A standard ring buffer uses two pointers: `head` (where to read from) and `tail` (where to write to).
+    *   Since we are dealing with byte storage, the indices will be integers (or `size_t`).
+
+5.  **Implement the Buffer State:**
+
+    ```c
+    #define BUFFER_SIZE 512
+
+    // Static buffer storage
+    static uint8_t buffer[BUFFER_SIZE];
+    // Indices
+    static int head = 0; // Read pointer (where the next item will be read from)
+    static int tail = 0; // Write pointer (where the next item will be written to)
+    ```
+
+6.  **Implement `ringbuf_init(void)`:**
+    *   Resets the state. The simplest way is to set both head and tail to 0, effectively making it empty.
+
+7.  **Implement `ringbuf_available(void)`:**
+    *   The number of elements currently stored is calculated based on the difference between `tail` and `head`, handling wrap-around.
+    *   If `tail >= head`, available = `tail - head`.
+    *   If `tail < head` (wrapped around), available = `BUFFER_SIZE - (head - tail)`.
+
+8.  **Implement `ringbuf_free_space(void)`:**
+    *   Free space = `BUFFER_SIZE - ringbuf_available()`. (Or calculated directly from indices).
+
+9.  **Implement `ringbuf_push(uint8_t byte)`:**
+    *   Check for full condition: Full if the next write position (`tail`) is equal to the read position (`head`).
+    *   If full, return -1.
+    *   Otherwise, write the byte at `buffer[tail]`.
+    *   Update `tail`: `tail = (tail + 1) % BUFFER_SIZE`.
+
+10. **Implement `ringbuf_pop(void)`:**
+    *   Check for empty condition: Empty if `head == tail`.
+    *   If empty, return -1.
+    *   Otherwise, read the byte from `buffer[head]`.
+    *   Update `head`: `head = (head + 1) % BUFFER_SIZE`.
+    *   Return the popped value.
+
+11. **Review and Refine (Self-Correction/Optimization):**
+    *   The requirements specify that `ringbuf_push` returns -1 if full, and `ringbuf_pop` returns -1 if empty. This is standard behavior for non-blocking ring buffers.
+    *   Since the functions are defined without a structure pointer argument (they operate on static state), they must be implemented as standalone functions operating on the internal static variables.
+
+12. **Final Code Assembly (C99 syntax):** Ensure correct use of `uint8_t` and integer arithmetic for modulo operations. (The implementation will need to define the buffer and indices within the scope where the functions are defined).

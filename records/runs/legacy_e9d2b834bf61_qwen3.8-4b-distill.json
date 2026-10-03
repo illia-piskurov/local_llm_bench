@@ -1,0 +1,222 @@
+{
+  "id": "legacy_e9d2b834bf61_qwen3.8-4b-distill",
+  "host_id": "e9d2b834bf61",
+  "model_key": "qwen3.8-4b-distill",
+  "model_name": "qwen3.8-4b-distill",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-08-25 16:26:54",
+  "completed_at": "2026-08-25 16:26:54",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-25 16:26:54",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "не удалось загрузить решение: В решении не найдена функция compile_query(query: dict) -> dict"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-08-25 16:43:44",
+      "passed": 0,
+      "total": 11,
+      "failures": [
+        "не удалось загрузить решение: invalid syntax (qwen3.8-4b-distill_sql_level2.py, line 1638)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-08-25 16:43:08",
+      "passed": 0,
+      "total": 15,
+      "failures": [
+        "не удалось загрузить решение: '{' was never closed (qwen3.8-4b-distill_sql_level3.py, line 199)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-08-25 16:53:04",
+      "passed": 5,
+      "total": 18,
+      "failures": [
+        "add: ожидалось ['5'], получено ['1']",
+        "sub_order: ожидалось ['7'], получено ['30']",
+        "mul: ожидалось ['24'], получено ['1']",
+        "div_order: ожидалось ['5'], получено ['0']",
+        "div_truncate: ожидалось ['3'], получено ['0']",
+        "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+        "dup: ожидалось ['18'], получено ['0']",
+        "swap: ожидалось ['1'], получено ['2']",
+        "pop: неожиданное исключение: Недостаточно элементов на стеке для PRINT. Строка 4",
+        "comments_and_blank_lines: ожидалось ['7'], получено ['1']",
+        "multiple_prints: ожидалось ['1', '2', '3'], получено ['1', '2', '1']",
+        "negative_numbers: ожидалось ['2'], получено ['8']",
+        "complex_chain: ожидалось ['10'], получено ['0']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-08-25 16:53:30",
+      "passed": 7,
+      "total": 27,
+      "failures": [
+        "add: ожидалось ['5'], получено ['1']",
+        "sub_order: ожидалось ['7'], получено ['30']",
+        "mul: ожидалось ['24'], получено ['1']",
+        "div_order: ожидалось ['5'], получено ['0']",
+        "div_truncate: ожидалось ['3'], получено ['0']",
+        "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+        "dup: ожидалось ['18'], получено ['0']",
+        "swap: ожидалось ['1'], получено ['2']",
+        "pop: неожиданное исключение: Недостаточно элементов на стеке для PRINT. Строка 4",
+        "comments_and_blank_lines: ожидалось ['7'], получено ['1']",
+        "multiple_prints: ожидалось ['1', '2', '3'], получено ['1', '2', '1']",
+        "negative_numbers: ожидалось ['2'], получено ['8']",
+        "complex_chain: ожидалось ['10'], получено ['0']",
+        "unconditional_jump_skips_code: неожиданное исключение: Метка 'SKIP' не найдена. Строка 2",
+        "jz_taken_when_zero: неожиданное исключение: Метка 'ZERO' не найдена. Строка 2",
+        "jz_not_taken_when_nonzero: неожиданное исключение: Метка 'ZERO' не найдена. Строка 2",
+        "jnz_taken_when_nonzero: неожиданное исключение: Метка 'NZ' не найдена. Строка 2",
+        "jnz_not_taken_when_zero: неожиданное исключение: Метка 'NZ' не найдена. Строка 2",
+        "countdown_loop: неожиданное исключение: Метка 'LOOP' не найдена. Строка 8",
+        "count_up_loop: неожиданное исключение: Метка 'LOOP' не найдена. Строка 10"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-08-25 16:52:45",
+      "passed": 12,
+      "total": 37,
+      "failures": [
+        "add: ожидалось ['5'], получено ['1']",
+        "sub_order: ожидалось ['7'], получено ['30']",
+        "mul: ожидалось ['24'], получено ['1']",
+        "div_order: ожидалось ['5'], получено ['0']",
+        "div_truncate: ожидалось ['3'], получено ['0']",
+        "div_by_zero: ожидалась ошибка, но выполнение прошло успешно",
+        "dup: ожидалось ['18'], получено ['0']",
+        "swap: ожидалось ['1'], получено ['2']",
+        "pop: неожиданное исключение: Недостаточно элементов на стеке для PRINT. Строка 4",
+        "comments_and_blank_lines: ожидалось ['7'], получено ['1']",
+        "multiple_prints: ожидалось ['1', '2', '3'], получено ['1', '2', '1']",
+        "negative_numbers: ожидалось ['2'], получено ['8']",
+        "complex_chain: ожидалось ['10'], получено ['0']",
+        "unconditional_jump_skips_code: неожиданное исключение: Метка 'SKIP' не найдена. Строка 2",
+        "jz_taken_when_zero: неожиданное исключение: Метка 'ZERO' не найдена. Строка 2",
+        "jz_not_taken_when_nonzero: неожиданное исключение: Метка 'ZERO' не найдена. Строка 2",
+        "jnz_taken_when_nonzero: неожиданное исключение: Метка 'NZ' не найдена. Строка 2",
+        "jnz_not_taken_when_zero: неожиданное исключение: Метка 'NZ' не найдена. Строка 2",
+        "countdown_loop: неожиданное исключение: Метка 'LOOP' не найдена. Строка 8",
+        "count_up_loop: неожиданное исключение: Метка 'LOOP' не найдена. Строка 10",
+        "call_ret_basic: неожиданное исключение: Подпрограмма 'double' не найдена. Строка 2",
+        "call_ret_nested: неожиданное исключение: Подпрограмма 'func_a' не найдена. Строка 1",
+        "store_and_load: ожидалось ['142'], получено ['58']",
+        "recursive_factorial: неожиданное исключение: Подпрограмма 'fact' не найдена. Строка 2",
+        "recursive_fibonacci: неожиданное исключение: Подпрограмма 'fib' не найдена. Строка 2"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-25 16:26:54",
+      "stats": {
+        "input_tokens": 421,
+        "total_output_tokens": 1964,
+        "reasoning_output_tokens": 190,
+        "tokens_per_second": 21.127307063743,
+        "time_to_first_token_seconds": 3.227255,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-08-25 16:38:40",
+      "stats": {
+        "input_tokens": 2512,
+        "total_output_tokens": 13103,
+        "reasoning_output_tokens": 180,
+        "tokens_per_second": 20.175871453137468,
+        "time_to_first_token_seconds": 18.596655,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-08-25 16:43:08",
+      "stats": {
+        "input_tokens": 13569,
+        "total_output_tokens": 2046,
+        "reasoning_output_tokens": 143,
+        "tokens_per_second": 19.382735840764628,
+        "time_to_first_token_seconds": 159.58262599999998,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-08-25 16:45:06",
+      "stats": {
+        "input_tokens": 335,
+        "total_output_tokens": 1204,
+        "reasoning_output_tokens": 274,
+        "tokens_per_second": 16.897811607084336,
+        "time_to_first_token_seconds": 2.297544,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-08-25 16:47:51",
+      "stats": {
+        "input_tokens": 1417,
+        "total_output_tokens": 2537,
+        "reasoning_output_tokens": 298,
+        "tokens_per_second": 16.56232510654726,
+        "time_to_first_token_seconds": 11.218937,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-08-25 16:52:13",
+      "stats": {
+        "input_tokens": 2741,
+        "total_output_tokens": 4367,
+        "reasoning_output_tokens": 175,
+        "tokens_per_second": 18.176109603730634,
+        "time_to_first_token_seconds": 20.363219,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

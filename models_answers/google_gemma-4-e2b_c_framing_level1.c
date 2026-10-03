@@ -1,0 +1,70 @@
+#include <stdint.h>
+
+#define BUFFER_SIZE 512
+
+// Static storage for the ring buffer and its state
+static uint8_t buffer[BUFFER_SIZE];
+static int head = 0; // Read pointer (index of the oldest element)
+static int tail = 0; // Write pointer (index where the next element will be written)
+
+/**
+ * @brief Initializes or resets the ring buffer to an empty state.
+ */
+void ringbuf_init(void) {
+    head = 0;
+    tail = 0;
+}
+
+/**
+ * @brief Pushes one byte into the buffer.
+ * @param byte The byte to push.
+ * @return 0 on success, -1 if the buffer is full.
+ */
+int ringbuf_push(uint8_t byte) {
+    // Check if the buffer is full (tail points to head)
+    if (tail == head) {
+        return -1; // Buffer is full
+    }
+
+    buffer[tail] = byte;
+    tail = (tail + 1) % BUFFER_SIZE;
+    return 0; // Success
+}
+
+/**
+ * @brief Pops one byte from the buffer.
+ * @return The popped byte value (0-255) on success, or -1 if the buffer is empty.
+ */
+int ringbuf_pop(void) {
+    // Check if the buffer is empty (head points to tail)
+    if (head == tail) {
+        return -1; // Buffer is empty
+    }
+
+    int value = buffer[head];
+    head = (head + 1) % BUFFER_SIZE;
+    return value;
+}
+
+/**
+ * @brief Returns the current number of bytes stored in the buffer.
+ * @return The number of available bytes (0 to 512).
+ */
+int ringbuf_available(void) {
+    // Calculate the distance between tail and head, handling wrap-around
+    if (tail >= head) {
+        return tail - head;
+    } else {
+        // Wrapped around case: (BUFFER_SIZE - head) + tail
+        return BUFFER_SIZE - head + tail;
+    }
+}
+
+/**
+ * @brief Returns the remaining free space in the buffer.
+ * @return The number of free bytes (0 to 512).
+ */
+int ringbuf_free_space(void) {
+    int available = ringbuf_available();
+    return BUFFER_SIZE - available;
+}

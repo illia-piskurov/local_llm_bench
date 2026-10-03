@@ -1,0 +1,277 @@
+{
+  "id": "legacy_56a307df6486_zai-org_glm-4.7-flash",
+  "host_id": "56a307df6486",
+  "model_key": "zai-org/glm-4.7-flash",
+  "model_name": "zai-org/glm-4.7-flash",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-07-11 14:19:53",
+  "completed_at": "2026-07-11 14:19:53",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-07-11 14:19:53",
+      "passed": 14,
+      "total": 15,
+      "failures": [
+        "nested_commit_propagates_to_outer_only: ожидалось ['2', '2'], получено ['1', '1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-07-11 14:29:49",
+      "passed": 23,
+      "total": 25,
+      "failures": [
+        "nested_commit_propagates_to_outer_only: ожидалось ['2', '2'], получено ['1', '1']",
+        "count_respects_transaction: ожидалось ['2', '1'], получено ['1', '1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-07-12 00:27:16",
+      "passed": 28,
+      "total": 30,
+      "failures": [
+        "nested_commit_propagates_to_outer_only: ожидалось ['2', '2'], получено ['1', '1']",
+        "count_respects_transaction: ожидалось ['2', '1'], получено ['1', '1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-12 21:02:22",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: неожиданное исключение: превышен таймаут 5с",
+        "dependency_unlocks_later: неожиданное исключение: превышен таймаут 5с",
+        "single_worker_duration_tiebreak: неожиданное исключение: превышен таймаут 5с",
+        "resource_limit_and_priority: неожиданное исключение: превышен таймаут 5с",
+        "simultaneous_unlocks: ожидалось ['root', 'c', 'd', 'b'], получено ['root']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-12 21:06:08",
+      "passed": 6,
+      "total": 10,
+      "failures": [
+        "simple_chain: невалидный топологический порядок: None",
+        "diamond: невалидный топологический порядок: None",
+        "multiple_roots: невалидный топологический порядок: None",
+        "wide_graph: невалидный топологический порядок: None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-12 21:14:39",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: неожиданное исключение: unhashable type: 'list'",
+        "simple_chain: неожиданное исключение: unhashable type: 'list'",
+        "diamond_pick_longer_branch: неожиданное исключение: unhashable type: 'list'",
+        "independent_tasks: неожиданное исключение: unhashable type: 'list'",
+        "wide_graph: неожиданное исключение: unhashable type: 'list'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-08-25 16:14:40",
+      "passed": 3,
+      "total": 6,
+      "failures": [
+        "simple_where_equality: SQL: ожидали 'SELECT * FROM users WHERE status = $1', получили 'SELECT * FROM users WHERE status = $0'",
+        "where_and_or_nested: SQL: ожидали 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', получили 'SELECT id, email FROM users WHERE (status = $0 AND (role = $1 OR age >= $2))'",
+        "multiple_and_conditions: SQL: ожидали 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', получили 'SELECT * FROM logs WHERE (level = $0 AND code != $1 AND timestamp > $2)'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-08-25 16:14:51",
+      "passed": 5,
+      "total": 11,
+      "failures": [
+        "simple_where_equality: SQL: ожидали 'SELECT * FROM users WHERE status = $1', получили 'SELECT * FROM users WHERE status = $0'",
+        "where_and_or_nested: SQL: ожидали 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', получили 'SELECT id, email FROM users WHERE (status = $0 AND (role = $1 OR age >= $2))'",
+        "multiple_and_conditions: SQL: ожидали 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', получили 'SELECT * FROM logs WHERE (level = $0 AND code != $1 AND timestamp > $2)'",
+        "where_in_operator: SQL: ожидали 'SELECT * FROM users WHERE id IN ($1, $2, $3)', получили 'SELECT * FROM users WHERE id IN ($0, $1, $2)'",
+        "where_is_null_and_like: исключение/таймаут: 'value'",
+        "where_is_not_null: исключение/таймаут: 'value'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-08-25 16:11:40",
+      "passed": 6,
+      "total": 15,
+      "failures": [
+        "simple_where_equality: SQL: ожидали 'SELECT * FROM users WHERE status = $1', получили 'SELECT * FROM users WHERE status = $0'",
+        "where_and_or_nested: SQL: ожидали 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', получили 'SELECT id, email FROM users WHERE (status = $0 AND (role = $1 OR age >= $2))'",
+        "multiple_and_conditions: SQL: ожидали 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', получили 'SELECT * FROM logs WHERE (level = $0 AND code != $1 AND timestamp > $2)'",
+        "where_in_operator: SQL: ожидали 'SELECT * FROM users WHERE id IN ($1, $2, $3)', получили 'SELECT * FROM users WHERE id IN ($0, $1, $2)'",
+        "where_is_null_and_like: исключение/таймаут: 'value'",
+        "where_is_not_null: исключение/таймаут: 'value'",
+        "having_clause: SQL: ожидали 'SELECT sales.category, SUM(sales.amount) AS total_sales FROM sales GROUP BY sales.category HAVING SUM(sales.amount) > $1', получили 'SELECT sales.category, SUM(sales.amount) AS total_sales FROM sales GROUP BY sales.category HAVING SUM(sales.amount) > $0'",
+        "where_subquery_in: исключение/таймаут: 'value'",
+        "subquery_with_parent_params_order: исключение/таймаут: 'value'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-07-12 13:00:02",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-07-12 13:00:02",
+      "passed": 0,
+      "total": 27,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-07-11 14:19:53",
+      "stats": {
+        "input_tokens": 394,
+        "total_output_tokens": 5469,
+        "reasoning_output_tokens": 4947,
+        "tokens_per_second": 10.558077260963017,
+        "time_to_first_token_seconds": 4.618,
+        "model_load_time_seconds": 82.284
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-07-11 14:29:49",
+      "stats": {
+        "input_tokens": 1153,
+        "total_output_tokens": 5092,
+        "reasoning_output_tokens": 4391,
+        "tokens_per_second": 9.995677124835579,
+        "time_to_first_token_seconds": 12.554,
+        "model_load_time_seconds": 59.298
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-07-12 00:27:13",
+      "stats": {
+        "input_tokens": 1227,
+        "total_output_tokens": 3488,
+        "reasoning_output_tokens": 2653,
+        "tokens_per_second": 10.640657905044819,
+        "time_to_first_token_seconds": 13.324273999999999,
+        "model_load_time_seconds": 57.801
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-12 21:01:59",
+      "stats": {
+        "input_tokens": 248,
+        "total_output_tokens": 5554,
+        "reasoning_output_tokens": 4966,
+        "tokens_per_second": 11.15844126508428,
+        "time_to_first_token_seconds": 2.933304,
+        "model_load_time_seconds": 55.531
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-12 21:06:05",
+      "stats": {
+        "input_tokens": 211,
+        "total_output_tokens": 1931,
+        "reasoning_output_tokens": 1642,
+        "tokens_per_second": 14.213723673346166,
+        "time_to_first_token_seconds": 2.861936,
+        "model_load_time_seconds": 27.148
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-12 21:14:36",
+      "stats": {
+        "input_tokens": 653,
+        "total_output_tokens": 3420,
+        "reasoning_output_tokens": 2909,
+        "tokens_per_second": 11.938338690110118,
+        "time_to_first_token_seconds": 6.392854000000001,
+        "model_load_time_seconds": 46.351
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-07-12 13:00:00",
+      "stats": {
+        "input_tokens": 318,
+        "total_output_tokens": 2990,
+        "reasoning_output_tokens": 2464,
+        "tokens_per_second": 12.650159669342258,
+        "time_to_first_token_seconds": 3.0593090000000003,
+        "model_load_time_seconds": 69.751
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-07-12 13:24:19",
+      "stats": {
+        "input_tokens": 1002,
+        "total_output_tokens": 4730,
+        "reasoning_output_tokens": 3878,
+        "tokens_per_second": 10.699978887561743,
+        "time_to_first_token_seconds": 8.519652,
+        "model_load_time_seconds": 57.471
+      }
+    }
+  ]
+}

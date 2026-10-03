@@ -1,0 +1,126 @@
+{
+  "id": "legacy_56a307df6486_zai-org_glm-4.6v-flash",
+  "host_id": "56a307df6486",
+  "model_key": "zai-org/glm-4.6v-flash",
+  "model_name": "zai-org/glm-4.6v-flash",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-07-13 10:56:32",
+  "completed_at": "2026-07-13 10:56:32",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-13 11:05:30",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: неожиданное исключение: превышен таймаут 5с",
+        "dependency_unlocks_later: неожиданное исключение: превышен таймаут 5с",
+        "single_worker_duration_tiebreak: неожиданное исключение: превышен таймаут 5с",
+        "resource_limit_and_priority: неожиданное исключение: превышен таймаут 5с",
+        "simultaneous_unlocks: неожиданное исключение: превышен таймаут 5с"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-13 09:16:50",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-13 09:51:06",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: ожидалось 5, получено 0",
+        "simple_chain: ожидалось 9, получено 0",
+        "diamond_pick_longer_branch: ожидалось 12, получено 0",
+        "independent_tasks: ожидалось 7, получено 0",
+        "wide_graph: ожидалось 19, получено 0"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-07-10 12:36:26",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-07-10 13:03:51",
+      "passed": 20,
+      "total": 27,
+      "failures": [
+        "unconditional_jump_skips_code: неожиданное исключение: Error at line 2: Unknown label 'skip' at line 2",
+        "jz_taken_when_zero: неожиданное исключение: Error at line 2: Unknown label 'zero' at line 2",
+        "jz_not_taken_when_nonzero: неожиданное исключение: Error at line 2: Unknown label 'zero' at line 2",
+        "jnz_taken_when_nonzero: неожиданное исключение: Error at line 2: Unknown label 'nz' at line 2",
+        "jnz_not_taken_when_zero: неожиданное исключение: Error at line 2: Unknown label 'nz' at line 2",
+        "countdown_loop: неожиданное исключение: Error at line 2: Label 'loop' already defined at line 2",
+        "count_up_loop: неожиданное исключение: Error at line 2: Label 'loop' already defined at line 2"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-13 10:56:32",
+      "stats": {
+        "input_tokens": 249,
+        "total_output_tokens": 4824,
+        "reasoning_output_tokens": 4164,
+        "tokens_per_second": 2.042390334695624,
+        "time_to_first_token_seconds": 11.591883,
+        "model_load_time_seconds": 62.897
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-07-13 09:16:47",
+      "stats": {
+        "input_tokens": 212,
+        "total_output_tokens": 2164,
+        "reasoning_output_tokens": 1833,
+        "tokens_per_second": 2.0623440625105864,
+        "time_to_first_token_seconds": 10.924305,
+        "model_load_time_seconds": 62.006
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-07-13 09:51:02",
+      "stats": {
+        "input_tokens": 667,
+        "total_output_tokens": 2557,
+        "reasoning_output_tokens": 2025,
+        "tokens_per_second": 2.0769547642135886,
+        "time_to_first_token_seconds": 33.637057,
+        "model_load_time_seconds": 68.959
+      }
+    }
+  ]
+}

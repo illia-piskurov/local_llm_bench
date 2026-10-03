@@ -1,169 +1,160 @@
-import sys
+class InterpreterError(Exception):
+    """Custom exception for interpreter errors."""
+    pass
 
 def run(program: str) -> list[str]:
     """
-    Интерпретирует программу стекового языка.
+    Runs the stack-based language program.
 
     Args:
-        program: Многострочный текст с инструкциями.
+        program: Multi-line string containing instructions.
 
     Returns:
-        Список строк, содержащих вывод команды PRINT.
+        list[str]: List of strings printed by the PRINT instruction.
 
     Raises:
-        RuntimeError: Если произошла ошибка выполнения (нехватка данных на стеке, деление на ноль).
+        InterpreterError: If a runtime error (underflow, division by zero) occurs.
     """
     stack = []
     output = []
-    lines = program.split('\n')
+    lines = program.strip().split('\n')
 
-    for i, line in enumerate(lines):
-        line_number = i + 1
-        stripped_line = line.strip()
+    for line_num, raw_line in enumerate(lines):
+        current_line = line_num + 1
+        line = raw_line.strip()
 
-        # Игнорирование пустых строк и комментариев
-        if not stripped_line or stripped_line.startswith('#'):
+        # Handle comments and empty lines
+        if not line or line.startswith('#'):
             continue
 
-        tokens = stripped_line.split()
-        if not tokens:
+        parts = line.split()
+        if not parts:
             continue
 
-        instruction = tokens[0]
+        instruction = parts[0]
 
         try:
             if instruction == "PUSH":
-                if len(tokens) != 2:
-                    raise ValueError("PUSH требует один аргумент.")
-                # Пытаемся преобразовать второй токен в целое число
-                value = int(tokens[1])
+                if len(parts) != 2:
+                    raise ValueError("PUSH requires a number.")
+                value = int(parts[1])
                 stack.append(value)
 
             elif instruction == "POP":
                 if not stack:
-                    raise IndexError("Недостаточно элементов на стеке для POP.")
+                    raise InterpreterError(f"Stack underflow at line {current_line}")
                 stack.pop()
 
             elif instruction == "DUP":
                 if not stack:
-                    raise IndexError("Недостаточно элементов на стеке для DUP.")
-                # Дублируем вершину стека
+                    raise InterpreterError(f"Stack underflow at line {current_line}")
                 stack.append(stack[-1])
 
             elif instruction == "SWAP":
                 if len(stack) < 2:
-                    raise IndexError("Недостаточно элементов на стеке для SWAP (требуется минимум 2).")
-                # Меняем местами два верхних элемента
+                    raise InterpreterError(f"Stack underflow at line {current_line}")
                 a = stack.pop()
                 b = stack.pop()
                 stack.append(a)
                 stack.append(b)
 
-            elif instruction == "PRINT":
-                if not stack:
-                    raise IndexError("Недостаточно элементов на стеке для PRINT.")
-                # Выводим значение, не удаляя его со стека
-                output.append(str(stack[-1]))
-
-            # --- Бинарные операции (требуют 2 элемента) ---
-            elif instruction in ["ADD", "SUB", "MUL", "DIV"]:
+            elif instruction == "ADD":
                 if len(stack) < 2:
-                    raise IndexError(f"Недостаточно элементов на стеке для {instruction} (требуется минимум 2).")
-
-                # b - второй элемент (нижний), a - первый элемент (верхний)
+                    raise InterpreterError(f"Stack underflow at line {current_line}")
                 b = stack.pop()
                 a = stack.pop()
-                result = None
+                stack.append(a + b)
 
-                if instruction == "ADD":
-                    result = a + b
-                elif instruction == "SUB":
-                    # Вычисляем a - b
-                    result = a - b
-                elif instruction == "MUL":
-                    result = a * b
-                elif instruction == "DIV":
-                    if b == 0:
-                        raise ZeroDivisionError("Деление на ноль.")
-                    # Целочисленное деление (a // b)
-                    result = a // b
+            elif instruction == "SUB":
+                if len(stack) < 2:
+                    raise InterpreterError(f"Stack underflow at line {current_line}")
+                b = stack.pop() # B is the top element
+                a = stack.pop() # A is below B
+                stack.append(a - b)
 
-                stack.append(result)
+            elif instruction == "MUL":
+                if len(stack) < 2:
+                    raise InterpreterError(f"Stack underflow at line {current_line}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+
+            elif instruction == "DIV":
+                if len(stack) < 2:
+                    raise InterpreterError(f"Stack underflow at line {current_line}")
+                b = stack.pop() # B is the divisor (top)
+                a = stack.pop() # A is dividend (below B)
+
+                if b == 0:
+                    raise InterpreterError("Division by zero at line {current_line}")
+
+                # Integer division
+                stack.append(a // b)
+
+            elif instruction == "PRINT":
+                if not stack:
+                    raise InterpreterError(f"Stack underflow at line {current_line}")
+                # Print the top element without popping it
+                output.append(str(stack[-1]))
 
             else:
-                raise NameError(f"Неизвестная инструкция: {instruction}")
+                # Handle unknown instruction gracefully if needed, though usually fatal
+                pass 
 
-        except IndexError as e:
-            # Перехват ошибок, связанных с недостатком элементов на стеке
-            raise RuntimeError(f"Ошибка в строке {line_number}: {e}")
-        except ZeroDivisionError as e:
-            # Перехват деления на ноль
-            raise RuntimeError(f"Ошибка в строке {line_number}: Деление на ноль.")
-        except ValueError as e:
-             # Ошибки парсинга (например, PUSH без аргумента)
-            raise RuntimeError(f"Ошибка в строке {line_number}: {e}")
-        except Exception as e:
-            # Общий перехват ошибок
-            raise RuntimeError(f"Критическая ошибка в строке {line_number}: {type(e).__name__} - {str(e)}")
+        except InterpreterError as e:
+            # Re-raise the specific error caught during execution
+            if "Division by zero" in str(e):
+                raise InterpreterError(str(e))
+            # If it's a stack error, we let the caller handle the specific message structure.
+            raise e
+        except IndexError:
+             # This should ideally be caught by the explicit stack checks, but serves as a safeguard.
+             raise InterpreterError(f"Stack underflow at line {current_line}")
+
 
     return output
 
 if __name__ == '__main__':
-    # Пример 1: Успешное выполнение (5 + 3) * 2 = 16. Вывод: 16
-    program_success = """
-    PUSH 5
-    PUSH 3
-    ADD       # Stack: [8]
-    DUP       # Stack: [8, 8]
-    MUL       # Stack: [64] (Ошибка в примере, должно быть MUL)
-    SWAP      # Stack: [8, 8]
-    POP       # Stack: [8]
-    PUSH 2
-    ADD       # Stack: [10]
-    PRINT     # Output: 10
-    """
-    print("--- Тест 1 (Успех) ---")
-    try:
-        results = run(program_success)
-        print("Вывод:", results)
-    except RuntimeError as e:
-        print("Ошибка выполнения:", e)
+    # Example Usage: Simple calculation (10 + 5) * 2
+    program_code = """
+# Push 10
+PUSH 10
+# Push 5
+PUSH 5
+ADD # Stack is now [15]
+PUSH 2
+MUL # Stack is now [30]
+PRINT
+"""
 
-    # Пример 2: Ошибка - Недостаточно элементов для POP
-    program_underflow = """
-    POP
-    PUSH 10
-    """
-    print("\n--- Тест 2 (Underflow) ---")
     try:
-        run(program_underflow)
-    except RuntimeError as e:
-        print("Перехвачена ошибка:", e)
+        results = run(program_code)
+        print("--- Results ---")
+        for r in results:
+            print(r)
+    except InterpreterError as e:
+        print(f"RUNTIME ERROR: {e}")
 
-    # Пример 3: Ошибка - Деление на ноль
-    program_div_zero = """
-    PUSH 10
-    PUSH 0
-    DIV
-    """
-    print("\n--- Тест 3 (Div Zero) ---")
+    # Example Usage 2: Error scenario (Division by zero)
+    print("\n--- Testing Division by Zero ---")
+    error_program = """
+PUSH 10
+PUSH 0
+DIV
+PRINT
+"""
     try:
-        run(program_div_zero)
-    except RuntimeError as e:
-        print("Перехвачена ошибка:", e)
+        run(error_program)
+    except InterpreterError as e:
+        print(f"RUNTIME ERROR CAUGHT: {e}")
 
-    # Пример 4: Комментарии и пробелы
-    program_clean = """
-    # Это комментарий
-    PUSH 10
-    # Пропуск пустой строки
-    PUSH 5
-    ADD       # 15
-    PRINT     # Output: 15
-    """
-    print("\n--- Тест 4 (Чистота) ---")
+    # Example Usage 3: Error scenario (Stack underflow)
+    print("\n--- Testing Stack Underflow ---")
+    underflow_program = """
+POP
+PRINT
+"""
     try:
-        results = run(program_clean)
-        print("Вывод:", results)
-    except RuntimeError as e:
-        print("Ошибка выполнения:", e)
+        run(underflow_program)
+    except InterpreterError as e:
+        print(f"RUNTIME ERROR CAUGHT: {e}")

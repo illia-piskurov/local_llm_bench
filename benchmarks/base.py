@@ -142,9 +142,7 @@ class StoredResult:
         if "manual_score" in data:
             evaluation = ManualResult(score=data["manual_score"], comment=data.get("comment", ""))
         else:
-            evaluation = TestResult(
-                passed=data["passed"], total=data["total"], failures=data.get("failures", [])
-            )
+            evaluation = TestResult(passed=data["passed"], total=data["total"], failures=data.get("failures", []))
         return cls(
             model=data["model"],
             benchmark=data["benchmark"],
@@ -154,6 +152,41 @@ class StoredResult:
         )
 
 
+def strip_reasoning_blocks(raw_text: str) -> tuple[str, str | None]:
+    """Strips reasoning tags (<think>, <thought>, <reasoning>, <reflection>) from text.
+
+    Returns:
+        (cleaned_text, extracted_reasoning_text)
+    """
+    if not raw_text:
+        return "", None
+
+    reasoning_parts = []
+    cleaned = raw_text
+
+    tags = ["think", "thought", "reasoning", "reflection"]
+    for tag in tags:
+        pat = rf"<{tag}>(.*?)</{tag}>"
+        for match in re.finditer(pat, cleaned, re.DOTALL | re.IGNORECASE):
+            text = match.group(1).strip()
+            if text:
+                reasoning_parts.append(text)
+        cleaned = re.sub(pat, "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+
+    # If opening tag remains unclosed (generation truncated mid-thought)
+    tag_union = "|".join(tags)
+    unclosed_pat = rf"<(?:{tag_union})>(.*)"
+    unclosed = re.search(unclosed_pat, cleaned, re.DOTALL | re.IGNORECASE)
+    if unclosed:
+        text = unclosed.group(1).strip()
+        if text:
+            reasoning_parts.append(text)
+        cleaned = re.sub(unclosed_pat, "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+
+    reasoning_str = "\n\n".join(reasoning_parts) if reasoning_parts else None
+    return cleaned.strip(), reasoning_str
+
+
 class Benchmark(ABC):
     id: str
     name: str
@@ -161,6 +194,7 @@ class Benchmark(ABC):
     levels: list[Level]
     file_ext: str = "py"
     code_lang: str = "python"
+    code_lang_aliases: tuple[str, ...] = ()
     answers_dir_name: str = "models_answers"
     manual_levels: frozenset[str] = frozenset()
 
@@ -175,32 +209,39 @@ class Benchmark(ABC):
         raise KeyError(f"Unknown level '{level_id}' for benchmark '{self.id}'")
 
     def extract_code(self, raw_text: str) -> str:
-        """Достаёт код из ```<code_lang> ... ``` блока (последнего, если их несколько —
-        модель могла сначала показать черновик/другой язык, а затем финальный вариант).
-        Если явного блока с этой меткой языка нет — берёт последний блок без метки языка.
-        Если открывающий блок есть, а закрывающего нет (генерация оборвалась) — берёт всё
-        после открывающего маркера, отбрасывая сам маркер.
-        Если блоков нет вообще — возвращает текст как есть."""
-        lang_blocks = re.findall(rf"```{re.escape(self.code_lang)}\s*\n(.*?)```", raw_text, re.DOTALL)
+        """Extracts source code from ```<code_lang> ... ``` block (takes the last block if
+        multiple are present, as the model may output drafts or preamble before final code).
+        If no block with matching language label is found, falls back to the last generic block.
+        If an opening block is present without a closing fence, captures all content after the marker.
+        If no fences exist, returns the text as is."""
+        # 1. First strip reasoning blocks (<think>...</think>) to avoid extracting drafts from thought chains
+        cleaned, _ = strip_reasoning_blocks(raw_text)
+        if not cleaned:
+            return ""
+
+        text_to_parse = cleaned
+
+        langs = [self.code_lang] + list(self.code_lang_aliases)
+        pattern = "|".join(re.escape(language) for language in langs)
+        lang_blocks = re.findall(rf"```(?:{pattern})\s*\n(.*?)```", text_to_parse, re.DOTALL | re.IGNORECASE)
         if lang_blocks:
             return lang_blocks[-1].strip() + "\n"
 
-        any_blocks = re.findall(r"```(?:\w*)\s*\n(.*?)```", raw_text, re.DOTALL)
+        any_blocks = re.findall(r"```(?:\w*)\s*\n(.*?)```", text_to_parse, re.DOTALL)
         if any_blocks:
             return any_blocks[-1].strip() + "\n"
 
-        unclosed = re.search(rf"```{re.escape(self.code_lang)}\s*\n(.*)", raw_text, re.DOTALL)
+        unclosed = re.search(rf"```(?:{pattern})\s*\n(.*)", text_to_parse, re.DOTALL | re.IGNORECASE)
         if unclosed:
             return unclosed.group(1).strip() + "\n"
 
-        unclosed_any = re.search(r"```(?:\w*)\s*\n(.*)", raw_text, re.DOTALL)
+        unclosed_any = re.search(r"```(?:\w*)\s*\n(.*)", text_to_parse, re.DOTALL)
         if unclosed_any:
             return unclosed_any.group(1).strip() + "\n"
 
-        return raw_text.strip() + "\n"
+        return text_to_parse.strip() + "\n"
 
     @abstractmethod
     def run_tests(self, level_id: str, answer_path: Path) -> TestResult:
-        """Прогоняет тесты для данного уровня. Вызывается фреймворком только когда
-        level_id NOT IN self.manual_levels — реализация для manual-уровней не нужна."""
+        """Runs test suite for given level. Invoked only when level_id is not manual."""
         raise NotImplementedError

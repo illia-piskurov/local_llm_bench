@@ -1,0 +1,269 @@
+{
+  "id": "legacy_56a307df6486_prism-ml_bonsai-27b",
+  "host_id": "56a307df6486",
+  "model_key": "prism-ml/bonsai-27b",
+  "model_name": "prism-ml/bonsai-27b",
+  "quantization": null,
+  "backend": null,
+  "generation_params": {},
+  "suite_version": null,
+  "started_at": "2026-08-03 21:36:47",
+  "completed_at": "2026-08-03 21:36:47",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-03 21:36:54",
+      "passed": 6,
+      "total": 15,
+      "failures": [
+        "basic_set_get: ожидалось ['10'], получено []",
+        "overwrite_set: ожидалось ['2'], получено []",
+        "simple_transaction_commit: ожидалось ['10'], получено []",
+        "simple_transaction_rollback: ожидалось ['5'], получено []",
+        "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+        "nested_transactions: ожидалось ['20', '10', 'NULL'], получено ['NULL', 'NULL']",
+        "nested_commit_propagates_to_outer_only: ожидалось ['2', '2'], получено []",
+        "multiple_keys_independent: ожидалось ['2', '1', '2'], получено []",
+        "set_new_key_inside_transaction: ожидалось ['100', '100'], получено []"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-03 21:34:13",
+      "passed": 23,
+      "total": 25,
+      "failures": [
+        "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+        "watch_delete: ожидалось ['WATCH a 5 -> NULL'], получено []"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-08-03 21:58:25",
+      "passed": 28,
+      "total": 30,
+      "failures": [
+        "rollback_restores_delete: ожидалось ['NULL', '5'], получено ['NULL', 'NULL']",
+        "watch_delete: ожидалось ['WATCH a 5 -> NULL'], получено []"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-04 23:42:37",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-03 21:53:40",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: ожидалось order=['a'], ms=5, cp=5; получено order=['a'], ms=0, cp=5",
+        "parallel_tasks_reduce_makespan: ожидалось order=['c', 'b', 'a'], ms=4, cp=3; получено order=['c', 'b', 'a'], ms=0, cp=3",
+        "dependencies_and_workers: ожидалось order=['a', 'c', 'b', 'd'], ms=11, cp=11; получено order=['a', 'c', 'b', 'd'], ms=0, cp=11",
+        "critical_path_longer_than_worker_parallelism: ожидалось order=['a', 'b', 'c', 'd'], ms=16, cp=4; получено order=['a', 'b', 'c', 'd'], ms=0, cp=4",
+        "wide_graph_with_unlocks: ожидалось order=['compile', 'fetch', 'test', 'package'], ms=7, cp=9; получено order=['compile', 'fetch', 'test', 'package'], ms=0, cp=8"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-03 21:46:02",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-03 21:47:43",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-08-03 20:27:43",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-08-03 20:55:40",
+      "passed": 5,
+      "total": 27,
+      "failures": [
+        "push_print: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "add: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "sub_order: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "mul: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "div_order: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "div_truncate: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "dup: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "swap: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "pop: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "comments_and_blank_lines: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "multiple_prints: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "print_does_not_pop: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "negative_numbers: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "complex_chain: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "unconditional_jump_skips_code: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "jz_taken_when_zero: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "jz_not_taken_when_nonzero: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "jnz_taken_when_nonzero: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "jnz_not_taken_when_zero: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "countdown_loop: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "count_up_loop: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)",
+        "label_does_nothing_on_its_own: неожиданное исключение: превышен таймаут 5с (вероятно бесконечный цикл)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-08-03 21:36:47",
+      "stats": {
+        "input_tokens": 420,
+        "total_output_tokens": 860,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 6.398184891488383,
+        "time_to_first_token_seconds": 5.3704790000000004,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-08-03 21:34:02",
+      "stats": {
+        "input_tokens": 1014,
+        "total_output_tokens": 639,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 8.179916168020341,
+        "time_to_first_token_seconds": 11.872214,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-08-03 21:58:11",
+      "stats": {
+        "input_tokens": 1175,
+        "total_output_tokens": 852,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 4.49791099750167,
+        "time_to_first_token_seconds": 22.710238,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-04 23:42:34",
+      "stats": {
+        "input_tokens": 260,
+        "total_output_tokens": 10884,
+        "reasoning_output_tokens": 10489,
+        "tokens_per_second": 6.55884805107681,
+        "time_to_first_token_seconds": 3.988615,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-03 21:53:34",
+      "stats": {
+        "input_tokens": 1054,
+        "total_output_tokens": 1397,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 4.854208841080712,
+        "time_to_first_token_seconds": 19.341159,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-08-03 21:45:58",
+      "stats": {
+        "input_tokens": 216,
+        "total_output_tokens": 297,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 5.259535963715223,
+        "time_to_first_token_seconds": 4.438828,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-08-03 21:47:41",
+      "stats": {
+        "input_tokens": 665,
+        "total_output_tokens": 432,
+        "reasoning_output_tokens": 0,
+        "tokens_per_second": 5.1764949312947905,
+        "time_to_first_token_seconds": 13.034088,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-08-03 20:27:35",
+      "stats": {
+        "input_tokens": 335,
+        "total_output_tokens": 10797,
+        "reasoning_output_tokens": 10044,
+        "tokens_per_second": 5.55644992367485,
+        "time_to_first_token_seconds": 6.22714,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-08-03 20:44:33",
+      "stats": {
+        "input_tokens": 1240,
+        "total_output_tokens": 7062,
+        "reasoning_output_tokens": 5860,
+        "tokens_per_second": 7.236597526005282,
+        "time_to_first_token_seconds": 23.531893,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

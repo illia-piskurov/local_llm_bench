@@ -1,82 +1,77 @@
 #!/usr/bin/env python3
 
-def compile_query(query: dict) -> dict:
+def compile_query(query, params=None, counter=None):
     """
-    Compile a query AST into parameterized SQL.
+    Compile a simple AST query dictionary into parameterized SQL.
     Returns {"sql": sql_string, "params": [values]}
-    Supports SELECT aliases, JOINs, GROUP BY, HAVING, ORDER BY,
-    LIMIT/OFFSET, advanced WHERE operators (IS NULL/NOT NULL, IN list, LIKE),
-    and subqueries in IN clauses.
     """
-    params = []
-    param_counter = 1
+    if params is None:
+        params = []
+    if counter is None:
+        counter = [1]  # use list for mutable integer
 
     def _add_param(value):
-        nonlocal param_counter
-        placeholder = f"${param_counter}"
-        param_counter += 1
+        placeholder = f"${counter[0]}"
+        counter[0] += 1
         params.append(value)
         return placeholder
 
-    # Compile SELECT clause (supports aliases)
-    def _compile_select():
-        items = query.get("select", ["*"])
-        if not isinstance(items, list):
-            raise ValueError("'select' must be a list")
-        parts = []
-        for item in items:
-            if isinstance(item, dict) and "expr" in item and "as" in item:
-                parts.append(f"{item['expr']} AS {item['as']}")
-            else:
-                parts.append(str(item))
-        return "SELECT " + ", ".join(parts)
+    # SELECT clause with optional aliases
+    select_cols = query.get("select", ["*"])
+    if not isinstance(select_cols, list):
+        raise ValueError("`select` must be a list")
+    select_parts = []
+    for item in select_cols:
+        if isinstance(item, dict) and "expr" in item and "as" in item:
+            select_parts.append(f"{item['expr']} AS {item['as']}")
+        else:
+            if not isinstance(item, str):
+                raise ValueError(f"Invalid select item: {item}")
+            select_parts.append(item)
+    select_part = "SELECT " + ", ".join(select_parts)
 
     # FROM clause
-    def _compile_from():
-        table = query.get("table")
-        if not table:
-            raise ValueError("'table' is required")
-        return f"FROM {table}"
+    table = query.get("table")
+    if not table:
+        raise ValueError("`table` is required")
+    from_part = f"FROM {table}"
 
     # JOIN clauses
-    def _compile_joins():
-        joins = query.get("joins", [])
-        parts = []
-        for j in joins:
-            jt = j.get("type", "INNER").upper()
-            if jt not in ("INNER", "LEFT", "RIGHT"):
-                jt = "INNER"
-            jt_table = j["table"]
-            on_dict = j["on"]
-            if not isinstance(on_dict, dict) or len(on_dict) != 1:
-                raise ValueError(f"Invalid join ON clause: {j}")
-            left_col, right_col = next(iter(on_dict.items()))
-            parts.append(f"{jt} JOIN {jt_table} ON {left_col} = {right_col}")
-        return " ".join(parts)
+    joins = query.get("joins", [])
+    join_parts = []
+    for j in joins:
+        jt = j.get("type", "INNER").upper()
+        if jt not in ("INNER", "LEFT", "RIGHT"):
+            jt = "INNER"
+        jt_table = j["table"]
+        on_dict = j.get("on")
+        if not isinstance(on_dict, dict) or len(on_dict) != 1:
+            raise ValueError(f"Invalid join ON clause: {j}")
+        left_col, right_col = next(iter(on_dict.items()))
+        join_parts.append(f"{jt} JOIN {jt_table} ON {left_col} = {right_col}")
+    join_part = " ".join(join_parts)
 
-    # WHERE / HAVING compilation
-    def _compile_condition(node):
+    # Helper to compile WHERE/HAVING trees
+    def _compile_tree(node):
         if isinstance(node, dict):
             if "AND" in node:
-                subconds = [_compile_condition(c) for c in node["AND"]]
+                subconds = [_compile_tree(c) for c in node["AND"]]
                 joined = " AND ".join(subconds)
                 return f"({joined})" if len(subconds) > 1 else joined
             if "OR" in node:
-                subconds = [_compile_condition(c) for c in node["OR"]]
+                subconds = [_compile_tree(c) for c in node["OR"]]
                 joined = " OR ".join(subconds)
                 return f"({joined})" if len(subconds) > 1 else joined
 
             # simple condition
             field = node.get("field")
             op = node.get("op")
-            value = node.get("value")
-
             if field is None or not isinstance(op, str):
                 raise ValueError(f"Invalid condition: {node}")
 
             op_upper = op.upper()
             if op_upper in ("=", "!=", ">", "<", ">=", "<="):
-                placeholder = _add_param(value)
+                placeholder = _add_param(node.get("value"))
                 return f"{field} {op} {placeholder}"
             elif op_upper == "IS NULL":
                 return f"{field} IS NULL"
@@ -84,45 +79,45 @@ def compile_query(query: dict) -> dict:
                 return f"{field} IS NOT NULL"
             elif op_upper == "IN":
                 if "query" in node:
-                    # subquery IN
-                    sub_sql, _ = compile_query(node["query"])
+                    sub_sql, _ = compile_query(node["query"], params, counter)
                     return f"{field} IN ({sub_sql})"
-                else:
-                    if not isinstance(value, list):
-                        raise ValueError(f"IN operator requires a list of values: {node}")
-                    placeholders = [_add_param(v) for v in value]
-                    return f"{field} IN ({', '.join(placeholders)})"
+                if not isinstance(node.get("value"), list):
+                    raise ValueError(f"IN operator requires a list of values: {node}")
+                placeholders = [_add_param(v) for v in node["value"]]
+                return f"{field} IN ({', '.join(placeholders)})"
             elif op_upper == "LIKE":
-                placeholder = _add_param(value)
+                placeholder = _add_param(node.get("value"))
                 return f"{field} LIKE {placeholder}"
             else:
                 raise ValueError(f"Unsupported operator: {op}")
         else:
-            raise ValueError(f"Unsupported condition node type: {type(node)}")
+            raise ValueError(f"Unsupported node type: {type(node)}")
 
-    def _compile_where():
-        where_tree = query.get("where")
-        if where_tree is None:
-            return ""
-        return "WHERE " + _compile_condition(where_tree)
-
-    def _compile_having():
-        having_tree = query.get("having")
-        if having_tree is None:
-            return ""
-        return "HAVING " + _compile_condition(having_tree)
+    # WHERE clause
+    where_tree = query.get("where")
+    if where_tree is not None:
+        where_part = "WHERE " + _compile_tree(where_tree)
+    else:
+        where_part = ""
 
     # GROUP BY clause
-    def _compile_groupby():
-        group_by = query.get("groupBy", [])
-        if isinstance(group_by, list) and group_by:
-            return "GROUP BY " + ", ".join(str(col) for col in group_by)
-        return ""
+    group_by = query.get("groupBy", [])
+    if isinstance(group_by, list) and group_by:
+        group_part = "GROUP BY " + ", ".join(group_by)
+    else:
+        group_part = ""
+
+    # HAVING clause
+    having_tree = query.get("having")
+    if having_tree is not None:
+        having_part = "HAVING " + _compile_tree(having_tree)
+    else:
+        having_part = ""
 
     # ORDER BY clause
-    def _compile_orderby():
-        order_by = query.get("orderBy", [])
-        parts = []
+    order_by = query.get("orderBy", [])
+    order_parts = []
+    if isinstance(order_by, list):
         for ob in order_by:
             field = ob.get("field")
             if not field:
@@ -130,33 +125,33 @@ def compile_query(query: dict) -> dict:
             direction = ob.get("dir", "ASC").upper()
             if direction not in ("ASC", "DESC"):
                 direction = "ASC"
-            parts.append(f"{field} {direction}")
-        return f"ORDER BY {', '.join(parts)}" if parts else ""
+            order_parts.append(f"{field} {direction}")
+    order_part = f"ORDER BY {', '.join(order_parts)}" if order_parts else ""
 
-    # LIMIT/OFFSET
-    def _compile_limit_offset():
-        limit = query.get("limit")
-        offset = query.get("offset")
-        parts = []
-        if isinstance(limit, int):
-            parts.append(f"LIMIT {int(limit)}")
-        if isinstance(offset, int):
-            parts.append(f"OFFSET {int(offset)}")
-        return " ".join(parts)
+    # LIMIT and OFFSET
+    limit = query.get("limit")
+    offset = query.get("offset")
 
-    # Assemble SQL
-    sql_parts = [
-        _compile_select(),
-        _compile_from(),
-        _compile_joins(),
-        _compile_where(),
-        _compile_groupby(),
-        _compile_having(),
-        _compile_orderby(),
-        _compile_limit_offset()
-    ]
-    sql = " ".join(part for part in sql_parts if part).strip()
+    limit_part = f"LIMIT {int(limit)}" if isinstance(limit, int) else ""
+    offset_part = f"OFFSET {int(offset)}" if isinstance(offset, int) else ""
 
+    sql_parts = [select_part, from_part]
+    if join_part:
+        sql_parts.append(join_part)
+    if where_part:
+        sql_parts.append(where_part)
+    if group_part:
+        sql_parts.append(group_part)
+    if having_part:
+        sql_parts.append(having_part)
+    if order_part:
+        sql_parts.append(order_part)
+    if limit_part:
+        sql_parts.append(limit_part)
+    if offset_part:
+        sql_parts.append(offset_part)
+
+    sql = " ".join(sql_parts).strip()
     return {"sql": sql, "params": params}
 
 # Example usage (uncomment to test):
@@ -182,11 +177,7 @@ if __name__ == "__main__":
             ]
         },
         "groupBy": ["orders.id", "users.name"],
-        "having": {
-            "AND": [
-                {"field": "COUNT(items.id)", "op": ">=", "value": 5}
-            ]
-        },
+        "having": {"field": "item_count", "op": ">", "value": 5},
         "orderBy": [{"field": "item_count", "dir": "DESC"}],
         "limit": 20,
         "offset": 0
