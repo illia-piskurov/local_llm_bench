@@ -46,7 +46,12 @@ INFRA_FAILURE_PREFIXES = (
 
 
 def is_infra_failure(failures: list[str]) -> bool:
-    return bool(failures) and failures[0].startswith(INFRA_FAILURE_PREFIXES)
+    return (
+        bool(failures)
+        and isinstance(failures, (list, tuple))
+        and isinstance(failures[0], str)
+        and failures[0].startswith(INFRA_FAILURE_PREFIXES)
+    )
 
 
 def detect_quantization(model_key: str) -> str | None:

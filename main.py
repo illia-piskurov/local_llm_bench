@@ -121,15 +121,18 @@ def detect_or_select_model() -> Model | None:
     if len(loaded) == 1:
         return loaded[0]
     elif len(loaded) > 1:
-        choices = [Choice(f"🟢 {m.key} (loaded)", value=m) for m in loaded]
+        choices = [Choice(f"🟢 {m.key} (loaded)", value=m) for m in loaded if m.key]
         choices.append(Choice("✏️  Choose another / enter manually", value="other"))
+        choices.append(Choice("🔙 Back", value=None))
         chosen = questionary.select("Multiple models loaded in LM Studio. Choose active:", choices=choices).ask()
-        if chosen != "other":
+        if chosen not in ("other", None):
             return chosen
+        if chosen is None:
+            return None
 
     # If no loaded models or user chose other
     all_models = lmstudio.list_llm_models()
-    choices = [Choice(m.key, value=m) for m in all_models]
+    choices = [Choice(m.key, value=m) for m in all_models if m.key]
     choices.append(Choice("✏️  Enter key manually", value="manual"))
     choices.append(Choice("🔙 Back", value=None))
     chosen = questionary.select("Choose model for testing:", choices=choices).ask()
@@ -214,6 +217,7 @@ def manage_deletion_menu(current_model: Model | None = None) -> Model | None:
             confirm = questionary.confirm(
                 f"Are you sure you want to completely delete all results, speeds, and runs for '{selected_model}'?",
                 default=False,
+                auto_enter=False,
             ).ask()
             if confirm:
                 count_res = store.clear_model(selected_model, REGISTRY)
@@ -259,6 +263,7 @@ def manage_deletion_menu(current_model: Model | None = None) -> Model | None:
             confirm = questionary.confirm(
                 f"Delete result [{b.short} - {l_id}] for model '{selected_model}'?",
                 default=False,
+                auto_enter=False,
             ).ask()
             if confirm:
                 count_res = store.clear(b, selected_model, l_id)
@@ -272,10 +277,13 @@ def manage_deletion_menu(current_model: Model | None = None) -> Model | None:
             confirm = questionary.confirm(
                 "WARNING: This will permanently delete ALL results, speeds, runs, and answers for ALL models! Continue?",
                 default=False,
+                auto_enter=False,
             ).ask()
             if confirm:
                 double_confirm = questionary.confirm(
-                    "Are you ABSOLUTELY sure? This cannot be undone.", default=False
+                    "Are you ABSOLUTELY sure? This cannot be undone.",
+                    default=False,
+                    auto_enter=False,
                 ).ask()
                 if double_confirm:
                     count_res = store.clear_all(REGISTRY)
@@ -294,6 +302,14 @@ def main_menu(model: Model, host: HostConfig) -> None:
     store.ensure_dirs(REGISTRY)
 
     while True:
+        if not host:
+            host = get_or_choose_host()
+        if not model:
+            new_m = detect_or_select_model()
+            if not new_m:
+                break
+            model = new_m
+
         # Check model progress
         tested_count = 0
         total_count = sum(len(b.levels) for b in REGISTRY)
@@ -387,13 +403,19 @@ def main_menu(model: Model, host: HostConfig) -> None:
                     run_queue(model, [(selected_bench, lvl_id)], host, force=True)
 
         elif action == "run_force_all":
-            confirm = questionary.confirm("Rerun absolutely all benchmarks for this model?").ask()
+            confirm = questionary.confirm(
+                "Rerun absolutely all benchmarks for this model?",
+                default=False,
+                auto_enter=False,
+            ).ask()
             if confirm:
                 queue = []
                 for b in REGISTRY:
                     for level in b.levels:
                         queue.append((b, level.id))
                 run_queue(model, queue, host, force=True)
+            else:
+                console.print("[dim]Action cancelled.[/dim]")
 
         elif action == "open_report":
             report_path = generate_html_report(db)
@@ -433,17 +455,20 @@ def main_menu(model: Model, host: HostConfig) -> None:
                 hosts = host_store.load_all()
                 h_choices = [Choice(h.label, value=h.id) for h in hosts]
                 h_choices.append(Choice("➕ Create new host", value="new"))
+                h_choices.append(Choice("🔙 Back", value=None))
                 sel_h = questionary.select("Select active host:", choices=h_choices).ask()
                 if sel_h == "new":
                     lbl = questionary.text("Host name (hardware label):").ask()
                     if lbl and lbl.strip():
-                        nh = HostConfig.create(lbl)
+                        nh = HostConfig.create(lbl.strip())
                         host_store.add(nh)
                         host_store.set_active(nh.id)
                         host = nh
                 elif sel_h:
-                    host_store.set_active(sel_h)
-                    host = host_store.get(sel_h)
+                    new_h = host_store.get(sel_h)
+                    if new_h:
+                        host_store.set_active(sel_h)
+                        host = new_h
 
         elif action == "manage_deletion":
             updated = manage_deletion_menu(current_model=model)

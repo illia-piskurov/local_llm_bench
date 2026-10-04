@@ -42,7 +42,7 @@ class Model:
 
     @classmethod
     def from_dict(cls, data: dict):
-        return cls(type=data.get("type"), key=data.get("key"))
+        return cls(type=str(data.get("type") or "llm"), key=str(data.get("key") or ""))
 
 
 @dataclass
@@ -205,8 +205,12 @@ def _render_transcript(messages: list[dict]) -> tuple[str | None, str]:
 
 
 def list_llm_models() -> list[Model]:
-    models = requests.get(f"{get_base_url()}/api/v1/models", timeout=10).json()
-    return [Model.from_dict(m) for m in models["models"] if m["type"] == "llm"]
+    try:
+        resp = requests.get(f"{get_base_url()}/api/v1/models", timeout=10).json()
+        models = resp.get("models", []) if isinstance(resp, dict) else []
+        return [Model.from_dict(m) for m in models if isinstance(m, dict) and m.get("type") == "llm"]
+    except Exception:
+        return []
 
 
 _FENCE_LINE_RE = re.compile(r"^[ \t]*```", re.MULTILINE)
@@ -321,10 +325,18 @@ def ask_model(
 
 
 def loaded_instance_ids(model_key: str) -> list[str]:
-    models = requests.get(f"{get_base_url()}/api/v1/models", timeout=30).json()["models"]
-    for m in models:
-        if m["key"] == model_key:
-            return [instance["id"] for instance in m.get("loaded_instances", [])]
+    try:
+        resp = requests.get(f"{get_base_url()}/api/v1/models", timeout=30).json()
+        models = resp.get("models", []) if isinstance(resp, dict) else []
+        for m in models:
+            if isinstance(m, dict) and m.get("key") == model_key:
+                return [
+                    instance["id"]
+                    for instance in m.get("loaded_instances", [])
+                    if isinstance(instance, dict) and "id" in instance
+                ]
+    except Exception:
+        pass
     return []
 
 
