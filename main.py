@@ -5,6 +5,7 @@ Focuses on the active model in LM Studio with support for running single tests o
 Each test is saved atomically; interruptions (Ctrl+C) safely preserve progress.
 """
 
+import json
 import sys
 from pathlib import Path
 
@@ -93,6 +94,7 @@ def detect_or_select_model() -> Model | None:
                 Choice("Retry connection", value="retry"),
                 Choice("Enter model key manually", value="manual"),
                 Choice("Open HTML report without running tests", value="report"),
+                Choice("🗑️ Manage / Delete results", value="manage_deletion"),
                 Choice("Exit", value="exit"),
             ],
         ).ask()
@@ -109,6 +111,9 @@ def detect_or_select_model() -> Model | None:
             out = generate_html_report(db)
             open_report_in_browser(out)
             return None
+        elif choice == "manage_deletion":
+            manage_deletion_menu()
+            return detect_or_select_model()
         return None
 
     # Check loaded models
@@ -116,15 +121,18 @@ def detect_or_select_model() -> Model | None:
     if len(loaded) == 1:
         return loaded[0]
     elif len(loaded) > 1:
-        choices = [Choice(f"🟢 {m.key} (loaded)", value=m) for m in loaded]
+        choices = [Choice(f"🟢 {m.key} (loaded)", value=m) for m in loaded if m.key]
         choices.append(Choice("✏️  Choose another / enter manually", value="other"))
+        choices.append(Choice("🔙 Back", value=None))
         chosen = questionary.select("Multiple models loaded in LM Studio. Choose active:", choices=choices).ask()
-        if chosen != "other":
+        if chosen not in ("other", None):
             return chosen
+        if chosen is None:
+            return None
 
     # If no loaded models or user chose other
     all_models = lmstudio.list_llm_models()
-    choices = [Choice(m.key, value=m) for m in all_models]
+    choices = [Choice(m.key, value=m) for m in all_models if m.key]
     choices.append(Choice("✏️  Enter key manually", value="manual"))
     choices.append(Choice("🔙 Back", value=None))
     chosen = questionary.select("Choose model for testing:", choices=choices).ask()
@@ -134,10 +142,174 @@ def detect_or_select_model() -> Model | None:
     return chosen
 
 
+def get_recorded_models(database: Database) -> list[str]:
+    models = set()
+    try:
+        for row in database.conn.execute("SELECT DISTINCT model FROM results").fetchall():
+            if row[0]:
+                models.add(row[0])
+        for row in database.conn.execute("SELECT DISTINCT model FROM speed_results").fetchall():
+            if row[0]:
+                models.add(row[0])
+        for row in database.conn.execute("SELECT DISTINCT model_key FROM runs").fetchall():
+            if row[0]:
+                models.add(row[0])
+    except Exception:
+        pass
+
+    records_dir = ROOT / "records"
+    for sub in ("results", "speeds"):
+        d = records_dir / sub
+        if d.exists():
+            for p in d.glob("*.json"):
+                try:
+                    data = json.loads(p.read_text(encoding="utf-8"))
+                    m = data.get("model") or data.get("model_key")
+                    if m:
+                        models.add(m)
+                except Exception:
+                    pass
+    d_runs = records_dir / "runs"
+    if d_runs.exists():
+        for p in d_runs.glob("*.json"):
+            try:
+                data = json.loads(p.read_text(encoding="utf-8"))
+                m = data.get("model_key")
+                if m:
+                    models.add(m)
+            except Exception:
+                pass
+    return sorted(list(models))
+
+
+def manage_deletion_menu(current_model: Model | None = None) -> Model | None:
+    DELETE_MODEL = "__delete_model__"
+    DELETE_LEVEL = "__delete_level__"
+    DELETE_ALL = "__delete_all__"
+    BACK = "__back__"
+
+    while True:
+        all_models = get_recorded_models(db)
+        if not all_models:
+            console.print("[yellow]No recorded results or models found to delete.[/yellow]")
+            return current_model
+
+        choices = [
+            Choice("🗑️  1. Delete ALL results of a specific model", value=DELETE_MODEL),
+            Choice("🎯 2. Delete results of a specific test / level for a model", value=DELETE_LEVEL),
+            Choice("⚠️  3. Reset ALL benchmark results (wipe database and records)", value=DELETE_ALL),
+            Choice("🔙 Back", value=BACK),
+        ]
+
+        action = questionary.select("Manage / Delete results:", choices=choices).ask()
+        if action in (None, BACK):
+            return current_model
+
+        if action == DELETE_MODEL:
+            model_choices = [Choice(m, value=m) for m in all_models]
+            model_choices.append(Choice("🔙 Back", value=BACK))
+            selected_model = questionary.select(
+                "Select model to delete all results and runs for:", choices=model_choices
+            ).ask()
+            if selected_model in (None, BACK):
+                continue
+
+            confirm = questionary.confirm(
+                f"Are you sure you want to completely delete all results, speeds, and runs for '{selected_model}'?",
+                default=False,
+                auto_enter=False,
+            ).ask()
+            if confirm:
+                count_res = store.clear_model(selected_model, REGISTRY)
+                count_speed = speed_store.clear_model(selected_model)
+                count_runs = run_store.clear_model(selected_model)
+                console.print(
+                    f"[bold green]✔ Successfully deleted '{selected_model}':[/bold green] "
+                    f"{count_res} result/answer files, {count_speed} speed records, {count_runs} runs removed."
+                )
+                if current_model and current_model.key == selected_model:
+                    console.print(
+                        f"[yellow]⚠️ Active model '{selected_model}' was deleted. Please select a new active model.[/yellow]"
+                    )
+                    new_m = detect_or_select_model()
+                    if new_m:
+                        current_model = new_m
+
+        elif action == DELETE_LEVEL:
+            model_choices = [Choice(m, value=m) for m in all_models]
+            model_choices.append(Choice("🔙 Back", value=BACK))
+            selected_model = questionary.select("Select model:", choices=model_choices).ask()
+            if selected_model in (None, BACK):
+                continue
+
+            level_choices = []
+            for b in REGISTRY:
+                for lvl in b.levels:
+                    res = store.load(b, selected_model, lvl.id)
+                    status = f"{res.format()} ({res.tested_at})" if res else "not tested"
+                    level_choices.append(
+                        Choice(
+                            f"[{b.short}] {b.name} — {lvl.name}: {status}",
+                            value=(b, lvl.id),
+                        )
+                    )
+            level_choices.append(Choice("🔙 Back", value=BACK))
+
+            selected_level = questionary.select("Select level to delete:", choices=level_choices).ask()
+            if selected_level in (None, BACK):
+                continue
+
+            b, l_id = selected_level
+            confirm = questionary.confirm(
+                f"Delete result [{b.short} - {l_id}] for model '{selected_model}'?",
+                default=False,
+                auto_enter=False,
+            ).ask()
+            if confirm:
+                count_res = store.clear(b, selected_model, l_id)
+                count_speed = speed_store.clear_level(selected_model, b.id, l_id)
+                console.print(
+                    f"[bold green]✔ Deleted [{b.short} - {l_id}] for '{selected_model}':[/bold green] "
+                    f"{count_res} result files, {count_speed} speed records removed."
+                )
+
+        elif action == DELETE_ALL:
+            confirm = questionary.confirm(
+                "WARNING: This will permanently delete ALL results, speeds, runs, and answers for ALL models! Continue?",
+                default=False,
+                auto_enter=False,
+            ).ask()
+            if confirm:
+                double_confirm = questionary.confirm(
+                    "Are you ABSOLUTELY sure? This cannot be undone.",
+                    default=False,
+                    auto_enter=False,
+                ).ask()
+                if double_confirm:
+                    count_res = store.clear_all(REGISTRY)
+                    count_speed = speed_store.clear_all()
+                    count_runs = run_store.clear_all()
+                    console.print(
+                        f"[bold red]✔ Benchmark wiped: deleted {count_res} result files, "
+                        f"{count_speed} speed records, {count_runs} runs.[/bold red]"
+                    )
+                    new_m = detect_or_select_model()
+                    if new_m:
+                        current_model = new_m
+
+
 def main_menu(model: Model, host: HostConfig) -> None:
     store.ensure_dirs(REGISTRY)
 
     while True:
+        if not host:
+            host = get_or_choose_host()
+        if not model:
+            new_m = detect_or_select_model()
+            if not new_m:
+                break
+            model = new_m
+
         # Check model progress
         tested_count = 0
         total_count = sum(len(b.levels) for b in REGISTRY)
@@ -166,6 +338,7 @@ def main_menu(model: Model, host: HostConfig) -> None:
             Choice("📜 6. View Run History (all sessions & quantizations)", value="view_runs"),
             Choice("🔄 7. Sync with Git (records/ <-> bench.db)", value="sync_db"),
             Choice("⚙️  8. Settings (Change model / host / server)", value="change_config"),
+            Choice("🗑️  9. Manage results (Delete model / test data)", value="manage_deletion"),
             Choice("❌ 0. Exit", value="exit"),
         ]
 
@@ -230,13 +403,19 @@ def main_menu(model: Model, host: HostConfig) -> None:
                     run_queue(model, [(selected_bench, lvl_id)], host, force=True)
 
         elif action == "run_force_all":
-            confirm = questionary.confirm("Rerun absolutely all benchmarks for this model?").ask()
+            confirm = questionary.confirm(
+                "Rerun absolutely all benchmarks for this model?",
+                default=False,
+                auto_enter=False,
+            ).ask()
             if confirm:
                 queue = []
                 for b in REGISTRY:
                     for level in b.levels:
                         queue.append((b, level.id))
                 run_queue(model, queue, host, force=True)
+            else:
+                console.print("[dim]Action cancelled.[/dim]")
 
         elif action == "open_report":
             report_path = generate_html_report(db)
@@ -276,20 +455,33 @@ def main_menu(model: Model, host: HostConfig) -> None:
                 hosts = host_store.load_all()
                 h_choices = [Choice(h.label, value=h.id) for h in hosts]
                 h_choices.append(Choice("➕ Create new host", value="new"))
+                h_choices.append(Choice("🔙 Back", value=None))
                 sel_h = questionary.select("Select active host:", choices=h_choices).ask()
                 if sel_h == "new":
                     lbl = questionary.text("Host name (hardware label):").ask()
                     if lbl and lbl.strip():
-                        nh = HostConfig.create(lbl)
+                        nh = HostConfig.create(lbl.strip())
                         host_store.add(nh)
                         host_store.set_active(nh.id)
                         host = nh
                 elif sel_h:
-                    host_store.set_active(sel_h)
-                    host = host_store.get(sel_h)
+                    new_h = host_store.get(sel_h)
+                    if new_h:
+                        host_store.set_active(sel_h)
+                        host = new_h
+
+        elif action == "manage_deletion":
+            updated = manage_deletion_menu(current_model=model)
+            if updated:
+                model = updated
 
 
 def main():
+    # CLI arguments: python main.py delete
+    if len(sys.argv) > 1 and sys.argv[1] in ("delete", "--delete"):
+        manage_deletion_menu()
+        return
+
     # CLI arguments: python main.py sync
     if len(sys.argv) > 1 and sys.argv[1] in ("sync", "--sync"):
         res = sync_db_and_records(db)

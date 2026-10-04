@@ -48,6 +48,7 @@ local_llm_bench/
 │   └── speeds/               # Speed benchmark samples (<host_id>__<run_id>__<model>_<bench>_<level>.json)
 ├── tests/                    # Test suite (pytest)
 │   ├── test_benchmark_contracts.py # Benchmark registry and level requirement checks
+│   ├── test_deletion.py           # Model and benchmark results deletion tests
 │   ├── test_golden_solutions.py    # Reference golden solutions verifying test correctness
 │   ├── test_harness.py             # Integration tests for sandboxes, database, report, and MCP
 │   ├── test_host_matching.py       # Host resolution and matching tests
@@ -143,6 +144,9 @@ python main.py report
 
 # Manually synchronize SQLite cache with records/
 python main.py sync
+
+# Manage and delete model results, speeds, and runs
+python main.py delete
 ```
 
 ### Testing & Verification

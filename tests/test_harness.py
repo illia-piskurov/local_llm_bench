@@ -392,3 +392,37 @@ def test_report_model_name_with_single_quote(tmp_path):
     content = out_file.read_text(encoding="utf-8")
     assert 'data-model="test&#x27;model/with&quot;quotes"' in content
     assert 'onclick="selectModel(this.dataset.model)"' in content
+
+
+def test_is_infra_failure_robustness():
+    from storage import INFRA_FAILURE_PREFIX, is_infra_failure
+
+    assert is_infra_failure([]) is False
+    assert is_infra_failure(None) is False
+    assert is_infra_failure(["Normal failure: 1 != 2"]) is False
+    assert is_infra_failure([f"{INFRA_FAILURE_PREFIX} Timeout"]) is True
+    # Non-string or unexpected objects in failures must not crash
+    assert is_infra_failure([123]) is False
+    assert is_infra_failure([None]) is False
+    assert is_infra_failure([{"err": "timeout"}]) is False
+
+
+def test_lmstudio_model_and_api_safety():
+    from lmstudio import Model, list_llm_models, loaded_instance_ids
+
+    # Model.from_dict safe fallback
+    m = Model.from_dict({})
+    assert m.type == "llm"
+    assert m.key == ""
+    assert isinstance(m.key, str)
+
+    m2 = Model.from_dict({"type": None, "key": None})
+    assert m2.type == "llm"
+    assert m2.key == ""
+
+    # list_llm_models and loaded_instance_ids when server is down or bad response
+    models = list_llm_models()
+    assert isinstance(models, list)
+
+    insts = loaded_instance_ids("non_existent_key")
+    assert isinstance(insts, list)

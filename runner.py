@@ -369,7 +369,9 @@ def execute_test(
 
     fail_summary = ""
     if test_result.failures:
-        first_fail = test_result.failures[0].split("\n")[0]
+        first_item = test_result.failures[0]
+        first_fail_str = str(first_item) if first_item is not None else ""
+        first_fail = first_fail_str.split("\n")[0]
         if len(first_fail) > 60:
             first_fail = first_fail[:57] + "..."
         fail_summary = f" [dim red]FAIL: {first_fail}[/dim red]"
