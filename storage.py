@@ -329,6 +329,35 @@ class RunStore:
         self.db.conn.commit()
         return cur.rowcount > 0
 
+    def clear_model(self, model_key: str, records_dir: Path | None = None) -> int:
+        cur = self.db.conn.execute("DELETE FROM runs WHERE model_key = ?", (model_key,))
+        self.db.conn.commit()
+        count = cur.rowcount
+
+        runs_dir = (records_dir or (Path(__file__).parent / "records")) / "runs"
+        if runs_dir.exists():
+            for path in runs_dir.glob("*.json"):
+                try:
+                    data = json.loads(path.read_text(encoding="utf-8"))
+                    if data.get("model_key") == model_key:
+                        path.unlink(missing_ok=True)
+                        count += 1
+                except Exception:
+                    pass
+        return count
+
+    def clear_all(self, records_dir: Path | None = None) -> int:
+        cur = self.db.conn.execute("DELETE FROM runs")
+        self.db.conn.commit()
+        count = cur.rowcount
+
+        runs_dir = (records_dir or (Path(__file__).parent / "records")) / "runs"
+        if runs_dir.exists():
+            for path in runs_dir.glob("*.json"):
+                path.unlink(missing_ok=True)
+                count += 1
+        return count
+
     def cleanup_stale_runs(self, max_age_seconds: int = 14400) -> int:
         """Marks in_progress runs older than max_age_seconds as failed."""
         now = datetime.now()
@@ -548,22 +577,92 @@ class ResultStore:
         count += cursor.rowcount
         self.db.conn.commit()
 
-        answer_path, raw_path = self.paths_for(benchmark, model_key, level_id)
-        for path in [answer_path, raw_path, raw_path.with_suffix(".api.json")]:
-            if path.exists():
-                path.unlink(missing_ok=True)
-                count += 1
+        key = safe_filename(model_key)
+        answers_dir = self.answers_root / benchmark.answers_dir_name
+        if answers_dir.exists():
+            for path in answers_dir.glob(f"*{benchmark.id}_{level_id}.*"):
+                if path.name.startswith(f"{key}_") or path.name.startswith(f"{key}__"):
+                    path.unlink(missing_ok=True)
+                    count += 1
+
+        if self.raw_answers_dir.exists():
+            for path in self.raw_answers_dir.glob(f"*{benchmark.id}_{level_id}*"):
+                if path.name.startswith(f"{key}_") or path.name.startswith(f"{key}__"):
+                    path.unlink(missing_ok=True)
+                    count += 1
+
+        records_results_dir = self.answers_root / "records" / "results"
+        if records_results_dir.exists():
+            for path in records_results_dir.glob(f"*{benchmark.id}_{level_id}.json"):
+                if key in path.name:
+                    try:
+                        data = json.loads(path.read_text(encoding="utf-8"))
+                        if (
+                            data.get("model") == model_key
+                            and data.get("benchmark") == benchmark.id
+                            and data.get("level") == level_id
+                        ):
+                            path.unlink(missing_ok=True)
+                            count += 1
+                    except Exception:
+                        pass
+
+        legacy_results_dir = self.answers_root / "results"
+        if legacy_results_dir.exists():
+            for path in legacy_results_dir.glob(f"*{benchmark.id}_{level_id}.json"):
+                if key in path.name:
+                    try:
+                        data = json.loads(path.read_text(encoding="utf-8"))
+                        if data.get("model") == model_key:
+                            path.unlink(missing_ok=True)
+                            count += 1
+                    except Exception:
+                        pass
+
         return count
 
     def clear_model(self, model_key: str, benchmarks: list[Benchmark]) -> int:
         count = 0
+        key = safe_filename(model_key)
+
         for benchmark in benchmarks:
-            for level_id in benchmark.level_order:
-                answer_path, raw_path = self.paths_for(benchmark, model_key, level_id)
-                for path in [answer_path, raw_path, raw_path.with_suffix(".api.json")]:
-                    if path.exists():
+            answers_dir = self.answers_root / benchmark.answers_dir_name
+            if answers_dir.exists():
+                for path in answers_dir.glob(f"*{key}*"):
+                    if path.name.startswith(f"{key}_") or path.name.startswith(f"{key}__"):
                         path.unlink(missing_ok=True)
                         count += 1
+
+        if self.raw_answers_dir.exists():
+            for path in self.raw_answers_dir.glob(f"*{key}*"):
+                if path.name.startswith(f"{key}_") or path.name.startswith(f"{key}__"):
+                    path.unlink(missing_ok=True)
+                    count += 1
+
+        records_results_dir = self.answers_root / "records" / "results"
+        if records_results_dir.exists():
+            for path in records_results_dir.glob("*.json"):
+                if key in path.name:
+                    try:
+                        data = json.loads(path.read_text(encoding="utf-8"))
+                        if data.get("model") == model_key or data.get("model_key") == model_key:
+                            path.unlink(missing_ok=True)
+                            count += 1
+                    except Exception:
+                        pass
+
+        legacy_results_dir = self.answers_root / "results"
+        if legacy_results_dir.exists():
+            for path in legacy_results_dir.glob("*.json"):
+                if key in path.name:
+                    try:
+                        data = json.loads(path.read_text(encoding="utf-8"))
+                        if data.get("model") == model_key:
+                            path.unlink(missing_ok=True)
+                            count += 1
+                    except Exception:
+                        pass
+
         cursor = self.db.conn.execute("DELETE FROM results WHERE model = ?", (model_key,))
         count += cursor.rowcount
         self.db.conn.commit()
@@ -571,14 +670,31 @@ class ResultStore:
 
     def clear_all(self, benchmarks: list[Benchmark]) -> int:
         count = 0
-        for result in self.all_saved():
-            for benchmark in benchmarks:
-                if benchmark.id == result.benchmark:
-                    answer_path, raw_path = self.paths_for(benchmark, result.model, result.level)
-                    for path in [answer_path, raw_path, raw_path.with_suffix(".api.json")]:
-                        if path.exists():
-                            path.unlink(missing_ok=True)
-                            count += 1
+        for benchmark in benchmarks:
+            answers_dir = self.answers_root / benchmark.answers_dir_name
+            if answers_dir.exists():
+                for path in answers_dir.glob(f"*.{benchmark.file_ext}"):
+                    path.unlink(missing_ok=True)
+                    count += 1
+
+        if self.raw_answers_dir.exists():
+            for path in self.raw_answers_dir.glob("*"):
+                if path.is_file():
+                    path.unlink(missing_ok=True)
+                    count += 1
+
+        records_results_dir = self.answers_root / "records" / "results"
+        if records_results_dir.exists():
+            for path in records_results_dir.glob("*.json"):
+                path.unlink(missing_ok=True)
+                count += 1
+
+        legacy_results_dir = self.answers_root / "results"
+        if legacy_results_dir.exists():
+            for path in legacy_results_dir.glob("*.json"):
+                path.unlink(missing_ok=True)
+                count += 1
+
         cursor = self.db.conn.execute("DELETE FROM results")
         count += cursor.rowcount
         self.db.conn.commit()
@@ -668,22 +784,94 @@ class SpeedResultStore:
             logger.warning("Failed to persist speed record to %s: %s", path, e)
 
     def clear_level(self, model_key: str, benchmark_id: str, level_id: str) -> int:
+        count = 0
         cursor = self.db.conn.execute(
             "DELETE FROM speed_results WHERE model = ? AND benchmark = ? AND level = ?",
             (model_key, benchmark_id, level_id),
         )
+        count += cursor.rowcount
         self.db.conn.commit()
-        return cursor.rowcount
+
+        key = safe_filename(model_key)
+        if self.records_speeds_dir.exists():
+            for path in self.records_speeds_dir.glob(f"*{benchmark_id}_{level_id}.json"):
+                if key in path.name:
+                    try:
+                        data = json.loads(path.read_text(encoding="utf-8"))
+                        if (
+                            data.get("model") == model_key
+                            and data.get("benchmark") == benchmark_id
+                            and data.get("level") == level_id
+                        ):
+                            path.unlink(missing_ok=True)
+                            count += 1
+                    except Exception:
+                        pass
+
+        legacy_dir = self.records_speeds_dir.parent.parent / "speed_results"
+        if legacy_dir.exists():
+            for path in legacy_dir.glob(f"*{benchmark_id}_{level_id}.json"):
+                if key in path.name:
+                    try:
+                        data = json.loads(path.read_text(encoding="utf-8"))
+                        if data.get("model") == model_key:
+                            path.unlink(missing_ok=True)
+                            count += 1
+                    except Exception:
+                        pass
+
+        return count
 
     def clear_model(self, model_key: str) -> int:
+        count = 0
         cursor = self.db.conn.execute("DELETE FROM speed_results WHERE model = ?", (model_key,))
+        count += cursor.rowcount
         self.db.conn.commit()
-        return cursor.rowcount
+
+        key = safe_filename(model_key)
+        if self.records_speeds_dir.exists():
+            for path in self.records_speeds_dir.glob("*.json"):
+                if key in path.name:
+                    try:
+                        data = json.loads(path.read_text(encoding="utf-8"))
+                        if data.get("model") == model_key:
+                            path.unlink(missing_ok=True)
+                            count += 1
+                    except Exception:
+                        pass
+
+        legacy_dir = self.records_speeds_dir.parent.parent / "speed_results"
+        if legacy_dir.exists():
+            for path in legacy_dir.glob("*.json"):
+                if key in path.name:
+                    try:
+                        data = json.loads(path.read_text(encoding="utf-8"))
+                        if data.get("model") == model_key:
+                            path.unlink(missing_ok=True)
+                            count += 1
+                    except Exception:
+                        pass
+
+        return count
 
     def clear_all(self) -> int:
+        count = 0
         cursor = self.db.conn.execute("DELETE FROM speed_results")
+        count += cursor.rowcount
         self.db.conn.commit()
-        return cursor.rowcount
+
+        if self.records_speeds_dir.exists():
+            for path in self.records_speeds_dir.glob("*.json"):
+                path.unlink(missing_ok=True)
+                count += 1
+
+        legacy_dir = self.records_speeds_dir.parent.parent / "speed_results"
+        if legacy_dir.exists():
+            for path in legacy_dir.glob("*.json"):
+                path.unlink(missing_ok=True)
+                count += 1
+
+        return count
 
     def all_saved(self, run_id: str | None = None) -> list[SpeedSample]:
         if run_id:

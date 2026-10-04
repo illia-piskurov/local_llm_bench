@@ -106,7 +106,14 @@ Synchronize your local SQLite cache with versioned Git records:
 uv run python main.py sync
 ```
 
-### 6. Model Context Protocol (MCP) Server
+### 6. Managing & Deleting Model Results
+Clean up unneeded models or reset specific benchmarks:
+```bash
+uv run python main.py delete
+```
+Or choose Option 9 directly from the interactive menu. This safely deletes results from the local SQLite cache (`bench.db`), versioned Git records (`records/results/`, `records/speeds/`, `records/runs/`), and generated solution files.
+
+### 7. Model Context Protocol (MCP) Server
 Integrate your benchmark database with Claude Desktop, Cursor, Windsurf, or Antigravity:
 ```bash
 uv run python mcp_server.py
@@ -139,8 +146,9 @@ local_llm_bench/
 │   ├── runs/                 # Run metadata (<host_id>__<run_id>.json)
 │   ├── results/              # Evaluation results (<host_id>__<run_id>__<model>_<bench>_<level>.json)
 │   └── speeds/               # Speed benchmark samples (<host_id>__<run_id>__<model>_<bench>_<level>.json)
-├── tests/                    # Pytest test suite (175+ tests)
+├── tests/                    # Pytest test suite (178+ tests)
 │   ├── test_benchmark_contracts.py
+│   ├── test_deletion.py
 │   ├── test_golden_solutions.py
 │   ├── test_harness.py
 │   ├── test_host_matching.py

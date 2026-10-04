@@ -32,6 +32,9 @@ python main.py report
 # Bidirectional sync between SQLite (bench.db) and Git records (records/)
 python main.py sync
 
+# Manage and delete model results, speeds, and runs
+python main.py delete
+
 # Run the complete test suite (unit tests, sandboxes, golden solutions)
 uv run pytest
 
