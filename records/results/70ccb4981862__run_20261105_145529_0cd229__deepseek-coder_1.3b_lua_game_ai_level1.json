@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261105_145529_0cd229",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:1.3b",
+  "benchmark": "lua_game_ai",
+  "level": "level1",
+  "tested_at": "2026-11-05 14:57:43",
+  "passed": 3,
+  "total": 7,
+  "failures": [
+    "action_and_condition: assertion returned false",
+    "selector_first_success: assertion returned false",
+    "selector_all_failure: assertion returned false",
+    "selector_resumes_running_child: assertion returned false"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

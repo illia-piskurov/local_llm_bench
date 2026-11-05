@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261105_160626_c390e2",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.5:8b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-11-05 16:11:53",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "simple_select_all: exception/timeout: KeyError: field",
+    "select_specific_columns: exception/timeout: KeyError: field",
+    "simple_where_equality: SQL: expected 'SELECT * FROM users WHERE status = $1', got 'SELECT * FROM users WHERE status = $1 ORDER BY ASC'; params: expected ['active'], got []",
+    "where_and_or_nested: exception/timeout: KeyError: field",
+    "order_by_limit_offset: exception/timeout: KeyError: field",
+    "multiple_and_conditions: SQL: expected 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', got 'SELECT * FROM logs WHERE (level = $1 AND code != $1) ORDER BY ASC'; params: expected ['error', 404, 1000], got []"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

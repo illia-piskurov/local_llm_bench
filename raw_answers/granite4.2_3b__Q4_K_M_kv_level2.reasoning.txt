@@ -1,0 +1,7 @@
+We need modify run to handle new commands and watch notifications. We'll implement simple watch tracking: for each key, store current value (as seen). When SET/DELETE, compare with current value; if different, emit notification and update. Need to handle nested transactions: changes visible immediately, so watch works on visible value. We'll store watch dict mapping key to current value (as seen). When SET/DELETE, compute old = current value, new = new value, emit if different. Update watch entry.
+
+Implement in run: maintain watch = {} mapping key -> current value (as seen). For each SET/DELETE, if key in watch and watch[key] != new value (or old != new), emit notification.
+
+We'll produce outputs list accordingly.
+
+Let's craft code.

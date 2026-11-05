@@ -1,0 +1,629 @@
+{
+  "id": "run_20261105_145529_0cd229",
+  "host_id": "70ccb4981862",
+  "model_key": "deepseek-coder:1.3b",
+  "model_name": "deepseek-coder:1.3b",
+  "quantization": "Q4_0",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "deepseek-coder:1.3b",
+      "display_name": "deepseek-coder:1.3b",
+      "architecture": "llama",
+      "quantization": "Q4_0",
+      "quantization_bits": null,
+      "size_bytes": 776080839,
+      "params_string": "1B",
+      "max_context_length": 16384,
+      "format": "gguf",
+      "publisher": null
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 14:55:29",
+  "completed_at": "2026-11-05 14:58:08",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:55:34",
+      "passed": 4,
+      "total": 10,
+      "failures": [
+        "no_dependencies: invalid topological order: None",
+        "simple_chain: invalid topological order: None",
+        "diamond: invalid topological order: None",
+        "multiple_roots: invalid topological order: None",
+        "single_task: invalid topological order: None",
+        "wide_graph: invalid topological order: None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:55:40",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "simple_chain: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "diamond_pick_longer_branch: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "independent_tasks: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "wide_graph: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:55:47",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: unexpected exception: ImportError: no module named 'threading'",
+        "dependency_unlocks_later: unexpected exception: ImportError: no module named 'threading'",
+        "single_worker_duration_tiebreak: unexpected exception: ImportError: no module named 'threading'",
+        "resource_limit_and_priority: unexpected exception: ImportError: no module named 'threading'",
+        "simultaneous_unlocks: unexpected exception: ImportError: no module named 'threading'",
+        "cycle_returns_none: unexpected exception: ImportError: no module named 'threading'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:55:59",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception: ImportError: no module named 'threading'",
+        "parallel_tasks_reduce_makespan: unexpected exception: ImportError: no module named 'threading'",
+        "dependencies_and_workers: unexpected exception: ImportError: no module named 'threading'",
+        "critical_path_longer_than_worker_parallelism: unexpected exception: ImportError: no module named 'threading'",
+        "wide_graph_with_unlocks: unexpected exception: ImportError: no module named 'threading'",
+        "cycle_returns_none: unexpected exception: ImportError: no module named 'threading'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:56:06",
+      "passed": 0,
+      "total": 15,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "get_missing: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "delete_then_get: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "delete_missing_key_noop: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "overwrite_set: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "commit_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "simple_transaction_commit: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "simple_transaction_rollback: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_restores_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "nested_transactions: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "multiple_keys_independent: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "set_new_key_inside_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:56:14",
+      "passed": 0,
+      "total": 25,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "get_missing: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "delete_then_get: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "delete_missing_key_noop: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "overwrite_set: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "commit_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "simple_transaction_commit: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "simple_transaction_rollback: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_restores_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "nested_transactions: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "multiple_keys_independent: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "set_new_key_inside_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_basic: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_zero: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_respects_transaction: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "count_after_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_set_new_key: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_set_change: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_no_change_no_notification: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_delete: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_unrelated_key_silent: unexpected exception/timeout: NameError: name 'run' isn't defined",
+        "watch_inside_transaction_fires: unexpected exception/timeout: NameError: name 'run' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:56:19",
+      "passed": 0,
+      "total": 30,
+      "failures": [
+        "failed to load solution: Function run(...) not found in solution"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:56:25",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "simple_select_all: exception/timeout: ImportError: no module named 'sqlparse'",
+        "select_specific_columns: exception/timeout: ImportError: no module named 'sqlparse'",
+        "simple_where_equality: exception/timeout: ImportError: no module named 'sqlparse'",
+        "where_and_or_nested: exception/timeout: ImportError: no module named 'sqlparse'",
+        "order_by_limit_offset: exception/timeout: ImportError: no module named 'sqlparse'",
+        "multiple_and_conditions: exception/timeout: ImportError: no module named 'sqlparse'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:56:33",
+      "passed": 0,
+      "total": 5,
+      "failures": [
+        "left_join_with_group_by: exception/timeout: ImportError: no module named 'sqlparse'",
+        "multiple_joins_inner_and_left: exception/timeout: ImportError: no module named 'sqlparse'",
+        "where_in_operator: exception/timeout: ImportError: no module named 'sqlparse'",
+        "where_is_null_and_like: exception/timeout: ImportError: no module named 'sqlparse'",
+        "where_is_not_null: exception/timeout: ImportError: no module named 'sqlparse'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:56:43",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "select_expression_alias: exception/timeout: ImportError: no module named 'sqlparse'",
+        "having_clause: exception/timeout: ImportError: no module named 'sqlparse'",
+        "where_subquery_in: exception/timeout: ImportError: no module named 'sqlparse'",
+        "subquery_with_parent_params_order: exception/timeout: ImportError: no module named 'sqlparse'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:56:48",
+      "passed": 3,
+      "total": 4,
+      "failures": [
+        "full_overflow_check: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:56:59",
+      "passed": 0,
+      "total": 8,
+      "failures": [
+        "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:50:69: warning: ^ has lower precedence than ==; == will be evaluated first [-Wparentheses]\n   50 |                     if (stream[i + 3 + packet_len] == stream[i + 3] ^ 0xFF) {\n      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:50:69: note: place parentheses around the '==' expression to silence this warning\n   50 |                     if (stream[i + 3 + packet_len] == stream[i + 3] ^ 0xFF) {\n      |                                                                     ^\n      |                         (                                          )\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:50:69: note: place parentheses around the ^ expression to evaluate it first\n   50 |                     if (stream[i + 3 + packet_len] == stream[i + 3] ^ 0xFF) {\n      |                                                                     ^     \n      |                                                       (                   )\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:59:51: error: call to undeclared library function 'malloc' with type 'void *(unsigned long)'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   59 |                         *out_payload = (uint8_t *)malloc(packet_len);\n      |                                                   ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:59:51: note: include the header <stdlib.h> or explicitly provide a declaration for 'malloc'\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:59:38: error: incompatible pointer to integer conversion assigning to 'uint8_t' (aka 'unsigned char') from 'uint8_t *' (aka 'unsigned char *'); dereference with * [-Wint-conversion]\n   59 |                         *out_payload = (uint8_t *)malloc(packet_len);\n      |                                      ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n      |                                        *\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:60:45: error: use of undeclared identifier 'NULL'\n   60 |                         if (*out_payload == NULL) {\n      |                                             ^~~~\n1 warning and 3 errors generated.\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:57:11",
+      "passed": 3,
+      "total": 10,
+      "failures": [
+        "full_overflow_check: assertion returned False",
+        "clean_packet: exception 'decode_packet'",
+        "with_junk_prefix: exception 'decode_packet'",
+        "reject_bad_checksum: exception 'decode_packet'",
+        "recover_after_false_magic: exception 'decode_packet'",
+        "fragmented_packet: assertion returned False",
+        "sequential_packets: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:57:16",
+      "passed": 1,
+      "total": 7,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "concurrency_default_one: assertion returned False",
+        "index_passed: assertion returned False",
+        "mapper_rejection: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:57:22",
+      "passed": 2,
+      "total": 12,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "index_passed: assertion returned False",
+        "mapper_rejection: assertion returned False",
+        "retry_transient_failure: assertion returned False",
+        "retry_exhausted: assertion returned False",
+        "exponential_backoff: assertion returned False",
+        "task_timeout: assertion returned False",
+        "timeout_triggers_retry: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:57:33",
+      "passed": 0,
+      "total": 17,
+      "failures": [
+        "JavaScript syntax error: SyntaxError: expecting ';'\n    at <input>:36\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:57:43",
+      "passed": 3,
+      "total": 7,
+      "failures": [
+        "action_and_condition: assertion returned false",
+        "selector_first_success: assertion returned false",
+        "selector_all_failure: assertion returned false",
+        "selector_resumes_running_child: assertion returned false"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:57:55",
+      "passed": 0,
+      "total": 12,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:3: attempt to call a nil value (field 'Action')",
+        "sequence_all_success: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:6: attempt to call a nil value (field 'Action')",
+        "selector_first_success: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+        "selector_all_failure: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:6: attempt to call a nil value (field 'Action')",
+        "blackboard_get_set: exception [string \"<python>\"]:4: attempt to call a nil value (method 'get')",
+        "blackboard_watchers: exception [string \"<python>\"]:6: attempt to call a nil value (method 'watch')",
+        "inverter_decorator: exception [string \"<python>\"]:3: attempt to call a nil value (field 'Action')",
+        "cooldown_decorator: exception [string \"<python>\"]:4: attempt to call a nil value (field 'Action')",
+        "composite_ai_tree: exception [string \"<python>\"]:4: attempt to call a nil value (method 'set')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:58:08",
+      "passed": 0,
+      "total": 16,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:3: attempt to call a nil value (field 'Action')",
+        "sequence_all_success: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:6: attempt to call a nil value (field 'Action')",
+        "selector_first_success: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+        "selector_all_failure: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:6: attempt to call a nil value (field 'Action')",
+        "blackboard_get_set: exception [string \"<python>\"]:3: attempt to index a nil value (field 'Blackboard')",
+        "blackboard_watchers: exception [string \"<python>\"]:3: attempt to index a nil value (field 'Blackboard')",
+        "inverter_decorator: exception [string \"<python>\"]:3: attempt to call a nil value (field 'Action')",
+        "cooldown_decorator: exception [string \"<python>\"]:4: attempt to call a nil value (field 'Action')",
+        "composite_ai_tree: exception [string \"<python>\"]:3: attempt to index a nil value (field 'Blackboard')",
+        "async_action_wait_ticks: assertion returned false",
+        "async_action_state_mutation: assertion returned false",
+        "tree_reset_interrupt: assertion returned false",
+        "full_npc_game_loop: exception [string \"<python>\"]:3: attempt to index a nil value (field 'Blackboard')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:55:33",
+      "stats": {
+        "input_tokens": 265,
+        "total_output_tokens": 401,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 102.66220243962259,
+        "time_to_first_token_seconds": 0.211456,
+        "model_load_time_seconds": 0.0014755
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:55:40",
+      "stats": {
+        "input_tokens": 838,
+        "total_output_tokens": 477,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 89.83487333282861,
+        "time_to_first_token_seconds": 0.52874,
+        "model_load_time_seconds": 0.001720416
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:55:46",
+      "stats": {
+        "input_tokens": 323,
+        "total_output_tokens": 575,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 99.15854917419036,
+        "time_to_first_token_seconds": 0.28147,
+        "model_load_time_seconds": 0.001445291
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:55:58",
+      "stats": {
+        "input_tokens": 1140,
+        "total_output_tokens": 874,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 83.0450826479105,
+        "time_to_first_token_seconds": 0.728298,
+        "model_load_time_seconds": 0.001694167
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:56:05",
+      "stats": {
+        "input_tokens": 449,
+        "total_output_tokens": 503,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 96.04623662011957,
+        "time_to_first_token_seconds": 0.367667,
+        "model_load_time_seconds": 0.001082042
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:56:12",
+      "stats": {
+        "input_tokens": 1240,
+        "total_output_tokens": 416,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 83.56491125446601,
+        "time_to_first_token_seconds": 0.758906,
+        "model_load_time_seconds": 0.001960584
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:56:19",
+      "stats": {
+        "input_tokens": 1036,
+        "total_output_tokens": 330,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 85.41867055416527,
+        "time_to_first_token_seconds": 0.945709,
+        "model_load_time_seconds": 0.00059025
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:56:24",
+      "stats": {
+        "input_tokens": 509,
+        "total_output_tokens": 494,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 96.22601191683191,
+        "time_to_first_token_seconds": 0.415958,
+        "model_load_time_seconds": 0.000450792
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:56:33",
+      "stats": {
+        "input_tokens": 1353,
+        "total_output_tokens": 603,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 81.75821100560431,
+        "time_to_first_token_seconds": 0.853257,
+        "model_load_time_seconds": 0.001113625
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:56:42",
+      "stats": {
+        "input_tokens": 1335,
+        "total_output_tokens": 600,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 80.15013723707249,
+        "time_to_first_token_seconds": 1.270488,
+        "model_load_time_seconds": 0.000453917
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:56:47",
+      "stats": {
+        "input_tokens": 377,
+        "total_output_tokens": 411,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 97.50584325651151,
+        "time_to_first_token_seconds": 0.308499,
+        "model_load_time_seconds": 0.000401416
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:56:59",
+      "stats": {
+        "input_tokens": 1230,
+        "total_output_tokens": 795,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 82.47622895027679,
+        "time_to_first_token_seconds": 0.855802,
+        "model_load_time_seconds": 0.001689292
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:57:11",
+      "stats": {
+        "input_tokens": 1682,
+        "total_output_tokens": 760,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 74.92943077195947,
+        "time_to_first_token_seconds": 1.667756,
+        "model_load_time_seconds": 0.001423958
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:57:15",
+      "stats": {
+        "input_tokens": 327,
+        "total_output_tokens": 395,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 101.19274220034524,
+        "time_to_first_token_seconds": 0.264051,
+        "model_load_time_seconds": 0.001424292
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:57:22",
+      "stats": {
+        "input_tokens": 1049,
+        "total_output_tokens": 492,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 86.48385643468896,
+        "time_to_first_token_seconds": 0.782217,
+        "model_load_time_seconds": 0.000580625
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:57:33",
+      "stats": {
+        "input_tokens": 1211,
+        "total_output_tokens": 761,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 82.24502771527744,
+        "time_to_first_token_seconds": 1.278647,
+        "model_load_time_seconds": 0.0007665
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:57:43",
+      "stats": {
+        "input_tokens": 733,
+        "total_output_tokens": 746,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 78.99816768727146,
+        "time_to_first_token_seconds": 0.757515,
+        "model_load_time_seconds": 0.0009275
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:57:55",
+      "stats": {
+        "input_tokens": 1954,
+        "total_output_tokens": 745,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 71.6426131801829,
+        "time_to_first_token_seconds": 1.757855,
+        "model_load_time_seconds": 0.001992667
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:58:08",
+      "stats": {
+        "input_tokens": 1681,
+        "total_output_tokens": 738,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 74.90632142363422,
+        "time_to_first_token_seconds": 2.089376,
+        "model_load_time_seconds": 0.001038542
+      }
+    }
+  ]
+}

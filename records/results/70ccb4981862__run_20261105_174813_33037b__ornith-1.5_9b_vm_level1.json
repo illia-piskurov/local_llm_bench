@@ -1,0 +1,13 @@
+{
+  "run_id": "run_20261105_174813_33037b",
+  "host_id": "70ccb4981862",
+  "model": "ornith-1.5:9b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-05 17:50:31",
+  "passed": 18,
+  "total": 18,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

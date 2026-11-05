@@ -1,0 +1,36 @@
+async function pMap(items, mapper, options = { concurrency: 1, retries: 0, backoffMs: 0, timeoutMs: 0 }) {
+    const concurrency = Math.min(options.concurrency, items.length);
+    const results = [];
+    const mapperWithIndex = (item, index) => mapper(item, index).catch(error => {
+        throw error;
+    });
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        let retryCount = 0;
+        let backoff = options.backoffMs * (2 ** retryCount);
+        const maxBackoff = options.timeoutMs ? options.timeoutMs : Infinity;
+        const timeout = options.timeoutMs ? new Promise(resolve => setTimeout(resolve, options.timeoutMs)) : Promise.resolve();
+
+        while (retryCount <= options.retries) {
+            results[i] = await Promise.race([
+                mapperWithIndex(item, i),
+                timeout
+            ]);
+
+            if (!results[i]) {
+                retryCount++;
+                backoff = Math.min(backoff * 2, maxBackoff);
+                await new Promise(resolve => setTimeout(resolve, backoff));
+            } else {
+                break;
+            }
+        }
+
+        if (retryCount > options.retries) {
+            throw new Error("Timeout");
+        }
+    }
+
+    return results;
+}

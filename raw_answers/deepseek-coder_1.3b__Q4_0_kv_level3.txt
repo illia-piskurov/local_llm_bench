@@ -1,0 +1,25 @@
+```python
+class InMemoryKeyValueStore:
+    def   __init__(self):
+        self.data = {}
+        self.transactions = []
+        self.watchers = {}
+        self.snapshots = {}
+
+    # ... existing methods remain the same ...
+
+    def snapshot(self, name):
+        self.snapshots[name] = self.data.copy()
+
+    def restore(self, name):
+        if name in self.snapshots:
+            self.data = self.snapshots[name]
+            self.watchers = {}
+            self.update_watchers()
+        else:
+            raise ValueError(f"No snapshot named {name} exists")
+
+    # ... existing methods remain the same ...
+```
+
+This code extends the `InMemoryKeyValueStore` class by adding two new methods: `snapshot` and `restore`. The `snapshot` method saves the current state of the store under a given name. It uses the `copy` method to create a copy of the `data` dictionary. The `restore` method restores the state of the store from a previously saved snapshot. It updates the `watchers` dictionary and calls the `update_watchers` method to print the watch notifications. If a snapshot with the given name does not exist, it raises a `ValueError`. The `run` method calls the superclass's `run` method to process the program and then updates the watcher dictionary.

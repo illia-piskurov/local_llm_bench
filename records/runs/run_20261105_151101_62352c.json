@@ -1,0 +1,34 @@
+{
+  "id": "run_20261105_151101_62352c",
+  "host_id": "70ccb4981862",
+  "model_key": "deepseek-r1:7b",
+  "model_name": "deepseek-r1:7b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "deepseek-r1:7b",
+      "display_name": "deepseek-r1:7b",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 4683075440,
+      "params_string": "7.6B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 15:11:01",
+  "completed_at": "2026-11-05 15:16:00",
+  "status": "interrupted",
+  "results": [],
+  "speeds": []
+}

@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261105_160626_c390e2",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.5:8b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-05 16:08:46",
+  "stats": {
+    "input_tokens": 920,
+    "total_output_tokens": 1294,
+    "reasoning_output_tokens": null,
+    "tokens_per_second": 16.72120549295477,
+    "time_to_first_token_seconds": 4.287926999,
+    "model_load_time_seconds": 0.00407225
+  }
+}

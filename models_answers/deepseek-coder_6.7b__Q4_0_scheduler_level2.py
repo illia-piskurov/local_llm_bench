@@ -1,0 +1,51 @@
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    # Initialize a dictionary to store the in-degree of each task
+    in_degree = {task: 0 for task in tasks}
+
+    # Initialize a dictionary to store the duration of each task
+    durations = {task: duration for task, (duration, _) in tasks.items()}
+
+    # Initialize a dictionary to store the earliest start time of each task
+    earliest_start_time = {task: 0 for task in tasks}
+
+    # Initialize a dictionary to store the latest start time of each task
+    latest_start_time = {task: 0 for task in tasks}
+
+    # Update the in-degree of each task based on the dependencies
+    for task, (_, dependencies) in tasks.items():
+        for dependency in dependencies:
+            if dependency in in_degree:
+                in_degree[dependency] += 1
+            else:
+                return None
+
+    # Initialize a queue to store the tasks with in-degree 0
+    queue = [task for task, degree in in_degree.items() if degree == 0]
+
+    # While there are tasks in the queue
+    while queue:
+        # Dequeue a task
+        task = queue.pop(0)
+
+        # Calculate the earliest start time of the task
+        earliest_start_time[task] = max(latest_start_time[dependency] for dependency in tasks[task][1]) + durations[task]
+
+        # For each task that depends on the dequeued task
+        for t, (_, dependencies) in tasks.items():
+            if task in dependencies:
+                # Decrease the in-degree of the task
+                in_degree[t] -= 1
+
+                # If the in-degree of the task is 0, add it to the queue
+                if in_degree[t] == 0:
+                    queue.append(t)
+
+        # Calculate the latest start time of the task
+        latest_start_time[task] = earliest_start_time[task]
+
+    # If there are any tasks with non-zero in-degree, there is a cycle
+    if any(degree > 0 for degree in in_degree.values()):
+        return None
+
+    # The critical path is the maximum earliest start time
+    return max(earliest_start_time.values())

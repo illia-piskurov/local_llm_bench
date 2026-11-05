@@ -1,0 +1,1 @@
+We need produce code. Provide run function. Implement interpreter reading lines, ignoring comments, track line numbers. Return list of printed strings.

@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261105_163011_1310c4",
+  "host_id": "70ccb4981862",
+  "model": "openthinker:7b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-05 16:37:40",
+  "stats": {
+    "input_tokens": 294,
+    "total_output_tokens": 5112,
+    "reasoning_output_tokens": 5296,
+    "tokens_per_second": 11.524649803383658,
+    "time_to_first_token_seconds": 1.93563,
+    "model_load_time_seconds": 3.050658875
+  }
+}

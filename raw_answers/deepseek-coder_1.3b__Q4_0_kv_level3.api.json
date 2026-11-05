@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:56:19.047979Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nclass InMemoryKeyValueStore:\n    def   __init__(self):\n        self.data = {}\n        self.transactions = []\n        self.watchers = {}\n        self.snapshots = {}\n\n    # ... existing methods remain the same ...\n\n    def snapshot(self, name):\n        self.snapshots[name] = self.data.copy()\n\n    def restore(self, name):\n        if name in self.snapshots:\n            self.data = self.snapshots[name]\n            self.watchers = {}\n            self.update_watchers()\n        else:\n            raise ValueError(f\"No snapshot named {name} exists\")\n\n    # ... existing methods remain the same ...\n```\n\nThis code extends the `InMemoryKeyValueStore` class by adding two new methods: `snapshot` and `restore`. The `snapshot` method saves the current state of the store under a given name. It uses the `copy` method to create a copy of the `data` dictionary. The `restore` method restores the state of the store from a previously saved snapshot. It updates the `watchers` dictionary and calls the `update_watchers` method to print the watch notifications. If a snapshot with the given name does not exist, it raises a `ValueError`. The `run` method calls the superclass's `run` method to process the program and then updates the watcher dictionary.\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 4890274125,
+  "load_duration": 590250,
+  "prompt_eval_count": 1036,
+  "prompt_eval_cached_count": 64,
+  "prompt_eval_duration": 945709000,
+  "eval_count": 330,
+  "eval_duration": 3863324000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1036,
+    "total_output_tokens": 330,
+    "tokens_per_second": 85.41867055416527,
+    "time_to_first_token_seconds": 0.945709,
+    "model_load_time_seconds": 0.00059025
+  }
+}

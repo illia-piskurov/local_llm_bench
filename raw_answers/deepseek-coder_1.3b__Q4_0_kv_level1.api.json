@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:56:05.468484Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nclass InMemoryKeyValueStore:\n    def __init__(self):\n        self.data = {}\n        self.transactions = []\n\n    def set(self, key, value):\n        self.data[key] = value\n        return \"OK\"\n\n    def get(self, key):\n        return self.data.get(key, \"NULL\")\n\n    def delete(self, key):\n        if key in self.data:\n            del self.data[key]\n        return \"OK\"\n\n    def begin(self):\n        self.transactions.append([])\n        return \"OK\"\n\n    def commit(self):\n        if not self.transactions:\n            return \"NO TRANSACTION\"\n        changes = self.transactions[-1]\n        self.transactions.pop()\n        for command in changes:\n            if command[0] == \"SET\":\n                self.data[command[1]] = command[2]\n            elif command[0] == \"DELETE\":\n                if command[1] in self.data:\n                    del self.data[command[1]]\n        return \"OK\"\n\n    def rollback(self):\n        if not self.transactions:\n            return \"NO TRANSACTION\"\n        self.transactions.pop()\n        return \"OK\"\n\n    def run(self, program):\n        commands = program.split(\"\\n\")\n        output = []\n        for command in commands:\n            args = command.split()\n            if args[0] == \"SET\":\n                output.append(self.set(args[1], args[2]))\n            elif args[0] == \"GET\":\n                output.append(self.get(args[1]))\n            elif args[0] == \"DELETE\":\n                output.append(self.delete(args[1]))\n            elif args[0] == \"BEGIN\":\n                output.append(self.begin())\n            elif args[0] == \"COMMIT\":\n                output.append(self.commit())\n            elif args[0] == \"ROLLBACK\":\n                output.append(self.rollback())\n        return output\n```\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 5731021500,
+  "load_duration": 1082042,
+  "prompt_eval_count": 449,
+  "prompt_eval_cached_count": 66,
+  "prompt_eval_duration": 367667000,
+  "eval_count": 503,
+  "eval_duration": 5237061000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 449,
+    "total_output_tokens": 503,
+    "tokens_per_second": 96.04623662011957,
+    "time_to_first_token_seconds": 0.367667,
+    "model_load_time_seconds": 0.001082042
+  }
+}

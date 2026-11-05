@@ -8,6 +8,7 @@ Each test is saved atomically; interruptions (Ctrl+C) safely preserve progress.
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import questionary
 from questionary import Choice
@@ -34,6 +35,17 @@ if sys.platform == "win32":
 console = Console(legacy_windows=False)
 ROOT = Path(__file__).parent
 db = Database(ROOT / "bench.db")
+
+# questionary falls back to the title when a Choice value is None, so "Back" entries carry this sentinel instead.
+BACK = "__back__"
+
+
+def select_choice(message: str, choices: list[Choice]) -> Any:
+    """Single-choice prompt that returns None for both the Back entry and a cancelled prompt (Ctrl-C)."""
+    answer = questionary.select(message, choices=choices).ask()
+    return None if isinstance(answer, str) and answer == BACK else answer
+
+
 set_default_db(db)
 store = ResultStore(db=db, answers_root=ROOT, raw_answers_dir=ROOT / "raw_answers")
 speed_store = SpeedResultStore(db)
@@ -63,9 +75,9 @@ def configure_server_url() -> str:
         Choice("🟢 Local LM Studio (http://127.0.0.1:1234)", value="http://127.0.0.1:1234"),
         Choice("🦙 Local Ollama (http://127.0.0.1:11434/v1)", value="http://127.0.0.1:11434/v1"),
         Choice("🌐 Enter URL manually (remote PC / LAN IP)", value="custom"),
-        Choice("🔙 Back", value=None),
+        Choice("🔙 Back", value=BACK),
     ]
-    chosen = questionary.select(f"Current address: {current}. Choose action:", choices=choices).ask()
+    chosen = select_choice(f"Current address: {current}. Choose action:", choices=choices)
     if chosen == "custom":
         new_url = questionary.text("Enter server URL (e.g. http://192.168.1.50:1234):", default=current).ask()
         if new_url and new_url.strip():
@@ -87,7 +99,7 @@ def configure_server_url() -> str:
 def detect_or_select_model() -> Model | None:
     if not lmstudio.is_server_online():
         console.print(f"[yellow]⚠️  Server ({lmstudio.get_base_url()}) is not responding.[/yellow]")
-        choice = questionary.select(
+        choice = select_choice(
             "What would you like to do?",
             choices=[
                 Choice("🌐 Change server address (IP/port)", value="server"),
@@ -97,7 +109,7 @@ def detect_or_select_model() -> Model | None:
                 Choice("🗑️ Manage / Delete results", value="manage_deletion"),
                 Choice("Exit", value="exit"),
             ],
-        ).ask()
+        )
         if choice == "server":
             configure_server_url()
             return detect_or_select_model()
@@ -123,8 +135,8 @@ def detect_or_select_model() -> Model | None:
     elif len(loaded) > 1:
         choices = [Choice(f"🟢 {m.key} (loaded)", value=m) for m in loaded if m.key]
         choices.append(Choice("✏️  Choose another / enter manually", value="other"))
-        choices.append(Choice("🔙 Back", value=None))
-        chosen = questionary.select("Multiple models loaded in LM Studio. Choose active:", choices=choices).ask()
+        choices.append(Choice("🔙 Back", value=BACK))
+        chosen = select_choice("Multiple models loaded in LM Studio. Choose active:", choices=choices)
         if chosen not in ("other", None):
             return chosen
         if chosen is None:
@@ -134,8 +146,8 @@ def detect_or_select_model() -> Model | None:
     all_models = lmstudio.list_llm_models()
     choices = [Choice(m.key, value=m) for m in all_models if m.key]
     choices.append(Choice("✏️  Enter key manually", value="manual"))
-    choices.append(Choice("🔙 Back", value=None))
-    chosen = questionary.select("Choose model for testing:", choices=choices).ask()
+    choices.append(Choice("🔙 Back", value=BACK))
+    chosen = select_choice("Choose model for testing:", choices=choices)
     if chosen == "manual":
         key = questionary.text("Enter model name/key:").ask()
         return Model(type="llm", key=key.strip()) if key and key.strip() else None
@@ -186,7 +198,6 @@ def manage_deletion_menu(current_model: Model | None = None) -> Model | None:
     DELETE_MODEL = "__delete_model__"
     DELETE_LEVEL = "__delete_level__"
     DELETE_ALL = "__delete_all__"
-    BACK = "__back__"
 
     while True:
         all_models = get_recorded_models(db)
@@ -201,16 +212,14 @@ def manage_deletion_menu(current_model: Model | None = None) -> Model | None:
             Choice("🔙 Back", value=BACK),
         ]
 
-        action = questionary.select("Manage / Delete results:", choices=choices).ask()
+        action = select_choice("Manage / Delete results:", choices=choices)
         if action in (None, BACK):
             return current_model
 
         if action == DELETE_MODEL:
             model_choices = [Choice(m, value=m) for m in all_models]
             model_choices.append(Choice("🔙 Back", value=BACK))
-            selected_model = questionary.select(
-                "Select model to delete all results and runs for:", choices=model_choices
-            ).ask()
+            selected_model = select_choice("Select model to delete all results and runs for:", choices=model_choices)
             if selected_model in (None, BACK):
                 continue
 
@@ -238,7 +247,7 @@ def manage_deletion_menu(current_model: Model | None = None) -> Model | None:
         elif action == DELETE_LEVEL:
             model_choices = [Choice(m, value=m) for m in all_models]
             model_choices.append(Choice("🔙 Back", value=BACK))
-            selected_model = questionary.select("Select model:", choices=model_choices).ask()
+            selected_model = select_choice("Select model:", choices=model_choices)
             if selected_model in (None, BACK):
                 continue
 
@@ -255,7 +264,7 @@ def manage_deletion_menu(current_model: Model | None = None) -> Model | None:
                     )
             level_choices.append(Choice("🔙 Back", value=BACK))
 
-            selected_level = questionary.select("Select level to delete:", choices=level_choices).ask()
+            selected_level = select_choice("Select level to delete:", choices=level_choices)
             if selected_level in (None, BACK):
                 continue
 
@@ -342,7 +351,7 @@ def main_menu(model: Model, host: HostConfig) -> None:
             Choice("❌ 0. Exit", value="exit"),
         ]
 
-        action = questionary.select("Choose action:", choices=choices).ask()
+        action = select_choice("Choose action:", choices=choices)
         if action in ("exit", None):
             console.print("[dim]Goodbye![/dim]")
             break
@@ -385,20 +394,20 @@ def main_menu(model: Model, host: HostConfig) -> None:
             suite_choices = [
                 Choice(f"{b.short:10} | {b.code_lang:10} | {b.name} ({len(b.levels)} lvls)", value=b) for b in REGISTRY
             ]
-            suite_choices.append(Choice("🔙 Back", value=None))
-            selected_bench = questionary.select("Select benchmark to run:", choices=suite_choices).ask()
+            suite_choices.append(Choice("🔙 Back", value=BACK))
+            selected_bench = select_choice("Select benchmark to run:", choices=suite_choices)
             if selected_bench:
                 queue = [(selected_bench, level.id) for level in selected_bench.levels]
                 run_queue(model, queue, host, force=True)
 
         elif action == "run_single":
             suite_choices = [Choice(f"{b.short} ({b.code_lang})", value=b) for b in REGISTRY]
-            suite_choices.append(Choice("🔙 Back", value=None))
-            selected_bench = questionary.select("Select benchmark:", choices=suite_choices).ask()
+            suite_choices.append(Choice("🔙 Back", value=BACK))
+            selected_bench = select_choice("Select benchmark:", choices=suite_choices)
             if selected_bench:
                 lvl_choices = [Choice(f"{level.name}", value=level.id) for level in selected_bench.levels]
-                lvl_choices.append(Choice("🔙 Back", value=None))
-                lvl_id = questionary.select("Select level:", choices=lvl_choices).ask()
+                lvl_choices.append(Choice("🔙 Back", value=BACK))
+                lvl_id = select_choice("Select level:", choices=lvl_choices)
                 if lvl_id:
                     run_queue(model, [(selected_bench, lvl_id)], host, force=True)
 
@@ -433,15 +442,15 @@ def main_menu(model: Model, host: HostConfig) -> None:
             )
 
         elif action == "change_config":
-            sub = questionary.select(
+            sub = select_choice(
                 "What would you like to change?",
                 choices=[
                     Choice("Change model", value="model"),
                     Choice("Change host (hardware)", value="host"),
                     Choice(f"🌐 Change server URL (current: {lmstudio.get_base_url()})", value="server"),
-                    Choice("🔙 Back", value=None),
+                    Choice("🔙 Back", value=BACK),
                 ],
-            ).ask()
+            )
             if sub == "model":
                 new_m = detect_or_select_model()
                 if new_m:
@@ -455,8 +464,8 @@ def main_menu(model: Model, host: HostConfig) -> None:
                 hosts = host_store.load_all()
                 h_choices = [Choice(h.label, value=h.id) for h in hosts]
                 h_choices.append(Choice("➕ Create new host", value="new"))
-                h_choices.append(Choice("🔙 Back", value=None))
-                sel_h = questionary.select("Select active host:", choices=h_choices).ask()
+                h_choices.append(Choice("🔙 Back", value=BACK))
+                sel_h = select_choice("Select active host:", choices=h_choices)
                 if sel_h == "new":
                     lbl = questionary.text("Host name (hardware label):").ask()
                     if lbl and lbl.strip():

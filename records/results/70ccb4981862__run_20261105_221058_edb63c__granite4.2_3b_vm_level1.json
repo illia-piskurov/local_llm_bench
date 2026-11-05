@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261105_221058_edb63c",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-05 22:11:18",
+  "passed": 16,
+  "total": 18,
+  "failures": [
+    "multiple_prints: unexpected exception/timeout: RuntimeError: Line 5: ADD needs two values",
+    "print_does_not_pop: unexpected exception/timeout: RuntimeError: Line 3: PRINT on empty stack"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:55:46.770821Z",
+  "message": {
+    "role": "assistant",
+    "content": "Here is a Python solution using the ```heapq``` module for priority queue and ```threading.Lock``` for thread synchronization.\n\n```python\nimport threading\nimport heapq\n\nclass TaskScheduler:\n    def __init__(self, tasks: dict[str, tuple[int, list[str], int]], workers: int):\n        self.tasks = tasks\n        self.workers = workers\n        self.results = []\n        self.available_workers = list(range(workers))\n        self.lock = threading.Lock()\n\n    def plan_order(self):\n        # Create a priority queue for tasks\n        self.tasks = {k: (v[0], v[1], v[2]) for k, v in self.tasks.items()}\n        self.tasks = [(-v[2], v[0], v[1]) for v in self.tasks.values()]\n        heapq.heapify(self.tasks)\n\n        # Create a list for results\n        self.results = []\n\n        # Run tasks\n        while self.tasks or self.available_workers:\n            self.execute_tasks()\n\n        # Check for cyclic dependencies\n        for task in self.tasks:\n            if self.has_cycle(task[1]):\n                return None\n\n        return self.results\n\n    def execute_tasks(self):\n        while self.tasks and self.available_workers:\n            task = heapq.heappop(self.tasks)\n            worker = self.available_workers.pop(0)\n\n            self.lock.acquire()\n            self.results.append(task[1])\n            self.lock.release()\n\n            self.available_workers.append(worker)\n\n    def has_cycle(self, deps: list[str]) -> bool:\n        visited = set()\n        stack = deps\n\n        while stack:\n            dep = stack.pop()\n\n            if dep in visited:\n                return True\n\n            visited.add(dep)\n            stack.extend(self.tasks[dep][1])\n\n        return False\n```\n\nThis code creates a task scheduler that can schedule tasks with dependencies and priorities. It uses a priority queue to determine the order of tasks to run, and a list of available workers to run tasks concurrently. The ```has_cycle``` method is used to check for cyclic dependencies.\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 6183796583,
+  "load_duration": 1445291,
+  "prompt_eval_count": 323,
+  "prompt_eval_cached_count": 68,
+  "prompt_eval_duration": 281470000,
+  "eval_count": 575,
+  "eval_duration": 5798794000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 323,
+    "total_output_tokens": 575,
+    "tokens_per_second": 99.15854917419036,
+    "time_to_first_token_seconds": 0.28147,
+    "model_load_time_seconds": 0.001445291
+  }
+}

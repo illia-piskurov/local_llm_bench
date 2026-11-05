@@ -1,0 +1,9 @@
+We need modify run to handle labels and jumps. We'll parse lines, maintain dict label_to_line. When encountering LABEL, store line number? Actually label defined at current position; we need jump target line number. We'll store mapping label -> line number. For JMP, JZ, JNZ: pop value, if condition true, set line_no to target line number and continue? Execution continues from that line. Need loop with line_no increment? We'll implement while iterating with line_no variable; when jump, set line_no = target_line and continue without incrementing? Simpler: use index over lines and while loop with manual line_no. We'll implement: iterate with enumerate, line_no = i+1. Use while loop with current line index. But requirement keep simple? We'll just use for loop and when jump, set line_no = target_line and continue without incrementing line_no? Actually for loop increments automatically; we can use while with index.
+
+Implement: lines = program.splitlines(); idx = 0; line_no = 1; while idx < len(lines): line = lines[idx].strip(); if empty or comment: idx+=1; continue; process; if jump, set line_no = target_line; idx+=1; else idx+=1; line_no +=1 after processing? Better: after processing, if jump, set line_no = target_line and continue without incrementing idx? We'll just use while with manual line_no and idx.
+
+Simplify: use for loop but we can't jump inside. We'll implement with while.
+
+We'll produce code accordingly.
+
+Return only code block.

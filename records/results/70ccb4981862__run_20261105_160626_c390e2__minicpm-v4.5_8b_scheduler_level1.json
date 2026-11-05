@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261105_160626_c390e2",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.5:8b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-05 16:06:37",
+  "passed": 6,
+  "total": 10,
+  "failures": [
+    "simple_chain: invalid topological order: ['c', 'b', 'a']",
+    "diamond: invalid topological order: ['d', 'b', 'c', 'a']",
+    "multiple_roots: invalid topological order: ['d', 'c', 'a', 'b']",
+    "wide_graph: invalid topological order: ['deploy', 'package', 'test', 'lint', 'compile']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

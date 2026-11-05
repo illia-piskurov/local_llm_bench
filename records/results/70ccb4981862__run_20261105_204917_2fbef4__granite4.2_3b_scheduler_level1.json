@@ -1,0 +1,13 @@
+{
+  "run_id": "run_20261105_204917_2fbef4",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-05 20:49:26",
+  "passed": 10,
+  "total": 10,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

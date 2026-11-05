@@ -1,0 +1,70 @@
+```python
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    # Build adjacency list and indegree map for all tasks mentioned as keys or dependencies
+    graph = {}
+    indegree = {}
+    all_nodes = set()
+
+    for task, deps in tasks.items():
+        all_nodes.add(task)
+        graph.setdefault(task, [])
+        indegree.setdefault(task, 0)
+        for d in deps:
+            all_nodes.add(d)
+            graph.setdefault(d, [])
+            indegree.setdefault(d, 0)
+
+    # Ensure every node has an entry in indegree even if no deps
+    for node in all_nodes:
+        if node not in indegree:
+            indegree[node] = 0
+        if node not in graph:
+            graph[node] = []
+
+    # Compute indegrees correctly: a node's indegree equals number of tasks that depend on it
+    # We'll recompute from scratch using adjacency from deps -> task
+    # Build reverse mapping: for each dep -> list of tasks that depend on it
+    rev = {node: [] for node in all_nodes}
+    for task, deps in tasks.items():
+        for d in deps:
+            rev.setdefault(d, []).append(task)
+
+    # indegree of a node = number of incoming edges = number of tasks that have this node as dep
+    indegree = {node: 0 for node in all_nodes}
+    for node, dependents in rev.items():
+        indegree[node] = len(dependents)  # edges from dependents -> node? Wait dependency direction:
+        # tasks[task] = list of deps that must complete prior to task.
+        # So edge dep -> task.
+        # indegree[task] = number of deps of task.
+        # indegree[dep] = number of tasks that depend on dep.
+        # We'll compute indegree for each node as number of deps pointing to it.
+    # Simpler: compute indegree directly:
+    indegree = {node: 0 for node in all_nodes}
+    for task, deps in tasks.items():
+        for d in deps:
+            indegree[task] += 1
+    # For nodes that are only deps and not tasks keys, indegree stays 0.
+
+    # Kahn's algorithm
+    from collections import deque
+
+    q = deque()
+    for node in all_nodes:
+        if indegree[node] == 0:
+            q.append(node)
+
+    order = []
+    while q:
+        cur = q.popleft()
+        order.append(cur)
+        # find tasks that have cur as a dependency
+        for task, deps in tasks.items():
+            if cur in deps:
+                indegree[task] -= 1
+                if indegree[task] == 0:
+                    q.append(task)
+
+    if len(order) != len(all_nodes):
+        return None
+    return order
+```

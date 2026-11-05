@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261105_204917_2fbef4",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-05 20:49:42",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: expected 5, got 0",
+    "simple_chain: expected 9, got 7",
+    "diamond_pick_longer_branch: expected 12, got 11",
+    "independent_tasks: expected 7, got 0",
+    "wide_graph: expected 19, got 9"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

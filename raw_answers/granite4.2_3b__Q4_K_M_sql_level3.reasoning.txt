@@ -1,0 +1,5 @@
+We need to extend previous function to handle new features. Keep existing behavior. Return dict with sql and params.
+
+Implement select handling: if select is list of strings or objects.
+
+We'll write concise code.

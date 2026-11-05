@@ -1,0 +1,13 @@
+{
+  "run_id": "run_20261105_152244_1d7a95",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-05 15:23:42",
+  "passed": 18,
+  "total": 18,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261105_160626_c390e2",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.5:8b",
+  "benchmark": "c_framing",
+  "level": "level1",
+  "tested_at": "2026-11-05 16:15:42",
+  "passed": 2,
+  "total": 4,
+  "failures": [
+    "pointer_wrap_around: assertion returned False",
+    "full_overflow_check: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,3 @@
+We need to extend previous code with decode_packet using ringbuf? Probably not required but keep ringbuf functions. Provide code with static ringbuf and new function.
+
+We'll output combined code.

@@ -1,0 +1,89 @@
+```python
+def run(program: str) -> list[str]:
+    lines = [line.strip() for line in program.splitlines() if line.strip()]
+    labels = {}
+    pc = 0
+    stack = []
+    call_stack = []
+    variables = {}
+    output = []
+    while pc < len(lines):
+        line = lines[pc]
+        if line.startswith('#') or not line:
+            pc += 1
+            continue
+        parts = line.split()
+        if not parts:
+            pc += 1
+            continue
+        cmd = parts[0]
+        if cmd == 'LABEL':
+            name = parts[1]
+            labels[name] = pc
+        elif cmd == 'JMP':
+            name = parts[1]
+            if name not in labels:
+                raise ValueError(f"Line {pc+1}: JMP: unknown label {name}")
+            pc = labels[name]
+        elif cmd == 'JZ':
+            name = parts[1]
+            if name not in labels:
+                raise ValueError(f"Line {pc+1}: JZ: unknown label {name}")
+            if not stack:
+                raise ValueError(f"Line {pc+1}: JZ: stack is empty")
+            val = stack.pop()
+            if val == 0:
+                pc = labels[name]
+        elif cmd == 'JNZ':
+            name = parts[1]
+            if name not in labels:
+                raise ValueError(f"Line {pc+1}: JNZ: unknown label {name}")
+            if not stack:
+                raise ValueError(f"Line {pc+1}: JNZ: stack is empty")
+            val = stack.pop()
+            if val != 0:
+                pc = labels[name]
+        elif cmd == 'CALL':
+            name = parts[1]
+            if name not in labels:
+                raise ValueError(f"Line {pc+1}: CALL: unknown label {name}")
+            call_stack.append(pc + 1)
+            pc = labels[name]
+        elif cmd == 'RET':
+            if not call_stack:
+                raise ValueError(f"Line {pc+1}: RET: call stack is empty")
+            pc = call_stack.pop()
+        elif cmd == 'EQ':
+            if len(stack) < 2:
+                raise ValueError(f"Line {pc+1}: EQ: stack has less than 2 values")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(int(a == b))
+        elif cmd == 'GT':
+            if len(stack) < 2:
+                raise ValueError(f"Line {pc+1}: GT: stack has less than 2 values")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(int(a > b))
+        elif cmd == 'LT':
+            if len(stack) < 2:
+                raise ValueError(f"Line {pc+1}: LT: stack has less than 2 values")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(int(a < b))
+        elif cmd == 'STORE':
+            var = parts[1]
+            if len(stack) < 1:
+                raise ValueError(f"Line {pc+1}: STORE: stack is empty")
+            val = stack.pop()
+            variables[var] = val
+        elif cmd == 'LOAD':
+            var = parts[1]
+            if var not in variables:
+                raise ValueError(f"Line {pc+1}: LOAD: variable {var} not stored yet")
+            stack.append(variables[var])
+        else:
+            raise ValueError(f"Line {pc+1}: Unknown command: {cmd}")
+        pc += 1
+    return output
+```

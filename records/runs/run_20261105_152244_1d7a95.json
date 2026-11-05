@@ -1,0 +1,140 @@
+{
+  "id": "run_20261105_152244_1d7a95",
+  "host_id": "70ccb4981862",
+  "model_key": "granite4.2:3b",
+  "model_name": "granite4.2:3b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "granite4.2:3b",
+      "display_name": "granite4.2:3b",
+      "architecture": "granite",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 2244023965,
+      "params_string": "3.7B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 15:22:44",
+  "completed_at": "2026-11-05 15:37:27",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-05 15:23:42",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-05 15:28:34",
+      "passed": 3,
+      "total": 27,
+      "failures": [
+        "push_print: unexpected exception/timeout: IndexError: list index out of range",
+        "add: expected ['5'], got []",
+        "sub_order: expected ['7'], got []",
+        "mul: unexpected exception/timeout: IndexError: list index out of range",
+        "div_truncate: expected ['3'], got []",
+        "div_by_zero: expected error, but execution succeeded ([])",
+        "dup: unexpected exception/timeout: IndexError: list index out of range",
+        "swap: expected ['1'], got []",
+        "pop: expected ['1'], got []",
+        "comments_and_blank_lines: expected ['7'], got []",
+        "multiple_prints: expected ['1', '2', '3'], got []",
+        "print_does_not_pop: unexpected exception/timeout: IndexError: list index out of range",
+        "negative_numbers: expected ['2'], got []",
+        "stack_underflow_add: expected error, but execution succeeded ([])",
+        "complex_chain: expected ['10'], got []",
+        "unconditional_jump_skips_code: expected ['3'], got []",
+        "jz_taken_when_zero: expected ['0'], got []",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: unknown label 'zero'",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: unknown label 'nz'",
+        "jnz_not_taken_when_zero: expected ['0'], got []",
+        "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+        "count_up_loop: expected ['1', '2', '3', '4', '5'], got []",
+        "jump_to_undefined_label: expected error, but execution succeeded ([])",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: IndexError: list index out of range"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-05 15:37:27",
+      "passed": 28,
+      "total": 37,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: unknown label 'skip'",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: unknown label 'zero'",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: unknown label 'zero'",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: unknown label 'nz'",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: unknown label 'nz'",
+        "call_ret_basic: unexpected exception/timeout: ValueError: Line 2: unknown label 'double'",
+        "call_ret_nested: unexpected exception/timeout: ValueError: Line 1: unknown label 'func_a'",
+        "recursive_factorial: unexpected exception/timeout: ValueError: Line 2: unknown label 'fact'",
+        "recursive_fibonacci: unexpected exception/timeout: ValueError: Line 2: unknown label 'fib'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-05 15:23:41",
+      "stats": {
+        "input_tokens": 299,
+        "total_output_tokens": 2160,
+        "reasoning_output_tokens": 1375,
+        "tokens_per_second": 40.16879074644957,
+        "time_to_first_token_seconds": 0.826272,
+        "model_load_time_seconds": 1.7915675
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-05 15:28:31",
+      "stats": {
+        "input_tokens": 1118,
+        "total_output_tokens": 6146,
+        "reasoning_output_tokens": 4618,
+        "tokens_per_second": 21.50430800987748,
+        "time_to_first_token_seconds": 2.351494,
+        "model_load_time_seconds": 0.001227292
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-05 15:37:22",
+      "stats": {
+        "input_tokens": 1695,
+        "total_output_tokens": 10004,
+        "reasoning_output_tokens": 8311,
+        "tokens_per_second": 19.18833448695746,
+        "time_to_first_token_seconds": 7.161558,
+        "model_load_time_seconds": 0.001760083
+      }
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+{
+  "id": "run_20261105_182316_9997dc",
+  "host_id": "70ccb4981862",
+  "model_key": "ornith-1.5:9b",
+  "model_name": "ornith-1.5:9b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "ornith-1.5:9b",
+      "display_name": "ornith-1.5:9b",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 6550813657,
+      "params_string": "9.0B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": null
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 18:23:16",
+  "completed_at": "2026-11-05 19:26:39",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-05 19:15:55",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-11-05 19:26:39",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": []
+}

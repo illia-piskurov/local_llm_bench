@@ -1,0 +1,83 @@
+{
+  "id": "run_20261105_163011_1310c4",
+  "host_id": "70ccb4981862",
+  "model_key": "openthinker:7b",
+  "model_name": "openthinker:7b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "openthinker:7b",
+      "display_name": "openthinker:7b",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 4683085261,
+      "params_string": "7.6B",
+      "max_context_length": 32768,
+      "format": "gguf",
+      "publisher": null
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 16:30:11",
+  "completed_at": "2026-11-05 16:57:41",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:37:41",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:47:41",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-05 16:57:41",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:37:40",
+      "stats": {
+        "input_tokens": 294,
+        "total_output_tokens": 5112,
+        "reasoning_output_tokens": 5296,
+        "tokens_per_second": 11.524649803383658,
+        "time_to_first_token_seconds": 1.93563,
+        "model_load_time_seconds": 3.050658875
+      }
+    }
+  ]
+}

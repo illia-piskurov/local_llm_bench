@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:57:55.964753Z",
+  "message": {
+    "role": "assistant",
+    "content": "Here is the extended implementation of the Behavior Tree engine with shared memory Blackboard and decorators:\n\n```lua\nBT = {}\nBT.SUCCESS = \"SUCCESS\"\nBT.FAILURE = \"FAILURE\"\nBT.RUNNING = \"RUNNING\"\n\nBT.Blackboard = {}\nBT.Blackboard.new = function()\n    local bb = {}\n    bb.data = {}\n    return bb\nend\nBT.Blackboard.get = function(bb, key, default)\n    if bb.data[key] then\n        return bb.data[key]\n    else\n        return default\n    end\nend\nBT.Blackboard.set = function(bb, key, value)\n    bb.data[key] = value\n    for k, v in pairs(bb.watchers) do\n        if k == key then\n            v(key, value, bb.data[key])\n        end\n    end\nend\nBT.Blackboard.watch = function(bb, key, callback)\n    bb.watchers[key] = callback\nend\n\nBT.Inverter = function(child)\n    local node = {}\n    node.child = child\n    node.status = BT.RUNNING\n\n    node.tick = function(ctx)\n        node.status = node.child:tick(ctx)\n        if node.status == BT.SUCCESS or node.status == BT.FAILURE then\n            return BT.FAILURE\n        elseif node.status == BT.RUNNING then\n            return BT.RUNNING\n        end\n    end\n\n    node.reset = function()\n        node.child:reset()\n    end\n\n    return node\nend\n\nBT.Cooldown = function(child, ticks)\n    local node = {}\n    node.child = child\n    node.ticks = ticks\n    node.cooldownTick = 0\n    node.status = BT.RUNNING\n\n    node.tick = function(ctx)\n        node.cooldownTick = node.cooldownTick + 1\n        if node.cooldownTick > node.ticks then\n            node.status = node.child:tick(ctx)\n            if node.status == BT.SUCCESS then\n                node.cooldownTick = 0\n            elseif node.status == BT.RUNNING then\n                return BT.RUNNING\n            end\n        end\n    end\n\n    node.reset = function()\n        node.cooldownTick = 0\n        node.child:reset()\n    end\n\n    return node\nend\n```\n\nThis code extends the behavior tree with a shared memory Blackboard and decorators. The Blackboard is a table that can store key-value pairs and call functions when a value changes. The decorators add additional behavior to the nodes. The decorators are instances of Lua tables, which are used to create decorators in the behavior tree. The `tick` method of each node is called at each tick of the behavior tree, and it returns the status of the node. The `reset` method is called to reset the status of the node to `BT.RUNNING`.\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 12180999708,
+  "load_duration": 1992667,
+  "prompt_eval_count": 1954,
+  "prompt_eval_cached_count": 754,
+  "prompt_eval_duration": 1757855000,
+  "eval_count": 745,
+  "eval_duration": 10398839000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1954,
+    "total_output_tokens": 745,
+    "tokens_per_second": 71.6426131801829,
+    "time_to_first_token_seconds": 1.757855,
+    "model_load_time_seconds": 0.001992667
+  }
+}

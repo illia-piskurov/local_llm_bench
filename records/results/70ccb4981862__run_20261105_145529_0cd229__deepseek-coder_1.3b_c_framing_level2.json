@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261105_145529_0cd229",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:1.3b",
+  "benchmark": "c_framing",
+  "level": "level2",
+  "tested_at": "2026-11-05 14:56:59",
+  "passed": 0,
+  "total": 8,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:50:69: warning: ^ has lower precedence than ==; == will be evaluated first [-Wparentheses]\n   50 |                     if (stream[i + 3 + packet_len] == stream[i + 3] ^ 0xFF) {\n      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:50:69: note: place parentheses around the '==' expression to silence this warning\n   50 |                     if (stream[i + 3 + packet_len] == stream[i + 3] ^ 0xFF) {\n      |                                                                     ^\n      |                         (                                          )\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:50:69: note: place parentheses around the ^ expression to evaluate it first\n   50 |                     if (stream[i + 3 + packet_len] == stream[i + 3] ^ 0xFF) {\n      |                                                                     ^     \n      |                                                       (                   )\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:59:51: error: call to undeclared library function 'malloc' with type 'void *(unsigned long)'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   59 |                         *out_payload = (uint8_t *)malloc(packet_len);\n      |                                                   ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:59:51: note: include the header <stdlib.h> or explicitly provide a declaration for 'malloc'\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:59:38: error: incompatible pointer to integer conversion assigning to 'uint8_t' (aka 'unsigned char') from 'uint8_t *' (aka 'unsigned char *'); dereference with * [-Wint-conversion]\n   59 |                         *out_payload = (uint8_t *)malloc(packet_len);\n      |                                      ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n      |                                        *\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/deepseek-coder_1.3b__Q4_0_c_framing_level2.c:60:45: error: use of undeclared identifier 'NULL'\n   60 |                         if (*out_payload == NULL) {\n      |                                             ^~~~\n1 warning and 3 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

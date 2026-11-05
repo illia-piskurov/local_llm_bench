@@ -1,0 +1,62 @@
+```python
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    storage = {}
+    pending = []          # stack of pending change dicts for nested transactions
+    watch = {}            # key -> current visible value (as seen by watch)
+    outputs = []
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split()
+        cmd = parts[0]
+
+        if cmd == "SET":
+            _, key, val = parts
+            old_val = watch.get(key, "NULL")
+            if old_val != val:
+                outputs.append(f"WATCH {key} {old_val} -> {val}")
+            watch[key] = val
+            storage[key] = val
+        elif cmd == "GET":
+            _, key = parts
+            outputs.append(storage.get(key, "NULL"))
+        elif cmd == "DELETE":
+            _, key = parts
+            old_val = watch.get(key, "NULL")
+            if old_val != "NULL":
+                outputs.append(f"WATCH {key} {old_val} -> NULL")
+            watch[key] = "NULL"
+            storage.pop(key, None)
+        elif cmd == "COUNT":
+            _, val = parts
+            cnt = sum(1 for v in storage.values() if v == val)
+            outputs.append(str(cnt))
+        elif cmd == "BEGIN":
+            pending.append({})
+        elif cmd == "COMMIT":
+            if pending:
+                changes = pending.pop()
+                if pending:
+                    for k, v in changes.items():
+                        pending[-1][k] = v
+                else:
+                    for k, v in changes.items():
+                        storage[k] = v
+            else:
+                outputs.append("NO TRANSACTION")
+        elif cmd == "ROLLBACK":
+            if pending:
+                pending.pop()
+            else:
+                outputs.append("NO TRANSACTION")
+        elif cmd == "WATCH":
+            _, key = parts
+            watch[key] = storage.get(key, "NULL")
+        else:
+            continue
+
+    return outputs
+```

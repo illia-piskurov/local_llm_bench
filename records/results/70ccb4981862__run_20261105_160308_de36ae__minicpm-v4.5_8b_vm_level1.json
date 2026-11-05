@@ -1,0 +1,13 @@
+{
+  "run_id": "run_20261105_160308_de36ae",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.5:8b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-05 16:03:44",
+  "passed": 18,
+  "total": 18,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

@@ -129,6 +129,14 @@ To maintain complete security isolation without sacrificing model ergonomics or 
 - Automatically extracts reasoning blocks (`<think>`, `<thought>`, `<reasoning>`) and logs them to `raw_answers/<model>_<bench>_<level>.reasoning.txt`.
 - Strips reasoning thoughts before code block extraction so draft code inside thoughts is never accidentally executed.
 - Omits `temperature` by default so model-specific sampling presets configured in LM Studio (e.g., recommended 0.6 for DeepSeek-R1) remain active.
+- Ollama is auto-detected (port `11434` or `ollama` in the URL) and served through its native `/api/chat` (streamed, so the timeout means "no tokens for N seconds"), `/api/tags`, `/api/ps`.
+  - `num_ctx` defaults to 16384 (`OLLAMA_NUM_CTX`) because a model's baked-in context can be 256k; `num_predict` is clamped so the answer never reaches the window, and a truncation retry grows the window.
+  - Thinking effort defaults to `medium` (`low` lets small models think only a few tokens) (`OLLAMA_THINK`: low | medium | high | on | off | auto = model default) and is capped at 8192 thinking tokens (`OLLAMA_THINK_BUDGET`, 0 = unlimited). Over the budget the attempt is dropped and the question is asked again with thinking off (noted in `think_budget` of the raw API json). Both settings are stored in the run's `generation_params`, so runs with different thinking settings are not comparable.
+
+### 3.6. Dashboard Scoring (`report_data.py`, `html_report.py`)
+- Score = mean of per-task scores (every benchmark level weighs the same). Truncated / failed generations count as 0%; only `[INFRA FAILURE]` (harness problem) is excluded and flagged.
+- Models completing less than 75% of the suite tasks are listed under the ranking as "partial".
+- Speed is token-weighted; the leaderboard can be filtered by host and backend, and the hardware matrix is keyed by model + backend + quantization + context.
 
 ---
 

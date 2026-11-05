@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:56:42.74718Z",
+  "message": {
+    "role": "assistant",
+    "content": "Here is a Python implementation of the compiler that supports computed expressions in SELECT, HAVING, and subqueries:\n\n```python\nimport sqlparse\n\ndef compile_query(query):\n    select_columns = ', '.join(query.get('select', ['*']))\n    where_condition = sqlparse.sql.Statement(compile_condition(query.get('where', {})))\n    having_condition = sqlparse.sql.Statement(compile_condition(query.get('having', {}))) if query.get('having', {}) else None\n    subquery = query.get('subquery', None)\n    order_by = ', '.join([f'{column} {direction}' for column, direction in query.get('orderBy', [])])\n    limit = query.get('limit', None)\n    offset = query.get('offset', None)\n\n    sql = f\"SELECT {select_columns} FROM {query['table']} WHERE {where_condition} {'HAVING' if having_condition else ''} {having_condition} {'SUBQUERY' if subquery else ''} {subquery}\"\n\n    if order_by:\n        sql += f\" ORDER BY {order_by}\"\n    if limit:\n        sql += f\" LIMIT {limit}\"\n    if offset:\n        sql += f\" OFFSET {offset}\"\n\n    return {'sql': sql, 'params': list(where_condition.tokens(sqlparse.sql.Identifier))}\n\ndef compile_condition(condition, parent=None):\n    if isinstance(condition, dict):\n        for k, v in condition.items():\n            if k in ['AND', 'OR']:\n                return f'({compile_condition(v, parent)})'\n            else:\n                if parent and k in ['>', '<', '>=', '<=']:\n                    return f'{parent} {k} {condition[k]}'\n                else:\n                    return f'{sqlparse.sql.Identifier(k)} {condition[k]}'\n    else:\n        return condition\n```\n\nThis code uses the `sqlparse` library to parse the SQL and generate the corresponding AST. The `compile_query` function takes a dictionary representing the query and returns a dictionary containing the compiled SQL and the list of bound parameters.\n\nThe `compile_condition` function is a recursive function that takes a condition and a parent condition and returns the corresponding SQL. It handles the logical operators and wraps them in parentheses if necessary.\n\nPlease note that this code does not handle all edge cases and does not include error checking. You may need to adjust it according to your specific requirements.\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 8850383417,
+  "load_duration": 453917,
+  "prompt_eval_count": 1335,
+  "prompt_eval_cached_count": 64,
+  "prompt_eval_duration": 1270488000,
+  "eval_count": 600,
+  "eval_duration": 7485951000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1335,
+    "total_output_tokens": 600,
+    "tokens_per_second": 80.15013723707249,
+    "time_to_first_token_seconds": 1.270488,
+    "model_load_time_seconds": 0.000453917
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "id": "run_20261105_160308_de36ae",
+  "host_id": "70ccb4981862",
+  "model_key": "minicpm-v4.5:8b",
+  "model_name": "minicpm-v4.5:8b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "minicpm-v4.5:8b",
+      "display_name": "minicpm-v4.5:8b",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 6121827879,
+      "params_string": "8.2B",
+      "max_context_length": 40960,
+      "format": "gguf",
+      "publisher": null
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 16:03:08",
+  "completed_at": "2026-11-05 16:05:26",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:03:44",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:04:34",
+      "passed": 22,
+      "total": 27,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: JMP: unknown label skip",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: JZ: unknown label zero",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: JZ: unknown label zero",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: JNZ: unknown label nz",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: JNZ: unknown label nz"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-05 16:05:26",
+      "passed": 8,
+      "total": 37,
+      "failures": [
+        "push_print: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "add: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "sub_order: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "mul: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "div_order: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "div_truncate: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "dup: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "swap: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "pop: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "comments_and_blank_lines: unexpected exception/timeout: ValueError: Line 2: Unknown command: PUSH",
+        "multiple_prints: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "print_does_not_pop: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "negative_numbers: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "complex_chain: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "countdown_loop: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "count_up_loop: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: ValueError: Line 2: Unknown command: PUSH",
+        "call_ret_basic: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "call_ret_nested: unexpected exception/timeout: ValueError: Line 1: CALL: unknown label func_a",
+        "comparison_eq_gt_lt: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "store_and_load: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "store_overwrite: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "recursive_factorial: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH",
+        "recursive_fibonacci: unexpected exception/timeout: ValueError: Line 1: Unknown command: PUSH"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:03:43",
+      "stats": {
+        "input_tokens": 277,
+        "total_output_tokens": 556,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 19.67264436713457,
+        "time_to_first_token_seconds": 1.549915,
+        "model_load_time_seconds": 4.808203458
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:04:32",
+      "stats": {
+        "input_tokens": 969,
+        "total_output_tokens": 843,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 19.15070159606218,
+        "time_to_first_token_seconds": 3.875702,
+        "model_load_time_seconds": 0.00126375
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-05 16:05:22",
+      "stats": {
+        "input_tokens": 1263,
+        "total_output_tokens": 748,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 18.48945822797576,
+        "time_to_first_token_seconds": 7.477551,
+        "model_load_time_seconds": 0.002140167
+      }
+    }
+  ]
+}

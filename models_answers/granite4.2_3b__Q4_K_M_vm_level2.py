@@ -1,0 +1,108 @@
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    stack = []
+    outputs = []
+    label_map = {}
+    idx = 0
+    line_no = 1
+    while idx < len(lines):
+        raw = lines[idx].strip()
+        if not raw or raw.startswith('#'):
+            idx += 1
+            line_no += 1
+            continue
+        parts = raw.split()
+        cmd = parts[0]
+        if cmd == 'LABEL':
+            label = parts[1]
+            label_map[label] = line_no
+            idx += 1
+            line_no += 1
+        elif cmd == 'JMP':
+            target = parts[1]
+            if target not in label_map:
+                raise RuntimeError(f"Line {line_no}: JMP to unknown label {target}")
+            line_no = label_map[target]
+            idx += 1
+            line_no += 1
+        elif cmd == 'JZ':
+            target = parts[1]
+            if target not in label_map:
+                raise RuntimeError(f"Line {line_no}: JZ to unknown label {target}")
+            if not stack:
+                raise RuntimeError(f"Line {line_no}: JZ on empty stack")
+            val = stack.pop()
+            if val == 0:
+                line_no = label_map[target]
+                idx += 1
+                line_no += 1
+            else:
+                idx += 1
+                line_no += 1
+        elif cmd == 'JNZ':
+            target = parts[1]
+            if target not in label_map:
+                raise RuntimeError(f"Line {line_no}: JNZ to unknown label {target}")
+            if not stack:
+                raise RuntimeError(f"Line {line_no}: JNZ on empty stack")
+            val = stack.pop()
+            if val != 0:
+                line_no = label_map[target]
+                idx += 1
+                line_no += 1
+            else:
+                idx += 1
+                line_no += 1
+        else:
+            # standard instructions
+            if cmd == 'PUSH':
+                n = int(parts[1])
+                stack.append(n)
+            elif cmd == 'POP':
+                if not stack:
+                    raise RuntimeError(f"Line {line_no}: POP on empty stack")
+                stack.pop()
+            elif cmd == 'ADD':
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_no}: ADD needs two values")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+            elif cmd == 'SUB':
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_no}: SUB needs two values")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a - b)
+            elif cmd == 'MUL':
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_no}: MUL needs two values")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+            elif cmd == 'DIV':
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_no}: DIV needs two values")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise RuntimeError(f"Line {line_no}: DIV by zero")
+                stack.append(a // b)
+            elif cmd == 'DUP':
+                if not stack:
+                    raise RuntimeError(f"Line {line_no}: DUP on empty stack")
+                stack.append(stack[-1])
+            elif cmd == 'SWAP':
+                if len(stack) < 2:
+                    raise RuntimeError(f"Line {line_no}: SWAP needs two values")
+                stack[-2], stack[-1] = stack[-1], stack[-2]
+            elif cmd == 'PRINT':
+                if not stack:
+                    raise RuntimeError(f"Line {line_no}: PRINT on empty stack")
+                outputs.append(str(stack[-1]))
+                stack.pop()
+            else:
+                raise RuntimeError(f"Line {line_no}: unknown instruction {cmd}")
+        idx += 1
+        line_no += 1
+    return outputs

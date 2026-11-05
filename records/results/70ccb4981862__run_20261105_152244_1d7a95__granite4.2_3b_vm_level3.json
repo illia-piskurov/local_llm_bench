@@ -1,0 +1,23 @@
+{
+  "run_id": "run_20261105_152244_1d7a95",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-11-05 15:37:27",
+  "passed": 28,
+  "total": 37,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: unknown label 'skip'",
+    "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: unknown label 'zero'",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: unknown label 'zero'",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: unknown label 'nz'",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: unknown label 'nz'",
+    "call_ret_basic: unexpected exception/timeout: ValueError: Line 2: unknown label 'double'",
+    "call_ret_nested: unexpected exception/timeout: ValueError: Line 1: unknown label 'func_a'",
+    "recursive_factorial: unexpected exception/timeout: ValueError: Line 2: unknown label 'fact'",
+    "recursive_fibonacci: unexpected exception/timeout: ValueError: Line 2: unknown label 'fib'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

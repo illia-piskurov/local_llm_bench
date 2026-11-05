@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:6.7b",
+  "created_at": "2026-11-05T13:04:19.989561Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nimport heapq\nfrom collections import defaultdict, deque\n\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    # Create a graph of tasks and their dependencies\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks.keys()}\n    for task, (_, deps, _) in tasks.items():\n        for dep in deps:\n            if dep not in tasks:\n                return None\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    # Create a priority queue of tasks to be processed\n    pq = [(-priority, -duration, task) for task, (duration, _, priority) in tasks.items()]\n    heapq.heapify(pq)\n\n    # Process tasks\n    res = []\n    while pq:\n        _, _, task = heapq.heappop(pq)\n        res.append(task)\n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                duration, deps, priority = tasks[neighbor]\n                heapq.heappush(pq, (-priority, -duration, neighbor))\n\n    # If there are still tasks to be processed, there is a cyclic dependency\n    if any(degree > 0 for degree in in_degree.values()):\n        return None\n\n    return res\n```\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 22165805917,
+  "load_duration": 1879209,
+  "prompt_eval_count": 323,
+  "prompt_eval_cached_count": 68,
+  "prompt_eval_duration": 2083125000,
+  "eval_count": 364,
+  "eval_duration": 19665925000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 323,
+    "total_output_tokens": 364,
+    "tokens_per_second": 18.509172591678244,
+    "time_to_first_token_seconds": 2.083125,
+    "model_load_time_seconds": 0.001879209
+  }
+}

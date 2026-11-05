@@ -1,0 +1,27 @@
+{
+  "model": "granite4.2:8b",
+  "created_at": "2026-11-05T19:31:06.913283Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    all_nodes = set()\n    for task, deps in tasks.items():\n        all_nodes.add(task)\n        for d in deps:\n            all_nodes.add(d)\n\n    # map task -> list of deps\n    graph = {task: deps for task, deps in tasks.items()}\n    # indegree: number of deps for each task\n    indegree = {}\n    for task in all_nodes:\n        indegree[task] = 0\n    for task, deps in tasks.items():\n        indegree[task] = len(deps)\n\n    # Kahn\n    from collections import deque\n    q = deque([node for node in all_nodes if indegree[node] == 0])\n    order = []\n    while q:\n        cur = q.popleft()\n        order.append(cur)\n        for task, deps in tasks.items():\n            if cur in deps:\n                indegree[task] -= 1\n                if indegree[task] == 0:\n                    q.append(task)\n\n    if len(order) != len(all_nodes):\n        return None\n    return order\n\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    # first check cycle via topo_sort\n    if topo_sort(tasks) is None:\n        return None\n\n    # build graph and map task->duration\n    all_nodes = set()\n    for task, (dur, deps) in tasks.items():\n        all_nodes.add(task)\n        for d in deps:\n            all_nodes.add(d)\n\n    # adjacency list of dependents\n    dependents = {node: [] for node in all_nodes}\n    for task, (dur, deps) in tasks.items():\n        for d in deps:\n            dependents[d].append(task)\n\n    # memoized longest path from node\n    from functools import lru_cache\n\n    @lru_cache(maxsize=None)\n    def dp(node):\n        # node may not be a key in tasks? only tasks keys have duration\n        # if node not in tasks, duration 0 and no outgoing? but only tasks have dependents\n        dur = tasks.get(node, (0, []))[0] if node in tasks else 0\n        max_child = 0\n        for nxt in dependents.get(node, []):\n            max_child = max(max_child, dp(nxt))\n        return dur + max_child\n\n    # compute max over all tasks\n    max_len = 0\n    for node in all_nodes:\n        if node in tasks:\n            max_len = max(max_len, dp(node))\n    return max_len\n```",
+    "thinking": "We need to output full file with both functions. Ensure correctness."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 46841522375,
+  "load_duration": 1604917,
+  "prompt_eval_count": 1048,
+  "prompt_eval_cached_count": 186,
+  "prompt_eval_duration": 5944419000,
+  "eval_count": 679,
+  "eval_duration": 40834630000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1048,
+    "total_output_tokens": 679,
+    "tokens_per_second": 16.62804340335642,
+    "time_to_first_token_seconds": 5.944419,
+    "model_load_time_seconds": 0.001604917,
+    "reasoning_output_tokens": 21
+  }
+}

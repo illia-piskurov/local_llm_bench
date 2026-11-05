@@ -1,0 +1,34 @@
+{
+  "id": "run_20261105_131054_5f42c7",
+  "host_id": "70ccb4981862",
+  "model_key": "MichelRosselli/bonsai-27b:latest",
+  "model_name": "MichelRosselli/bonsai-27b:latest",
+  "quantization": "Q1_0",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "MichelRosselli/bonsai-27b:latest",
+      "display_name": "MichelRosselli/bonsai-27b:latest",
+      "architecture": "qwen35",
+      "quantization": "Q1_0",
+      "quantization_bits": null,
+      "size_bytes": 4432710882,
+      "params_string": "26.9B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": null
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 13:10:54",
+  "completed_at": "2026-11-05 13:10:54",
+  "status": "failed",
+  "results": [],
+  "speeds": []
+}

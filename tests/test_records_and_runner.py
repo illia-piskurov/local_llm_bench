@@ -366,7 +366,7 @@ def test_export_writes_distinct_snapshot_files_per_run_and_roundtrips(tmp_path):
     assert {(r["run_id"], r["passed"]) for r in rows} == {(run_a.id, 1), (run_b.id, 2)}
 
 
-def test_infra_failures_not_penalized_in_leaderboard_and_analytics(tmp_path):
+def test_infra_failures_handling_in_leaderboard_and_analytics(tmp_path):
     import analytics
     import report_data
 
@@ -419,10 +419,14 @@ def test_infra_failures_not_penalized_in_leaderboard_and_analytics(tmp_path):
     models_summary = analytics.list_models(db.conn)
     assert "100.0%" in models_summary
 
-    # report_data should also exclude infra failures from totals and averages
+    # The dashboard never lets truncated / failed generations raise a score: they count as 0%.
     l_data, _ = report_data.load_leaderboard_data(db.conn)
     assert len(l_data) == 1
-    assert l_data[0]["avg_pct"] == 100.0
+    assert l_data[0]["avg_pct"] == pytest.approx(100 / 3)
+    assert l_data[0]["tests_count"] == 3
+    assert l_data[0]["truncated"] == 1
+    assert l_data[0]["failed"] == 1
+    # Genuinely scored checks are still reported as such
     assert l_data[0]["passed"] == 5
     assert l_data[0]["total"] == 5
 

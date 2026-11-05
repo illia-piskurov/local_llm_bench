@@ -1,0 +1,7 @@
+We need to produce code implementing described store. Provide run function. We'll implement simple simulation.
+
+We'll parse program string line by line. Keep state: dict for storage, stack of transaction contexts? Each transaction holds pending changes dict. When BEGIN, push new context. COMMIT merges changes into parent context (or global if none). ROLLBACK discards.
+
+Implement run returning outputs per GET and COMMIT/ROLLBACK NO TRANSACTION.
+
+Let's craft concise code.

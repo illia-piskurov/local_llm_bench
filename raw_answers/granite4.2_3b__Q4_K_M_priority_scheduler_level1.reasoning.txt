@@ -1,0 +1,13 @@
+We need to produce code implementing scheduler. Provide function plan_order. We'll implement topological sort, priority queue simulation. Return list of task names in order they are completed? Probably order of execution (when they finish). We'll simulate events.
+
+We'll implement simple: compute topological order respecting dependencies, then schedule with workers.
+
+We'll return list of task names in order they are completed (or started?). We'll return order of completion.
+
+Implement.
+
+We'll include detection of cycles.
+
+Return None if cycle.
+
+Let's craft concise code.

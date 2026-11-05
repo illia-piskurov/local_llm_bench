@@ -1,0 +1,64 @@
+Here is a JavaScript implementation of the `pMap` function with the new options:
+
+```javascript
+async function pMap(items, mapper, options = { concurrency: 1, signal: null, backoffMs: 0, timeoutMs: 0, settled: false }) {
+    const concurrency = Math.min(options.concurrency, items.length);
+    const results = [];
+    const mapperWithIndex = (item, index) => mapper(item, index).catch(error => {
+        throw error;
+    });
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        let retryCount = 0;
+        let backoff = options.backoffMs * (2 ** retryCount);
+        const maxBackoff = options.timeoutMs ? options.timeoutMs : Infinity;
+        const timeout = options.timeoutMs ? new Promise(resolve => setTimeout(resolve, options.timeoutMs)) : Promise.resolve();
+
+        while (retryCount <= options.retries) {
+            if (options.signal && options.signal.aborted) {
+                if (options.settled) {
+                    results.push({ status: 'rejected', reason: options.signal.reason });
+                } else {
+                    results.push({ status: 'rejected', reason: options.signal.reason || new Error("Aborted") });
+                }
+                break;
+            }
+
+            if (options.settled) {
+                results.push(await Promise.race([mapperWithIndex(item, i), timeout]));
+            } else {
+                results.push(await Promise.race([mapperWithIndex(item, i), timeout]).catch(error => {
+                    if (error.message === "Aborted") {
+                        if (options.signal) {
+                            options.signal.abort();
+                        }
+                        if (retryCount < options.retries) {
+                            retryCount++;
+                            backoff = Math.min(backoff * 2, maxBackoff);
+                            await new Promise(resolve => setTimeout(resolve, backoff));
+                        } else {
+                            throw new Error("Timeout");
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    return results;
+}
+```
+
+This function now includes the new options:
+
+- `options.signal`: instance of AbortSignal.
+- `options.settled`: boolean.
+
+The function now includes a retry loop with exponential backoff and timeout. If a mapper attempt exceeds the timeout, it will throw an error and abort all retries. If the signal is already aborted at invocation time, it will reject pMap with signal.reason (or new Error("Aborted")) without calling mapper. If cancellation occurs mid-flight, it will not start remaining tasks in the queue and immediately reject pMap with signal.reason (or new Error("Aborted")).
+
+The returned array now contains result objects:
+- For fulfilled tasks: { status: 'fulfilled', value: <result> }
+- For failed tasks (after exhausting all retries): { status: 'rejected', reason: <error message or error object> }
+
+Important: cancellation via signal still interrupts the entire pMap and rejects it.

@@ -1,0 +1,77 @@
+class Stack:
+    def __init__(self):
+        self.items = []
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        if len(self.items) < 1:
+            raise IndexError("Pop operation on empty stack")
+        return self.items.pop()
+
+    def add(self):
+        a = self.pop()
+        b = self.pop()
+        self.push(a + b)
+
+    def sub(self):
+        b = self.pop()
+        a = self.pop()
+        if a < b:
+            raise IndexError("Sub operation on invalid stack")
+        self.push(a - b)
+
+    def mul(self):
+        a = self.pop()
+        b = self.pop()
+        self.push(a * b)
+
+    def div(self):
+        b = self.pop()
+        a = self.pop()
+        if b == 0:
+            raise ZeroDivisionError("Division by zero")
+        self.push(a / b)
+
+    def dup(self):
+        self.push(self.items[-1])
+
+    def swap(self):
+        if len(self.items) < 2:
+            raise IndexError("Swap operation on invalid stack")
+        self.items[-2], self.items[-1] = self.items[-1], self.items[-2]
+
+    def print(self):
+        print(self.items[-1])
+
+
+def run(program):
+    lines = program.split('\n')
+    stack = Stack()
+    printed = []
+
+    for line_num, line in enumerate(lines, start=1):
+        line = line.strip()
+        if line:
+            if line.startswith('PUSH'):
+                stack.push(int(line[4:]))
+            elif line == 'PRINT':
+                stack.print()
+                printed.append(str(stack.items[-1]))
+            elif line == 'DIV':
+                stack.div()
+            elif line == 'SUB':
+                stack.sub()
+            elif line == 'MUL':
+                stack.mul()
+            elif line == 'ADD':
+                stack.add()
+            elif line == 'DUP':
+                stack.dup()
+            elif line == 'SWAP':
+                stack.swap()
+            else:
+                raise ValueError(f"Invalid instruction at line {line_num}")
+
+    return printed

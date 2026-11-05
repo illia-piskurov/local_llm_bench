@@ -1,0 +1,83 @@
+Here is the extended implementation of the Behavior Tree engine with shared memory Blackboard and decorators:
+
+```lua
+BT = {}
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+BT.Blackboard = {}
+BT.Blackboard.new = function()
+    local bb = {}
+    bb.data = {}
+    return bb
+end
+BT.Blackboard.get = function(bb, key, default)
+    if bb.data[key] then
+        return bb.data[key]
+    else
+        return default
+    end
+end
+BT.Blackboard.set = function(bb, key, value)
+    bb.data[key] = value
+    for k, v in pairs(bb.watchers) do
+        if k == key then
+            v(key, value, bb.data[key])
+        end
+    end
+end
+BT.Blackboard.watch = function(bb, key, callback)
+    bb.watchers[key] = callback
+end
+
+BT.Inverter = function(child)
+    local node = {}
+    node.child = child
+    node.status = BT.RUNNING
+
+    node.tick = function(ctx)
+        node.status = node.child:tick(ctx)
+        if node.status == BT.SUCCESS or node.status == BT.FAILURE then
+            return BT.FAILURE
+        elseif node.status == BT.RUNNING then
+            return BT.RUNNING
+        end
+    end
+
+    node.reset = function()
+        node.child:reset()
+    end
+
+    return node
+end
+
+BT.Cooldown = function(child, ticks)
+    local node = {}
+    node.child = child
+    node.ticks = ticks
+    node.cooldownTick = 0
+    node.status = BT.RUNNING
+
+    node.tick = function(ctx)
+        node.cooldownTick = node.cooldownTick + 1
+        if node.cooldownTick > node.ticks then
+            node.status = node.child:tick(ctx)
+            if node.status == BT.SUCCESS then
+                node.cooldownTick = 0
+            elseif node.status == BT.RUNNING then
+                return BT.RUNNING
+            end
+        end
+    end
+
+    node.reset = function()
+        node.cooldownTick = 0
+        node.child:reset()
+    end
+
+    return node
+end
+```
+
+This code extends the behavior tree with a shared memory Blackboard and decorators. The Blackboard is a table that can store key-value pairs and call functions when a value changes. The decorators add additional behavior to the nodes. The decorators are instances of Lua tables, which are used to create decorators in the behavior tree. The `tick` method of each node is called at each tick of the behavior tree, and it returns the status of the node. The `reset` method is called to reset the status of the node to `BT.RUNNING`.

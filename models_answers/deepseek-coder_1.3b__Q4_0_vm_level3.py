@@ -1,0 +1,123 @@
+class Stack:
+    def   __init__(self):
+        self.items = []
+        self.call_stack = []
+        self.labels = {}
+        self.ip = 0
+        self.sp = 0
+
+    def push(self, item):
+        self.items.append(item)
+        self.sp += 1
+
+    def pop(self):
+        if self.sp == 0:
+            raise IndexError("Attempt to pop from empty stack")
+        self.sp -= 1
+        return self.items.pop()
+
+    def call(self, name):
+        self.call_stack.append(self.ip)
+        self.ip = self.labels[name]
+
+    def ret(self):
+        if len(self.call_stack) == 0:
+            raise IndexError("Attempt to ret from empty call stack")
+        self.ip = self.call_stack.pop()
+
+    def eq(self):
+        b = self.pop()
+        a = self.pop()
+        self.push(1 if a == b else 0)
+
+    def gt(self):
+        b = self.pop()
+        a = self.pop()
+        self.push(1 if a > b else 0)
+
+    def lt(self):
+        b = self.pop()
+        a = self.pop()
+        self.push(1 if a < b else 0)
+
+    def store(self, var):
+        value = self.pop()
+        self.items[var] = value
+
+    def load(self, var):
+        if var not in self.items:
+            raise ValueError(f"Variable {var} not stored yet")
+        self.push(self.items[var])
+
+    def print(self):
+        print(self.pop())
+
+    def div(self):
+        b = self.pop()
+        a = self.pop()
+        if b == 0:
+            raise ZeroDivisionError("Division by zero")
+        self.push(a // b)
+
+    def sub(self):
+        b = self.pop()
+        a = self.pop()
+        self.push(a - b)
+
+    def mul(self):
+        b = self.pop()
+        a = self.pop()
+        self.push(a * b)
+
+    def add(self):
+        b = self.pop()
+        a = self.pop()
+        self.push(a + b)
+
+    def dup(self):
+        self.push(self.items[self.sp - 1])
+
+    def swap(self):
+        self.push(self.items[self.sp - 2])
+        self.push(self.items[self.sp - 1])
+
+    def label(self, name):
+        self.labels[name] = self.ip
+
+    def instruction(self, line):
+        if line.startswith('PUSH'):
+            self.push(int(line[4:]))
+        elif line == 'PRINT':
+            self.print()
+        elif line == 'DIV':
+            self.div()
+        elif line == 'SUB':
+            self.sub()
+        elif line == 'MUL':
+            self.mul()
+        elif line == 'ADD':
+            self.add()
+        elif line == 'DUP':
+            self.dup()
+        elif line == 'SWAP':
+            self.swap()
+        elif line.startswith('LABEL'):
+            self.label(line[7:])
+        elif line == 'CALL':
+            self.call(line[4:])
+        elif line == 'RET':
+            self.ret()
+        else:
+            raise ValueError(f"Invalid instruction at line   {line_num}")
+
+def run(program):
+    lines = program.split('\n')
+    stack = Stack()
+    printed = []
+
+    for line_num, line in enumerate(lines, start=1):
+        line = line.strip()
+        if line:
+            stack.instruction(line)
+
+    return printed

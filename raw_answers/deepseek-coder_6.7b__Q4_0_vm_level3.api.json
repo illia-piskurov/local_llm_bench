@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:6.7b",
+  "created_at": "2026-11-05T13:02:54.644497Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nclass StackMachine:\n    def __init__(self):\n        self.stack = []\n        self.labels = {}\n        self.variables = {}\n        self.call_stack = []\n        self.commands = {\n            'PUSH': self.push,\n            'POP': self.pop,\n            'ADD': self.add,\n            'SUB': self.sub,\n            'MUL': self.mul,\n            'DIV': self.div,\n            'DUP': self.dup,\n            'SWAP': self.swap,\n            'PRINT': self.print_top,\n            'LABEL': self.label,\n            'JMP': self.jmp,\n            'JZ': self.jz,\n            'JNZ': self.jnz,\n            'CALL': self.call,\n            'RET': self.ret,\n            'EQ': self.eq,\n            'GT': self.gt,\n            'LT': self.lt,\n            'STORE': self.store,\n            'LOAD': self.load\n        }\n        self.output = []\n\n    def push(self, value):\n        self.stack.append(int(value))\n\n    def pop(self):\n        return self.stack.pop()\n\n    def add(self):\n        self.stack.append(self.stack.pop() + self.stack.pop())\n\n    def sub(self):\n        b = self.stack.pop()\n        a = self.stack.pop()\n        self.stack.append(a - b)\n\n    def mul(self):\n        self.stack.append(self.stack.pop() * self.stack.pop())\n\n    def div(self):\n        b = self.stack.pop()\n        a = self.stack.pop()\n        if b == 0:\n            raise Exception('Division by zero')\n        self.stack.append(a // b)\n\n    def dup(self):\n        self.stack.append(self.stack[-1])\n\n    def swap(self):\n        a = self.stack.pop()\n        b = self.stack.pop()\n        self.stack.append(a)\n        self.stack.append(b)\n\n    def print_top(self):\n        self.output.append(str(self.stack[-1]))\n\n    def label(self, name):\n        self.labels[name] = len(self.output)\n\n    def jmp(self, name):\n        self.pc = self.labels[name]\n\n    def jz(self, name):\n        if self.stack.pop() == 0:\n            self.pc = self.labels[name]\n\n    def jnz(self, name):\n        if self.stack[-1] != 0:\n            self.pc = self.labels[name]\n\n    def call(self, name):\n        self.call_stack.append(self.pc)\n        self.pc = self.labels[name]\n\n    def ret(self):\n        if not self.call_stack:\n            raise Exception('Empty call stack')\n        self.pc = self.call_stack.pop()\n\n    def eq(self):\n        b = self.stack.pop()\n        a = self.stack.pop()\n        self.stack.append(1 if a == b else 0)\n\n    def gt(self):\n        b = self.stack.pop()\n        a = self.stack.pop()\n        self.stack.append(1 if a > b else 0)\n\n    def lt(self):\n        b = self.stack.pop()\n        a = self.stack.pop()\n        self.stack.append(1 if a < b else 0)\n\n    def store(self, var):\n        self.variables[var] = self.stack.pop()\n\n    def load(self, var):\n        if var not in self.variables:\n            raise Exception('Variable not found')\n        self.stack.append(self.variables[var])\n\n    def run(self, program):\n        lines = program.split('\\n')\n        for line_num, line in enumerate(lines, start=1):\n            if line and not line.startswith('#'):\n                instruction, *args = line.split()\n                command = self.commands.get(instruction)\n                if command:\n                    if args:\n                        command(*args)\n                    else:\n                        command()\n                else:\n                    raise Exception('Unknown instruction at line {}'.format(line_num))\n        return self.output\n\nmachine = StackMachine()\n```\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 68428837125,
+  "load_duration": 2371959,
+  "prompt_eval_count": 1340,
+  "prompt_eval_cached_count": 64,
+  "prompt_eval_duration": 6548506000,
+  "eval_count": 1105,
+  "eval_duration": 61428413000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1340,
+    "total_output_tokens": 1105,
+    "tokens_per_second": 17.98841848640954,
+    "time_to_first_token_seconds": 6.548506,
+    "model_load_time_seconds": 0.002371959
+  }
+}

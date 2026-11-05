@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261105_204917_2fbef4",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-11-05 20:53:00",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "simple_select_all: SQL: expected 'SELECT * FROM products', got 'SELECT * WHERE TRUE ORDER BY ASC'",
+    "select_specific_columns: SQL: expected 'SELECT id, email, created_at FROM users', got 'SELECT id, email, created_at WHERE TRUE ORDER BY ASC'",
+    "simple_where_equality: SQL: expected 'SELECT * FROM users WHERE status = $1', got 'SELECT * WHERE value AND field AND op ORDER BY ASC'; params: expected ['active'], got []",
+    "where_and_or_nested: exception/timeout: TypeError: join expects a list of str/bytes objects consistent with self object",
+    "order_by_limit_offset: SQL: expected 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', got 'SELECT * WHERE TRUE ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20'",
+    "multiple_and_conditions: exception/timeout: TypeError: join expects a list of str/bytes objects consistent with self object"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

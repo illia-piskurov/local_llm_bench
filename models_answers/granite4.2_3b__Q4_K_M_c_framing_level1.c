@@ -1,0 +1,43 @@
+#define BUFFER_SIZE 512
+
+typedef struct {
+    uint8_t data[BUFFER_SIZE];
+    size_t head;
+    size_t tail;
+} RingBuffer;
+
+static RingBuffer ringbuf = {
+    .head = 0,
+    .tail = 0
+};
+
+void ringbuf_init(void) {
+    ringbuf.head = 0;
+    ringbuf.tail = 0;
+}
+
+int ringbuf_push(uint8_t byte) {
+    if (ringbuf.tail == ringbuf.head && ringbuf.head == BUFFER_SIZE) {
+        return -1; // full
+    }
+    ringbuf.data[ringbuf.tail] = byte;
+    ringbuf.tail = (ringbuf.tail + 1) % BUFFER_SIZE;
+    return 0;
+}
+
+int ringbuf_pop(void) {
+    if (ringbuf.head == ringbuf.tail) {
+        return -1; // empty
+    }
+    uint8_t byte = ringbuf.data[ringbuf.head];
+    ringbuf.head = (ringbuf.head + 1) % BUFFER_SIZE;
+    return byte;
+}
+
+int ringbuf_available(void) {
+    return (ringbuf.tail - ringbuf.head + BUFFER_SIZE) % BUFFER_SIZE;
+}
+
+int ringbuf_free_space(void) {
+    return (BUFFER_SIZE - ringbuf_available());
+}

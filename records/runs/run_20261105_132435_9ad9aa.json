@@ -1,0 +1,47 @@
+{
+  "id": "run_20261105_132435_9ad9aa",
+  "host_id": "70ccb4981862",
+  "model_key": "deepseek-r1:1.5b",
+  "model_name": "deepseek-r1:1.5b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "deepseek-r1:1.5b",
+      "display_name": "deepseek-r1:1.5b",
+      "architecture": "qwen2",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 1117322768,
+      "params_string": "1.8B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 13:24:35",
+  "completed_at": "2026-11-05 14:47:26",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:07:21",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[TRUNCATED] js_async/level1: server reported finish_reason=length; still truncated at max_tokens=65536 (retry cap 65536)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": []
+}

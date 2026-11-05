@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261105_204917_2fbef4",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "c_framing",
+  "level": "level1",
+  "tested_at": "2026-11-05 20:54:29",
+  "stats": {
+    "input_tokens": 280,
+    "total_output_tokens": 365,
+    "reasoning_output_tokens": 25,
+    "tokens_per_second": 34.94409662569272,
+    "time_to_first_token_seconds": 1.196129,
+    "model_load_time_seconds": 0.00122325
+  }
+}

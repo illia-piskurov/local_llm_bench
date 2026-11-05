@@ -1,0 +1,23 @@
+{
+  "run_id": "run_20261105_212458_ad1a9e",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:8b",
+  "benchmark": "js_async",
+  "level": "level2",
+  "tested_at": "2026-11-05 21:26:45",
+  "passed": 3,
+  "total": 12,
+  "failures": [
+    "order_preservation: assertion returned False",
+    "concurrency_limit: assertion returned False",
+    "concurrency_as_number: assertion returned False",
+    "concurrency_default_one: assertion returned False",
+    "index_passed: assertion returned False",
+    "retry_transient_failure: assertion returned False",
+    "retry_exhausted: assertion returned False",
+    "exponential_backoff: assertion returned False",
+    "timeout_triggers_retry: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:6.7b",
+  "created_at": "2026-11-05T13:03:20.965031Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    # Initialize a dictionary to store the in-degree of each task\n    in_degree = {task: 0 for task in tasks}\n\n    # Update the in-degree of each task based on the dependencies\n    for task, dependencies in tasks.items():\n        for dependency in dependencies:\n            if dependency in in_degree:\n                in_degree[dependency] += 1\n            else:\n                return None\n\n    # Initialize a queue to store the tasks with in-degree 0\n    queue = [task for task, degree in in_degree.items() if degree == 0]\n\n    # Initialize a list to store the topological sort\n    sorted_tasks = []\n\n    # While there are tasks in the queue\n    while queue:\n        # Dequeue a task\n        task = queue.pop(0)\n\n        # Add the task to the sorted list\n        sorted_tasks.append(task)\n\n        # For each task that depends on the dequeued task\n        for t, dependencies in tasks.items():\n            if task in dependencies:\n                # Decrease the in-degree of the task\n                in_degree[t] -= 1\n\n                # If the in-degree of the task is 0, add it to the queue\n                if in_degree[t] == 0:\n                    queue.append(t)\n\n    # If there are any tasks with non-zero in-degree, there is a cycle\n    if any(degree > 0 for degree in in_degree.values()):\n        return None\n\n    return sorted_tasks\n```\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 22524871125,
+  "load_duration": 6235000,
+  "prompt_eval_count": 265,
+  "prompt_eval_cached_count": 64,
+  "prompt_eval_duration": 1222688000,
+  "eval_count": 394,
+  "eval_duration": 20705073000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 265,
+    "total_output_tokens": 394,
+    "tokens_per_second": 19.029152903735234,
+    "time_to_first_token_seconds": 1.222688,
+    "model_load_time_seconds": 0.006235
+  }
+}

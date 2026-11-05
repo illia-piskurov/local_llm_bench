@@ -1,0 +1,257 @@
+```python
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    # Build graph and reverse mapping
+    graph = {name: [] for name in tasks}
+    indeg = {name: 0 for name in tasks}
+    rev = {name: [] for name in tasks}
+    for name, (dur, deps, pri) in tasks.items():
+        for dep in deps:
+            graph[dep].append(name)
+            indeg[name] += 1
+            rev[name].append(dep)
+
+    # Detect cycle using DFS
+    visited = {name: 0 for name in tasks}
+    stack = []
+    def dfs(v):
+        visited[v] = 1
+        stack.append(v)
+        for w in graph[v]:
+            if visited[w] == 0:
+                if dfs(w):
+                    return True
+            elif visited[w] == 1:
+                return True
+        visited[v] = 2
+        stack.pop()
+        return False
+    for v in tasks:
+        if visited[v] == 0 and dfs(v):
+            return None
+
+    # Topological order (Kahn)
+    q = [v for v in tasks if indeg[v] == 0]
+    order = []
+    while q:
+        cur = q.pop(0)
+        order.append(cur)
+        for nxt in graph[cur]:
+            indeg[nxt] -= 1
+            if indeg[nxt] == 0:
+                q.append(nxt)
+
+    # Preprocess tasks
+    proc = {name: (tasks[name][0], tasks[name][1], tasks[name][2]) for name in tasks}
+
+    # Simulation
+    ready = []          # (priority, duration, name)
+    in_prog = set()     # tasks currently running
+    running = []        # (start_time, name)
+    finished = []       # (completion_time, name)
+    time = 0
+
+    # initial ready tasks (deps satisfied)
+    for name in tasks:
+        dur, deps, pri = proc[name]
+        if all(dep in tasks for dep in deps):
+            ready.append((pri, dur, name))
+    ready.sort(key=lambda x: (-x[0], x[1], x[2]))
+
+    while ready or running:
+        # pick ready task if any
+        if ready:
+            pri, dur, name = ready[0]
+            ready.remove(ready[0])
+            start = time
+            running.append((start, name))
+            in_prog.add(name)
+            finish = start + dur
+            finished.append((finish, name))
+        else:
+            # advance time to next running task finish
+            next_finish = min(r[0] + proc[r[1]][0] for r in running)
+            time = next_finish
+            # update running tasks: those that finish exactly at time become ready
+            new_running = []
+            for (r_start, r_name) in running:
+                if r_start + proc[r_name][0] == time:
+                    in_prog.remove(r_name)
+                    # add dependents
+                    for dep in graph[r_name]:
+                        if all(d in tasks for d in proc[dep][1]):
+                            ready.append((proc[dep][2], proc[dep][0], dep))
+                    # this task is finished
+                    finished.append((time, r_name))
+                else:
+                    new_running.append((r_start, r_name))
+            running = new_running
+            # recompute ready list later
+
+        # enforce worker limit
+        if len(running) >= workers:
+            # advance time to next running task finish
+            next_finish = min(r[0] + proc[r[1]][0] for r in running)
+            time = next_finish
+            # update running tasks similarly as above
+            new_running = []
+            for (r_start, r_name) in running:
+                if r_start + proc[r_name][0] == time:
+                    in_prog.remove(r_name)
+                    for dep in graph[r_name]:
+                        if all(d in tasks for d in proc[dep][1]):
+                            ready.append((proc[dep][2], proc[dep][0], dep))
+                    finished.append((time, r_name))
+                else:
+                    new_running.append((r_start, r_name))
+            running = new_running
+        else:
+            # ready task started, continue loop
+            pass
+
+    # Return task names in order they finish
+    return [name for _, name in sorted(finished, key=lambda x: x[0])]
+
+
+def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
+    # Build graph and reverse mapping
+    graph = {name: [] for name in tasks}
+    indeg = {name: 0 for name in tasks}
+    for name, (dur, deps, _) in tasks.items():
+        for dep in deps:
+            graph[dep].append(name)
+            indeg[name] += 1
+
+    # Detect cycle using DFS
+    visited = {name: 0 for name in tasks}
+    stack = []
+    def dfs(v):
+        visited[v] = 1
+        stack.append(v)
+        for w in graph[v]:
+            if visited[w] == 0:
+                if dfs(w):
+                    return True
+            elif visited[w] == 1:
+                return True
+        visited[v] = 2
+        stack.pop()
+        return False
+    for v in tasks:
+        if visited[v] == 0 and dfs(v):
+            return None
+
+    # DP for longest path (topological order)
+    order = [v for v in tasks if indeg[v] == 0]
+    while order:
+        cur = order.pop(0)
+        for nxt in graph[cur]:
+            indeg[nxt] -= 1
+            if indeg[nxt] == 0:
+                order.append(nxt)
+        # compute longest path ending at cur
+        dp = {cur: tasks[cur][0]}
+        for nxt in graph[cur]:
+            dp[nxt] = max(dp.get(nxt, 0), dp[cur] + tasks[nxt][0])
+        # propagate to successors later; simpler: run DP after topological order
+    # Re‑run DP using the order list (already topological)
+    dp = {name: 0 for name in tasks}
+    for cur in order:
+        for nxt in graph[cur]:
+            dp[nxt] = max(dp[nxt], dp[cur] + tasks[nxt][0])
+    return max(dp.values()) if dp else 0
+
+
+def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
+    # Build graph and reverse mapping
+    graph = {name: [] for name in tasks}
+    indeg = {name: 0 for name in tasks}
+    for name, (dur, deps, _) in tasks.items():
+        for dep in deps:
+            graph[dep].append(name)
+            indeg[name] += 1
+
+    # Detect cycle using DFS
+    visited = {name: 0 for name in tasks}
+    stack = []
+    def dfs(v):
+        visited[v] = 1
+        stack.append(v)
+        for w in graph[v]:
+            if visited[w] == 0:
+                if dfs(w):
+                    return True
+            elif visited[w] == 1:
+                return True
+        visited[v] = 2
+        stack.pop()
+        return False
+    for v in tasks:
+        if visited[v] == 0 and dfs(v):
+            return None
+
+    # Simulation identical to plan_order but return makespan (max completion time)
+    proc = {name: (tasks[name][0], tasks[name][1], tasks[name][2]) for name in tasks}
+    ready = []          # (priority, duration, name)
+    in_prog = set()     # tasks currently running
+    running = []        # (start_time, name)
+    finished = []       # (completion_time, name)
+    time = 0
+
+    # initial ready tasks (deps satisfied)
+    for name in tasks:
+        dur, deps, pri = proc[name]
+        if all(dep in tasks for dep in deps):
+            ready.append((pri, dur, name))
+    ready.sort(key=lambda x: (-x[0], x[1], x[2]))
+
+    while ready or running:
+        # pick ready task if any
+        if ready:
+            pri, dur, name = ready[0]
+            ready.remove(ready[0])
+            start = time
+            running.append((start, name))
+            in_prog.add(name)
+            finish = start + dur
+            finished.append((finish, name))
+        else:
+            # advance time to next running task finish
+            next_finish = min(r[0] + proc[r[1]][0] for r in running)
+            time = next_finish
+            # update running tasks
+            new_running = []
+            for (r_start, r_name) in running:
+                if r_start + proc[r_name][0] == time:
+                    in_prog.remove(r_name)
+                    # add dependents
+                    for dep in graph[r_name]:
+                        if all(d in tasks for d in proc[dep][1]):
+                            ready.append((proc[dep][2], proc[dep][0], dep))
+                    finished.append((time, r_name))
+                else:
+                    new_running.append((r_start, r_name))
+            running = new_running
+
+        # enforce worker limit
+        if len(running) >= workers:
+            next_finish = min(r[0] + proc[r[1]][0] for r in running)
+            time = next_finish
+            # update running tasks similarly as above
+            new_running = []
+            for (r_start, r_name) in running:
+                if r_start + proc[r_name][0] == time:
+                    in_prog.remove(r_name)
+                    for dep in graph[r_name]:
+                        if all(d in tasks for d in proc[dep][1]):
+                            ready.append((proc[dep][2], proc[dep][0], dep))
+                    finished.append((time, r_name))
+                else:
+                    new_running.append((r_start, r_name))
+            running = new_running
+        else:
+            # ready task started, continue loop
+            pass
+
+    # makespan = max completion time
+    return max(comp for comp, _ in finished) if finished else 0
+```

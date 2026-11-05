@@ -1,0 +1,437 @@
+{
+  "id": "run_20261105_160626_c390e2",
+  "host_id": "70ccb4981862",
+  "model_key": "minicpm-v4.5:8b",
+  "model_name": "minicpm-v4.5:8b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "minicpm-v4.5:8b",
+      "display_name": "minicpm-v4.5:8b",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 6121827879,
+      "params_string": "8.2B",
+      "max_context_length": 40960,
+      "format": "gguf",
+      "publisher": null
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 16:06:26",
+  "completed_at": "2026-11-05 16:25:24",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:06:37",
+      "passed": 6,
+      "total": 10,
+      "failures": [
+        "simple_chain: invalid topological order: ['c', 'b', 'a']",
+        "diamond: invalid topological order: ['d', 'b', 'c', 'a']",
+        "multiple_roots: invalid topological order: ['d', 'c', 'a', 'b']",
+        "wide_graph: invalid topological order: ['deploy', 'package', 'test', 'lint', 'compile']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:06:53",
+      "passed": 3,
+      "total": 6,
+      "failures": [
+        "simple_chain: unexpected exception/timeout: Error decoding WASM response: Expecting value: line 1 column 1 (char 0)",
+        "diamond_pick_longer_branch: unexpected exception/timeout: Error decoding WASM response: Expecting value: line 1 column 1 (char 0)",
+        "wide_graph: unexpected exception/timeout: Error decoding WASM response: Expecting value: line 1 column 1 (char 0)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:07:24",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: expected ['b', 'c', 'a'], got None",
+        "dependency_unlocks_later: expected ['a', 'b', 'c'], got ['b', 'c']",
+        "single_worker_duration_tiebreak: expected ['b', 'c', 'a'], got None",
+        "resource_limit_and_priority: expected ['compile', 'lint', 'test', 'package', 'deploy'], got ['test', 'package', 'compile', 'lint']",
+        "simultaneous_unlocks: expected ['root', 'c', 'd', 'b'], got None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:08:47",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception: IndexError: pop from empty list",
+        "parallel_tasks_reduce_makespan: unexpected exception: IndexError: pop from empty list",
+        "dependencies_and_workers: unexpected exception: IndexError: pop from empty list",
+        "critical_path_longer_than_worker_parallelism: unexpected exception: IndexError: pop from empty list",
+        "wide_graph_with_unlocks: unexpected exception: IndexError: pop from empty list"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:09:12",
+      "passed": 5,
+      "total": 15,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: IndexError: list index out of range",
+        "delete_then_get: unexpected exception/timeout: IndexError: list index out of range",
+        "overwrite_set: unexpected exception/timeout: IndexError: list index out of range",
+        "simple_transaction_commit: unexpected exception/timeout: IndexError: list index out of range",
+        "simple_transaction_rollback: unexpected exception/timeout: IndexError: list index out of range",
+        "rollback_restores_delete: unexpected exception/timeout: IndexError: list index out of range",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: IndexError: list index out of range",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: IndexError: list index out of range",
+        "multiple_keys_independent: unexpected exception/timeout: IndexError: list index out of range",
+        "set_new_key_inside_transaction: unexpected exception/timeout: IndexError: list index out of range"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:10:00",
+      "passed": 6,
+      "total": 25,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: IndexError: list index out of range",
+        "delete_then_get: unexpected exception/timeout: IndexError: list index out of range",
+        "overwrite_set: unexpected exception/timeout: IndexError: list index out of range",
+        "simple_transaction_commit: unexpected exception/timeout: IndexError: list index out of range",
+        "simple_transaction_rollback: unexpected exception/timeout: IndexError: list index out of range",
+        "rollback_restores_delete: unexpected exception/timeout: IndexError: list index out of range",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: IndexError: list index out of range",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: IndexError: list index out of range",
+        "multiple_keys_independent: unexpected exception/timeout: IndexError: list index out of range",
+        "set_new_key_inside_transaction: unexpected exception/timeout: IndexError: list index out of range",
+        "count_basic: unexpected exception/timeout: IndexError: list index out of range",
+        "count_respects_transaction: unexpected exception/timeout: IndexError: list index out of range",
+        "count_after_delete: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_set_new_key: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_set_change: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_no_change_no_notification: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_delete: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_unrelated_key_silent: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got ['WATCH a None -> 1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-05 16:11:00",
+      "passed": 6,
+      "total": 30,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: IndexError: list index out of range",
+        "delete_then_get: unexpected exception/timeout: IndexError: list index out of range",
+        "overwrite_set: unexpected exception/timeout: IndexError: list index out of range",
+        "simple_transaction_commit: unexpected exception/timeout: IndexError: list index out of range",
+        "simple_transaction_rollback: unexpected exception/timeout: IndexError: list index out of range",
+        "rollback_restores_delete: unexpected exception/timeout: IndexError: list index out of range",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: IndexError: list index out of range",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: IndexError: list index out of range",
+        "multiple_keys_independent: unexpected exception/timeout: IndexError: list index out of range",
+        "set_new_key_inside_transaction: unexpected exception/timeout: IndexError: list index out of range",
+        "count_basic: unexpected exception/timeout: IndexError: list index out of range",
+        "count_respects_transaction: unexpected exception/timeout: IndexError: list index out of range",
+        "count_after_delete: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_set_new_key: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_set_change: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_no_change_no_notification: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_delete: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_unrelated_key_silent: unexpected exception/timeout: IndexError: list index out of range",
+        "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got ['WATCH a None -> 1']",
+        "snapshot_restores_full_state: unexpected exception/timeout: IndexError: list index out of range",
+        "snapshot_is_deep_copied: unexpected exception/timeout: IndexError: list index out of range",
+        "restore_preserves_open_transactions: unexpected exception/timeout: ValueError: dict update sequence has wrong length",
+        "restore_keeps_watch_registrations: unexpected exception/timeout: IndexError: list index out of range",
+        "snapshot_inside_nested_transactions: unexpected exception/timeout: ValueError: dict update sequence has wrong length"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:11:53",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "simple_select_all: exception/timeout: KeyError: field",
+        "select_specific_columns: exception/timeout: KeyError: field",
+        "simple_where_equality: SQL: expected 'SELECT * FROM users WHERE status = $1', got 'SELECT * FROM users WHERE status = $1 ORDER BY ASC'; params: expected ['active'], got []",
+        "where_and_or_nested: exception/timeout: KeyError: field",
+        "order_by_limit_offset: exception/timeout: KeyError: field",
+        "multiple_and_conditions: SQL: expected 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', got 'SELECT * FROM logs WHERE (level = $1 AND code != $1) ORDER BY ASC'; params: expected ['error', 404, 1000], got []"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:13:14",
+      "passed": 0,
+      "total": 5,
+      "failures": [
+        "left_join_with_group_by: exception/timeout: KeyError: field",
+        "multiple_joins_inner_and_left: exception/timeout: KeyError: field",
+        "where_in_operator: SQL: expected 'SELECT * FROM users WHERE id IN ($1, $2, $3)', got 'SELECT * FROM users WHERE id IN ($1, $2, $3) ASC'; params: expected [10, 20, 30], got []",
+        "where_is_null_and_like: exception/timeout: KeyError: value",
+        "where_is_not_null: exception/timeout: KeyError: value"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-05 16:15:20",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "select_expression_alias: exception/timeout: KeyError: field",
+        "having_clause: exception/timeout: KeyError: field",
+        "where_subquery_in: exception/timeout: KeyError: value",
+        "subquery_with_parent_params_order: exception/timeout: KeyError: value"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:15:42",
+      "passed": 2,
+      "total": 4,
+      "failures": [
+        "pointer_wrap_around: assertion returned False",
+        "full_overflow_check: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:16:29",
+      "passed": 0,
+      "total": 8,
+      "failures": [
+        "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/minicpm-v4.5_8b__Q4_K_M_c_framing_level2.c:16:15: warning: result of comparison of constant 512 with expression of type 'uint8_t' (aka 'unsigned char') is always false [-Wtautological-constant-out-of-range-compare]\n   16 |     if (count == BUFFER_SIZE) return -1;\n      |         ~~~~~ ^  ~~~~~~~~~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/minicpm-v4.5_8b__Q4_K_M_c_framing_level2.c:67:28: error: use of undeclared identifier 'NULL'\n   67 |         if (out_payload != NULL) {\n      |                            ^~~~\n1 warning and 1 error generated.\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-05 16:17:40",
+      "passed": 0,
+      "total": 10,
+      "failures": [
+        "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/minicpm-v4.5_8b__Q4_K_M_c_framing_level3.c:16:15: warning: result of comparison of constant 512 with expression of type 'uint8_t' (aka 'unsigned char') is always false [-Wtautological-constant-out-of-range-compare]\n   16 |     if (count == BUFFER_SIZE) return -1;\n      |         ~~~~~ ^  ~~~~~~~~~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/minicpm-v4.5_8b__Q4_K_M_c_framing_level3.c:77:32: error: use of undeclared identifier 'NULL'\n   77 |             if (out_payload != NULL) {\n      |                                ^~~~\n1 warning and 1 error generated.\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:06:36",
+      "stats": {
+        "input_tokens": 174,
+        "total_output_tokens": 157,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 17.16092123760192,
+        "time_to_first_token_seconds": 0.99874,
+        "model_load_time_seconds": 0.002164583
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:06:53",
+      "stats": {
+        "input_tokens": 459,
+        "total_output_tokens": 284,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 19.642495515424613,
+        "time_to_first_token_seconds": 1.638859,
+        "model_load_time_seconds": 0.00089675
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:07:23",
+      "stats": {
+        "input_tokens": 220,
+        "total_output_tokens": 527,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 18.523809826765117,
+        "time_to_first_token_seconds": 1.221546,
+        "model_load_time_seconds": 0.002321708
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:08:46",
+      "stats": {
+        "input_tokens": 920,
+        "total_output_tokens": 1294,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 16.72120549295477,
+        "time_to_first_token_seconds": 4.287926999,
+        "model_load_time_seconds": 0.00407225
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:09:11",
+      "stats": {
+        "input_tokens": 323,
+        "total_output_tokens": 284,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 13.68709526680968,
+        "time_to_first_token_seconds": 2.496242,
+        "model_load_time_seconds": 0.002762667
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:09:57",
+      "stats": {
+        "input_tokens": 809,
+        "total_output_tokens": 511,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 12.539692667101834,
+        "time_to_first_token_seconds": 4.198305999,
+        "model_load_time_seconds": 0.001437334
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-05 16:10:57",
+      "stats": {
+        "input_tokens": 957,
+        "total_output_tokens": 650,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 13.163333005330077,
+        "time_to_first_token_seconds": 7.630316,
+        "model_load_time_seconds": 0.002558458
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:11:52",
+      "stats": {
+        "input_tokens": 349,
+        "total_output_tokens": 601,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 12.313091723703154,
+        "time_to_first_token_seconds": 2.873164,
+        "model_load_time_seconds": 0.002050792
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:13:14",
+      "stats": {
+        "input_tokens": 1197,
+        "total_output_tokens": 892,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 12.317189672445192,
+        "time_to_first_token_seconds": 8.231017,
+        "model_load_time_seconds": 0.002412625
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-05 16:15:20",
+      "stats": {
+        "input_tokens": 1384,
+        "total_output_tokens": 1335,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 11.880468814512447,
+        "time_to_first_token_seconds": 13.092657,
+        "model_load_time_seconds": 0.001784708
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-05 16:15:41",
+      "stats": {
+        "input_tokens": 255,
+        "total_output_tokens": 210,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 11.629596681156775,
+        "time_to_first_token_seconds": 2.295367,
+        "model_load_time_seconds": 0.001873416
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-05 16:16:29",
+      "stats": {
+        "input_tokens": 770,
+        "total_output_tokens": 507,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 12.026170369940418,
+        "time_to_first_token_seconds": 5.195146,
+        "model_load_time_seconds": 0.00232725
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-05 16:17:39",
+      "stats": {
+        "input_tokens": 1062,
+        "total_output_tokens": 595,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 10.204362685756703,
+        "time_to_first_token_seconds": 11.492893,
+        "model_load_time_seconds": 0.001903667
+      }
+    }
+  ]
+}

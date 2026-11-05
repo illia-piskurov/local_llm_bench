@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:58:08.223262Z",
+  "message": {
+    "role": "assistant",
+    "content": "Here is the extended implementation of the Behavior Tree engine with coroutine-based async actions and cascading tree resets:\n\n```lua\nBT = {}\nBT.SUCCESS = \"SUCCESS\"\nBT.FAILURE = \"FAILURE\"\nBT.RUNNING = \"RUNNING\"\n\nBT.AsyncAction = function(coroutine_fn)\n    local node = {}\n    node.coroutine = nil\n    node.tick = function(ctx)\n        if node.coroutine then\n            coroutine.resume(node.coroutine, ctx)\n        else\n            node.coroutine = coroutine.create(coroutine_fn)\n            coroutine.resume(node.coroutine, ctx)\n        end\n        return BT.RUNNING\n    end\n    node.reset = function()\n        if node.coroutine then\n            coroutine.resume(node.coroutine, true)\n            node.coroutine = nil\n        end\n    end\n    return node\nend\n\nBT.Sequence = function(children)\n    local node = {}\n    node.children = children\n    node.tick = function(ctx)\n        for _, child in ipairs(node.children) do\n            ctx = child:tick(ctx)\n            if ctx == BT.FAILURE then\n                return BT.FAILURE\n            elseif ctx == BT.SUCCESS then\n                ctx = child:reset()\n            end\n        end\n        return ctx\n    end\n    node.reset = function()\n        for _, child in ipairs(node.children) do\n            child:reset()\n        end\n    end\n    return node\nend\n\nBT.Selector = function(children)\n    local node = {}\n    node.children = children\n    node.tick = function(ctx)\n        for _, child in ipairs(node.children) do\n            ctx = child:tick(ctx)\n            if ctx == BT.SUCCESS or ctx == BT.FAILURE then\n                return ctx\n            end\n        end\n        return BT.FAILURE\n    end\n    node.reset = function()\n        for _, child in ipairs(node.children) do\n            child:reset()\n        end\n    end\n    return node\nend\n```\n\nThis code extends the behavior tree with coroutine-based async actions and cascading tree resets. The `AsyncAction` decorator enables multi-tick actions without blocking the main game loop. The `Sequence` and `Selector` decorators cascade the results of child nodes. The `tick` method of each node is called at each tick of the behavior tree, and it returns the status of the node. The `reset` method is called to reset the status of the node to `BT.RUNNING`.\n\nPlease note that this code assumes that the coroutine function `coroutine_fn` takes a single argument `ctx` and returns a status (`BT.SUCCESS`, `BT.FAILURE`, or `true`/`false`). The `ctx` argument is passed to the coroutine function and can be used to pass additional information between coroutines.\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 12234305375,
+  "load_duration": 1038542,
+  "prompt_eval_count": 1681,
+  "prompt_eval_cached_count": 64,
+  "prompt_eval_duration": 2089376000,
+  "eval_count": 738,
+  "eval_duration": 9852306000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1681,
+    "total_output_tokens": 738,
+    "tokens_per_second": 74.90632142363422,
+    "time_to_first_token_seconds": 2.089376,
+    "model_load_time_seconds": 0.001038542
+  }
+}

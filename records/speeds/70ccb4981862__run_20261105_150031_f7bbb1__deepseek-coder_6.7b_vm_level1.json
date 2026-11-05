@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261105_150031_f7bbb1",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:6.7b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-05 15:01:02",
+  "stats": {
+    "input_tokens": 381,
+    "total_output_tokens": 577,
+    "reasoning_output_tokens": null,
+    "tokens_per_second": 22.749117722583854,
+    "time_to_first_token_seconds": 1.730559,
+    "model_load_time_seconds": 3.82036475
+  }
+}

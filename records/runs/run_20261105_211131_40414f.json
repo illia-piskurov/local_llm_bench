@@ -1,0 +1,139 @@
+{
+  "id": "run_20261105_211131_40414f",
+  "host_id": "70ccb4981862",
+  "model_key": "granite4.2:8b",
+  "model_name": "granite4.2:8b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "granite4.2:8b",
+      "display_name": "granite4.2:8b",
+      "architecture": "granite",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 5347929757,
+      "params_string": "8.8B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "low",
+    "think_budget": 4096,
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 21:11:31",
+  "completed_at": "2026-11-05 21:16:51",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-05 21:12:16",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-05 21:14:21",
+      "passed": 20,
+      "total": 27,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: RuntimeError: Line 2: JMP references undefined label 'skip'",
+        "jz_taken_when_zero: unexpected exception/timeout: RuntimeError: Line 2: JZ references undefined label 'zero'",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: RuntimeError: Line 2: JZ references undefined label 'zero'",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: RuntimeError: Line 2: JNZ references undefined label 'nz'",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: RuntimeError: Line 2: JNZ references undefined label 'nz'",
+        "countdown_loop: unexpected exception/timeout: RuntimeError: Line 8: JNZ references undefined label 'loop'",
+        "count_up_loop: unexpected exception/timeout: RuntimeError: Line 10: JNZ references undefined label 'loop'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-05 21:16:51",
+      "passed": 14,
+      "total": 37,
+      "failures": [
+        "add: unexpected exception/timeout: RuntimeError: Line 3: Unknown instruction 'ADD'",
+        "sub_order: unexpected exception/timeout: RuntimeError: Line 3: Unknown instruction 'SUB'",
+        "mul: unexpected exception/timeout: RuntimeError: Line 3: Unknown instruction 'MUL'",
+        "div_order: unexpected exception/timeout: RuntimeError: Line 3: Unknown instruction 'DIV'",
+        "div_truncate: unexpected exception/timeout: RuntimeError: Line 3: Unknown instruction 'DIV'",
+        "dup: unexpected exception/timeout: RuntimeError: Line 3: Unknown instruction 'ADD'",
+        "swap: unexpected exception/timeout: RuntimeError: Line 4: Unknown instruction 'SUB'",
+        "comments_and_blank_lines: unexpected exception/timeout: RuntimeError: Line 7: Unknown instruction 'ADD'",
+        "multiple_prints: unexpected exception/timeout: RuntimeError: Line 5: Unknown instruction 'ADD'",
+        "negative_numbers: unexpected exception/timeout: RuntimeError: Line 3: Unknown instruction 'ADD'",
+        "complex_chain: unexpected exception/timeout: RuntimeError: Line 3: Unknown instruction 'ADD'",
+        "unconditional_jump_skips_code: unexpected exception/timeout: RuntimeError: Line 6: Unknown instruction 'ADD'",
+        "jz_taken_when_zero: unexpected exception/timeout: RuntimeError: Line 2: JZ references undefined label 'zero'",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: RuntimeError: Line 2: JZ references undefined label 'zero'",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: RuntimeError: Line 2: JNZ references undefined label 'nz'",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: RuntimeError: Line 2: JNZ references undefined label 'nz'",
+        "countdown_loop: unexpected exception/timeout: RuntimeError: Line 6: Unknown instruction 'SUB'",
+        "count_up_loop: unexpected exception/timeout: RuntimeError: Line 4: Unknown instruction 'ADD'",
+        "call_ret_basic: unexpected exception/timeout: RuntimeError: Line 7: Unknown instruction 'MUL'",
+        "call_ret_nested: unexpected exception/timeout: RuntimeError: Line 6: RET needs a name/label",
+        "store_and_load: unexpected exception/timeout: RuntimeError: Line 7: Unknown instruction 'ADD'",
+        "recursive_factorial: unexpected exception/timeout: RuntimeError: Line 12: Unknown instruction 'SUB'",
+        "recursive_fibonacci: unexpected exception/timeout: RuntimeError: Line 10: RET needs a name/label"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-05 21:12:15",
+      "stats": {
+        "input_tokens": 307,
+        "total_output_tokens": 687,
+        "reasoning_output_tokens": 5,
+        "tokens_per_second": 17.883647583122645,
+        "time_to_first_token_seconds": 1.844947,
+        "model_load_time_seconds": 4.051804209
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-05 21:14:19",
+      "stats": {
+        "input_tokens": 1133,
+        "total_output_tokens": 1973,
+        "reasoning_output_tokens": 268,
+        "tokens_per_second": 16.82733904085174,
+        "time_to_first_token_seconds": 5.429094,
+        "model_load_time_seconds": 0.001264167
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-05 21:16:47",
+      "stats": {
+        "input_tokens": 2179,
+        "total_output_tokens": 1904,
+        "reasoning_output_tokens": 19,
+        "tokens_per_second": 14.600966214338088,
+        "time_to_first_token_seconds": 15.68707,
+        "model_load_time_seconds": 0.0057275
+      }
+    }
+  ]
+}

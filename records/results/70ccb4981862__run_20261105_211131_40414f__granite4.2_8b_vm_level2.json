@@ -1,0 +1,21 @@
+{
+  "run_id": "run_20261105_211131_40414f",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:8b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-11-05 21:14:21",
+  "passed": 20,
+  "total": 27,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: RuntimeError: Line 2: JMP references undefined label 'skip'",
+    "jz_taken_when_zero: unexpected exception/timeout: RuntimeError: Line 2: JZ references undefined label 'zero'",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: RuntimeError: Line 2: JZ references undefined label 'zero'",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: RuntimeError: Line 2: JNZ references undefined label 'nz'",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: RuntimeError: Line 2: JNZ references undefined label 'nz'",
+    "countdown_loop: unexpected exception/timeout: RuntimeError: Line 8: JNZ references undefined label 'loop'",
+    "count_up_loop: unexpected exception/timeout: RuntimeError: Line 10: JNZ references undefined label 'loop'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

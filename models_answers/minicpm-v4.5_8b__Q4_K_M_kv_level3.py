@@ -1,0 +1,93 @@
+def run(program):
+    lines = [line.strip() for line in program.splitlines() if line.strip()]
+    storage = {}
+    transactions = []
+    watches = {}
+    snapshots = {}
+    outputs = []
+    for line in lines:
+        if not line:
+            continue
+        parts = line.split()
+        if parts[0] == 'SET':
+            key = parts[1]
+            value = parts[2]
+            if key in watches:
+                old = watches[key]
+                if old != value:
+                    outputs.append(f'WATCH {key} {old} -> {value}')
+            transactions[-1][key] = value
+        elif parts[0] == 'GET':
+            key = parts[1]
+            if key in storage:
+                outputs.append(storage[key])
+            elif transactions:
+                outputs.append(transactions[-1].get(key, 'NULL'))
+            else:
+                outputs.append('NULL')
+        elif parts[0] == 'DELETE':
+            key = parts[1]
+            if key in watches:
+                old = watches[key]
+                if old is not None:
+                    outputs.append(f'WATCH {key} {old} -> NULL')
+            if transactions:
+                transactions[-1].pop(key, None)
+        elif parts[0] == 'COUNT':
+            value = parts[1]
+            count = 0
+            for t in transactions:
+                for k, v in t.items():
+                    if v == value:
+                        count += 1
+            outputs.append(str(count))
+        elif parts[0] == 'BEGIN':
+            transactions.append({})
+        elif parts[0] == 'COMMIT':
+            if not transactions:
+                outputs.append('NO TRANSACTION')
+            else:
+                parent = transactions[-2]
+                for key, value in transactions[-1].items():
+                    parent[key] = value
+                transactions.pop()
+        elif parts[0] == 'ROLLBACK':
+            if not transactions:
+                outputs.append('NO TRANSACTION')
+            else:
+                transactions.pop()
+        elif parts[0] == 'WATCH':
+            key = parts[1]
+            if key in watches:
+                del watches[key]
+            else:
+                watches[key] = None
+                if transactions:
+                    current = transactions[-1]
+                    if key in current:
+                        old = current[key]
+                        if old is not None:
+                            outputs.append(f'WATCH {key} NULL -> {old}')
+                        watches[key] = old
+                    else:
+                        watches[key] = None
+        elif parts[0] == 'SNAPSHOT':
+            name = parts[1]
+            snapshots[name] = {
+                'storage': storage.copy(),
+                'transactions': transactions.copy(),
+                'watches': watches.copy(),
+            }
+        elif parts[0] == 'RESTORE':
+            name = parts[1]
+            if name not in snapshots:
+                outputs.append(f'ERROR: snapshot {name} not found')
+                continue
+            global_storage, global_transactions, global_watches = snapshots[name]
+            storage.clear()
+            storage.update(global_storage)
+            transactions.clear()
+            transactions.extend(global_transactions)
+            watches.clear()
+            watches.update(global_watches)
+    return outputs

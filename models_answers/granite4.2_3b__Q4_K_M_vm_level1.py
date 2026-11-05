@@ -1,0 +1,61 @@
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    stack = []
+    outputs = []
+    line_no = 1
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith('#'):
+            continue
+        parts = line.split()
+        cmd = parts[0]
+        if cmd == 'PUSH':
+            n = int(parts[1])
+            stack.append(n)
+        elif cmd == 'POP':
+            if len(stack) == 0:
+                raise RuntimeError(f"Line {line_no}: POP on empty stack")
+            stack.pop()
+        elif cmd == 'ADD':
+            if len(stack) < 2:
+                raise RuntimeError(f"Line {line_no}: ADD needs two values")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a + b)
+        elif cmd == 'SUB':
+            if len(stack) < 2:
+                raise RuntimeError(f"Line {line_no}: SUB needs two values")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+        elif cmd == 'MUL':
+            if len(stack) < 2:
+                raise RuntimeError(f"Line {line_no}: MUL needs two values")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a * b)
+        elif cmd == 'DIV':
+            if len(stack) < 2:
+                raise RuntimeError(f"Line {line_no}: DIV needs two values")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise RuntimeError(f"Line {line_no}: DIV by zero")
+            stack.append(a // b)
+        elif cmd == 'DUP':
+            if not stack:
+                raise RuntimeError(f"Line {line_no}: DUP on empty stack")
+            stack.append(stack[-1])
+        elif cmd == 'SWAP':
+            if len(stack) < 2:
+                raise RuntimeError(f"Line {line_no}: SWAP needs two values")
+            stack[-2], stack[-1] = stack[-1], stack[-2]
+        elif cmd == 'PRINT':
+            if not stack:
+                raise RuntimeError(f"Line {line_no}: PRINT on empty stack")
+            outputs.append(str(stack[-1]))
+            stack.pop()   # keep top for later ops
+        else:
+            raise RuntimeError(f"Line {line_no}: unknown instruction {cmd}")
+        line_no += 1
+    return outputs

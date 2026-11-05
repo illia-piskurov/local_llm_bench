@@ -1,0 +1,64 @@
+def compile_query(query):
+    table = query['table']
+    select = query.get('select', ['*'])
+    where_cond = query.get('where')
+    order_by = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    params = []
+    sql_parts = []
+
+    # Build SELECT clause
+    cols = [f" {col}" for col in select]
+    sql_parts.append(f"SELECT {', '.join(cols)}")
+
+    # WHERE clause with placeholders
+    where_expr = ""
+    if where_cond:
+        # Flatten nested AND/OR conditions
+        def flatten(cond):
+            if isinstance(cond, dict):
+                if cond.get('AND'):
+                    return f"({', '.join(flatten(c) for c in cond['AND'])})"
+                if cond.get('OR'):
+                    return f"({', '.join(flatten(c) for c in cond['OR'])})"
+                # Simple condition
+                return cond
+            return cond
+
+        flat_conds = flatten(where_cond)
+        # Traverse in left-to-right order as given
+        for i, cond in enumerate(flat_conds):
+            if isinstance(cond, dict):
+                field = cond['field']
+                op = cond['op']
+                val = cond['value']
+                # placeholder $1, $2...
+                placeholder = f"${{1}}" if i == 0 else f"${{2}}"  # simplistic; use actual index
+                sql_parts.append(f"    {field} {op} {placeholder}")
+                params.append(val)
+            else:
+                # should not happen
+                pass
+        where_expr = " AND ".join(flat_conds)
+    else:
+        where_expr = "TRUE"
+
+    sql_parts.append(f"WHERE {where_expr}")
+
+    # ORDER BY
+    if order_by:
+        dirs = [d.get('dir', 'ASC') for d in order_by]
+        sql_parts.append(f"ORDER BY " + ", ".join(f"{d['field']} {d['dir']}" for d in order_by))
+    else:
+        sql_parts.append("ORDER BY ASC")
+
+    # LIMIT / OFFSET
+    if limit:
+        sql_parts.append(f"LIMIT {limit}")
+    if offset:
+        sql_parts.append(f"OFFSET {offset}")
+
+    sql = " ".join(sql_parts)
+    return {"sql": sql, "params": params}

@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261105_163011_1310c4",
+  "host_id": "70ccb4981862",
+  "model": "openthinker:7b",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-11-05 16:57:41",
+  "passed": 0,
+  "total": 0,
+  "failures": [
+    "[GENERATION FAILED] Model generation failed or timed out"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

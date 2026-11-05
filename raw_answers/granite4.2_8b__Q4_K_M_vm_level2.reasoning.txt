@@ -1,0 +1,11 @@
+We need implement labels dict mapping name->line index. JMP/JZ/JNZ jump to that line (next instruction). Need store line numbers after ignoring comments/empty. Use list of parsed commands with line numbers. Then execute with index pointer. Return output.
+
+Implement run building list of (cmd, args, orig_line). Labels dict. Then execute pointer i.
+
+Handle jumps: set i = label_line -1? Since pointer points to current command, after jump go to label line (the command at that line). We'll store label_line as index in list (0-based). When JMP, set i = label_line -1? Actually after executing current, we want next instruction at label. So set i = label_line -1 then loop will increment? Simpler: set i = label_line -1 and continue loop without increment? We'll set i = label_line -1 and then continue without increment? We'll use while loop with i < len(cmds): execute cmd; if jump, set i = label_line -1 and continue (next iteration will execute label). We'll handle.
+
+Implement.
+
+Return output.
+
+Let's craft code.

@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:55:40.200989Z",
+  "message": {
+    "role": "assistant",
+    "content": "Here is a Python implementation of a task dependency scheduler using Depth-First Search (DFS) algorithm and a modified version of the classic critical path method.\n\n```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    graph = {name: set(deps) for name, deps in tasks.items()}\n    parent_nodes = {name: None for name in tasks.keys()}\n    visited = set()\n    sorted_tasks = []\n\n    def dfs(node: str) -> None:\n        visited.add(node)\n        for neighbor in graph[node]:\n            if neighbor not in visited:\n                dfs(neighbor)\n        sorted_tasks.append(node)\n\n    for node in graph:\n        if node not in visited:\n            dfs(node)\n\n    if any(node is not None for node in visited):\n        return None\n\n    return sorted_tasks\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    graph = {name: (duration, deps) for name, (duration, deps) in tasks.items()}\n    sorted_tasks = topo_sort(graph)\n\n    if sorted_tasks is None:\n        return None\n\n    critical_paths = {}\n    for task in sorted_tasks:\n        path = [task]\n        while parent_nodes[task] is not None:\n            task = parent_nodes[task]\n            path.insert(0, task)\n        critical_paths[task] = len(path)\n\n    longest_path = max(critical_paths.values())\n    return longest_path\n```\n\nThis code first creates a graph from the task dependencies. Then it uses Depth-First Search (DFS) to find a topological sort of the tasks. If there is a cycle in the graph, it returns None. Otherwise, it calculates the critical path length for each task and returns the longest one.\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 5900546833,
+  "load_duration": 1720416,
+  "prompt_eval_count": 838,
+  "prompt_eval_cached_count": 282,
+  "prompt_eval_duration": 528740000,
+  "eval_count": 477,
+  "eval_duration": 5309742000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 838,
+    "total_output_tokens": 477,
+    "tokens_per_second": 89.83487333282861,
+    "time_to_first_token_seconds": 0.52874,
+    "model_load_time_seconds": 0.001720416
+  }
+}

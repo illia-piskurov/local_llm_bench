@@ -1,0 +1,60 @@
+```python
+import heapq
+from collections import defaultdict, deque
+
+def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
+    # Create a graph of tasks and their dependencies
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task in tasks.keys()}
+    duration = {task: dur for task, (dur, _, _) in tasks.items()}
+    for task, (_, deps, _) in tasks.items():
+        for dep in deps:
+            if dep not in tasks:
+                return None
+            graph[dep].append(task)
+            in_degree[task] += 1
+
+    # Initialize the earliest start time for each task as 0
+    earliest_start_time = {task: 0 for task in tasks.keys()}
+
+    # Process tasks
+    for _ in range(len(tasks)):
+        for task in earliest_start_time:
+            if in_degree[task] == 0:
+                for neighbor in graph[task]:
+                    earliest_start_time[neighbor] = max(earliest_start_time[neighbor], earliest_start_time[task] + duration[task])
+                    in_degree[neighbor] -= 1
+
+    # If there are still tasks to be processed, there is a cyclic dependency
+    if any(degree > 0 for degree in in_degree.values()):
+        return None
+
+    return max(earliest_start_time.values())
+
+
+def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
+    # Create a graph of tasks and their dependencies
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task in tasks.keys()}
+    duration = {task: dur for task, (dur, _, _) in tasks.items()}
+    for task, (_, deps, _) in tasks.items():
+        for dep in deps:
+            if dep not in tasks:
+                return None
+            graph[dep].append(task)
+            in_degree[task] += 1
+
+    # Initialize the earliest start time for each task as 0
+    earliest_start_time = {task: 0 for task in tasks.keys()}
+
+    # Create a priority queue of tasks to be processed
+    pq = [(-priority, -duration[task], task) for task, (_, _, priority) in tasks.items()]
+    heapq.heapify(pq)
+
+    # Process tasks
+    while pq:
+        _, _, task = heapq.heappop(pq)
+        for neighbor in graph[task]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                earliest_start_time[neighbor] = max(earliest

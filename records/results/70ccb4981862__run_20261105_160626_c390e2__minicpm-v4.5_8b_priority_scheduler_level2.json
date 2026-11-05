@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261105_160626_c390e2",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.5:8b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-05 16:08:47",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception: IndexError: pop from empty list",
+    "parallel_tasks_reduce_makespan: unexpected exception: IndexError: pop from empty list",
+    "dependencies_and_workers: unexpected exception: IndexError: pop from empty list",
+    "critical_path_longer_than_worker_parallelism: unexpected exception: IndexError: pop from empty list",
+    "wide_graph_with_unlocks: unexpected exception: IndexError: pop from empty list"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

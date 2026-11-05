@@ -1,0 +1,48 @@
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    storage = {}
+    # stack of pending change dicts for nested transactions
+    pending = []          # each element is a dict of changes for that transaction
+    outputs = []
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split()
+        cmd = parts[0]
+
+        if cmd == "SET":
+            _, key, val = parts
+            storage[key] = val
+        elif cmd == "GET":
+            _, key = parts
+            outputs.append(storage.get(key, "NULL"))
+        elif cmd == "DELETE":
+            _, key = parts
+            storage.pop(key, None)
+        elif cmd == "BEGIN":
+            pending.append({})   # new transaction context
+        elif cmd == "COMMIT":
+            if pending:
+                # merge changes into parent (or global if no pending)
+                changes = pending.pop()
+                if pending:
+                    # merge into the new top pending dict
+                    for k, v in changes.items():
+                        pending[-1][k] = v
+                else:
+                    # commit root transaction: apply changes globally
+                    for k, v in changes.items():
+                        storage[k] = v
+            else:
+                outputs.append("NO TRANSACTION")
+        elif cmd == "ROLLBACK":
+            if pending:
+                pending.pop()
+            else:
+                outputs.append("NO TRANSACTION")
+        else:
+            continue
+
+    return outputs

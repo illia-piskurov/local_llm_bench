@@ -1,0 +1,37 @@
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    # Create a graph from the task dependencies
+    graph = {name: set(deps) for name, deps in tasks.items()}
+
+    # Create a graph where keys are tasks and values are their parents
+    parent_nodes = {name: None for name in tasks.keys()}
+
+    # Create a set to store visited nodes
+    visited = set()
+
+    # Create a list to store the sorted tasks
+    sorted_tasks = []
+
+    # Perform DFS on the graph
+    def dfs(node: str) -> None:
+        # Mark the current node as visited
+        visited.add(node)
+
+        # Visit all the neighbors of the current node
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                dfs(neighbor)
+
+        # Add the current node to the sorted tasks
+        sorted_tasks.append(node)
+
+    # Perform DFS on all nodes
+    for node in graph:
+        if node not in visited:
+            dfs(node)
+
+    # If there is a cycle in the graph, return None
+    if any(node is not None for node in visited):
+        return None
+
+    # Return the sorted tasks
+    return sorted_tasks

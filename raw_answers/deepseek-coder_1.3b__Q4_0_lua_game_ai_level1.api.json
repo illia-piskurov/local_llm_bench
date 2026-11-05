@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:57:43.747299Z",
+  "message": {
+    "role": "assistant",
+    "content": "Here is the implementation of the Behavior Tree engine in Lua:\n\n```lua\nBT = {}\n\nBT.SUCCESS = \"SUCCESS\"\nBT.FAILURE = \"FAILURE\"\nBT.RUNNING = \"RUNNING\"\n\nBT.Action = function(fn)\n    local node = {}\n    node.fn = fn\n    node.status = BT.RUNNING\n\n    node.tick = function(ctx)\n        node.status = node.fn(ctx)\n        if node.status == BT.SUCCESS or node.status == BT.FAILURE or node.status == BT.RUNNING then\n            return node.status\n        end\n    end\n\n    node.reset = function()\n        node.status = BT.RUNNING\n    end\n\n    return node\nend\n\nBT.Condition = function(predicate)\n    local node = {}\n    node.predicate = predicate\n    node.status = BT.RUNNING\n\n    node.tick = function(ctx)\n        node.status = predicate(ctx)\n        if node.status == BT.SUCCESS or node.status == BT.FAILURE then\n            return node.status\n        end\n    end\n\n    node.reset = function()\n        node.status = BT.RUNNING\n    end\n\n    return node\nend\n\nBT.Sequence = function(children)\n    local node = {}\n    node.children = children\n    node.currentChild = 1\n    node.status = BT.RUNNING\n\n    node.tick = function(ctx)\n        while node.currentChild <= #node.children do\n            local childStatus = node.children[node.currentChild]:tick(ctx)\n            if childStatus == BT.FAILURE or childStatus == BT.RUNNING then\n                return childStatus\n            end\n            node.currentChild = node.currentChild + 1\n        end\n        return BT.SUCCESS\n    end\n\n    node.reset = function()\n        node.currentChild = 1\n    end\n\n    return node\nend\n\nBT.Selector = function(children)\n    local node = {}\n    node.children = children\n    node.currentChild = 1\n    node.status = BT.RUNNING\n\n    node.tick = function(ctx)\n        while node.currentChild <= #node.children do\n            local childStatus = node.children[node.currentChild]:tick(ctx)\n            if childStatus == BT.SUCCESS or childStatus == BT.FAILURE then\n                return childStatus\n            end\n            node.currentChild = node.currentChild + 1\n        end\n        return BT.FAILURE\n    end\n\n    node.reset = function()\n        node.currentChild = 1\n    end\n\n    return node\nend\n```\n\nThis code defines the behavior tree nodes and the behavior tree itself. The nodes are instances of Lua tables, which are used to create nodes in the behavior tree. The `tick` method of each node is called at each tick of the behavior tree, and it returns the status of the node. The `reset` method is called to reset the status of the node to `BT.RUNNING`.\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 10594678209,
+  "load_duration": 927500,
+  "prompt_eval_count": 733,
+  "prompt_eval_cached_count": 64,
+  "prompt_eval_duration": 757515000,
+  "eval_count": 746,
+  "eval_duration": 9443257000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 733,
+    "total_output_tokens": 746,
+    "tokens_per_second": 78.99816768727146,
+    "time_to_first_token_seconds": 0.757515,
+    "model_load_time_seconds": 0.0009275
+  }
+}

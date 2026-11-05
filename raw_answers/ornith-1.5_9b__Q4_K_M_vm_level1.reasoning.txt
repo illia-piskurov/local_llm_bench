@@ -1,0 +1,149 @@
+The user wants a single Python file implementing a stack-based language interpreter. Let me write it carefully.
+
+Instructions:
+- PUSH <n> — push number n
+- POP — pop value
+- ADD — pop two, push sum
+- SUB — pop two (b then a), push a - b
+- MUL — pop two, push product
+- DIV — pop two (b then a), push a // b
+- DUP — duplicate top
+- SWAP — swap top two
+- PRINT — print top without popping
+
+Comments: lines starting with "#" ignored. Empty lines ignored.
+
+Errors: not enough values — clear error with line number. Division by zero — clear error with line number.
+
+Function run(program: str) -> list[str] returns list of printed strings.
+
+Let me write this.
+
+I need to track line numbers. The program is multi-line text. I'll split by lines and track index.
+
+Let me handle PUSH parsing: "PUSH <n>" — n could be negative? "arguments separated by space". Let me parse int.
+
+Let me write the code.
+
+```python
+def run(program: str) -> list[str]:
+    stack = []
+    output = []
+    lines = program.splitlines()
+    for idx, line in enumerate(lines):
+        lineno = idx + 1
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        parts = stripped.split()
+        op = parts[0].upper()
+        try:
+            if op == "PUSH":
+                if len(parts) != 2:
+                    raise ValueError(f"Line {lineno}: PUSH requires exactly one argument")
+                stack.append(int(parts[1]))
+            elif op == "POP":
+                if len(stack) < 1:
+                    raise IndexError(f"Line {lineno}: POP on empty stack")
+                stack.pop()
+            elif op == "ADD":
+                if len(stack) < 2:
+                    raise IndexError(f"Line {lineno}: ADD needs two values")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+            elif op == "SUB":
+                if len(stack) < 2:
+                    raise IndexError(f"Line {lineno}: SUB needs two values")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a - b)
+            elif op == "MUL":
+                if len(stack) < 2:
+                    raise IndexError(f"Line {lineno}: MUL needs two values")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+            elif op == "DIV":
+                if len(stack) < 2:
+                    raise IndexError(f"Line {lineno}: DIV needs two values")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise ZeroDivisionError(f"Line {lineno}: division by zero")
+                stack.append(a // b)
+            elif op == "DUP":
+                if len(stack) < 1:
+                    raise IndexError(f"Line {lineno}: DUP on empty stack")
+                stack.append(stack[-1])
+            elif op == "SWAP":
+                if len(stack) < 2:
+                    raise IndexError(f"Line {lineno}: SWAP needs two values")
+                stack[-1], stack[-2] = stack[-2], stack[-1]
+            elif op == "PRINT":
+                if len(stack) < 1:
+                    raise IndexError(f"Line {lineno}: PRINT on empty stack")
+                output.append(str(stack[-1]))
+            else:
+                raise ValueError(f"Line {lineno}: unknown instruction '{op}'")
+        except (IndexError, ZeroDivisionError, ValueError) as e:
+            raise e
+    return output
+```
+
+Wait, the requirement says "raise a clear error with the line number". I'm raising IndexError/ZeroDivisionError with messages including line number. That's fine. But maybe I should use a custom exception to be cleaner. Let me use a custom exception class to be clear.
+
+Actually, let me keep it simple but clear. I'll define a custom exception.
+
+Let me refine. I'll make a custom exception `StackError`.
+
+Also for PUSH, should I handle the case where the number is not an integer? The spec says PUSH <n> pushes number n. I'll parse int. If it fails, raise ValueError with line number.
+
+Let me also consider: what if there are extra spaces? split() handles that.
+
+Let me finalize with a custom exception.
+
+```python
+class StackError(Exception):
+    pass
+
+
+def run(program: str) -> list[str]:
+    stack = []
+    output = []
+    lines = program.splitlines()
+    for idx, line in enumerate(lines):
+        lineno = idx + 1
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        parts = stripped.split()
+        op = parts[0].upper()
+        try:
+            if op == "PUSH":
+                if len(parts) != 2:
+                    raise StackError(f"Line {lineno}: PUSH requires exactly one argument")
+                stack.append(int(parts[1]))
+            elif op == "POP":
+                if len(stack) < 1:
+                    raise StackError(f"Line {lineno}: POP on empty stack")
+                stack.pop()
+            ...
+        except StackError:
+            raise
+        except (IndexError, ZeroDivisionError, ValueError) as e:
+            raise StackError(str(e)) from e
+    return output
+```
+
+Hmm, but if I catch ValueError from int parsing, I want to include line number. Let me just handle it directly.
+
+Let me write clean code. I'll keep the try/except but re-raise StackError directly.
+
+Actually simpler: handle each error inline with StackError.
+
+Let me write the final version.
+
+I think it's good. Let me make sure the output for PRINT is the string representation. For integers, str() gives the number. Good.
+
+Let me finalize.

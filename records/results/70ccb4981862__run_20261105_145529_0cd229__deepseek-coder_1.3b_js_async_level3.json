@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261105_145529_0cd229",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:1.3b",
+  "benchmark": "js_async",
+  "level": "level3",
+  "tested_at": "2026-11-05 14:57:33",
+  "passed": 0,
+  "total": 17,
+  "failures": [
+    "JavaScript syntax error: SyntaxError: expecting ';'\n    at <input>:36\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

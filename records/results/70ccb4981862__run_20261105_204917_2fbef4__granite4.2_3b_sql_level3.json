@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261105_204917_2fbef4",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-11-05 20:54:17",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "select_expression_alias: exception/timeout: ValueError: too many values to unpack (expected 2)",
+    "having_clause: SQL: expected 'SELECT sales.category, SUM(sales.amount) AS total_sales FROM sales GROUP BY sales.category HAVING SUM(sales.amount) > $1', got 'SELECT sales.category, (SUM(sales.amount)) AS total_sales WHERE TRUE HAVING GROUP BY sales.category ORDER BY ASC'; params: expected [1000], got []",
+    "where_subquery_in: SQL: expected 'SELECT id, name FROM users WHERE id IN (SELECT user_id FROM vip_members WHERE tier = $1)', got 'SELECT id, name WHERE HAVING TRUE ORDER BY ASC'; params: expected ['gold'], got []",
+    "subquery_with_parent_params_order: SQL: expected 'SELECT * FROM posts WHERE (status = $1 AND author_id IN (SELECT id FROM banned_authors WHERE reason = $2) AND views > $3)', got 'SELECT * WHERE HAVING TRUE ORDER BY ASC'; params: expected ['published', 'spam', 500], got []"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

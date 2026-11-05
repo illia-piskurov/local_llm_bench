@@ -1,0 +1,25 @@
+{
+  "model": "minicpm-v4.5:8b",
+  "created_at": "2026-11-05T14:11:52.830138Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef compile_query(query):\n    table = query['table']\n    select = query.get('select', ['*'])\n    where = query.get('where', {})\n    order_by = query.get('orderBy', [{'field': '', 'dir': 'ASC'}])\n    limit = query.get('limit')\n    offset = query.get('offset')\n\n    def build_select(columns):\n        if columns == ['*']:\n            return '*'\n        return ', '.join(columns)\n\n    def build_order_by(columns):\n        order = []\n        for col in columns:\n            field = col['field']\n            dir = col.get('dir', 'ASC')\n            order.append(f'{field} {dir}')\n        return ', '.join(order)\n\n    def build_where(where):\n        if isinstance(where, dict):\n            if 'AND' in where:\n                conditions = where['AND']\n                if len(conditions) == 1:\n                    return build_condition(conditions[0])\n                return f'({build_condition(conditions[0])} AND {build_condition(conditions[1])})'\n            elif 'OR' in where:\n                conditions = where['OR']\n                if len(conditions) == 1:\n                    return build_condition(conditions[0])\n                return f'({build_condition(conditions[0])} OR {build_condition(conditions[1])})'\n            else:\n                return build_condition(where)\n        else:\n            return build_condition(where)\n\n    def build_condition(cond):\n        field = cond['field']\n        op = cond['op']\n        value = cond['value']\n        if op == '=':\n            return f'{field} = $1'\n        elif op == '!=':\n            return f'{field} != $1'\n        elif op == '>':\n            return f'{field} > $1'\n        elif op == '<':\n            return f'{field} < $1'\n        elif op == '>=':\n            return f'{field} >= $1'\n        elif op == '<=':\n            return f'{field} <= $1'\n        else:\n            raise ValueError(f\"Unsupported operator: {op}\")\n\n    params = []\n    where_str = build_where(where)\n    if where_str:\n        where_str = f'WHERE {where_str}'\n    else:\n        where_str = ''\n    order_by_str = build_order_by(order_by)\n    if order_by_str:\n        order_by_str = f'ORDER BY {order_by_str}'\n    else:\n        order_by_str = ''\n    limit_str = ''\n    if limit is not None:\n        limit_str = f'LIMIT {limit}'\n    offset_str = ''\n    if offset is not None:\n        offset_str = f'OFFSET {offset}'\n    sql = f'SELECT {build_select(select)} FROM {table} {where_str} {order_by_str} {limit_str} {offset_str}'\n    return {\"sql\": sql, \"params\": params}\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 51857655667,
+  "load_duration": 2050792,
+  "prompt_eval_count": 349,
+  "prompt_eval_cached_count": 3,
+  "prompt_eval_duration": 2873164000,
+  "eval_count": 601,
+  "eval_duration": 48809837000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 349,
+    "total_output_tokens": 601,
+    "tokens_per_second": 12.313091723703154,
+    "time_to_first_token_seconds": 2.873164,
+    "model_load_time_seconds": 0.002050792
+  }
+}

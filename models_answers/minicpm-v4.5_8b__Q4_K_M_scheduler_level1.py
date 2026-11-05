@@ -1,0 +1,21 @@
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    in_degree = {task: 0 for task in tasks}
+    for task, deps in tasks.items():
+        for dep in deps:
+            in_degree[dep] += 1
+
+    queue = [task for task in in_degree if in_degree[task] == 0]
+    result = []
+
+    while queue:
+        task = queue.pop(0)
+        result.append(task)
+        for dep in tasks[task]:
+            in_degree[dep] -= 1
+            if in_degree[dep] == 0:
+                queue.append(dep)
+
+    if len(result) == len(tasks):
+        return result
+    else:
+        return None

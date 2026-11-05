@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261105_150031_f7bbb1",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:6.7b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-05 15:04:20",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "dependency_unlocks_later: expected ['a', 'b', 'c'], got ['b', 'c', 'a', 'b', 'c']",
+    "single_worker_duration_tiebreak: expected ['b', 'c', 'a'], got ['a', 'c', 'b']",
+    "resource_limit_and_priority: expected ['compile', 'lint', 'test', 'package', 'deploy'], got ['test', 'package', 'compile', 'test', 'package', 'lint', 'deploy', 'deploy']",
+    "simultaneous_unlocks: expected ['root', 'c', 'd', 'b'], got ['c', 'd', 'b', 'root', 'c', 'd', 'b']",
+    "cycle_returns_none: expected None (cycle), got ['a', 'b', 'a', 'b']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

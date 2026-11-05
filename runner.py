@@ -412,6 +412,7 @@ def run_queue(
 
     gen_params = cfg.to_dict()
     gen_params["artifact"] = art_info.to_dict()
+    gen_params.update(lmstudio.backend_generation_params())
     gen_params["suite_hash"] = suite_h
 
     run = run_store.create(
@@ -439,7 +440,10 @@ def run_queue(
         details.append(f"Backend: [bold]{backend}[/bold]")
     if suite_ver:
         details.append(f"Suite: [dim]{suite_ver}[/dim]")
-    details.append(f"Params: [dim]temp={cfg.temperature}, seed={cfg.seed}, max_tok={cfg.max_tokens}[/dim]")
+    params_text = f"temp={cfg.temperature}, seed={cfg.seed}, max_tok={cfg.max_tokens}"
+    if "think" in gen_params:
+        params_text += f", think={gen_params['think']}, think_budget={gen_params['think_budget'] or 'unlimited'}"
+    details.append(f"Params: [dim]{params_text}[/dim]")
     if details:
         console.print(f"   [dim]{' | '.join(details)}[/dim]")
 

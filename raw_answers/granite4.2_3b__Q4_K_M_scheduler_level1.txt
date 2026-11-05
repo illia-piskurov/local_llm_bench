@@ -1,0 +1,28 @@
+```python
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    # Build adjacency list and indegree count
+    graph = {task: [] for task in tasks}
+    indegree = {task: 0 for task in tasks}
+    for task, deps in tasks.items():
+        for dep in deps:
+            graph[dep].append(task)
+            indegree[task] += 1
+
+    # Kahn's algorithm queue
+    queue = [task for task in tasks if indegree[task] == 0]
+    result = []
+    while queue:
+        cur = queue.pop(0)
+        result.append(cur)
+        for nxt in graph[cur]:
+            indegree[nxt] -= 1
+            if indegree[nxt] == 0:
+                queue.append(nxt)
+
+    # If we processed all tasks, result is a valid topological order
+    if len(result) == len(tasks):
+        return result
+    else:
+        # Cycle detected
+        return None
+```

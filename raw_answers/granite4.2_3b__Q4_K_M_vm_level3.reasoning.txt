@@ -1,0 +1,7 @@
+We need extend previous code with new instructions. Keep previous behavior. Add call stack, subroutine handling, variables dict. Return outputs same.
+
+Implement parsing: need to handle CALL, RET, STORE, LOAD, EQ, GT, LT.
+
+We'll modify code accordingly.
+
+Return only code block.

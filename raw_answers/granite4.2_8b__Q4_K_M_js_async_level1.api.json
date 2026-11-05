@@ -1,0 +1,27 @@
+{
+  "model": "granite4.2:8b",
+  "created_at": "2026-11-05T19:26:08.692844Z",
+  "message": {
+    "role": "assistant",
+    "content": "```javascript\nasync function pMap(items, mapper, options) {\n  const concurrency = typeof options === 'number' ? options : options?.concurrency ?? 1;\n  if (items.length === 0) return [];\n\n  const results = new Array(items.length);\n  const pendingPromises = [];\n  let nextIndex = 0;\n\n  async function runItem(index) {\n    try {\n      const result = await mapper(items[index], index);\n      results[index] = result;\n    } catch (err) {\n      throw err;\n    }\n  }\n\n  const processQueue = async () => {\n    while (nextIndex < items.length) {\n      // Start up to concurrency tasks\n      while (pendingPromises.length < concurrency && nextIndex < items.length) {\n        const idx = nextIndex++;\n        pendingPromises.push(runItem(idx));\n      }\n\n      // Wait for the next pending task to finish\n      if (pendingPromises.length === 0) continue;\n\n      const firstPending = pendingPromises.shift();\n      try {\n        await firstPending;\n      } catch (err) {\n        throw err;\n      }\n\n      // If all tasks done, exit\n      if (nextIndex >= items.length && pendingPromises.length === 0) break;\n    }\n  };\n\n  await processQueue();\n  return results;\n}\n```",
+    "thinking": "```javascript\nasync function pMap(items, mapper, options) {\n  const concurrency = typeof options === 'number' ? options : options?.concurrency ?? 1;\n  const results = new Array(items.length);\n  let pending = 0;\n  let active = 0;\n\n  async function process(i) {\n    try {\n      const res = await mapper(items[i], i);\n      results[i] = res;\n    } catch (err) {\n      throw err;\n    }\n  }\n\n  for (let i = 0; i < items.length; i++) {\n    pending++;\n    active++;\n    await new Promise(resolve => {\n      setTimeout(() => {\n        process(i).then(() => {\n          active--;\n          if (--pending === 0) resolve();\n        }).catch(() => {\n          active--;\n          if (--pending === 0) resolve();\n        });\n      }, 0);\n    });\n  }\n\n  return results;\n}\n```\n\nNeed proper concurrency limit. Simpler: use Promise.allSettled with semaphore.\n\nImplement semaphore with queue.\n\n```javascript\nasync function pMap(items, mapper, options) {\n  const concurrency = typeof options === 'number' ? options : options?.concurrency ?? 1;\n  if (items.length === 0) return [];\n  const results = new Array(items.length);\n  const semaphore = { count: concurrency };\n  async function acquire() {\n    if (semaphore.count <= 0) return new Promise(resolve => {\n      const q = [];\n      (async function run() {\n        if (semaphore.count > 0) {\n          semaphore.count--;\n          resolve();\n        } else {\n          q.push(resolve);\n        }\n      })();\n    };\n  }\n  // too complex.\n\nGiven time, produce simple correct? Might be wrong.\n\nI'll output a working version using queue.\n\n```javascript\nasync function pMap(items, mapper, options) {\n  const concurrency = typeof options === 'number' ? options : options?.concurrency ?? 1;\n  if (items.length === 0) return [];\n  const results = new Array(items.length);\n  const queue = [];\n  let active = 0;\n\n  async function process(i) {\n    try {\n      const res = await mapper(items[i], i);\n      results[i] = res;\n    } catch (err) {\n      throw err;\n    }\n  }\n\n  for (let i = 0; i < items.length; i++) {\n    queue.push(i);\n    if (active < concurrency) {\n      active++;\n      await process(queue.shift()!);\n    } else {\n      await new Promise(resolve => {\n        const check = () => {\n          if (active < concurrency && queue.length > 0) {\n            const idx = queue.shift()!;\n            active++;\n            process(idx).then(() => {\n              active--;\n              check();\n            }).catch(() => {\n              active--;\n              check();\n            });\n          } else if (queue.length === 0) {\n            resolve();\n          } else {\n            setTimeout(check, 0);\n          }\n        };\n        check();\n      });\n    }\n  }\n\n  return results;\n}\n```\n\nOkay."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 70416856041,
+  "load_duration": 3563466000,
+  "prompt_eval_count": 248,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 1519854000,
+  "eval_count": 1120,
+  "eval_duration": 65327935000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 248,
+    "total_output_tokens": 1120,
+    "tokens_per_second": 17.14427373220966,
+    "time_to_first_token_seconds": 1.519854,
+    "model_load_time_seconds": 3.563466,
+    "reasoning_output_tokens": 787
+  }
+}

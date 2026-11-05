@@ -1,0 +1,1 @@
+We need to output full file with both functions. Ensure correctness.

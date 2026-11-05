@@ -390,8 +390,11 @@ def test_report_model_name_with_single_quote(tmp_path):
     out_file = tmp_path / "report.html"
     generate_html_report(db, out_file, sync_records=False)
     content = out_file.read_text(encoding="utf-8")
-    assert 'data-model="test&#x27;model/with&quot;quotes"' in content
-    assert 'onclick="selectModel(this.dataset.model)"' in content
+    # Model names reach the page only as JSON data (rendered through esc()), never inside HTML attributes
+    import json
+
+    assert json.dumps(quote_model) in content
+    assert "data-model=\"test'model" not in content
 
 
 def test_is_infra_failure_robustness():

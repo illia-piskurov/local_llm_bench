@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261105_145529_0cd229",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:1.3b",
+  "benchmark": "lua_game_ai",
+  "level": "level3",
+  "tested_at": "2026-11-05 14:58:08",
+  "stats": {
+    "input_tokens": 1681,
+    "total_output_tokens": 738,
+    "reasoning_output_tokens": null,
+    "tokens_per_second": 74.90632142363422,
+    "time_to_first_token_seconds": 2.089376,
+    "model_load_time_seconds": 0.001038542
+  }
+}

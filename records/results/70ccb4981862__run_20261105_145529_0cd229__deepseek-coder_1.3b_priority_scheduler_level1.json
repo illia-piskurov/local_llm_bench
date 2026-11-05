@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261105_145529_0cd229",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:1.3b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-05 14:55:47",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: unexpected exception: ImportError: no module named 'threading'",
+    "dependency_unlocks_later: unexpected exception: ImportError: no module named 'threading'",
+    "single_worker_duration_tiebreak: unexpected exception: ImportError: no module named 'threading'",
+    "resource_limit_and_priority: unexpected exception: ImportError: no module named 'threading'",
+    "simultaneous_unlocks: unexpected exception: ImportError: no module named 'threading'",
+    "cycle_returns_none: unexpected exception: ImportError: no module named 'threading'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

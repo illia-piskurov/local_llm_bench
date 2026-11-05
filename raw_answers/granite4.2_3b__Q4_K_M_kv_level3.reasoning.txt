@@ -1,0 +1,11 @@
+We need modify run to handle SNAPSHOT and RESTORE. Store snapshots dict mapping name->state (deep copy). State includes storage, pending stack, watch, outputs? outputs irrelevant. We'll store copies.
+
+Implement SNAPSHOT <name>: save state = {'storage': dict(storage), 'pending': list(pending), 'watch': dict(watch)}; store in snapshots dict.
+
+RESTORE <name>: set state = snapshots[name]; restore storage, pending, watch. No outputs.
+
+Add commands handling.
+
+Return outputs as before.
+
+Implement.

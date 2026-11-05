@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261105_145529_0cd229",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:1.3b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-05 14:55:34",
+  "passed": 4,
+  "total": 10,
+  "failures": [
+    "no_dependencies: invalid topological order: None",
+    "simple_chain: invalid topological order: None",
+    "diamond: invalid topological order: None",
+    "multiple_roots: invalid topological order: None",
+    "single_task: invalid topological order: None",
+    "wide_graph: invalid topological order: None"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

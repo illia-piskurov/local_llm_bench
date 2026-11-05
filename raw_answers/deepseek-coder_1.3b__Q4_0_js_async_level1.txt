@@ -1,0 +1,30 @@
+Here is a simple implementation of the `pMap` function using JavaScript's async/await and Promise.
+
+```javascript
+async function pMap(items, mapper, options = { concurrency: 1 }) {
+    const concurrency = Math.min(options.concurrency, items.length);
+    const results = [];
+    const mapperWithIndex = (item, index) => mapper(item, index).catch(error => {
+        throw error;
+    });
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        results[i] = await Promise.race([
+            mapperWithIndex(item, i),
+            // If we're at the concurrency limit, we'll wait for the previous mapper to complete
+            i < concurrency ? Promise.resolve() : results[i - 1]
+        ]);
+    }
+
+    return results;
+}
+```
+
+This function works by mapping each item in the `items` array to a new promise. The mapper function is called with the item and its index as arguments. If the mapper function throws an error, this error is caught and thrown as the result of the corresponding promise.
+
+The `Promise.race` function is used to ensure that at most `concurrency` promises are running concurrently. If a new promise is created, it waits for the previous promise to complete.
+
+The function returns a new promise that resolves when all promises in the `results` array have resolved.
+
+Please note that this implementation assumes that the mapper function does not throw an error for an item. If the mapper function can throw an error for an item, you would need to modify the code to handle this case.

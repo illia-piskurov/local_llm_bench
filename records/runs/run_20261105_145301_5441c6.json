@@ -1,0 +1,164 @@
+{
+  "id": "run_20261105_145301_5441c6",
+  "host_id": "70ccb4981862",
+  "model_key": "deepseek-coder:1.3b",
+  "model_name": "deepseek-coder:1.3b",
+  "quantization": "Q4_0",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "deepseek-coder:1.3b",
+      "display_name": "deepseek-coder:1.3b",
+      "architecture": "llama",
+      "quantization": "Q4_0",
+      "quantization_bits": null,
+      "size_bytes": 776080839,
+      "params_string": "1B",
+      "max_context_length": 16384,
+      "format": "gguf",
+      "publisher": null
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 14:53:01",
+  "completed_at": "2026-11-05 14:53:35",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:53:10",
+      "passed": 13,
+      "total": 18,
+      "failures": [
+        "div_order: expected ['5'], got ['5.0']",
+        "div_truncate: expected ['3'], got ['3.5']",
+        "pop: unexpected exception/timeout: ValueError: Invalid instruction at line 3",
+        "comments_and_blank_lines: unexpected exception/timeout: ValueError: Invalid instruction at line 1",
+        "complex_chain: expected ['10'], got ['10.0']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:53:20",
+      "passed": 5,
+      "total": 27,
+      "failures": [
+        "push_print: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "add: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "sub_order: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "mul: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "div_order: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "div_truncate: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "dup: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "swap: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "pop: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "comments_and_blank_lines: unexpected exception/timeout: ValueError: Invalid instruction at line  1",
+        "multiple_prints: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "print_does_not_pop: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "negative_numbers: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "complex_chain: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "unconditional_jump_skips_code: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "jz_taken_when_zero: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "countdown_loop: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "count_up_loop: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'push'",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: AttributeError: 'Stack' object has no attribute 'labels'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:53:35",
+      "passed": 8,
+      "total": 37,
+      "failures": [
+        "push_print: expected ['5'], got []",
+        "add: expected ['5'], got []",
+        "sub_order: expected ['7'], got []",
+        "mul: expected ['24'], got []",
+        "div_order: expected ['5'], got []",
+        "div_truncate: expected ['3'], got []",
+        "dup: expected ['18'], got []",
+        "swap: expected ['1'], got []",
+        "pop: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "comments_and_blank_lines: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "multiple_prints: unexpected exception/timeout: IndexError: Attempt to pop from empty stack",
+        "print_does_not_pop: unexpected exception/timeout: IndexError: Attempt to pop from empty stack",
+        "negative_numbers: expected ['2'], got []",
+        "complex_chain: expected ['10'], got []",
+        "unconditional_jump_skips_code: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "jz_taken_when_zero: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "countdown_loop: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "count_up_loop: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "label_does_nothing_on_its_own: expected ['42'], got []",
+        "call_ret_basic: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "call_ret_nested: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "comparison_eq_gt_lt: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "store_and_load: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "store_overwrite: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "recursive_factorial: unexpected exception/timeout: NameError: name 'line_num' isn't defined",
+        "recursive_fibonacci: unexpected exception/timeout: NameError: name 'line_num' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-05 14:53:09",
+      "stats": {
+        "input_tokens": 381,
+        "total_output_tokens": 597,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 94.20409688410088,
+        "time_to_first_token_seconds": 0.406563,
+        "model_load_time_seconds": 1.279658208
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-05 14:53:18",
+      "stats": {
+        "input_tokens": 1187,
+        "total_output_tokens": 580,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 83.11413175252166,
+        "time_to_first_token_seconds": 0.752215,
+        "model_load_time_seconds": 0.001717875
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-05 14:53:33",
+      "stats": {
+        "input_tokens": 1186,
+        "total_output_tokens": 977,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 80.60335862727777,
+        "time_to_first_token_seconds": 1.148791,
+        "model_load_time_seconds": 0.0016485
+      }
+    }
+  ]
+}

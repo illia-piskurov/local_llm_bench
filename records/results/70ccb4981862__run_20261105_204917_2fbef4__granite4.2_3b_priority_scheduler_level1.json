@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261105_204917_2fbef4",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-05 20:50:21",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: unexpected exception: KeyError: b",
+    "dependency_unlocks_later: unexpected exception: KeyError: b",
+    "single_worker_duration_tiebreak: expected ['b', 'c', 'a'], got ['b', 'b', 'c', 'c', 'a', 'a']",
+    "resource_limit_and_priority: unexpected exception: KeyError: test",
+    "simultaneous_unlocks: unexpected exception: KeyError: c"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

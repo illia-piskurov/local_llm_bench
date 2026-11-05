@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261105_204917_2fbef4",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-11-05 20:51:49",
+  "passed": 11,
+  "total": 15,
+  "failures": [
+    "simple_transaction_rollback: expected ['5'], got ['10']",
+    "rollback_restores_delete: expected ['NULL', '5'], got ['NULL', 'NULL']",
+    "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '20', '20']",
+    "multiple_keys_independent: expected ['2', '1', '2'], got ['2', '99', '2']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

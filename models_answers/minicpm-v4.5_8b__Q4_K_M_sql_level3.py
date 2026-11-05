@@ -1,0 +1,159 @@
+def compile_query(query):
+    table = query['table']
+    select = query.get('select', [])
+    joins = query.get('joins', [])
+    group_by = query.get('groupBy', [])
+    where = query.get('where', {})
+    having = query.get('having', {})
+    order_by = query.get('orderBy', [{'field': '', 'dir': 'ASC'}])
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    def build_select(columns):
+        if not columns:
+            return '*'
+        select_list = []
+        for col in columns:
+            if isinstance(col, dict):
+                expr = col['expr']
+                alias = col.get('as', expr)
+                select_list.append(f'{expr} AS {alias}')
+            else:
+                select_list.append(col)
+        return ', '.join(select_list)
+
+    def build_order_by(columns):
+        order = []
+        for col in columns:
+            field = col['field']
+            dir = col.get('dir', 'ASC')
+            order.append(f'{field} {dir}')
+        return ', '.join(order)
+
+    def build_joins(joins):
+        join_str = []
+        for join in joins:
+            type = join.get('type', 'INNER')
+            table = join['table']
+            on = join['on']
+            on_str = []
+            for left_col, right_col in on.items():
+                on_str.append(f'{left_col} = {right_col}')
+            on_str = ', '.join(on_str)
+            join_str.append(f'{type} JOIN {table} ON {on_str}')
+        return ' '.join(join_str)
+
+    def build_where(where):
+        if isinstance(where, dict):
+            if 'AND' in where:
+                conditions = where['AND']
+                if len(conditions) == 1:
+                    return build_condition(conditions[0])
+                return f'({build_condition(conditions[0])} AND {build_condition(conditions[1])})'
+            elif 'OR' in where:
+                conditions = where['OR']
+                if len(conditions) == 1:
+                    return build_condition(conditions[0])
+                return f'({build_condition(conditions[0])} OR {build_condition(conditions[1])})'
+            else:
+                return build_condition(where)
+        else:
+            return build_condition(where)
+
+    def build_having(having):
+        if isinstance(having, dict):
+            if 'AND' in having:
+                conditions = having['AND']
+                if len(conditions) == 1:
+                    return build_condition(conditions[0])
+                return f'({build_condition(conditions[0])} AND {build_condition(conditions[1])})'
+            elif 'OR' in having:
+                conditions = having['OR']
+                if len(conditions) == 1:
+                    return build_condition(conditions[0])
+                return f'({build_condition(conditions[0])} OR {build_condition(conditions[1])})'
+            else:
+                return build_condition(having)
+        else:
+            return build_condition(having)
+
+    def build_condition(cond):
+        field = cond['field']
+        op = cond['op']
+        value = cond['value']
+        if op == '=':
+            return f'{field} = $1'
+        elif op == '!=':
+            return f'{field} != $1'
+        elif op == '>':
+            return f'{field} > $1'
+        elif op == '<':
+            return f'{field} < $1'
+        elif op == '>=':
+            return f'{field} >= $1'
+        elif op == '<=':
+            return f'{field} <= $1'
+        elif op == 'IN':
+            if isinstance(value, list):
+                params = [f'${i+1}' for i in range(len(value))]
+                return f'{field} IN ({", ".join(params)})'
+            else:
+                raise ValueError("IN operator value must be a list")
+        elif op == 'IS NULL':
+            return f'{field} IS NULL'
+        elif op == 'IS NOT NULL':
+            return f'{field} IS NOT NULL'
+        elif op == 'LIKE':
+            if isinstance(value, str):
+                value = value.replace('%', '%%')
+                return f'{field} LIKE ${1}'
+            else:
+                raise ValueError("LIKE operator value must be a string")
+        else:
+            raise ValueError(f"Unsupported operator: {op}")
+
+    def build_subquery(query):
+        sub = compile_query(query)
+        return f'({sub["sql"]})'
+
+    def build_having_condition(having_condition):
+        if isinstance(having_condition, dict):
+            if 'AND' in having_condition:
+                conditions = having_condition['AND']
+                if len(conditions) == 1:
+                    return build_condition(conditions[0])
+                return f'({build_condition(conditions[0])} AND {build_condition(conditions[1])})'
+            elif 'OR' in having_condition:
+                conditions = having_condition['OR']
+                if len(conditions) == 1:
+                    return build_condition(conditions[0])
+                return f'({build_condition(conditions[0])} OR {build_condition(conditions[1])})'
+            else:
+                return build_condition(having_condition)
+        else:
+            return build_condition(having_condition)
+
+    params = []
+    where_str = build_where(where)
+    having_str = build_having(having)
+    if where_str:
+        where_str = f'WHERE {where_str}'
+    else:
+        where_str = ''
+    joins_str = build_joins(joins)
+    group_by_str = ', '.join(group_by)
+    order_by_str = build_order_by(order_by)
+    limit_str = ''
+    if limit is not None:
+        limit_str = f'LIMIT {limit}'
+    offset_str = ''
+    if offset is not None:
+        offset_str = f'OFFSET {offset}'
+    select_str = build_select(select)
+    having_str = build_having(having)
+    if having_str:
+        having_str = f'HAVING {having_str}'
+    else:
+        having_str = ''
+    sql = f'SELECT {select_str} FROM {table} {joins_str} {where_str} GROUP BY {group_by_str} {having_str} {order_by_str} {limit_str} {offset_str}'
+    return {"sql": sql, "params": params}

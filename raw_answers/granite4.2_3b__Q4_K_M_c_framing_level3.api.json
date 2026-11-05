@@ -1,0 +1,27 @@
+{
+  "model": "granite4.2:3b",
+  "created_at": "2026-11-05T18:55:44.343537Z",
+  "message": {
+    "role": "assistant",
+    "content": "```c\n#define BUFFER_SIZE 512\n\ntypedef struct {\n    uint8_t data[BUFFER_SIZE];\n    size_t head;\n    size_t tail;\n} RingBuffer;\n\nRingBuffer ringbuf = {\n    .head = 0,\n    .tail = 0\n};\n\nvoid ringbuf_init(void) {\n    ringbuf.head = 0;\n    ringbuf.tail = 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if (ringbuf.tail == ringbuf.head && ringbuf.head == BUFFER_SIZE) {\n        return -1; // full\n    }\n    ringbuf.data[ringbuf.tail] = byte;\n    ringbuf.tail = (ringbuf.tail + 1) % BUFFER_SIZE;\n    return 0;\n}\n\nint ringbuf_pop(void) {\n    if (ringbuf.head == ringbuf.tail) {\n        return -1; // empty\n    }\n    uint8_t byte = ringbuf.data[ringbuf.head];\n    ringbuf.head = (ringbuf.head + 1) % BUFFER_SIZE;\n    return byte;\n}\n\nint ringbuf_available(void) {\n    return (ringbuf.tail - ringbuf.head + BUFFER_SIZE) % BUFFER_SIZE;\n}\n\nint ringbuf_free_space(void) {\n    return (BUFFER_SIZE - ringbuf_available());\n}\n\n/* Level 2 packet decoder */\nint decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {\n    if (stream_len < 4) return -1;\n    size_t i = 0;\n    while (i < stream_len) {\n        if (stream[i] == 0xAA) {\n            if (i + 4 > stream_len) return -1;\n            uint8_t magic = stream[i];\n            uint8_t type = stream[i + 1];\n            uint8_t len = stream[i + 2];\n            uint8_t checksum = stream[i + 3];\n            if (len > 255 || i + 4 + len > stream_len) return -1;\n            uint8_t expected_checksum = 0;\n            for (int j = i + 1; j < i + 1 + len; ++j) {\n                expected_checksum ^= stream[j];\n            }\n            if (checksum != expected_checksum) {\n                i++;\n                continue;\n            }\n            if (len == 0) {\n                out_payload = NULL;\n                *out_type = type;\n                return 0;\n            }\n            if (i + 4 + len <= stream_len) {\n                out_payload = (uint8_t *)malloc(len);\n                if (!out_payload) return -1;\n                for (int j = 0; j < len; ++j) {\n                    out_payload[j] = stream[i + 1 + j];\n                }\n                *out_type = type;\n                return len;\n            }\n            i++;\n        } else {\n            i++;\n        }\n    }\n    return -1;\n}\n\n/* Level 1 and Level 2 streaming parser */\nvoid feed_bytes(const uint8_t *data, int len) {\n    for (int i = 0; i < len; ++i) {\n        ringbuf_push(data[i]);\n    }\n}\n\nint get_next_packet(uint8_t *out_payload, int *out_type) {\n    if (ringbuf_available() < 4) return -1;\n    const uint8_t *stream = ringbuf.data;\n    size_t head = ringbuf.head;\n    size_t tail = ringbuf.tail;\n    size_t i = 0;\n    while (i < tail - head) {\n        if (stream[head + i] == 0xAA) {\n            if (head + i + 4 > tail) return -1;\n            uint8_t magic = stream[head + i];\n            uint8_t type = stream[head + i + 1];\n            uint8_t len = stream[head + i + 2];\n            uint8_t checksum = stream[head + i + 3];\n            if (len > 255 || head + i + 4 + len > tail) return -1;\n            uint8_t expected_checksum = 0;\n            for (int j = head + i + 1; j < head + i + 1 + len; ++j) {\n                expected_checksum ^= stream[j];\n            }\n            if (checksum != expected_checksum) {\n                i++;\n                continue;\n            }\n            if (len == 0) {\n                out_payload = NULL;\n                *out_type = type;\n                return 0;\n            }\n            if (head + i + 4 + len <= tail) {\n                out_payload = (uint8_t *)malloc(len);\n                if (!out_payload) return -1;\n                for (int j = 0; j < len; ++j) {\n                    out_payload[j] = stream[head + i + 1 + j];\n                }\n                *out_type = type;\n                return len;\n            }\n            i++;\n        } else {\n            i++;\n        }\n    }\n    return -1;\n}\n```",
+    "thinking": "We need to provide combined code with ringbuf functions, feed_bytes, get_next_packet, and decode_packet? Level2 decode_packet already defined. We'll include them.\n\nReturn only code block."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 48025617958,
+  "load_duration": 1817708,
+  "prompt_eval_count": 1400,
+  "prompt_eval_cached_count": 8,
+  "prompt_eval_duration": 5068712000,
+  "eval_count": 1356,
+  "eval_duration": 42907089000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1400,
+    "total_output_tokens": 1356,
+    "tokens_per_second": 31.60316935040734,
+    "time_to_first_token_seconds": 5.068712,
+    "model_load_time_seconds": 0.001817708,
+    "reasoning_output_tokens": 62
+  }
+}

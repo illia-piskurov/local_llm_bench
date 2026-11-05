@@ -1,0 +1,29 @@
+{
+  "run_id": "run_20261105_150031_f7bbb1",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:6.7b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-05 15:01:03",
+  "passed": 3,
+  "total": 18,
+  "failures": [
+    "push_print: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "add: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "sub_order: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "mul: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "div_order: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "div_truncate: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "dup: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "swap: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "pop: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "comments_and_blank_lines: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "multiple_prints: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "print_does_not_pop: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "negative_numbers: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "empty_program: unexpected exception/timeout: NameError: name 'run' isn't defined",
+    "complex_chain: unexpected exception/timeout: NameError: name 'run' isn't defined"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

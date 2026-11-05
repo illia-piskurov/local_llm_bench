@@ -1,0 +1,25 @@
+{
+  "model": "minicpm-v4.5:8b",
+  "created_at": "2026-11-05T14:15:41.337691Z",
+  "message": {
+    "role": "assistant",
+    "content": "```c\n#include <stdint.h>\n\n#define BUFFER_SIZE 512\nstatic uint8_t buffer[BUFFER_SIZE];\nstatic uint8_t head = 0;\nstatic uint8_t tail = 0;\nstatic uint8_t count = 0;\n\nvoid ringbuf_init(void) {\n    head = 0;\n    tail = 0;\n    count = 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if (count == BUFFER_SIZE) return -1;\n    buffer[head] = byte;\n    head = (head + 1) % BUFFER_SIZE;\n    count++;\n    return 0;\n}\n\nint ringbuf_pop(void) {\n    if (count == 0) return -1;\n    uint8_t byte = buffer[tail];\n    tail = (tail + 1) % BUFFER_SIZE;\n    count--;\n    return byte;\n}\n\nint ringbuf_available(void) {\n    return count;\n}\n\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - count;\n}\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 20535403375,
+  "load_duration": 1873416,
+  "prompt_eval_count": 255,
+  "prompt_eval_cached_count": 3,
+  "prompt_eval_duration": 2295367000,
+  "eval_count": 210,
+  "eval_duration": 18057376000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 255,
+    "total_output_tokens": 210,
+    "tokens_per_second": 11.629596681156775,
+    "time_to_first_token_seconds": 2.295367,
+    "model_load_time_seconds": 0.001873416
+  }
+}

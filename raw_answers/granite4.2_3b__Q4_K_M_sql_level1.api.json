@@ -1,0 +1,27 @@
+{
+  "model": "granite4.2:3b",
+  "created_at": "2026-11-05T18:52:59.666164Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef compile_query(query):\n    table = query['table']\n    select = query.get('select', ['*'])\n    where_cond = query.get('where')\n    order_by = query.get('orderBy', [])\n    limit = query.get('limit')\n    offset = query.get('offset')\n\n    params = []\n    sql_parts = []\n\n    # Build SELECT clause\n    cols = [f\" {col}\" for col in select]\n    sql_parts.append(f\"SELECT {', '.join(cols)}\")\n\n    # WHERE clause with placeholders\n    where_expr = \"\"\n    if where_cond:\n        # Flatten nested AND/OR conditions\n        def flatten(cond):\n            if isinstance(cond, dict):\n                if cond.get('AND'):\n                    return f\"({', '.join(flatten(c) for c in cond['AND'])})\"\n                if cond.get('OR'):\n                    return f\"({', '.join(flatten(c) for c in cond['OR'])})\"\n                # Simple condition\n                return cond\n            return cond\n\n        flat_conds = flatten(where_cond)\n        # Traverse in left-to-right order as given\n        for i, cond in enumerate(flat_conds):\n            if isinstance(cond, dict):\n                field = cond['field']\n                op = cond['op']\n                val = cond['value']\n                # placeholder $1, $2...\n                placeholder = f\"${{1}}\" if i == 0 else f\"${{2}}\"  # simplistic; use actual index\n                sql_parts.append(f\"    {field} {op} {placeholder}\")\n                params.append(val)\n            else:\n                # should not happen\n                pass\n        where_expr = \" AND \".join(flat_conds)\n    else:\n        where_expr = \"TRUE\"\n\n    sql_parts.append(f\"WHERE {where_expr}\")\n\n    # ORDER BY\n    if order_by:\n        dirs = [d.get('dir', 'ASC') for d in order_by]\n        sql_parts.append(f\"ORDER BY \" + \", \".join(f\"{d['field']} {d['dir']}\" for d in order_by))\n    else:\n        sql_parts.append(\"ORDER BY ASC\")\n\n    # LIMIT / OFFSET\n    if limit:\n        sql_parts.append(f\"LIMIT {limit}\")\n    if offset:\n        sql_parts.append(f\"OFFSET {offset}\")\n\n    sql = \" \".join(sql_parts)\n    return {\"sql\": sql, \"params\": params}\n```",
+    "thinking": "We need produce code."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 21666837250,
+  "load_duration": 1096208,
+  "prompt_eval_count": 389,
+  "prompt_eval_cached_count": 8,
+  "prompt_eval_duration": 1088580000,
+  "eval_count": 610,
+  "eval_duration": 20541478000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 389,
+    "total_output_tokens": 610,
+    "tokens_per_second": 29.69601311064374,
+    "time_to_first_token_seconds": 1.08858,
+    "model_load_time_seconds": 0.001096208,
+    "reasoning_output_tokens": 6
+  }
+}

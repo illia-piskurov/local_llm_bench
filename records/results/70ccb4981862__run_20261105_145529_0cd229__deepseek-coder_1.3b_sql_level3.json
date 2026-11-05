@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261105_145529_0cd229",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:1.3b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-11-05 14:56:43",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "select_expression_alias: exception/timeout: ImportError: no module named 'sqlparse'",
+    "having_clause: exception/timeout: ImportError: no module named 'sqlparse'",
+    "where_subquery_in: exception/timeout: ImportError: no module named 'sqlparse'",
+    "subquery_with_parent_params_order: exception/timeout: ImportError: no module named 'sqlparse'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

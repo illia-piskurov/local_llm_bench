@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261105_204917_2fbef4",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "c_framing",
+  "level": "level1",
+  "tested_at": "2026-11-05 20:54:29",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/granite4.2_3b__Q4_K_M_c_framing_level1.c:4:5: error: unknown type name 'uint8_t'\n    4 |     uint8_t data[BUFFER_SIZE];\n      |     ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/granite4.2_3b__Q4_K_M_c_framing_level1.c:5:5: error: unknown type name 'size_t'\n    5 |     size_t head;\n      |     ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/granite4.2_3b__Q4_K_M_c_framing_level1.c:6:5: error: unknown type name 'size_t'\n    6 |     size_t tail;\n      |     ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/granite4.2_3b__Q4_K_M_c_framing_level1.c:19:18: error: unknown type name 'uint8_t'\n   19 | int ringbuf_push(uint8_t byte) {\n      |                  ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/granite4.2_3b__Q4_K_M_c_framing_level1.c:32:5: error: use of undeclared identifier 'uint8_t'\n   32 |     uint8_t byte = ringbuf.data[ringbuf.head];\n      |     ^~~~~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/granite4.2_3b__Q4_K_M_c_framing_level1.c:34:12: error: use of undeclared identifier 'byte'\n   34 |     return byte;\n      |            ^~~~\n6 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

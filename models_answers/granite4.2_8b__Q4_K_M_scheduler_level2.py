@@ -1,0 +1,71 @@
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    all_nodes = set()
+    for task, deps in tasks.items():
+        all_nodes.add(task)
+        for d in deps:
+            all_nodes.add(d)
+
+    # map task -> list of deps
+    graph = {task: deps for task, deps in tasks.items()}
+    # indegree: number of deps for each task
+    indegree = {}
+    for task in all_nodes:
+        indegree[task] = 0
+    for task, deps in tasks.items():
+        indegree[task] = len(deps)
+
+    # Kahn
+    from collections import deque
+    q = deque([node for node in all_nodes if indegree[node] == 0])
+    order = []
+    while q:
+        cur = q.popleft()
+        order.append(cur)
+        for task, deps in tasks.items():
+            if cur in deps:
+                indegree[task] -= 1
+                if indegree[task] == 0:
+                    q.append(task)
+
+    if len(order) != len(all_nodes):
+        return None
+    return order
+
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    # first check cycle via topo_sort
+    if topo_sort(tasks) is None:
+        return None
+
+    # build graph and map task->duration
+    all_nodes = set()
+    for task, (dur, deps) in tasks.items():
+        all_nodes.add(task)
+        for d in deps:
+            all_nodes.add(d)
+
+    # adjacency list of dependents
+    dependents = {node: [] for node in all_nodes}
+    for task, (dur, deps) in tasks.items():
+        for d in deps:
+            dependents[d].append(task)
+
+    # memoized longest path from node
+    from functools import lru_cache
+
+    @lru_cache(maxsize=None)
+    def dp(node):
+        # node may not be a key in tasks? only tasks keys have duration
+        # if node not in tasks, duration 0 and no outgoing? but only tasks have dependents
+        dur = tasks.get(node, (0, []))[0] if node in tasks else 0
+        max_child = 0
+        for nxt in dependents.get(node, []):
+            max_child = max(max_child, dp(nxt))
+        return dur + max_child
+
+    # compute max over all tasks
+    max_len = 0
+    for node in all_nodes:
+        if node in tasks:
+            max_len = max(max_len, dp(node))
+    return max_len

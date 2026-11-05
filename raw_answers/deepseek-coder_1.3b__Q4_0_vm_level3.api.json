@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:53:33.541303Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nclass Stack:\n    def   __init__(self):\n        self.items = []\n        self.call_stack = []\n        self.labels = {}\n        self.ip = 0\n        self.sp = 0\n\n    def push(self, item):\n        self.items.append(item)\n        self.sp += 1\n\n    def pop(self):\n        if self.sp == 0:\n            raise IndexError(\"Attempt to pop from empty stack\")\n        self.sp -= 1\n        return self.items.pop()\n\n    def call(self, name):\n        self.call_stack.append(self.ip)\n        self.ip = self.labels[name]\n\n    def ret(self):\n        if len(self.call_stack) == 0:\n            raise IndexError(\"Attempt to ret from empty call stack\")\n        self.ip = self.call_stack.pop()\n\n    def eq(self):\n        b = self.pop()\n        a = self.pop()\n        self.push(1 if a == b else 0)\n\n    def gt(self):\n        b = self.pop()\n        a = self.pop()\n        self.push(1 if a > b else 0)\n\n    def lt(self):\n        b = self.pop()\n        a = self.pop()\n        self.push(1 if a < b else 0)\n\n    def store(self, var):\n        value = self.pop()\n        self.items[var] = value\n\n    def load(self, var):\n        if var not in self.items:\n            raise ValueError(f\"Variable {var} not stored yet\")\n        self.push(self.items[var])\n\n    def print(self):\n        print(self.pop())\n\n    def div(self):\n        b = self.pop()\n        a = self.pop()\n        if b == 0:\n            raise ZeroDivisionError(\"Division by zero\")\n        self.push(a // b)\n\n    def sub(self):\n        b = self.pop()\n        a = self.pop()\n        self.push(a - b)\n\n    def mul(self):\n        b = self.pop()\n        a = self.pop()\n        self.push(a * b)\n\n    def add(self):\n        b = self.pop()\n        a = self.pop()\n        self.push(a + b)\n\n    def dup(self):\n        self.push(self.items[self.sp - 1])\n\n    def swap(self):\n        self.push(self.items[self.sp - 2])\n        self.push(self.items[self.sp - 1])\n\n    def label(self, name):\n        self.labels[name] = self.ip\n\n    def instruction(self, line):\n        if line.startswith('PUSH'):\n            self.push(int(line[4:]))\n        elif line == 'PRINT':\n            self.print()\n        elif line == 'DIV':\n            self.div()\n        elif line == 'SUB':\n            self.sub()\n        elif line == 'MUL':\n            self.mul()\n        elif line == 'ADD':\n            self.add()\n        elif line == 'DUP':\n            self.dup()\n        elif line == 'SWAP':\n            self.swap()\n        elif line.startswith('LABEL'):\n            self.label(line[7:])\n        elif line == 'CALL':\n            self.call(line[4:])\n        elif line == 'RET':\n            self.ret()\n        else:\n            raise ValueError(f\"Invalid instruction at line   {line_num}\")\n\ndef run(program):\n    lines = program.split('\\n')\n    stack = Stack()\n    printed = []\n\n    for line_num, line in enumerate(lines, start=1):\n        line = line.strip()\n        if line:\n            stack.instruction(line)\n\n    return printed\n```\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 13373345292,
+  "load_duration": 1648500,
+  "prompt_eval_count": 1186,
+  "prompt_eval_cached_count": 64,
+  "prompt_eval_duration": 1148791000,
+  "eval_count": 977,
+  "eval_duration": 12121083000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1186,
+    "total_output_tokens": 977,
+    "tokens_per_second": 80.60335862727777,
+    "time_to_first_token_seconds": 1.148791,
+    "model_load_time_seconds": 0.0016485
+  }
+}

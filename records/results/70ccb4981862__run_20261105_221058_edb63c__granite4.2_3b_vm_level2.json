@@ -1,0 +1,24 @@
+{
+  "run_id": "run_20261105_221058_edb63c",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-11-05 22:11:58",
+  "passed": 17,
+  "total": 27,
+  "failures": [
+    "multiple_prints: unexpected exception/timeout: RuntimeError: Line 5: ADD needs two values",
+    "print_does_not_pop: unexpected exception/timeout: RuntimeError: Line 3: PRINT on empty stack",
+    "unconditional_jump_skips_code: unexpected exception/timeout: RuntimeError: Line 2: JMP to unknown label skip",
+    "jz_taken_when_zero: unexpected exception/timeout: RuntimeError: Line 2: JZ to unknown label zero",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: RuntimeError: Line 2: JZ to unknown label zero",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: RuntimeError: Line 2: JNZ to unknown label nz",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: RuntimeError: Line 2: JNZ to unknown label nz",
+    "countdown_loop: unexpected exception/timeout: RuntimeError: Line 6: SUB needs two values",
+    "count_up_loop: unexpected exception/timeout: RuntimeError: Line 4: ADD needs two values",
+    "label_does_nothing_on_its_own: unexpected exception/timeout: RuntimeError: Line 3: PRINT on empty stack"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261105_160626_c390e2",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.5:8b",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-11-05 16:13:14",
+  "passed": 0,
+  "total": 5,
+  "failures": [
+    "left_join_with_group_by: exception/timeout: KeyError: field",
+    "multiple_joins_inner_and_left: exception/timeout: KeyError: field",
+    "where_in_operator: SQL: expected 'SELECT * FROM users WHERE id IN ($1, $2, $3)', got 'SELECT * FROM users WHERE id IN ($1, $2, $3) ASC'; params: expected [10, 20, 30], got []",
+    "where_is_null_and_like: exception/timeout: KeyError: value",
+    "where_is_not_null: exception/timeout: KeyError: value"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

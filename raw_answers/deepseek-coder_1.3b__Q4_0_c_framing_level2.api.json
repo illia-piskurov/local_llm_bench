@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:56:59.515003Z",
+  "message": {
+    "role": "assistant",
+    "content": "Here is the C code for the extended packet decoder:\n\n```c\n#include <stdint.h>\n\n#define BUFFER_SIZE 512\n\nstatic uint8_t buffer[BUFFER_SIZE];\nstatic int head = BUFFER_SIZE;\nstatic int tail = 0;\n\nvoid ringbuf_init(void) {\n    head = tail = 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if ((head + 1) % BUFFER_SIZE == tail) {\n        return -1;\n    }\n    buffer[head] = byte;\n    head = (head + 1) % BUFFER_SIZE;\n    return 0;\n}\n\nint ringbuf_pop(void) {\n    if (head == tail) {\n        return -1;\n    }\n    uint8_t byte = buffer[tail];\n    tail = (tail + 1) % BUFFER_SIZE;\n    return byte;\n}\n\nint ringbuf_available(void) {\n    if (head >= tail) {\n        return head - tail;\n    } else {\n        return BUFFER_SIZE - tail + head;\n    }\n}\n\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - ringbuf_available();\n}\n\nint decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {\n    int i;\n    for (i = 0; i < stream_len; i++) {\n        if (stream[i] == 0xAA) {\n            if (i + 3 < stream_len && stream[i + 1] == 0 && stream[i + 2] == 0 && stream[i + 3] == 0xAA) {\n                int packet_len = stream[i + 3];\n                if (i + 3 + packet_len < stream_len) {\n                    if (stream[i + 3 + packet_len] == stream[i + 3] ^ 0xFF) {\n                        if (ringbuf_push(stream[i + 3])) {\n                            return -1;\n                        }\n                        for (int j = 0; j < packet_len; j++) {\n                            if (ringbuf_push(stream[i + 3 + j])) {\n                                return -1;\n                            }\n                        }\n                        *out_payload = (uint8_t *)malloc(packet_len);\n                        if (*out_payload == NULL) {\n                            return -1;\n                        }\n                        for (int j = 0; j < packet_len; j++) {\n                            *out_payload++ = ringbuf_pop();\n                        }\n                        *out_type = stream[i + 1];\n                        return packet_len + 3;\n                    }\n                }\n            }\n        }\n    }\n    return -1;\n}\n```\n\nThis code uses a ring buffer with a head and tail pointer. The head pointer points to the next byte to be pushed, and the tail pointer points to the previous byte to be popped. The `decode_packet` function scans the stream and locates the first valid packet. If a valid packet is found, it copies the payload bytes into `out_payload`, writes the message type to `out_type`, and returns the payload length. If no valid packet is found or insufficient data, it returns -1.\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 10513731459,
+  "load_duration": 1689292,
+  "prompt_eval_count": 1230,
+  "prompt_eval_cached_count": 397,
+  "prompt_eval_duration": 855802000,
+  "eval_count": 795,
+  "eval_duration": 9639141000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1230,
+    "total_output_tokens": 795,
+    "tokens_per_second": 82.47622895027679,
+    "time_to_first_token_seconds": 0.855802,
+    "model_load_time_seconds": 0.001689292
+  }
+}

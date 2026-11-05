@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261105_160626_c390e2",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.5:8b",
+  "benchmark": "c_framing",
+  "level": "level3",
+  "tested_at": "2026-11-05 16:17:40",
+  "passed": 0,
+  "total": 10,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/minicpm-v4.5_8b__Q4_K_M_c_framing_level3.c:16:15: warning: result of comparison of constant 512 with expression of type 'uint8_t' (aka 'unsigned char') is always false [-Wtautological-constant-out-of-range-compare]\n   16 |     if (count == BUFFER_SIZE) return -1;\n      |         ~~~~~ ^  ~~~~~~~~~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/minicpm-v4.5_8b__Q4_K_M_c_framing_level3.c:77:32: error: use of undeclared identifier 'NULL'\n   77 |             if (out_payload != NULL) {\n      |                                ^~~~\n1 warning and 1 error generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261105_160626_c390e2",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.5:8b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-11-05 16:15:20",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "select_expression_alias: exception/timeout: KeyError: field",
+    "having_clause: exception/timeout: KeyError: field",
+    "where_subquery_in: exception/timeout: KeyError: value",
+    "subquery_with_parent_params_order: exception/timeout: KeyError: value"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

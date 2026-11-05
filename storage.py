@@ -54,6 +54,18 @@ def is_infra_failure(failures: list[str]) -> bool:
     )
 
 
+def failure_kind(failures: list[str]) -> str | None:
+    """Classifies a harness failure: 'truncated', 'failed' (generation/runner), 'infra', or None for a scored result."""
+    if not is_infra_failure(failures):
+        return None
+    first = failures[0]
+    if first.startswith(TRUNCATED_PREFIX):
+        return "truncated"
+    if first.startswith(INFRA_FAILURE_PREFIX):
+        return "infra"
+    return "failed"
+
+
 def detect_quantization(model_key: str) -> str | None:
     match = re.search(
         r"(?i)\b(q[0-9]_[a-z0-9_]+|qat|awq|gptq|exl2|fp16|bf16|int8|int4|f32|fp32)\b",

@@ -1,0 +1,149 @@
+{
+  "id": "run_20261105_212936_0e157c",
+  "host_id": "70ccb4981862",
+  "model_key": "granite4.2:8b",
+  "model_name": "granite4.2:8b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "granite4.2:8b",
+      "display_name": "granite4.2:8b",
+      "architecture": "granite",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 5347929757,
+      "params_string": "8.8B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "low",
+    "think_budget": 4096,
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 21:29:36",
+  "completed_at": "2026-11-05 21:34:06",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 21:30:20",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 21:31:07",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "simple_chain: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "diamond_pick_longer_branch: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "independent_tasks: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "wide_graph: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 21:31:53",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: unexpected exception: WASM computation fuel limit exceeded (infinite loop)",
+        "dependency_unlocks_later: unexpected exception: WASM computation fuel limit exceeded (infinite loop)",
+        "single_worker_duration_tiebreak: unexpected exception: WASM computation fuel limit exceeded (infinite loop)",
+        "resource_limit_and_priority: unexpected exception: WASM computation fuel limit exceeded (infinite loop)",
+        "simultaneous_unlocks: unexpected exception: WASM computation fuel limit exceeded (infinite loop)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 21:33:51",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "single_task: expected order=['a'], ms=5, cp=5; got order=['a'], ms=0, cp=5",
+        "parallel_tasks_reduce_makespan: expected order=['c', 'b', 'a'], ms=4, cp=3; got order=['c', 'b', 'a'], ms=0, cp=3",
+        "dependencies_and_workers: expected order=['a', 'c', 'b', 'd'], ms=11, cp=11; got order=['c', 'a', 'd', 'b'], ms=0, cp=10",
+        "critical_path_longer_than_worker_parallelism: expected order=['a', 'b', 'c', 'd'], ms=16, cp=4; got order=['a', 'b', 'c', 'd'], ms=0, cp=4",
+        "wide_graph_with_unlocks: expected order=['compile', 'fetch', 'test', 'package'], ms=8, cp=8; got order=['test', 'compile', 'fetch', 'package'], ms=0, cp=11",
+        "cycle_returns_none: expected None, got order=None, ms=None, cp=2"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 21:30:19",
+      "stats": {
+        "input_tokens": 202,
+        "total_output_tokens": 707,
+        "reasoning_output_tokens": 6,
+        "tokens_per_second": 17.352597842205686,
+        "time_to_first_token_seconds": 1.396232,
+        "model_load_time_seconds": 0.001287041
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 21:31:06",
+      "stats": {
+        "input_tokens": 1048,
+        "total_output_tokens": 679,
+        "reasoning_output_tokens": 21,
+        "tokens_per_second": 16.62804340335642,
+        "time_to_first_token_seconds": 5.944419,
+        "model_load_time_seconds": 0.001604917
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-05 21:31:53",
+      "stats": {
+        "input_tokens": 258,
+        "total_output_tokens": 714,
+        "reasoning_output_tokens": 10,
+        "tokens_per_second": 16.3266631444673,
+        "time_to_first_token_seconds": 1.802981,
+        "model_load_time_seconds": 0.001595083
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-05 21:33:49",
+      "stats": {
+        "input_tokens": 1164,
+        "total_output_tokens": 1592,
+        "reasoning_output_tokens": 23,
+        "tokens_per_second": 14.692563145973837,
+        "time_to_first_token_seconds": 7.410285,
+        "model_load_time_seconds": 0.001698208
+      }
+    }
+  ]
+}

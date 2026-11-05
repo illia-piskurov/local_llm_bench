@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261105_150031_f7bbb1",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:6.7b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-05 15:06:27",
+  "passed": 0,
+  "total": 0,
+  "failures": [
+    "[TRUNCATED] priority_scheduler/level2: unclosed code fence in the response; still truncated at max_tokens=65536 (retry cap 65536)"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

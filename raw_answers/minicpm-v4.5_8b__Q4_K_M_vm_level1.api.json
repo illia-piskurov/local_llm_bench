@@ -1,0 +1,25 @@
+{
+  "model": "minicpm-v4.5:8b",
+  "created_at": "2026-11-05T14:03:43.147034Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef run(program: str) -> list[str]:\n    lines = [line.strip() for line in program.splitlines() if line.strip()]\n    stack = []\n    output = []\n    for idx, line in enumerate(lines, 1):\n        if line.startswith('#') or not line:\n            continue\n        parts = line.split()\n        if not parts:\n            continue\n        cmd = parts[0]\n        if cmd == 'PUSH':\n            try:\n                n = int(parts[1])\n                stack.append(n)\n            except (IndexError, ValueError):\n                raise ValueError(f\"Line {idx}: PUSH requires a number argument\")\n        elif cmd == 'POP':\n            if not stack:\n                raise ValueError(f\"Line {idx}: POP: stack is empty\")\n            stack.pop()\n        elif cmd == 'ADD':\n            if len(stack) < 2:\n                raise ValueError(f\"Line {idx}: ADD: stack has less than 2 values\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(a + b)\n        elif cmd == 'SUB':\n            if len(stack) < 2:\n                raise ValueError(f\"Line {idx}: SUB: stack has less than 2 values\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(a - b)\n        elif cmd == 'MUL':\n            if len(stack) < 2:\n                raise ValueError(f\"Line {idx}: MUL: stack has less than 2 values\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(a * b)\n        elif cmd == 'DIV':\n            if len(stack) < 2:\n                raise ValueError(f\"Line {idx}: DIV: stack has less than 2 values\")\n            b = stack.pop()\n            a = stack.pop()\n            if b == 0:\n                raise ValueError(f\"Line {idx}: DIV: division by zero\")\n            stack.append(a // b)\n        elif cmd == 'DUP':\n            if len(stack) < 1:\n                raise ValueError(f\"Line {idx}: DUP: stack is empty\")\n            stack.append(stack[-1])\n        elif cmd == 'SWAP':\n            if len(stack) < 2:\n                raise ValueError(f\"Line {idx}: SWAP: stack has less than 2 values\")\n            stack[-2], stack[-1] = stack[-1], stack[-2]\n        elif cmd == 'PRINT':\n            if not stack:\n                raise ValueError(f\"Line {idx}: PRINT: stack is empty\")\n            output.append(str(stack[-1]))\n        else:\n            raise ValueError(f\"Line {idx}: Unknown command: {cmd}\")\n    return output\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 34633000333,
+  "load_duration": 4808203458,
+  "prompt_eval_count": 277,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 1549915000,
+  "eval_count": 556,
+  "eval_duration": 28262596000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 277,
+    "total_output_tokens": 556,
+    "tokens_per_second": 19.67264436713457,
+    "time_to_first_token_seconds": 1.549915,
+    "model_load_time_seconds": 4.808203458
+  }
+}

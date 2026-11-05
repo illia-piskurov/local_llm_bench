@@ -1,0 +1,13 @@
+{
+  "run_id": "run_20261105_163011_1310c4",
+  "host_id": "70ccb4981862",
+  "model": "openthinker:7b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-05 16:37:41",
+  "passed": 18,
+  "total": 18,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

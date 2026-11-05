@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261105_160308_de36ae",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.5:8b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-11-05 16:04:34",
+  "passed": 22,
+  "total": 27,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: JMP: unknown label skip",
+    "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: JZ: unknown label zero",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: JZ: unknown label zero",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 2: JNZ: unknown label nz",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 2: JNZ: unknown label nz"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

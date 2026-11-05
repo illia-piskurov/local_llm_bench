@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:57:15.98124Z",
+  "message": {
+    "role": "assistant",
+    "content": "Here is a simple implementation of the `pMap` function using JavaScript's async/await and Promise.\n\n```javascript\nasync function pMap(items, mapper, options = { concurrency: 1 }) {\n    const concurrency = Math.min(options.concurrency, items.length);\n    const results = [];\n    const mapperWithIndex = (item, index) => mapper(item, index).catch(error => {\n        throw error;\n    });\n\n    for (let i = 0; i < items.length; i++) {\n        const item = items[i];\n        results[i] = await Promise.race([\n            mapperWithIndex(item, i),\n            // If we're at the concurrency limit, we'll wait for the previous mapper to complete\n            i < concurrency ? Promise.resolve() : results[i - 1]\n        ]);\n    }\n\n    return results;\n}\n```\n\nThis function works by mapping each item in the `items` array to a new promise. The mapper function is called with the item and its index as arguments. If the mapper function throws an error, this error is caught and thrown as the result of the corresponding promise.\n\nThe `Promise.race` function is used to ensure that at most `concurrency` promises are running concurrently. If a new promise is created, it waits for the previous promise to complete.\n\nThe function returns a new promise that resolves when all promises in the `results` array have resolved.\n\nPlease note that this implementation assumes that the mapper function does not throw an error for an item. If the mapper function can throw an error for an item, you would need to modify the code to handle this case.\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 4264815958,
+  "load_duration": 1424292,
+  "prompt_eval_count": 327,
+  "prompt_eval_cached_count": 64,
+  "prompt_eval_duration": 264051000,
+  "eval_count": 395,
+  "eval_duration": 3903442000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 327,
+    "total_output_tokens": 395,
+    "tokens_per_second": 101.19274220034524,
+    "time_to_first_token_seconds": 0.264051,
+    "model_load_time_seconds": 0.001424292
+  }
+}

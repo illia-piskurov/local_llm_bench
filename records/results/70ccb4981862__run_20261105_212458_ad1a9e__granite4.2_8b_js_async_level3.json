@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261105_212458_ad1a9e",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:8b",
+  "benchmark": "js_async",
+  "level": "level3",
+  "tested_at": "2026-11-05 21:28:39",
+  "passed": 0,
+  "total": 17,
+  "failures": [
+    "JavaScript syntax error: SyntaxError: invalid redefinition of lexical identifier\n    at <input>:118\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

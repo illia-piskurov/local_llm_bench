@@ -1,0 +1,25 @@
+{
+  "model": "minicpm-v4.5:8b",
+  "created_at": "2026-11-05T14:05:22.428517Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef run(program: str) -> list[str]:\n    lines = [line.strip() for line in program.splitlines() if line.strip()]\n    labels = {}\n    pc = 0\n    stack = []\n    call_stack = []\n    variables = {}\n    output = []\n    while pc < len(lines):\n        line = lines[pc]\n        if line.startswith('#') or not line:\n            pc += 1\n            continue\n        parts = line.split()\n        if not parts:\n            pc += 1\n            continue\n        cmd = parts[0]\n        if cmd == 'LABEL':\n            name = parts[1]\n            labels[name] = pc\n        elif cmd == 'JMP':\n            name = parts[1]\n            if name not in labels:\n                raise ValueError(f\"Line {pc+1}: JMP: unknown label {name}\")\n            pc = labels[name]\n        elif cmd == 'JZ':\n            name = parts[1]\n            if name not in labels:\n                raise ValueError(f\"Line {pc+1}: JZ: unknown label {name}\")\n            if not stack:\n                raise ValueError(f\"Line {pc+1}: JZ: stack is empty\")\n            val = stack.pop()\n            if val == 0:\n                pc = labels[name]\n        elif cmd == 'JNZ':\n            name = parts[1]\n            if name not in labels:\n                raise ValueError(f\"Line {pc+1}: JNZ: unknown label {name}\")\n            if not stack:\n                raise ValueError(f\"Line {pc+1}: JNZ: stack is empty\")\n            val = stack.pop()\n            if val != 0:\n                pc = labels[name]\n        elif cmd == 'CALL':\n            name = parts[1]\n            if name not in labels:\n                raise ValueError(f\"Line {pc+1}: CALL: unknown label {name}\")\n            call_stack.append(pc + 1)\n            pc = labels[name]\n        elif cmd == 'RET':\n            if not call_stack:\n                raise ValueError(f\"Line {pc+1}: RET: call stack is empty\")\n            pc = call_stack.pop()\n        elif cmd == 'EQ':\n            if len(stack) < 2:\n                raise ValueError(f\"Line {pc+1}: EQ: stack has less than 2 values\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(int(a == b))\n        elif cmd == 'GT':\n            if len(stack) < 2:\n                raise ValueError(f\"Line {pc+1}: GT: stack has less than 2 values\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(int(a > b))\n        elif cmd == 'LT':\n            if len(stack) < 2:\n                raise ValueError(f\"Line {pc+1}: LT: stack has less than 2 values\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(int(a < b))\n        elif cmd == 'STORE':\n            var = parts[1]\n            if len(stack) < 1:\n                raise ValueError(f\"Line {pc+1}: STORE: stack is empty\")\n            val = stack.pop()\n            variables[var] = val\n        elif cmd == 'LOAD':\n            var = parts[1]\n            if var not in variables:\n                raise ValueError(f\"Line {pc+1}: LOAD: variable {var} not stored yet\")\n            stack.append(variables[var])\n        else:\n            raise ValueError(f\"Line {pc+1}: Unknown command: {cmd}\")\n        pc += 1\n    return output\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 48043727834,
+  "load_duration": 2140167,
+  "prompt_eval_count": 1263,
+  "prompt_eval_cached_count": 3,
+  "prompt_eval_duration": 7477551000,
+  "eval_count": 748,
+  "eval_duration": 40455485000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1263,
+    "total_output_tokens": 748,
+    "tokens_per_second": 18.48945822797576,
+    "time_to_first_token_seconds": 7.477551,
+    "model_load_time_seconds": 0.002140167
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "model": "granite4.2:8b",
+  "created_at": "2026-11-05T19:30:19.246353Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    # Build adjacency list and indegree map for all tasks mentioned as keys or dependencies\n    graph = {}\n    indegree = {}\n    all_nodes = set()\n\n    for task, deps in tasks.items():\n        all_nodes.add(task)\n        graph.setdefault(task, [])\n        indegree.setdefault(task, 0)\n        for d in deps:\n            all_nodes.add(d)\n            graph.setdefault(d, [])\n            indegree.setdefault(d, 0)\n\n    # Ensure every node has an entry in indegree even if no deps\n    for node in all_nodes:\n        if node not in indegree:\n            indegree[node] = 0\n        if node not in graph:\n            graph[node] = []\n\n    # Compute indegrees correctly: a node's indegree equals number of tasks that depend on it\n    # We'll recompute from scratch using adjacency from deps -> task\n    # Build reverse mapping: for each dep -> list of tasks that depend on it\n    rev = {node: [] for node in all_nodes}\n    for task, deps in tasks.items():\n        for d in deps:\n            rev.setdefault(d, []).append(task)\n\n    # indegree of a node = number of incoming edges = number of tasks that have this node as dep\n    indegree = {node: 0 for node in all_nodes}\n    for node, dependents in rev.items():\n        indegree[node] = len(dependents)  # edges from dependents -> node? Wait dependency direction:\n        # tasks[task] = list of deps that must complete prior to task.\n        # So edge dep -> task.\n        # indegree[task] = number of deps of task.\n        # indegree[dep] = number of tasks that depend on dep.\n        # We'll compute indegree for each node as number of deps pointing to it.\n    # Simpler: compute indegree directly:\n    indegree = {node: 0 for node in all_nodes}\n    for task, deps in tasks.items():\n        for d in deps:\n            indegree[task] += 1\n    # For nodes that are only deps and not tasks keys, indegree stays 0.\n\n    # Kahn's algorithm\n    from collections import deque\n\n    q = deque()\n    for node in all_nodes:\n        if indegree[node] == 0:\n            q.append(node)\n\n    order = []\n    while q:\n        cur = q.popleft()\n        order.append(cur)\n        # find tasks that have cur as a dependency\n        for task, deps in tasks.items():\n            if cur in deps:\n                indegree[task] -= 1\n                if indegree[task] == 0:\n                    q.append(task)\n\n    if len(order) != len(all_nodes):\n        return None\n    return order\n```",
+    "thinking": "We need output code."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 42310319541,
+  "load_duration": 1287041,
+  "prompt_eval_count": 202,
+  "prompt_eval_cached_count": 8,
+  "prompt_eval_duration": 1396232000,
+  "eval_count": 707,
+  "eval_duration": 40743179000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 202,
+    "total_output_tokens": 707,
+    "tokens_per_second": 17.352597842205686,
+    "time_to_first_token_seconds": 1.396232,
+    "model_load_time_seconds": 0.001287041,
+    "reasoning_output_tokens": 6
+  }
+}

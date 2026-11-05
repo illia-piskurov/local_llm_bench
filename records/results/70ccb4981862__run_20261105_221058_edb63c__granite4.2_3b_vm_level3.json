@@ -1,0 +1,30 @@
+{
+  "run_id": "run_20261105_221058_edb63c",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-11-05 22:12:46",
+  "passed": 21,
+  "total": 37,
+  "failures": [
+    "multiple_prints: unexpected exception/timeout: RuntimeError: Line 5: ADD needs two values",
+    "print_does_not_pop: unexpected exception/timeout: RuntimeError: Line 3: PRINT on empty stack",
+    "unconditional_jump_skips_code: unexpected exception/timeout: RuntimeError: Line 2: JMP to unknown label skip",
+    "jz_taken_when_zero: unexpected exception/timeout: RuntimeError: Line 2: JZ to unknown label zero",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: RuntimeError: Line 2: JZ to unknown label zero",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: RuntimeError: Line 2: JNZ to unknown label nz",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: RuntimeError: Line 2: JNZ to unknown label nz",
+    "countdown_loop: unexpected exception/timeout: RuntimeError: Line 6: SUB needs two values",
+    "count_up_loop: unexpected exception/timeout: RuntimeError: Line 4: ADD needs two values",
+    "label_does_nothing_on_its_own: unexpected exception/timeout: RuntimeError: Line 3: PRINT on empty stack",
+    "call_ret_basic: unexpected exception/timeout: RuntimeError: Line 2: CALL to unknown label double",
+    "call_ret_nested: unexpected exception/timeout: RuntimeError: Line 1: CALL to unknown label func_a",
+    "store_and_load: unexpected exception/timeout: RuntimeError: Line 2: STORE of unknown variable x",
+    "store_overwrite: unexpected exception/timeout: RuntimeError: Line 2: STORE of unknown variable val",
+    "recursive_factorial: unexpected exception/timeout: RuntimeError: Line 2: CALL to unknown label fact",
+    "recursive_fibonacci: unexpected exception/timeout: RuntimeError: Line 2: CALL to unknown label fib"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,64 @@
+```python
+def run(program: str) -> list[str]:
+    lines = [line.strip() for line in program.splitlines() if line.strip()]
+    stack = []
+    output = []
+    for idx, line in enumerate(lines, 1):
+        if line.startswith('#') or not line:
+            continue
+        parts = line.split()
+        if not parts:
+            continue
+        cmd = parts[0]
+        if cmd == 'PUSH':
+            try:
+                n = int(parts[1])
+                stack.append(n)
+            except (IndexError, ValueError):
+                raise ValueError(f"Line {idx}: PUSH requires a number argument")
+        elif cmd == 'POP':
+            if not stack:
+                raise ValueError(f"Line {idx}: POP: stack is empty")
+            stack.pop()
+        elif cmd == 'ADD':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: ADD: stack has less than 2 values")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a + b)
+        elif cmd == 'SUB':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: SUB: stack has less than 2 values")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+        elif cmd == 'MUL':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: MUL: stack has less than 2 values")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a * b)
+        elif cmd == 'DIV':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: DIV: stack has less than 2 values")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise ValueError(f"Line {idx}: DIV: division by zero")
+            stack.append(a // b)
+        elif cmd == 'DUP':
+            if len(stack) < 1:
+                raise ValueError(f"Line {idx}: DUP: stack is empty")
+            stack.append(stack[-1])
+        elif cmd == 'SWAP':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: SWAP: stack has less than 2 values")
+            stack[-2], stack[-1] = stack[-1], stack[-2]
+        elif cmd == 'PRINT':
+            if not stack:
+                raise ValueError(f"Line {idx}: PRINT: stack is empty")
+            output.append(str(stack[-1]))
+        else:
+            raise ValueError(f"Line {idx}: Unknown command: {cmd}")
+    return output
+```

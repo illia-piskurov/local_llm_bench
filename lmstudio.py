@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import threading
@@ -7,6 +8,10 @@ from pathlib import Path
 import requests
 
 UNLOAD_TIMEOUT_SECONDS = 30
+OLLAMA_DEFAULT_NUM_CTX = 16384
+OLLAMA_CTX_MARGIN = 256
+OLLAMA_DEFAULT_THINK = "medium"
+OLLAMA_DEFAULT_THINK_BUDGET = 8192
 LOCAL_SERVER_FILE = Path(__file__).parent / ".local_server"
 
 
@@ -33,6 +38,17 @@ def set_base_url(url: str) -> str:
         cleaned = f"http://{cleaned}"
     LOCAL_SERVER_FILE.write_text(cleaned, encoding="utf-8")
     return cleaned
+
+
+def _ollama_root() -> str:
+    """Returns the server root without a trailing /v1 or /api segment."""
+    return re.sub(r"/(?:v1|api)/?$", "", get_base_url())
+
+
+def is_ollama() -> bool:
+    """True when the configured server is Ollama (default port 11434 or 'ollama' in the host name)."""
+    root = _ollama_root().lower()
+    return ":11434" in root or "ollama" in root
 
 
 @dataclass
@@ -147,7 +163,40 @@ class ModelArtifactInfo:
         )
 
 
+def _ollama_artifact_info(model_key: str) -> ModelArtifactInfo:
+    root = _ollama_root()
+    info = ModelArtifactInfo(key=model_key)
+    try:
+        resp = requests.post(f"{root}/api/show", json={"model": model_key}, timeout=5)
+        if resp.status_code != 200:
+            return info
+        data = resp.json()
+        details = data.get("details") or {}
+        arch = details.get("family")
+        max_ctx = None
+        for k, v in (data.get("model_info") or {}).items():
+            if k.endswith(".context_length") and isinstance(v, int):
+                max_ctx = v
+                break
+        tags = requests.get(f"{root}/api/tags", timeout=5).json().get("models", [])
+        size = next((m.get("size") for m in tags if model_key in (m.get("name"), m.get("model"))), None)
+        return ModelArtifactInfo(
+            key=model_key,
+            display_name=model_key,
+            architecture=arch,
+            quantization=details.get("quantization_level"),
+            size_bytes=size,
+            params_string=details.get("parameter_size"),
+            max_context_length=max_ctx,
+            format=details.get("format"),
+        )
+    except Exception:
+        return info
+
+
 def get_model_artifact_info(model_key: str) -> ModelArtifactInfo:
+    if is_ollama():
+        return _ollama_artifact_info(model_key)
     try:
         resp = requests.get(f"{get_base_url()}/api/v1/models", timeout=5)
         if resp.status_code == 200:
@@ -205,6 +254,12 @@ def _render_transcript(messages: list[dict]) -> tuple[str | None, str]:
 
 
 def list_llm_models() -> list[Model]:
+    if is_ollama():
+        try:
+            resp = requests.get(f"{_ollama_root()}/api/tags", timeout=10).json()
+            return [Model(type="llm", key=str(m.get("name") or "")) for m in resp.get("models", []) if m.get("name")]
+        except Exception:
+            return []
     try:
         resp = requests.get(f"{get_base_url()}/api/v1/models", timeout=10).json()
         models = resp.get("models", []) if isinstance(resp, dict) else []
@@ -243,6 +298,170 @@ def detect_truncation(payload: dict, raw_content: str, max_tokens: int) -> str |
     return None
 
 
+def _ollama_think() -> bool | str | None:
+    """Thinking mode from OLLAMA_THINK: low | medium (default) | high | on | off | auto (the model's own default)."""
+    raw = (os.environ.get("OLLAMA_THINK") or OLLAMA_DEFAULT_THINK).strip().lower()
+    if raw in ("off", "false", "0", "no"):
+        return False
+    if raw in ("on", "true", "1", "yes"):
+        return True
+    if raw in ("low", "medium", "high"):
+        return raw
+    return None
+
+
+def _ollama_think_budget() -> int:
+    """Max thinking tokens per answer from OLLAMA_THINK_BUDGET (0 disables the limit)."""
+    raw = os.environ.get("OLLAMA_THINK_BUDGET")
+    return max(0, int(raw)) if raw and raw.strip().isdigit() else OLLAMA_DEFAULT_THINK_BUDGET
+
+
+def backend_generation_params() -> dict:
+    """Backend settings that change the results, so they are recorded together with the run's parameters."""
+    if not is_ollama():
+        return {}
+    think = _ollama_think()
+    return {"think": "auto" if think is None else think, "think_budget": _ollama_think_budget()}
+
+
+def _ollama_context_plan(messages: list[dict], cfg: GenerationConfig) -> tuple[int, int]:
+    """Returns (num_ctx, num_predict) so the prompt and the answer always fit the window.
+
+    Without an explicit num_ctx Ollama uses the model's baked-in default (up to 256k), which allocates a huge
+    KV cache, so a bounded default is used. When the output hits the window Ollama shifts the context and drops
+    the start of the prompt, hence num_predict is clamped to the room left. A truncation retry asks for a larger
+    max_tokens, so the window grows with it instead of repeating the same cut-off.
+    """
+    prompt_tokens = sum(len(m.get("content") or "") for m in messages) // 3 + 1
+    ctx = cfg.context_length or int(os.environ.get("OLLAMA_NUM_CTX") or OLLAMA_DEFAULT_NUM_CTX)
+    if cfg.max_tokens > DEFAULT_MAX_TOKENS:
+        ctx = max(ctx, prompt_tokens + cfg.max_tokens + OLLAMA_CTX_MARGIN)
+    return ctx, max(1, min(cfg.max_tokens, ctx - prompt_tokens - OLLAMA_CTX_MARGIN))
+
+
+class _ThinkRejected(Exception):
+    """The server does not accept the requested `think` value for this model (older Ollama or a non-thinking model)."""
+
+
+def _stream_chat(body: dict, idle_timeout: float, think_budget: int) -> tuple[dict, str, str, int | None]:
+    """Streams /api/chat; returns (final chunk, content, thinking, thinking tokens when the budget was exceeded).
+
+    The reply is streamed so the timeout means "no tokens for N seconds" rather than a wall-clock limit on the
+    whole answer, which would fail slow reasoning models that are still producing output. Every streamed chunk is
+    about one token, so counting thinking chunks enforces the thinking budget; on overflow the stream is dropped
+    and the final chunk is empty.
+    """
+    content_parts: list[str] = []
+    thinking_parts: list[str] = []
+    final: dict = {}
+    try:
+        with requests.post(
+            f"{_ollama_root()}/api/chat", json=body, stream=True, timeout=(10.0, idle_timeout)
+        ) as response:
+            if response.status_code == 400 and "think" in response.text.lower():
+                raise _ThinkRejected(response.text)
+            response.raise_for_status()
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                chunk = json.loads(line)
+                if chunk.get("error"):
+                    raise RuntimeError(f"Ollama error: {chunk['error']}")
+                msg = chunk.get("message") or {}
+                content_parts.append(msg.get("content") or "")
+                if msg.get("thinking"):
+                    thinking_parts.append(msg["thinking"])
+                    if think_budget and len(thinking_parts) > think_budget:
+                        return {}, "".join(content_parts), "".join(thinking_parts), len(thinking_parts)
+                if chunk.get("done"):
+                    final = chunk
+    except requests.exceptions.RequestException as e:
+        # A stalled stream surfaces as a ConnectionError wrapping the read timeout, not as a Timeout.
+        if isinstance(e, requests.exceptions.Timeout) or "timed out" in str(e).lower():
+            raise TimeoutError(f"No output from the model for {idle_timeout}s: {e}") from e
+        raise RuntimeError(f"Inference request failed: {e}") from e
+
+    if not final:
+        raise RuntimeError("Ollama stream ended before the final chunk")
+    return final, "".join(content_parts), "".join(thinking_parts), None
+
+
+def _ask_ollama(model_key: str, messages: list[dict], cfg: GenerationConfig) -> ModelResponse:
+    """Runs a chat completion through Ollama's native /api/chat and maps its stats to the LM Studio shape."""
+    num_ctx, num_predict = _ollama_context_plan(messages, cfg)
+    options: dict = {
+        "temperature": cfg.temperature,
+        "seed": cfg.seed,
+        "top_p": cfg.top_p,
+        "num_predict": num_predict,
+        "num_ctx": num_ctx,
+    }
+    if cfg.repeat_penalty is not None:
+        options["repeat_penalty"] = cfg.repeat_penalty
+
+    body: dict = {"model": model_key, "messages": messages, "stream": True, "options": options}
+    think = _ollama_think()
+    if think is not None:
+        body["think"] = think
+    budget = _ollama_think_budget()
+
+    def stream(limit: int):
+        try:
+            return _stream_chat(body, cfg.timeout_seconds, limit)
+        except _ThinkRejected:
+            # Older Ollama or a model without the requested thinking mode: fall back to the model's default.
+            body.pop("think", None)
+            return _stream_chat(body, cfg.timeout_seconds, limit)
+
+    final, raw_content, reasoning_text, exceeded = stream(budget)
+    discarded = None
+    if exceeded is not None:
+        # Thinking ran past the budget: drop that attempt and ask again without thinking (or, when the model
+        # cannot skip it, let it finish unrestricted).
+        discarded = exceeded
+        body["think"] = False
+        final, raw_content, reasoning_text, _ = stream(0)
+    reasoning_text = reasoning_text or None
+    data = {**final, "message": {"role": "assistant", "content": raw_content, "thinking": reasoning_text or ""}}
+
+    eval_count = final.get("eval_count") or 0
+    eval_ns = final.get("eval_duration") or 0
+    stats: dict = {
+        "input_tokens": final.get("prompt_eval_count"),
+        "total_output_tokens": eval_count,
+        "tokens_per_second": eval_count / (eval_ns / 1e9) if eval_count and eval_ns else None,
+        "time_to_first_token_seconds": (final.get("prompt_eval_duration") or 0) / 1e9,
+        "model_load_time_seconds": (final.get("load_duration") or 0) / 1e9,
+    }
+    payload = {**data, "finish_reason": final.get("done_reason"), "stats": stats}
+    if discarded is not None:
+        payload["think_budget"] = {"limit": budget, "discarded_thinking_tokens": discarded}
+
+    from benchmarks.base import strip_reasoning_blocks
+
+    cleaned_content, inline_reasoning = strip_reasoning_blocks(raw_content)
+    if inline_reasoning:
+        reasoning_text = f"{reasoning_text}\n\n{inline_reasoning}" if reasoning_text else inline_reasoning
+        content = cleaned_content
+    else:
+        content = raw_content
+
+    # Ollama does not report reasoning tokens separately: split the real output count by the text share.
+    if reasoning_text:
+        think_chars = len(reasoning_text)
+        share = think_chars / (think_chars + len(content)) if think_chars + len(content) else 1.0
+        estimate = eval_count * share if eval_count else think_chars / 3.8
+        stats["reasoning_output_tokens"] = max(1, round(estimate))
+
+    return ModelResponse(
+        content=content,
+        stats=stats,
+        raw=payload,
+        reasoning=reasoning_text,
+        truncated_reason=detect_truncation(payload, raw_content, cfg.max_tokens),
+    )
+
+
 def ask_model(
     model_key: str,
     messages: list[dict],
@@ -253,6 +472,9 @@ def ask_model(
     cfg = replace(config) if config is not None else GenerationConfig()
     if temperature is not None:
         cfg = replace(cfg, temperature=temperature)
+
+    if is_ollama():
+        return _ask_ollama(model_key, messages, cfg)
 
     system_prompt, input_text = _render_transcript(messages)
 
@@ -341,6 +563,17 @@ def loaded_instance_ids(model_key: str) -> list[str]:
 
 
 def unload_model(model_key: str, console=None, timeout: int = UNLOAD_TIMEOUT_SECONDS) -> None:
+    if is_ollama():
+        try:
+            requests.post(f"{_ollama_root()}/api/generate", json={"model": model_key, "keep_alive": 0}, timeout=timeout)
+        except Exception as e:
+            msg = f"failed to unload {model_key}: {e}"
+            if console is not None:
+                console.print(f"  [yellow]warn:[/yellow] {msg}")
+            else:
+                print(f"  warn: {msg}")
+        return
+
     def warn(message: str) -> None:
         if console is not None:
             console.print(f"  [yellow]warn:[/yellow] {message}")
@@ -375,6 +608,11 @@ def unload_model(model_key: str, console=None, timeout: int = UNLOAD_TIMEOUT_SEC
 
 
 def is_server_online() -> bool:
+    if is_ollama():
+        try:
+            return requests.get(f"{_ollama_root()}/api/version", timeout=2).status_code == 200
+        except Exception:
+            return False
     try:
         r = requests.get(f"{get_base_url()}/api/v1/models", timeout=2)
         return r.status_code == 200
@@ -383,6 +621,12 @@ def is_server_online() -> bool:
 
 
 def get_loaded_models() -> list[Model]:
+    if is_ollama():
+        try:
+            resp = requests.get(f"{_ollama_root()}/api/ps", timeout=5).json()
+            return [Model(type="llm", key=str(m.get("name") or "")) for m in resp.get("models", []) if m.get("name")]
+        except Exception:
+            return []
     try:
         resp = requests.get(f"{get_base_url()}/api/v1/models", timeout=5).json()
         models = resp.get("models", [])

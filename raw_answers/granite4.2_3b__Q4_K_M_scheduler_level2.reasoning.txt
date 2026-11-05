@@ -1,0 +1,7 @@
+We need to extend same file with both functions. Provide both. Ensure no external deps. Use topological sort already defined? We'll keep topo_sort unchanged and add critical_path.
+
+Implement critical_path using DP on DAG, detect cycle via indegree similar.
+
+Return total duration if DAG else None.
+
+Let's craft code block containing both functions.

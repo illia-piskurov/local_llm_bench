@@ -1,0 +1,27 @@
+{
+  "model": "granite4.2:3b",
+  "created_at": "2026-11-05T18:55:55.892091Z",
+  "message": {
+    "role": "assistant",
+    "content": "```javascript\nasync function pMap(items, mapper, options = undefined) {\n  if (!Array.isArray(items) || items.length === 0) return [];\n\n  const concurrency = typeof options === 'number' ? options : (options || 1);\n  const results = new Array(items.length);\n  const pending = new Map(); // task id -> {item, index, promise}\n\n  async function runTask(task) {\n    try {\n      const result = await mapper(task.item, task.index);\n      results[task.index] = result;\n    } catch (err) {\n      throw err;\n    }\n  }\n\n  for (let i = 0; i < items.length; i++) {\n    const item = items[i];\n    const task = { item, index: i };\n    pending.set(i, task);\n    runTask(task).then(runTask);\n  }\n\n  // Worker pool loop\n  while (pending.size > 0) {\n    const task = pending.get(pending.keys().next().value);\n    if (!task) break;\n    pending.delete(task.index);\n    const promise = runTask(task);\n    if (pending.size === concurrency) {\n      await promise;\n    } else {\n      pending.set(task.index, task);\n    }\n  }\n  return results;\n}\n```",
+    "thinking": "We need to produce async concurrent mapping with concurrency limit, preserving order. Use async/await with worker pool. Provide code."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 11262249542,
+  "load_duration": 1424875,
+  "prompt_eval_count": 248,
+  "prompt_eval_cached_count": 8,
+  "prompt_eval_duration": 988199000,
+  "eval_count": 353,
+  "eval_duration": 10213237000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 248,
+    "total_output_tokens": 353,
+    "tokens_per_second": 34.56298918746329,
+    "time_to_first_token_seconds": 0.988199,
+    "model_load_time_seconds": 0.001424875,
+    "reasoning_output_tokens": 41
+  }
+}

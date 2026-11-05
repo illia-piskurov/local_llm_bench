@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261105_204917_2fbef4",
+  "host_id": "70ccb4981862",
+  "model": "granite4.2:3b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-05 20:51:35",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: expected order=['a'], ms=5, cp=5; got order=['a', 'a'], ms=5, cp=0",
+    "parallel_tasks_reduce_makespan: expected order=['c', 'b', 'a'], ms=4, cp=3; got order=['c', 'c', 'b', 'b', 'a', 'a'], ms=4, cp=0",
+    "dependencies_and_workers: unexpected exception: KeyError: d",
+    "critical_path_longer_than_worker_parallelism: expected order=['a', 'b', 'c', 'd'], ms=16, cp=4; got order=['a', 'a', 'b', 'b', 'c', 'c', 'd', 'd'], ms=16, cp=0",
+    "wide_graph_with_unlocks: unexpected exception: KeyError: test"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

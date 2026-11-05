@@ -1,0 +1,27 @@
+{
+  "model": "granite4.2:3b",
+  "created_at": "2026-11-05T18:49:42.587323Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    graph = {task: [] for task in tasks}\n    indegree = {task: 0 for task in tasks}\n    for task, deps in tasks.items():\n        for dep in deps:\n            graph[dep].append(task)\n            indegree[task] += 1\n\n    queue = [task for task in tasks if indegree[task] == 0]\n    result = []\n    while queue:\n        cur = queue.pop(0)\n        result.append(cur)\n        for nxt in graph[cur]:\n            indegree[nxt] -= 1\n            if indegree[nxt] == 0:\n                queue.append(nxt)\n\n    if len(result) == len(tasks):\n        return result\n    else:\n        return None\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    # Build graph and indegree\n    graph = {task: [] for task in tasks}\n    indegree = {task: 0 for task in tasks}\n    for task, (dur, deps) in tasks.items():\n        for dep in deps:\n            graph[dep].append(task)\n            indegree[task] += 1\n\n    # Kahn's algorithm with DP\n    queue = [task for task in tasks if indegree[task] == 0]\n    dist = {task: 0 for task in tasks}\n    processed = 0\n    while queue:\n        cur = queue.pop(0)\n        processed += 1\n        cur_dur = tasks[cur][0]\n        for nxt in graph[cur]:\n            indegree[nxt] -= 1\n            if indegree[nxt] == 0:\n                queue.append(nxt)\n            # Update longest path to nxt\n            if dist[nxt] < dist[cur] + tasks[nxt][0]:\n                dist[nxt] = dist[cur] + tasks[nxt][0]\n\n    if processed == len(tasks):\n        return max(dist.values())\n    else:\n        return None\n```",
+    "thinking": "We need to extend same file with both functions. Provide both. Ensure no external deps. Use topological sort already defined? We'll keep topo_sort unchanged and add critical_path.\n\nImplement critical_path using DP on DAG, detect cycle via indegree similar.\n\nReturn total duration if DAG else None.\n\nLet's craft code block containing both functions."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 15696898875,
+  "load_duration": 1837291,
+  "prompt_eval_count": 596,
+  "prompt_eval_cached_count": 186,
+  "prompt_eval_duration": 1026796000,
+  "eval_count": 592,
+  "eval_duration": 14640179000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 596,
+    "total_output_tokens": 592,
+    "tokens_per_second": 40.436664059913475,
+    "time_to_first_token_seconds": 1.026796,
+    "model_load_time_seconds": 0.001837291,
+    "reasoning_output_tokens": 105
+  }
+}

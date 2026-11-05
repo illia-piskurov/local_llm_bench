@@ -1,0 +1,25 @@
+{
+  "model": "deepseek-coder:1.3b",
+  "created_at": "2026-11-05T12:56:12.275488Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nclass InMemoryKeyValueStore:\n    def  __init__(self):\n        self.data = {}\n        self.transactions = []\n        self.watchers = {}\n\n    # ... existing methods remain the same ...\n\n    def count(self, value):\n        count = sum(1 for key, value_ in self.data.items() if value_ == value)\n        return str(count)\n\n    def watch(self, key):\n        if key in self.data:\n            old_value = self.data.get(key, None)\n            self.data[key] = None\n            self.watchers[key] = (self.data[key], old_value)\n            return \"OK\"\n        else:\n            return \"NULL\"\n\n    def update_watchers(self):\n        for key, (new_value, old_value) in self.watchers.items():\n            if new_value != old_value:\n                print(f\"WATCH {key} {old_value} -> {new_value}\")\n\n    def run(self, program):\n        output = super().run(program)\n        self.update_watchers()\n        return output\n```\n\nThis code extends the `InMemoryKeyValueStore` class by adding two new methods: `count` and `watch`. The `count` method returns the number of keys whose current value is equal to the provided value. The `watch` method starts watching a key. It starts watching a key and updates the watcher dictionary. If the key does not exist, it returns \"NULL\". The `update_watchers` method updates the watcher dictionary and prints the watch notifications. The `run` method calls the superclass's `run` method to process the program and then updates the watcher dictionary.\n"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 5823473459,
+  "load_duration": 1960584,
+  "prompt_eval_count": 1240,
+  "prompt_eval_cached_count": 462,
+  "prompt_eval_duration": 758906000,
+  "eval_count": 416,
+  "eval_duration": 4978166000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1240,
+    "total_output_tokens": 416,
+    "tokens_per_second": 83.56491125446601,
+    "time_to_first_token_seconds": 0.758906,
+    "model_load_time_seconds": 0.001960584
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "run_id": "run_20261105_145529_0cd229",
+  "host_id": "70ccb4981862",
+  "model": "deepseek-coder:1.3b",
+  "benchmark": "lua_game_ai",
+  "level": "level2",
+  "tested_at": "2026-11-05 14:57:55",
+  "passed": 0,
+  "total": 12,
+  "failures": [
+    "action_and_condition: exception [string \"<python>\"]:3: attempt to call a nil value (field 'Action')",
+    "sequence_all_success: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+    "sequence_short_circuit_failure: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+    "sequence_resumes_running_child: exception [string \"<python>\"]:6: attempt to call a nil value (field 'Action')",
+    "selector_first_success: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+    "selector_all_failure: exception [string \"<python>\"]:5: attempt to call a nil value (field 'Action')",
+    "selector_resumes_running_child: exception [string \"<python>\"]:6: attempt to call a nil value (field 'Action')",
+    "blackboard_get_set: exception [string \"<python>\"]:4: attempt to call a nil value (method 'get')",
+    "blackboard_watchers: exception [string \"<python>\"]:6: attempt to call a nil value (method 'watch')",
+    "inverter_decorator: exception [string \"<python>\"]:3: attempt to call a nil value (field 'Action')",
+    "cooldown_decorator: exception [string \"<python>\"]:4: attempt to call a nil value (field 'Action')",
+    "composite_ai_tree: exception [string \"<python>\"]:4: attempt to call a nil value (method 'set')"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

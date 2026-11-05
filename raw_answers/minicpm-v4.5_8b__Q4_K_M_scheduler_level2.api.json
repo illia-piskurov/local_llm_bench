@@ -1,0 +1,25 @@
+{
+  "model": "minicpm-v4.5:8b",
+  "created_at": "2026-11-05T14:06:53.494904Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    def topo_sort_duration(tasks: dict[str, tuple[int, list[str]]]) -> dict[str, int]:\n        in_degree = {task: 0 for task, _ in tasks.items()}\n        for task, (duration, deps) in tasks.items():\n            for dep in deps:\n                in_degree[dep] += 1\n\n        queue = [task for task in in_degree if in_degree[task] == 0]\n        earliest_start = {task: 0 for task in tasks}\n        earliest_start.update({task: float('inf') for task in tasks if task not in queue})\n\n        while queue:\n            task = queue.pop(0)\n            for dep in tasks[task][1]:\n                in_degree[dep] -= 1\n                if in_degree[dep] == 0:\n                    queue.append(dep)\n                earliest_start[dep] = max(earliest_start[dep], earliest_start[task] + tasks[task][0])\n\n        return earliest_start\n\n    earliest_start = topo_sort_duration(tasks)\n    if any(task not in earliest_start for task in tasks):\n        return None\n\n    max_duration = max(earliest_start[task] + tasks[task][0] for task in tasks)\n    return max_duration\n```"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 16118878542,
+  "load_duration": 896750,
+  "prompt_eval_count": 459,
+  "prompt_eval_cached_count": 170,
+  "prompt_eval_duration": 1638859000,
+  "eval_count": 284,
+  "eval_duration": 14458448000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 459,
+    "total_output_tokens": 284,
+    "tokens_per_second": 19.642495515424613,
+    "time_to_first_token_seconds": 1.638859,
+    "model_load_time_seconds": 0.00089675
+  }
+}
