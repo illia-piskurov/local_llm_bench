@@ -1,0 +1,153 @@
+#include <stdint.h>
+#include <stddef.h> // For size_t
+
+// Define the buffer size
+#define BUFFER_SIZE 512
+
+// --- Ring Buffer Implementation (Level 1) ---
+
+// Structure to hold the ring buffer state and storage
+typedef struct {
+    uint8_t buffer[BUFFER_SIZE];
+    size_t head; // Write index
+    size_t tail; // Read index
+} ringbuf_t;
+
+// Static instance of the ring buffer storage
+static ringbuf_t ring_buffer;
+
+/**
+ * Initializes or resets the ring buffer to an empty state.
+ */
+void ringbuf_init(void) {
+    ring_buffer.head = 0;
+    ring_buffer.tail = 0;
+}
+
+/**
+ * Pushes one byte into the buffer.
+ * Returns 0 on success, or -1 if the buffer is full.
+ */
+int ringbuf_push(uint8_t byte) {
+    // Check if the buffer is full. Full condition: (head + 1) % SIZE == tail
+    if (((ring_buffer.head + 1) % BUFFER_SIZE) == ring_buffer.tail) {
+        return -1; // Buffer is full
+    }
+
+    // Write the byte at the current head position
+    ring_buffer.buffer[ring_buffer.head] = byte;
+
+    // Move head pointer forward (circularly)
+    ring_buffer.head = (ring_buffer.head + 1) % BUFFER_SIZE;
+    return 0; // Success
+}
+
+/**
+ * Pops one byte from the buffer (FIFO).
+ * Returns byte value on success, or -1 if the buffer is empty.
+ */
+int ringbuf_pop(void) {
+    // Check if the buffer is empty. Empty condition: head == tail
+    if (ring_buffer.head == ring_buffer.tail) {
+        return -1; // Buffer is empty
+    }
+
+    // Read the byte from the current tail position
+    uint8_t byte = ring_buffer.buffer[ring_buffer.tail];
+
+    // Move tail pointer forward (circularly)
+    ring_buffer.tail = (ring_buffer.tail + 1) % BUFFER_SIZE;
+    return (int)byte; // Success, return byte value
+}
+
+/**
+ * Returns the current number of bytes stored in the buffer (0 to 512).
+ */
+int ringbuf_available(void) {
+    // Calculate the number of elements by taking the difference, ensuring positive wrap-around.
+    if (ring_buffer.head >= ring_buffer.tail) {
+        return (int)(ring_buffer.head - ring_buffer.tail);
+    } else {
+        // Wrap around case: (512 - tail) + head
+        return (int)(BUFFER_SIZE - ring_buffer.tail + ring_buffer.head);
+    }
+}
+
+/**
+ * Returns remaining free space in the buffer (512 - available).
+ */
+int ringbuf_free_space(void) {
+    int available = ringbuf_available();
+    return BUFFER_SIZE - available;
+}
+
+// --- Packet Decoder Implementation (Level 2) ---
+
+/**
+ * Decodes a binary packet from a stream.
+ * Packet format: [0xAA (Magic)] [type] [len] [payload (len B)] [checksum (1B)]
+ * 
+ * @param stream The data stream to scan.
+ * @param stream_len The length of the available data in the stream.
+ * @param out_payload Pointer to store the decoded payload data.
+ * @param out_type Pointer to store the decoded message type.
+ * @return Payload length on success, -1 on failure.
+ */
+int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {
+    // Start searching for the magic byte (0xAA)
+    for (int i = 0; i <= stream_len - 4; ++i) {
+        if (stream[i] == 0xAA) {
+            // Potential start found. Check if there is enough data for the full packet structure.
+            
+            // 1. Extract Type (Index i + 1)
+            uint8_t type = stream[i + 1];
+
+            // 2. Extract Length (Index i + 2)
+            uint8_t len = stream[i + 2];
+
+            // Calculate total required length: Magic (1) + Type (1) + Length (1) + Payload (len) + Checksum (1)
+            int required_total = 3 + len + 1;
+
+            // Check if we have enough data for the claimed length
+            if (i + required_total > stream_len) {
+                // Not enough data remaining for this packet structure, skip and continue search.
+                continue; 
+            }
+
+            // --- Validation Steps ---
+            
+            uint8_t calculated_checksum = 0;
+            int check_valid = 1;
+
+            // 3. Validate Payload and Checksum
+            for (int j = 0; j < len; ++j) {
+                uint8_t byte = stream[i + 3 + j]; // Payload starts at i + 3
+                calculated_checksum ^= byte;
+            }
+
+            // Checksum validation
+            uint8_t received_checksum = stream[i + 3 + len]; // Checksum is right after payload
+            
+            if (calculated_checksum != received_checksum) {
+                // Checksum mismatch, invalid packet. Skip and continue search.
+                check_valid = 0;
+            }
+
+            if (check_valid) {
+                // Valid packet found!
+                *out_type = (int)type;
+                
+                // Copy payload
+                for (int j = 0; j < len; ++j) {
+                    out_payload[j] = stream[i + 3 + j];
+                }
+                
+                return len; // Success, return payload length
+            }
+
+            // If validation failed (e.g., bad checksum), the loop continues to search for the next 0xAA marker
+        }
+    }
+
+    return -1; // No valid packet found
+}

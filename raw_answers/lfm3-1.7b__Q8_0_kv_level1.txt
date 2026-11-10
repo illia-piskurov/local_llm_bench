@@ -1,0 +1,8 @@
+<tool_call>
+<function=run_program>
+<parameter=program>
+def run(program: str) -> list[str]:
+    # Implementation...
+</parameter>
+</function>
+</tool_call>

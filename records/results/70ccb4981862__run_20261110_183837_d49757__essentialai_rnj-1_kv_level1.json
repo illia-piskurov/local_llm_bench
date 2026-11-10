@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261110_183837_d49757",
+  "host_id": "70ccb4981862",
+  "model": "essentialai/rnj-1",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-11-10 18:44:28",
+  "passed": 13,
+  "total": 15,
+  "failures": [
+    "delete_then_get: expected ['NULL'], got ['10']",
+    "rollback_restores_delete: expected ['NULL', '5'], got ['5', '5']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

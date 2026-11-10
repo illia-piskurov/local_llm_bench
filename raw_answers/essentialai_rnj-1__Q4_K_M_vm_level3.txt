@@ -1,0 +1,113 @@
+```python
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    stack = []
+    output = []
+    labels = {}
+    variables = {}
+    call_stack = []
+
+    # Preprocess to find all label positions
+    for i, line in enumerate(lines):
+        if not line.strip() or line.strip().startswith("#"):
+            continue
+
+        parts = line.split()
+        cmd = parts[0]
+        args = parts[1:]
+
+        if cmd == "LABEL":
+            labels[args[0]] = i + 1  # Store label position (1-based index)
+
+    current_line = 0
+    while current_line < len(lines):
+        line = lines[current_line]
+        if not line.strip() or line.strip().startswith("#"):
+            current_line += 1
+            continue
+
+        parts = line.split()
+        cmd = parts[0]
+        args = parts[1:]
+
+        try:
+            if cmd == "PUSH":
+                n = int(args[0])
+                stack.append(n)
+            elif cmd == "POP":
+                if not stack:
+                    raise IndexError(f"Stack underflow at line {current_line + 1}")
+                stack.pop()
+            elif cmd == "ADD":
+                if len(stack) < 2:
+                    raise IndexError(f"Stack underflow at line {current_line + 1}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+            elif cmd == "SUB":
+                if len(stack) < 2:
+                    raise IndexError(f"Stack underflow at line {current_line + 1}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a - b)
+            elif cmd == "MUL":
+                if len(stack) < 2:
+                    raise IndexError(f"Stack underflow at line {current_line + 1}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+            elif cmd == "DIV":
+                if len(stack) < 2:
+                    raise IndexError(f"Stack underflow at line {current_line + 1}")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise ZeroDivisionError(f"Division by zero at line {current_line + 1}")
+                stack.append(a // b)
+            elif cmd == "DUP":
+                if not stack:
+                    raise IndexError(f"Stack underflow at line {current_line + 1}")
+                top = stack[-1]
+                stack.append(top)
+            elif cmd == "SWAP":
+                if len(stack) < 2:
+                    raise IndexError(f"Stack underflow at line {current_line + 1}")
+                a, b = stack.pop(), stack.pop()
+                stack.extend([b, a])
+            elif cmd == "PRINT":
+                if not stack:
+                    raise IndexError(f"Stack underflow at line {current_line + 1}")
+                output.append(str(stack[-1]))
+            elif cmd in ("JMP", "JZ", "JNZ"):
+                label = args[0]
+                if label not in labels:
+                    raise ValueError(f"Label '{label}' not found at line {current_line + 1}")
+
+                target_line = labels[label] - 1  # Convert to 0-based index
+
+                if cmd == "JMP":
+                    current_line = target_line
+                elif cmd == "JZ":
+                    if len(stack) < 1:
+                        raise IndexError(f"Stack underflow at line {current_line + 1}")
+                    value = stack.pop()
+                    if value == 0:
+                        current_line = target_line
+                    else:
+                        current_line += 1
+                elif cmd == "JNZ":
+                    if len(stack) < 1:
+                        raise IndexError(f"Stack underflow at line {current_line + 1}")
+                    value = stack.pop()
+                    if value != 0:
+                        current_line = target_line
+                    else:
+                        current_line += 1
+            elif cmd in ("CALL", "RET"):
+                label = args[0] if cmd == "CALL" else None
+
+                if cmd == "CALL":
+                    if label not in labels:
+                        raise ValueError(f"Label '{label}' not found at line {current_line + 1}")
+                    call_stack.append(current_line)
+                    current_line =

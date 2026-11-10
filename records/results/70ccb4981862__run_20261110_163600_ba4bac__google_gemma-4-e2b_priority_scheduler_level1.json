@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261110_163600_ba4bac",
+  "host_id": "70ccb4981862",
+  "model": "google/gemma-4-e2b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-10 16:43:45",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: unexpected exception: TypeError: string indices must be integers, not str",
+    "dependency_unlocks_later: unexpected exception: TypeError: string indices must be integers, not str",
+    "single_worker_duration_tiebreak: unexpected exception: TypeError: string indices must be integers, not str",
+    "resource_limit_and_priority: unexpected exception: TypeError: string indices must be integers, not str",
+    "simultaneous_unlocks: unexpected exception: TypeError: string indices must be integers, not str"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

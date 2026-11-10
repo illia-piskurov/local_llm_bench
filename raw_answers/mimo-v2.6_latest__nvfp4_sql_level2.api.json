@@ -1,0 +1,26 @@
+{
+  "model": "mimo-v2.6:latest",
+  "created_at": "2026-11-09T16:35:32.566261Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef compile_query(query: dict) -> dict:\n    sql = []\n    params = []\n\n    sql.append(\"SELECT\")\n    columns = query.get(\"select\", [\"*\"])\n    sql.append(\", \".join(columns))\n\n    joins = query.get(\"joins\", [])\n    if joins:\n        sql.append(\"FROM\")\n        sql.append(query[\"table\"])\n        for join in joins:\n            join_type = join.get(\"type\", \"INNER\")\n            sql.append(f\"{join_type} JOIN {join['table']}\")\n            on = join.get(\"on\", {})\n            left_col = next(iter(on))\n            right_col = on[left_col]\n            sql.append(f\"ON {left_col} = {right_col}\")\n\n    where = query.get(\"where\")\n    if where:\n        sql.append(\"WHERE\")\n        cond_sql, params = _compile_condition(where, params)\n        sql.append(cond_sql)\n\n    if query.get(\"groupBy\"):\n        sql.append(\"GROUP BY\")\n        sql.append(\", \".join(query[\"groupBy\"]))\n\n    if query.get(\"orderBy\"):\n        sql.append(\"ORDER BY\")\n        for item in query[\"orderBy\"]:\n            field = item[\"field\"]\n            direction = item.get(\"dir\", \"ASC\")\n            sql.append(f\"{field} {direction}\")\n\n    if query.get(\"limit\") is not None:\n        sql.append(f\"LIMIT {query['limit']}\")\n\n    if query.get(\"offset\") is not None:\n        sql.append(f\"OFFSET {query['offset']}\")\n\n    return {\"sql\": \" \".join(sql), \"params\": params}\n\n\ndef _compile_condition(cond, params):\n    if isinstance(cond, list):\n        parts = [_compile_condition(c, params) for c in cond]\n        return \" AND \".join(parts), params\n\n    if isinstance(cond, dict):\n        if \"AND\" in cond:\n            conds = cond[\"AND\"]\n            if len(conds) > 1:\n                parts = [_compile_condition(c, params) for c in conds]\n                return f\"({ ' AND '.join(p[0] for p in parts) })\", params\n            return parts[0][0], params\n\n        if \"OR\" in cond:\n            conds = cond[\"OR\"]\n            if len(conds) > 1:\n                parts = [_compile_condition(c, params) for c in conds]\n                return f\"({ ' OR '.join(p[0] for p in parts) })\", params\n            return parts[0][0], params\n\n        return _compile_leaf(cond, params)\n\n    return _compile_leaf(cond, params)\n\n\ndef _compile_leaf(cond, params):\n    field = cond[\"field\"]\n    op = cond[\"op\"]\n    value = cond[\"value\"]\n\n    if op == \"IS NULL\":\n        return f\"{field} IS NULL\"\n\n    if op == \"IS NOT NULL\":\n        return f\"{field} IS NOT NULL\"\n\n    if op == \"IN\":\n        placeholders = \", \".join(f\"${i + 1}\" for i in range(len(value)))\n        params.extend(value)\n        return f\"{field} IN ({placeholders})\"\n\n    if op == \"LIKE\":\n        placeholder = f\"${len(params) + 1}\"\n        params.append(value)\n        return f\"{field} LIKE {placeholder}\"\n\n    placeholder = f\"${len(params) + 1}\"\n    params.append(value)\n    return f\"{field} {op} {placeholder}\"\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 51616522750,
+  "load_duration": 2603292,
+  "prompt_eval_count": 1132,
+  "prompt_eval_cached_count": 361,
+  "prompt_eval_duration": 4815841834,
+  "eval_count": 773,
+  "eval_duration": 46739971541,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1132,
+    "total_output_tokens": 773,
+    "tokens_per_second": 16.538307031743255,
+    "time_to_first_token_seconds": 4.815841834,
+    "model_load_time_seconds": 0.002603292
+  }
+}

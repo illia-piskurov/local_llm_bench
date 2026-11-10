@@ -1,0 +1,178 @@
+We need to extend the previous implementation (which defines a static ring buffer of size BUFFER_SIZE=512 bytes, with front, rear, count). The user asks: "Extend your implementation with a binary packet decoder."
+
+We must produce only the C code in a single ```c ...``` block. Should include the original functions and also add new function decode_packet.
+
+The requirements for decode_packet:
+
+- Input: const uint8_t *stream, int stream_len (total number of bytes to scan? Or length of data we need to examine?), uint8_t *out_payload, int *out_type.
+- Need to return an integer: payload length (>=0) if valid packet found and enough space; else -1.
+
+We must parse packets according to format:
+
+Packet format:
+[0xAA (Magic, 1B)] [type (1B)] [len (1B)] [payload (len B)] [checksum (1B)]
+
+So total length = 4 + len bytes? Actually "Total valid packet length = 3 + len + 1 = len + 4 bytes." That's consistent: magic=0xAA, type, len, payload of len bytes, checksum. So we need to check that after reading the first three bytes (0xAA, type, len), then we must have exactly len bytes of payload, and finally a checksum byte at position 3+1+len = 4+len? Actually indexes: positions:
+- pos0: magic (0xAA)
+- pos1: type
+- pos2: length (len)
+- pos3: start of payload (len bytes follow)
+- then after payload, there is a checksum byte at position 3 + len? Or maybe the format is [magic][type][len][payload][checksum]. So total = 4 (first three?) Wait: Let's break down:
+
+Given "Total valid packet length = 3 + len + 1 = len + 4 bytes." That seems to count: magic (1), type (1), len (1) = 3, payload (len), checksum (1). So total = 3 + len + 1? Actually they wrote "3 + len + 1 = len + 4". Indeed 3+len+1 = len+4. So that matches: magic(1)+type(1)+len(1)+payload(len)+checksum(1) = 3 + len + 1.
+
+Thus to identify a packet, we need to see if there is a 0xAA at position i, then next byte type, then length byte len. If the following bytes exist and match that length (i.e., we can read payload of size len), and then after the payload there should be exactly one more byte checksum (XOR of payload). Also need to check if preceding bytes are not noise? The requirement says:
+
+- Scan stream and locate the first valid packet.
+- If preceded by noise bytes or false 0xAA markers (corrupted length or checksum), skip the noise and find the valid packet.
+
+Interpretation: The stream may contain some garbage before a real packet. Or there may be spurious 0xAA at start but with wrong length or checksum => false marker. We need to skip over them until we find a correct packet.
+
+We also have ring buffer? The existing code uses buffer for storing bytes pushed via push; but now decode_packet is separate scanning of stream, not using the ring buffer? Possibly it's independent: we can implement decode_packet that just scans through given array (stream) and finds first valid packet.
+
+We need to preserve all ring buffer functions from Level 1. So keep them as defined earlier in same file or code block.
+
+Thus final code should include:
+
+- #include <stdint.h>
+- #define BUFFER_SIZE 512
+
+- static uint8_t buffer[BUFFER_SIZE];
+- static unsigned int front, rear, count;
+
+- void ringbuf_init(void) { front=0; rear=0; count=0; }
+
+- int ringbuf_push(uint8_t byte) ...
+
+- int ringbuf_pop(...)
+
+- int ringbuf_available() ...
+
+- int ringbuf_free_space() ...
+
+- Then new function: int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type);
+
+We need to decide how to handle the parameters. The arguments:
+
+- const uint8_t *stream: pointer to start of scanning.
+- int stream_len: maybe total length of data in stream? Or number of bytes to consider? Usually we would pass length of entire packet(s) or maybe just up to some limit. We'll assume it's total bytes available; but we must not read beyond.
+
+We also have out_payload and out_type pointers/int* for results.
+
+We need to return payload length (number of bytes copied). If valid, set *out_payload to the payload data? Or fill into out_payload? The function signature: int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type); It returns "payload length (>= 0)" if found and valid. Also it says "Copy payload bytes into out_payload." So presumably we should copy the payload bytes from stream into out_payload (maybe starting at appropriate offset). But signature does not give start index for payload. Usually you'd need to know where payload is in stream: after reading magic, type, len, and then read len bytes for payload. The *out_payload pointer likely points to location where payload should be stored? Or we just fill out_payload with those bytes (starting at current position). Let's examine typical design: You pass a stream and allocate output array; you want function to extract the packet from stream, copy its payload into out_payload. Could set *out_payload as pointer to first byte of payload. But then they'd also need to know len for how many bytes to fill.
+
+Let's decide: We'll treat decode_packet such that it scans from start index (0) and when finds a valid packet at some position i, we will copy the next 'len' bytes into out_payload (starting at offset maybe after reading those bytes). But we don't have a pointer for payload start. However, typical usage: they'd allocate an array big enough to hold entire stream; then call decode_packet(stream, total_len, out_payload, &out_type); and it would fill out_payload with the captured payload (len bytes). That seems plausible.
+
+Thus we can implement as:
+
+- Initialize variables: i = 0; // index in stream
+- While i < stream_len:
+    - if stream[i] != 0xAA: maybe not a packet start? But there could be other magic values for noise. The spec only mentions preceding by noise bytes or false 0xAA markers (corrupted length or checksum). So we need to detect start of potential packet at position where stream[i]==0xAA.
+
+We can just search for first occurrence of 0xAA that satisfies subsequent conditions: after i, there must be a type byte and len byte. If the length field indicates payload size larger than remaining bytes or not enough data, it's corrupted; then we skip noise (i.e., move forward by something?). The requirement "skip the noise and find the valid packet" implies we need to handle false markers: i.e., if at a 0xAA there is type but len > distance to end of stream or missing payload, that's false. So we can just continue scanning.
+
+Implementation approach:
+
+Loop over index from 0 to stream_len-1 (maybe inclusive). At each step check if stream[i]==0xAA. If yes:
+
+   - Then read next byte at i+1: type = stream[i+1]; ensure it's within bounds (i+1 < stream_len) else invalid.
+
+   - Read length byte at i+2: len = stream[i+2]; Ensure len <= (stream_len - (i+3)) maybe? Actually we need to check that there are enough bytes after the length field for payload and checksum. So required total length after this point is 1 (checksum) + len (payload). Since we also need a checksum byte at position i+2+len = i+2+len? Wait: The format:
+
+Indices:
+- i: magic (0xAA)
+- i+1: type
+- i+2: length
+- payload from i+3 to i+2+len-1 (inclusive) (len bytes)
+- checksum at index i+2+len (i.e., after payload)
+
+Thus total packet size = 4 + len (since magic,type,len =3; plus payload len; plus checksum=1). Actually 3+len+1.
+
+We need to ensure that there are at least (len+1) bytes after the length field: i.e., stream_len - (i+2) >= len+1? Let's compute: After reading magic,type,len we need to have len payload bytes and one checksum byte. So total needed = 2 + len + 1? Wait: Already accounted for type (position i+1). The length field is at position i+2. Then after that we need len payload bytes starting at i+3. After those, there's a checksum byte at index i+3+len-1 = i+2+len. So the total number of bytes needed from start index i (i inclusive) to end is 4 + len? Let's check: positions:
+
+0xAA (i)
+type (i+1)
+len (i+2)
+payload[0] at i+3
+...
+payload[len-1] at i+2+len
+
+checksum at i+2+len+1 = i+3+len? Actually we counted wrong. Let's define:
+
+Let packet start index s where stream[s] = 0xAA.
+Then:
+stream[s]   -> magic
+stream[s+1] -> type
+stream[s+2] -> length (len)
+payload: len bytes from stream[s+3] to stream[s+2+len]? Because after three fields, we have payload. So last payload index is s+3+len-1 = s+2+len? Wait that's off by 1.
+
+Let's write out: Suppose we have:
+
+Indices:
+0: magic
+1: type
+2: len
+3: first payload byte
+...
+len+3: last payload byte (since payload starts at index 3 and occupies len bytes)
+Then checksum is at index 4 + len? Actually after payload, the next byte is checksum. So if payload length = L, then indices for payload are from s+3 to s+2+L inclusive (since that's 3 + L positions). The last payload index = s+3 + L -1 = s+2 + L? Let's compute: Example: len=5. Then:
+- magic at s
+- type at s+1
+- length at s+2 (=5)
+- payload bytes start at s+3, go for 5 bytes: indices s+3 (byte0), s+4(1), s+5(2), s+6(3), s+7(4). So last is s+2+len? Since len=5: s+2+5 = s+7. Yes matches.
+- checksum at index s+8, which equals s+2+len+1.
+
+Thus total needed length after start index s is 1 (magic) +1(type)+1(len)+len(payload)+1(checksum)= len+4. So we need stream_len - s >= len+4? Actually from s to end inclusive: number of bytes = (stream_len - s). Must be at least len+4.
+
+Thus condition: if i < stream_len and stream[i]==0xAA, then set type = stream[i+1] if i+1 < stream_len else invalid. Then len_byte = stream[i+2] if i+2 < stream_len else invalid. Then we need to check:
+
+- (i + 2 + len_byte) < stream_len? Actually we need at least len_byte bytes for payload plus checksum after them.
+
+If i+2+len_byte >= stream_len: not enough data => invalid marker (false). Or maybe we can just return false, skip and continue search.
+
+Also we should verify that the checksum byte matches XOR of payload. So compute XOR of the len bytes in payload region. Then compare to stream[i+3+len_byte]? Wait index for checksum = i+2 + len? Actually earlier derived: after payload (starting at i+3), length = len, so last payload index = i+3+len-1 = i+2+len? Let's verify with previous example len=5:
+
+i (magic) = start
+type = i+1
+len = i+2
+payload indices: i+3 to i+7 inclusive => that's 5 bytes. That is from i+3 to i+2+len? Since i+2+len = i+7, yes. So last payload index = i+2+len.
+
+Checksum index = i+2+len+1 = i+3+len? Actually earlier we said checksum at s+8 for len=5: That's i+8. Let's compute using formula: i+2+len+1 = i+2+5+1 = i+8. So correct.
+
+Thus to get the checksum byte, we need to read stream[i+3+len]? Wait confusion: Since payload indices start at s+3; after len bytes, index of next is s+3+len = s+(3+len). That's one more than last payload? Let's check with example: For len=5:
+
+- magic (0)
+- type (1)
+- len (2)
+- payload 0 at 3
+- payload 4 at 7 (since 3..7 inclusive is 5 bytes). So index = s+3 + (len-1) = s+2+len? Wait: s+3+(len-1)=s+2+len. Yes.
+
+Then checksum at s+2+len+1 = s+3+len? Actually for len=5, s+2+len+1 = s+8. So we need to check byte at position i+2+len+1? Let's compute: i is start index of 0xAA; then type at i+1; len at i+2; payload from i+3 to i+2+len inclusive; checksum at i+3+len? Wait i+3 + (len-1) = i+2+len. Then next byte after that is i+3+len? Let's test: For len=5, i+3+len = i+8 => matches.
+
+Thus the formula for checksum index: i + 4 + len? Because magic(0),type(1),len(2),payload(len bytes). So total before checksum = 3 (magic+type+len) + len (payload) = 3 + len. Then checksum is at position 3 + len + 1 = 4 + len from start index i? Let's compute: Starting at magic i, after three fields we are at index i+3; then payload occupies indices i+3 to i+2+len inclusive (that's len bytes). Then the next byte (checksum) is at index i+3+len = i + 3 + len. Since i start, it's i + 3 + len? Actually earlier we had example: len=5; i=0 => magic at 0, type1, len2, payload indices 3..7, checksum index 8 = i + (3+len). Indeed i+3+len = 0+3+5=8. So formula is i + 3 + len.
+
+Thus we can check: if stream[i] == 0xAA and stream[i+1] != ? type; stream[i+2] = len; then require that (i + 3 + len) < stream_len, else insufficient data => invalid.
+
+And also compute XOR of payload bytes: for j from i+3 to i+2+len-1 inclusive? Wait we need len bytes of payload. That's indices i+3 up to i+2+len? Let's re-evaluate: For len=5, payload bytes are at positions 3,4,5,6,7 (i.e., i+3 to i+2+len). Because i+2+len = i+7. So that includes both the last payload byte and the checksum? Actually no, we said last payload index is i+2+len-1? Let's double-check.
+
+We have: magic at i
+type at i+1
+length at i+2
+
+Now we need to place len bytes of payload starting after length. That means the first payload byte is at index i+3. The number of payload bytes = len, so indices for payload are i+3, i+4, ..., i+3 + (len - 1) = i + 2 + len? Because i+3 + (len-1) = i + 2 + len? Let's compute: i + 3 + len - 1 = i + 2 + len. Yes same.
+
+Thus the last payload index is i+2+len. Then the checksum index is after that, at i+2+len+1 = i+3+len. So earlier we mistakenly placed one extra.
+
+Let's verify with len=5: i=0 => magic@0, type@1, len@2, payload indices 3..? i+3 = 3 to i+2+len = 2+5 =7 => indices 3,4,5,6,7 -> that's five bytes (3-7). Then checksum index = i+2+len+1 = 2+5+1 =8. So matches earlier: payload up to index 7 inclusive.
+
+Thus correct range for payload is from stream[i+3] to stream[i+2+len] (inclusive) - that's len bytes.
+
+So we need to check that stream_len > i+2+len (so that there exists checksum at i+2+len+1). But we also must ensure that the length field value matches actual payload length: if it says less, but there may be extra zero padding? The spec doesn't mention that; just check.
+
+Thus algorithm for scanning:
+
+for (int i = 0; i < stream_len; ) {
+    // Look for magic
+    if (stream[i] == 0xAA) {
+        // Check next two bytes exist and are type and len
+        if (i+1 >= stream_len || stream[i+1] != ??? maybe any? We'll

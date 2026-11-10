@@ -1,0 +1,29 @@
+{
+  "run_id": "run_20261110_161310_e6db3c",
+  "host_id": "70ccb4981862",
+  "model": "lfm-3-coder-claude-distill",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-10 16:14:40",
+  "passed": 3,
+  "total": 18,
+  "failures": [
+    "push_print: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "add: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "sub_order: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "mul: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "div_order: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "div_truncate: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "dup: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "swap: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "pop: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "comments_and_blank_lines: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "multiple_prints: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "print_does_not_pop: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "negative_numbers: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "empty_program: unexpected exception/timeout: WASM trap: guest exited with code 1",
+    "complex_chain: unexpected exception/timeout: WASM trap: guest exited with code 1"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

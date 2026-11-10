@@ -1,0 +1,9 @@
+Need to add COUNT and WATCH. Watch tracks key -> old value (visible value at time of watch). On SET or DELETE that modifies visible value, emit notification.
+
+Implementation: maintain watch dict key -> old value. On set(key, value): old = store.get(key); if old != value: notify. On delete(key): old = store.get(key); if key in storage: del; if old != "NULL": notify.
+
+But careful: if a key is set inside a transaction, then watch is created with the transaction value. Later rollback discards it — but watch already recorded old value. That's fine per spec.
+
+Also note: if SET assigns same value — no notification. If key doesn't exist and SET assigns value, old is NULL, new is value → notify.
+
+Let me write it.

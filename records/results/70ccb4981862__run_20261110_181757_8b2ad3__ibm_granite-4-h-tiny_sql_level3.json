@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_181757_8b2ad3",
+  "host_id": "70ccb4981862",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-11-10 18:26:26",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "failed to load solution: Syntax error in solution: f-string: unmatched ')' (<unknown>, line 24)"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

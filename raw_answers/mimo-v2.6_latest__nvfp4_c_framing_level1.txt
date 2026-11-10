@@ -1,0 +1,51 @@
+```c
+#include <stdint.h>
+
+#define BUFFER_SIZE 512
+
+static uint8_t buffer[BUFFER_SIZE];
+static size_t head;
+static size_t count;
+
+void ringbuf_init(void)
+{
+    head = 0;
+    count = 0;
+}
+
+int ringbuf_push(uint8_t byte)
+{
+    if (count == BUFFER_SIZE) {
+        return -1;
+    }
+
+    buffer[head] = byte;
+    head = (head + 1) % BUFFER_SIZE;
+    count++;
+
+    return 0;
+}
+
+int ringbuf_pop(void)
+{
+    if (count == 0) {
+        return -1;
+    }
+
+    int byte = buffer[head];
+    head = (head + 1) % BUFFER_SIZE;
+    count--;
+
+    return byte;
+}
+
+int ringbuf_available(void)
+{
+    return (int)count;
+}
+
+int ringbuf_free_space(void)
+{
+    return BUFFER_SIZE - ringbuf_available();
+}
+```

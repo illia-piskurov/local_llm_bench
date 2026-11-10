@@ -1,0 +1,21 @@
+{
+  "run_id": "run_20261110_181757_8b2ad3",
+  "host_id": "70ccb4981862",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-11-10 18:18:42",
+  "passed": 20,
+  "total": 27,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: KeyError: skip",
+    "jz_taken_when_zero: unexpected exception/timeout: KeyError: zero",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: KeyError: end",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: KeyError: nz",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: KeyError: end",
+    "countdown_loop: unexpected exception/timeout: KeyError: loop",
+    "count_up_loop: unexpected exception/timeout: KeyError: loop"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

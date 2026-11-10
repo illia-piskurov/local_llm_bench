@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261110_183837_d49757",
+  "host_id": "70ccb4981862",
+  "model": "essentialai/rnj-1",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-10 18:41:33",
+  "passed": 6,
+  "total": 10,
+  "failures": [
+    "simple_chain: invalid topological order: ['c', 'b', 'a']",
+    "diamond: invalid topological order: ['d', 'c', 'b', 'a']",
+    "multiple_roots: invalid topological order: ['d', 'c', 'b', 'a']",
+    "wide_graph: invalid topological order: ['deploy', 'package', 'test', 'lint', 'compile']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

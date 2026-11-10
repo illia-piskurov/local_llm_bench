@@ -1,0 +1,158 @@
+We need to implement `plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None`. Input: tasks is a dictionary mapping task name (str) to a tuple (duration, deps, priority). So each key is a task name; value = (duration, dependencies list of other task names, priority integer). Dependencies are the tasks that must be completed before this one can start. Priority: higher number means higher priority? Usually higher priority starts earlier. So we need to schedule tasks respecting dependencies, and workers limited.
+
+We also must detect cycles in dependency graph; if any cycle exists among tasks (i.e., dependencies form a cycle), return None.
+
+Execution rules:
+- Tasks run non-preemptively: once started, they run for their full duration.
+- At most `workers` tasks can run simultaneously.
+- When multiple tasks are ready to run, select first by highest priority (higher number = earlier?), then shortest duration, then alphabetical task name.
+- If multiple tasks start at the exact same timestamp, append them to the returned list following same tie-breaking rule. So essentially we need to output a list of task names in order they start? Or "plan_order" returns something: `list[str] | None`. The description: "Return only the Python code ...". We need to implement function returning list of strings (the schedule order) or None if cycle.
+
+Interpretation: We want to produce an ordering (or schedule timeline) for tasks, maybe like a list representing execution events? Or just return the order they start? Let's parse typical similar problems. "plan_order" likely returns list of task names in order they should be executed given dependencies and worker limit. But with non-preemptive and multiple workers, we might have overlapping runs; but output maybe is sequence of starting times? Hmm.
+
+Let's re-read: "Implement a task scheduler with dependencies, priorities, and a limited worker pool in a single Python file.
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None
+
+Each task is defined by a tuple (duration, deps, priority):
+- duration: task duration in integer time units;
+- deps: list of task names that must finish before this task can start;
+- priority: task priority; higher priority tasks must start earlier.
+
+Execution rules:
+- Tasks run non-preemptively;
+- At most workers tasks can run simultaneously;
+- When multiple tasks are ready to run, select first by highest priority,
+  then shortest duration, then alphabetical task name;
+- If multiple tasks start at the exact same timestamp, append them to the returned list[str]
+  following the same priority tie-breaking rule;
+- If there is a cyclic dependency in tasks, return None."
+
+Thus we need to simulate scheduling of tasks over time with limited concurrency. Return something: "list[str]" maybe representing tasks ordered by start time? Or perhaps it's just list of task names as they would be executed (like order of execution). The phrase "If multiple tasks start at the exact same timestamp, append them to the returned list following the same priority tie-breaking rule;" implies we need a list where each element is a task name that starts at some time. So likely we produce a chronological list of events: for each task when it starts (or maybe completes?). Let's think.
+
+Common scheduling problems ask for "plan_order" returns order tasks should be run, but with dependencies and workers you cannot just simple topological order. Also priority influences starting earlier.
+
+Given limited worker pool, multiple tasks can start at same time if they become ready simultaneously. So we need to decide which tasks are ready (all deps completed) and then pick next task according to tie-breaking rules to start now. Once started, it runs for its duration, during which other tasks may also become ready or remain waiting.
+
+Thus the output list likely contains task names in order they start? Or maybe we need to return a schedule timeline: like each element is the start time and task name? But spec says returns `list[str] | None`. So just strings. Not times. If it's only task names, then perhaps it's just ordering of tasks by their start times. That seems plausible.
+
+Let's assume output is list of task names in order they are scheduled to begin execution (i.e., starting at each time slot). The function returns that list.
+
+We also need to detect cycles: if there is a cycle among dependencies, return None.
+
+Implementation plan:
+
+- Parse tasks dict into mapping name -> (duration, deps, priority). Deps may refer to other task names. They might not include all tasks? Possibly some tasks are leaf nodes with empty deps or deps list containing none.
+
+- Build adjacency for dependency graph: For each task, dependencies = set(deps). Also we need to compute indegree (number of unsatisfied prerequisites) and maybe later topological order but also priority influences start time among ready tasks. However standard Kahn's algorithm respects only dependencies not priorities; we need to schedule by highest priority first when multiple ready.
+
+- We can simulate using a priority queue for currently ready tasks. At each step, while there are tasks whose all deps completed (i.e., their duration? Actually they become ready once the last dependency finishes). So we need to track completion times of tasks and know when dependencies finish.
+
+Because non-preemptive: once started, it runs its full duration; thus we can't interrupt. The scheduler picks a task that is ready at current time, starts it for its duration, and marks it as busy until start+duration. While running, other tasks may become ready if their dependencies have finished earlier (i.e., when any of their deps completed). Since tasks run concurrently up to worker limit.
+
+Thus we can simulate event-driven using a priority queue of events? Or simpler: We can compute schedule by always picking the highest-priority ready task among those whose prerequisites all finished. But since tasks may be running concurrently, we need to handle when multiple tasks become ready at different times; but also limited workers.
+
+Given that durations are integer and no preemption, one typical approach is to maintain a timeline of time points where something finishes or starts. However with many tasks and worker limit maybe simpler to just simulate step by step: At each "time unit"? But durations may be more than 1. Could do event-based.
+
+Given the problem constraints are not huge? Not specified. We need a solution that works in general, but we can implement simulation using a queue of ready tasks sorted by priority etc., and track worker availability.
+
+Simplify: Since only integer times and no preemption, we could treat each task's start time as the max( finish time of its dependencies ) and if multiple workers available, assign earliest possible start based on picking highest priority among those whose all deps finished before or at same time? But due to concurrency, a task may become ready after some other tasks have already started; but we need to consider overlapping runs.
+
+Let's think about algorithm: We maintain a set of currently running tasks (busy workers). At each step, we identify tasks that are "ready" i.e., all dependencies completed. Among them, pick the one with highest priority (higher number first), then shortest duration, then alphabetical name. Then assign it to start at the earliest possible time? Since we can only run up to `workers` tasks simultaneously, but we have a pool of workers; each worker can run one task at a time.
+
+Thus schedule: At time t=0, we find all tasks whose deps are empty (no dependencies). Choose among them using tie-break. Start it on a worker for duration d. It will occupy that worker until t = start + d. While running, other tasks may become ready if their dependencies have completed at some times earlier than or equal to when they finish? Actually tasks become ready as soon as all deps are finished; we can check after each task finishes.
+
+Thus we need an event queue of completion events: For each task, we know its start time and duration. When it completes (at start + duration), we mark it done and then for any other tasks that have this task in their dependency list, they become ready if all other deps also completed before or at the same time? Actually a task's readiness is determined by when the last of its dependencies finishes. So once we know completion times, we can schedule new ready tasks.
+
+Simplify: We could simulate by iterating over time steps? But durations might be large; but number of tasks maybe small. Could implement using priority queue for "next event" where events are task completions and readiness checks. That's more complex.
+
+Given this is a coding challenge on LeetCode style, perhaps they expect simpler approach: Because dependencies are static, we can compute topological order with priority tie-breaking; but limited workers also influences ordering? Usually plan_order returns just the order tasks should be started (like schedule). Let's search memory: I recall an existing problem "plan_order" from some platform maybe expecting to return list of task names sorted by their dependencies and priorities. But not sure.
+
+Let's try to interpret more concretely with example:
+
+Suppose tasks = {
+    'A': (3, [], 1),
+    'B': (2, ['A'], 2),
+    'C': (4, ['B'], 3)
+}
+Workers = 2
+
+Dependencies: A no deps, B depends on A, C depends on B. Priority: higher number means earlier start? So highest priority is C (3). But C cannot start until B finishes and B needs A finished. However if only one worker? Let's say workers=1.
+
+We have time 0: A ready; pick highest priority among ready? Only A, so start A at 0 for duration 3 -> finishes at 3.
+At t=3: now B becomes ready (since A done). C not yet because needs B. At this moment only one worker free after A finished, so we can run B from 3 to 5. After finishing, C becomes ready at 5 and starts, runs for 4 -> finishes 9.
+
+Thus start times: A at 0, B at 3, C at 5. So output list maybe ["A","B","C"].
+
+If workers=2 (two parallel), at time 0 we could run A and also something else? Only one ready initially; no difference. At t=3, after A finishes, there is worker 1 free for B; but still only one task ready, so start B at 3. At t=5, C starts.
+
+Thus same list.
+
+Now test priority: Suppose two tasks are both ready simultaneously (e.g., independent). Then we select highest priority first, then shortest duration etc.
+
+Now about returning multiple tasks starting at same timestamp: e.g., at time 0, A and D ready; pick highest priority. Both start at same time? Usually they'd be started simultaneously if multiple workers available. So output list includes both names in the order of tie-breaking (highest priority first). If more than one worker free, we can start them all at that timestamp.
+
+Thus our schedule algorithm should produce an ordered list of task names as they begin execution. That matches "If multiple tasks start at the exact same timestamp, append them to the returned list[str] following the same priority tie-breaking rule."
+
+So we need to output a flat list (not per worker) maybe representing chronological order of starts across all workers? If two tasks start at time 0, they are appended consecutively. So overall schedule is just sorted by start time ascending; for equal start times, order by tie-break.
+
+Thus we can simulate:
+
+Initialize:
+- ready_tasks: set of tasks that have all deps satisfied and not yet started.
+- For each task, track its state: not_started (pending), running (busy until some time), completed. We'll need to know start_time and duration for when it finishes.
+
+We also need a list of "current workers" busy until times? At any moment we can assign up to `workers` tasks in parallel. The simplest is to schedule tasks sequentially at the earliest possible start based on current free slots? But easier: Use an event-driven simulation with time steps but limited to integer times and durations.
+
+Given non-preemptive, each task runs for its duration without interruption; we can think of it as occupying a worker from start_time inclusive to start_time + duration exclusive (or inclusive?). For simplicity, treat that at start_time = t, the task will be busy during interval [t, t+duration). Another task starting at same time would share workers.
+
+We need to maintain for each worker? Actually we have pool of `workers` identical workers. At any moment, up to `workers` tasks can run concurrently. We don't care which specific worker; just the count.
+
+Thus scheduling is akin to: At any given time t, choose up to `workers` ready tasks (those whose dependencies all completed before or at t and not running) to start as soon as possible after previous starts? But if multiple become ready at different times, we schedule them when a worker becomes free. However typical non-preemptive with limited workers: you can think of each task's start time is the maximum between its dependency completion time and the earliest available slot (when a worker finishes). This yields optimal makespan but also determines order.
+
+But problem doesn't require minimizing total time; just produce schedule according to tie-breaking when multiple tasks are ready at same timestamp. And we have limited workers: at any instant, you cannot start more than `workers` tasks concurrently. So our algorithm should assign start times accordingly.
+
+Simplify: We can simulate by always picking the highest priority ready task among those that have become ready and also whose resource (worker) is free? Wait there are multiple workers; if more than one worker available, we can start them simultaneously at same time even if tasks finish at different times. This gets messy.
+
+But maybe they expect simpler: just schedule based on dependencies only ignoring concurrency; i.e., compute a topological order respecting dependencies and priorities but with limited workers meaning you cannot run all tasks in parallel; but since there's no actual simulation of overlapping, the output is just list of tasks sorted by start time? Actually not.
+
+Given complexity, perhaps they expect us to implement using priority queue for ready tasks each step: while there are unfinished tasks:
+
+- While there are tasks with completed dependencies and not yet started:
+   - Determine set of currently ready (all deps done) but also check if any running task is still ongoing.
+   - Choose the highest priority among those that can start now, given workers limit.
+
+But we need to decide how many of them can start at same timestamp. If number_of_ready <= workers and they all are ready, we can start all? The rule: "When multiple tasks are ready to run, select first by highest priority, then shortest duration, then alphabetical task name." That seems to refer to selecting a single next task when picking the earliest start time. However if there is capacity for more than one at same timestamp, we might need to decide which ones start and in what order.
+
+The phrase "If multiple tasks start at the exact same timestamp, append them to the returned list[str] following the same priority tie-breaking rule;" suggests that when they become ready at the same time (maybe after some events), they all start at that same timestamp. That can happen if both have no deps and we have enough workers. So we need to produce a flat list of tasks in order of start times, grouping those with same start time together sorted by tie-break.
+
+Thus algorithm: Simulate timeline; maintain current time t. At each moment, find all ready tasks (deps satisfied) that are not currently running. Among them, select tasks that can be started now given workers left? Actually we need to decide which ones to start at this time up to worker limit. Usually you'd start as many ready tasks as possible, but priority order determines selection.
+
+Simplify: At each "event" (when a task completes), update readiness of dependent tasks; after checking all currently ready tasks, pick the highest priority among those and assign it a start time = current time? But what about workers limit? Suppose there are 2 ready tasks and workers=1. Only one can run at same time; we choose highest priority (or tie-break). Then that task runs for its duration, after which we may have another ready task become eligible. That is consistent.
+
+Thus we don't need to consider multiple starting simultaneously if worker limit < number of ready tasks. The simulation should handle that: At each step, pick one task to start now; run it until finish; update times and re-evaluate ready set.
+
+Hence schedule order (list) will be the sequence of starts in chronological order. So we can just produce list as we assign starts, including possibly multiple starts at same timestamp if workers >= number_of_ready_tasks? Actually we may start only one per event because we pick highest priority; but after finishing that task, maybe there are other ready tasks; they will be picked next.
+
+But the rule about "multiple tasks start at exact same timestamp" suggests scenario where more than one can start simultaneously (i.e., when a worker finishes its current job and another becomes ready). In such case, we need to treat them as starting at that same timestamp. Our algorithm of picking one per loop won't capture simultaneous starts.
+
+Thus we need to handle "if after finishing a task, there may be multiple new tasks becoming ready; they become ready at the same time (the finish time), and if workers are free enough, they all can start at that exact time."
+
+Hence approach: Use event-driven simulation with events for task completion. At each completion, we add newly ready tasks to a priority queue based on tie-break rules. Then from that set of ready tasks, we pick up to `workers` number (or as many as possible) and schedule them starting at the current time (the event time). But if there are more than workers ready, we only start the highest priority ones until worker limit reached? The rule says "At most workers tasks can run simultaneously." So yes.
+
+Thus algorithm steps:
+
+- Compute initial dependencies: For each task, check deps. If any dep missing (i.e., not in tasks dict) maybe ignore? Assume all present.
+
+- Build graph and indegree counts for topological order, but we also need to track dependency completion times.
+
+Simpler approach: Since n is unknown, implement naive simulation with a while loop:
+
+Initialize:
+- time = 0
+- schedule list starts_times (list of task names in order they start)
+- completed_tasks = set()
+- running = [] # list of (task_name, end_time) currently running tasks? Need to know which workers are busy and until when.
+- For each task not yet started: we need its duration.
+
+We also need a way to track when dependencies finish. When we finish a task at time t_end, for each dependent that has this task as dependency, decrement its remaining prerequisite count; if it becomes zero and not already running or completed

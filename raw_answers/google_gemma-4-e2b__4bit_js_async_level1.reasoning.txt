@@ -1,0 +1,75 @@
+
+Thinking Process:
+
+1.  **Understand the Goal:** Implement an asynchronous concurrent mapping function (`pMap`) in JavaScript that takes an array, an async mapping function, and optional concurrency limits. It must preserve the order of results and handle errors by immediately rejecting the main promise.
+
+2.  **Analyze Signature and Requirements:**
+    *   `async function pMap(items, mapper, options)`
+    *   `items`: Array of input data.
+    *   `mapper`: An async function `(item, index) => result`.
+    *   `options`: Defines concurrency (number or `{ concurrency: N }`). Default is 1.
+    *   Requirement 1: Empty input -> return `[]`.
+    *   Requirement 2: Concurrency limit (e.g., N tasks running simultaneously).
+    *   Requirement 3: Order preservation (Result[i] must correspond to Items[i]).
+    *   Requirement 4: Error handling (Fail-fast mechanism).
+
+3.  **Determine the Strategy (Concurrent Mapping):**
+    *   Since we need to run tasks concurrently but limit them, the standard approach is to use a queue or pool mechanism.
+    *   We will create an array of promises, one for each item mapping operation.
+    *   We need a mechanism (like a queue and a set of active promises) to ensure only `N` tasks run simultaneously.
+    *   We need to wait for *all* promises to complete, ensuring we gather the results in the correct order.
+
+4.  **Detailed Implementation Steps:**
+
+    *   **Handle Edge Case (Empty Input):** Check `items.length === 0`. If so, return `[]`.
+
+    *   **Normalize Concurrency:** Extract the concurrency limit from `options`. Default to 1.
+        ```javascript
+        const concurrency = options !== undefined ? options.concurrency : 1;
+        ```
+
+    *   **Initialize Results Array:** Create a result array of the correct size, filled with placeholders or initial nulls.
+        ```javascript
+        const results = new Array(items.length);
+        ```
+
+    *   **Worker Function:** Create an internal function (or logic) that handles mapping a single item and manages the promise chain.
+
+    *   **The Core Concurrency Loop (Simplified Approach using `Promise.all` with chunking):**
+        A cleaner way for ordered concurrent processing is often to define the function that processes *one* item and then use a structure (like an array of promises) and limit how many we start resolving simultaneously.
+
+    *   **Implementation using a Queue/Pool Pattern (Most robust for concurrency limits):**
+
+        a. Create an array of promises, where each promise resolves to the result for a specific index.
+        b. Create a function that recursively or iteratively processes indices, ensuring only `concurrency` are active at any time.
+
+    *   **Refined Implementation Strategy (Iterative Promise Management):**
+        1. Map the input array to an array of Promises, where each promise wraps the call to `mapper(item, index)`.
+        2. Use a loop or a mechanism that continuously pulls from the promise array, resolves it, and replaces it with a new task, ensuring the limit is respected.
+
+    *   **Error Handling:** If any promise rejects, we must catch it and immediately reject the main function's returned promise. `Promise.allSettled` is useful if we want to wait for all, but since the requirement states *immediate* rejection on failure, a standard `Promise.all` structure is better, which naturally fails fast.
+
+5.  **Drafting the Code (Focusing on concurrency control):**
+
+    *   We will use a mechanism similar to `p-limit` or custom async loops.
+
+    *   Let $N$ be the number of items. We need $N$ results in order.
+
+    *   Let's simplify the flow by creating an array of processing tasks and managing them via a semaphore or queue pattern.
+
+6.  **Self-Correction/Refinement (Using `map` and concurrency control):**
+
+    A common pattern is to use a helper function that processes items sequentially but manages concurrency internally.
+
+    Let's stick to the required asynchronous style and ensure that we collect results by index, guaranteeing order.
+
+    *Initial idea:* Create $N$ promises upfront.
+    `const tasks = items.map((item, index) => mapper(item, index));`
+
+    Then we need a utility to run these tasks in batches.
+
+    *Better approach:* Process items index by index, managing a pool of active workers.
+
+7.  **Final Code Structure (Implementing the logic):** (This needs to be robust against index mapping and error propagation.)
+
+    (Since the requirement emphasizes strict order, using an indexed array approach where we wait for index $i$ before worrying about index $j > i$ is key.) (Wait, the requirement implies concurrency optimization, so we should use a pool.)

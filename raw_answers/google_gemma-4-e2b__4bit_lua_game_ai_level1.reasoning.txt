@@ -1,0 +1,45 @@
+
+Thinking Process:
+
+1.  **Understand the Goal:** Implement the core structure and behavior of a Behavior Tree (BT) engine in Lua, focusing on standard nodes: Action, Condition, Sequence, and Selector.
+
+2.  **Define the Global Structure:** The BT structure needs to handle nodes and their execution flow/results.
+    *   `BT = {}` (Global table).
+    *   Execution statuses: `SUCCESS`, `FAILURE`, `RUNNING`.
+
+3.  **Implement Base Node Structure (Implicit Requirement):** All nodes must share a common interface (`tick`, `reset`).
+
+4.  **Implement `BT.Action(fn)`:**
+    *   Role: Performs an operation.
+    *   `tick(ctx)`: Calls `fn(ctx)`. Maps results (`true`/`SUCCESS`, `false`/`FAILURE`, `RUNNING`) to the standard BT results.
+    *   `reset()`: Nothing complex needed, perhaps just state reset if the action had internal state (but here we focus on the structural requirement).
+
+5.  **Implement `BT.Condition(predicate)`:**
+    *   Role: Checks a state.
+    *   `tick(ctx)`: Calls `predicate(ctx)`. Maps result (`true` to `SUCCESS`, `false` to `FAILURE`).
+    *   `reset()`: Standard reset.
+
+6.  **Implement `BT.Sequence(children)`:**
+    *   Role: Executes children in order (AND logic). Strict failure propagation. Handles `RUNNING` state to remember position for resumption.
+    *   Execution Flow:
+        *   Iterate through children.
+        *   If child is `FAILURE`, stop and return `FAILURE`.
+        *   If child is `RUNNING`, store index, return `RUNNING`.
+        *   If child is `SUCCESS`, continue.
+        *   If iteration completes, return `SUCCESS`. (Need to handle the indexing/state management for resumption).
+
+7.  **Implement `BT.Selector(children)`:**
+    *   Role: Executes children until one succeeds (OR logic/fallback). Handles `RUNNING` state to remember position.
+    *   Execution Flow:
+        *   Iterate through children.
+        *   If child is `SUCCESS`, stop and return `SUCCESS`.
+        *   If child is `RUNNING`, store index, return `RUNNING`.
+        *   If iteration completes (all failures), return `FAILURE`.
+
+8.  **Refinement & Implementation Details (Lua specifics):**
+    *   Need a robust way for composite nodes (`Sequence`, `Selector`) to manage internal state (which child they are currently on).
+    *   The structure should allow nodes to be constructed easily.
+
+*(Self-Correction during Sequence/Selector design):* Composite nodes need a mechanism to store the "current position" so they know where to restart from if a child returns `RUNNING`.
+
+Let's define the structure and methods required for these classes.

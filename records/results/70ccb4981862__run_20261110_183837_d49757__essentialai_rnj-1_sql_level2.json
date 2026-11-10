@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261110_183837_d49757",
+  "host_id": "70ccb4981862",
+  "model": "essentialai/rnj-1",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-11-10 18:48:16",
+  "passed": 0,
+  "total": 5,
+  "failures": [
+    "left_join_with_group_by: SQL: expected 'SELECT orders.id, orders.total FROM orders LEFT JOIN items ON orders.id = items.order_id GROUP BY orders.id, orders.total', got 'LEFT JOIN items ON orders.id = items.order_id SELECT orders.id, orders.total FROM orders GROUP BY orders.id, orders.total'",
+    "multiple_joins_inner_and_left: SQL: expected 'SELECT posts.title, users.name FROM posts INNER JOIN users ON posts.author_id = users.id LEFT JOIN comments ON posts.id = comments.post_id', got 'INNER JOIN users ON posts.author_id = users.id LEFT JOIN comments ON posts.id = comments.post_id SELECT posts.title, users.name FROM posts'",
+    "where_in_operator: SQL: expected 'SELECT * FROM users WHERE id IN ($1, $2, $3)', got 'SELECT * FROM users WHERE id IN $1'; params: expected [10, 20, 30], got [[10, 20, 30]]",
+    "where_is_null_and_like: exception/timeout: KeyError: value",
+    "where_is_not_null: exception/timeout: KeyError: value"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

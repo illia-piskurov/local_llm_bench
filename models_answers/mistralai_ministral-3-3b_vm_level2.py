@@ -10,18 +10,14 @@ def run(program: str) -> list[str]:
 
     while pc < len(lines):
         line = lines[pc].split()
-        cmd = line[0] if line else ''
+        cmd = line[0]
 
         try:
-            if not cmd:
-                pc += 1
-                continue
-
             if cmd == 'PUSH':
                 n = int(line[1])
                 stack.append(n)
             elif cmd == 'POP':
-                if len(stack) == 0:
+                if not stack:
                     raise ValueError(f"Stack underflow at line {pc + 1}")
                 stack.pop()
             elif cmd == 'ADD':
@@ -47,7 +43,7 @@ def run(program: str) -> list[str]:
                     raise ZeroDivisionError(f"Division by zero at line {pc + 1}")
                 stack.append(a // b)
             elif cmd == 'DUP':
-                if len(stack) == 0:
+                if not stack:
                     raise ValueError(f"Not enough values for DUP at line {pc + 1}")
                 stack.append(stack[-1])
             elif cmd == 'SWAP':
@@ -57,40 +53,36 @@ def run(program: str) -> list[str]:
                 stack.append(a)
                 stack.append(b)
             elif cmd == 'PRINT':
-                if len(stack) == 0:
+                if not stack:
                     raise ValueError(f"No value to print at line {pc + 1}")
                 output.append(str(stack[-1]))
             elif cmd == 'LABEL':
                 pass
             elif cmd == 'JMP':
-                label_name = line[1]
-                target_pos = get_label(label_name)
-                if target_pos is None:
-                    raise ValueError(f"Undefined label '{label_name}' at line {pc + 1}")
-                pc = target_pos - 1
+                target = get_label(line[1])
+                if target is None:
+                    raise ValueError(f"Undefined label '{line[1]}' at line {pc + 1}")
+                pc = target - 1
             elif cmd == 'JZ':
-                if len(stack) == 0:
+                if not stack:
                     raise ValueError(f"Not enough values for JZ at line {pc + 1}")
-                value = stack.pop()
-                label_name = line[1]
-                target_pos = get_label(label_name)
-                if target_pos is None:
-                    raise ValueError(f"Undefined label '{label_name}' at line {pc + 1}")
-                pc = target_pos - 1 if value == 0 else pc
+                val = stack.pop()
+                target = get_label(line[1])
+                if target is None:
+                    raise ValueError(f"Undefined label '{line[1]}' at line {pc + 1}")
+                pc = (target - 1) if val == 0 else pc
             elif cmd == 'JNZ':
-                if len(stack) == 0:
+                if not stack:
                     raise ValueError(f"Not enough values for JNZ at line {pc + 1}")
-                value = stack.pop()
-                label_name = line[1]
-                target_pos = get_label(label_name)
-                if target_pos is None:
-                    raise ValueError(f"Undefined label '{label_name}' at line {pc + 1}")
-                pc = target_pos - 1 if value != 0 else pc
+                val = stack.pop()
+                target = get_label(line[1])
+                if target is None:
+                    raise ValueError(f"Undefined label '{line[1]}' at line {pc + 1}")
+                pc = (target - 1) if val != 0 else pc
             else:
                 raise ValueError(f"Unknown command '{cmd}' at line {pc + 1}")
-
-        except (ValueError, ZeroDivisionError) as e:
-            raise e
-
+        except Exception as e:
+            raise ValueError(str(e))
         pc += 1
+
     return output

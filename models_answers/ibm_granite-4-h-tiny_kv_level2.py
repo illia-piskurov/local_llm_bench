@@ -1,68 +1,98 @@
 class InMemoryKVStore:
     def __init__(self):
-        self.store = {}
+        self.data = {}
         self.transactions = []
-        self.watchers = {}
+        self.watches = {}
 
-    def execute(self, line):
+    def set(self, key, value):
+        current_value = self.get(key)
+        if current_value != value:
+            self.data[key] = value
+            if key in self.watches:
+                print(f"WATCH {key} {current_value} -> {value}")
+
+    def get(self, key):
+        return self.data.get(key, "NULL")
+
+    def delete(self, key):
+        if key in self.data:
+            current_value = self.data[key]
+            del self.data[key]
+            if key in self.watches:
+                print(f"WATCH {key} {current_value} -> NULL")
+        else:
+            raise KeyError("Key not found for deletion")
+
+    def begin_transaction(self):
+        self.transactions.append({})
+
+    def commit(self):
+        if not self.transactions:
+            return "NO TRANSACTION"
+        transaction = self.transactions.pop()
+        parent = self.transactions[-1] if self.transactions else None
+        for k, v in transaction.items():
+            parent[k] = v
+
+    def rollback(self):
+        if not self.transactions:
+            return "NO TRANSACTION"
+        self.transactions.pop()
+
+    def count(self, value):
+        count = 0
+        current_data = self.data.copy()
+        for trans in reversed(self.transactions):
+            for k, v in trans.items():
+                current_data[k] = v
+        for key, val in current_data.items():
+            if val == value:
+                count += 1
+        return str(count)
+
+    def watch_notifications(self):
+        notifications = []
+        current_data = self.data.copy()
+        for trans in reversed(self.transactions):
+            for k, v in trans.items():
+                current_data[k] = v
+        for key, old_val in self.watches.items():
+            new_val = current_data.get(key, "NULL")
+            if old_val != new_val:
+                notifications.append(f"WATCH {key} {old_val} -> {new_val}")
+        return "\n".join(notifications)
+
+
+def run(program: str) -> list[str]:
+    store = InMemoryKVStore()
+    output = []
+    lines = (line.strip() for line in program.splitlines() if line.strip())
+    for line in lines:
         parts = line.split()
         cmd = parts[0]
         if cmd == "SET":
-            key, value = parts[1], parts[2]
-            old_value = self.store.get(key)
-            self.store[key] = value
-            if key in self.watchers:
-                for watcher_key, watcher_value in self.watchers[key]:
-                    if watcher_key not in self.transactions[-1]:
-                        print(f"WATCH {key} {watcher_value} -> {value}")
+            key, value = parts[1], " ".join(parts[2:])
+            store.set(key, value)
         elif cmd == "GET":
             key = parts[1]
-            return [self.store.get(key, "NULL")]
+            output.append(store.get(key))
         elif cmd == "DELETE":
             key = parts[1]
-            if key in self.store:
-                old_value = self.store[key]
-                del self.store[key]
-                if key in self.watchers:
-                    for watcher_key, watcher_value in self.watchers[key]:
-                        if watcher_key not in self.transactions[-1]:
-                            print(f"WATCH {key} {watcher_value} -> NULL")
+            try:
+                store.delete(key)
+            except KeyError:
+                pass
         elif cmd == "BEGIN":
-            self.transactions.append({})
+            store.begin_transaction()
         elif cmd == "COMMIT":
-            if not self.transactions:
-                return ["NO TRANSACTION"]
-            txn = self.transactions.pop()
-            if self.transactions:
-                parent_txn = self.transactions[-1]
-                parent_txn.update(txn)
-            else:
-                self.store.update(txn)
+            output.append(store.commit())
         elif cmd == "ROLLBACK":
-            if not self.transactions:
-                return ["NO TRANSACTION"]
-            self.transactions.pop()
+            output.append(store.rollback())
         elif cmd == "COUNT":
             value = parts[1]
-            count = sum(1 for v in self.store.values() + [v for txn in self.transactions for v in txn.values()] if v == value)
-            return [str(count)]
+            output.append(store.count(value))
         elif cmd == "WATCH":
             key = parts[1]
-            old_value = self.store.get(key, "NULL")
-            if key not in self.watchers:
-                self.watchers[key] = []
-            self.watchers[key].append((key, old_value))
-
-    def run(self, program):
-        output = []
-        for line in program.strip().splitlines():
-            if not line:
-                continue
-            result = self.execute(line)
-            if isinstance(result, list):
-                output.extend(result)
-        return output
-
-def run(program: str) -> list[str]:
-    kv_store = InMemoryKVStore()
-    return kv_store.run(program)
+            store.watches[key] = store.get(key)
+    print(store.watch_notifications())
+    return output

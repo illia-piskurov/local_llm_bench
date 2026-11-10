@@ -1,0 +1,118 @@
+We need to implement an in-memory key-value store with nested transactions. Commands: SET, GET, DELETE, BEGIN, COMMIT, ROLLBACK. They are one per line, arguments separated by spaces.
+
+Interpretation:
+
+- We have a global store (maybe normal state) and a stack of transactions. Each transaction is like a context where changes made inside are visible via GET immediately but not persisted globally until COMMIT? Actually description: "Transactions can be nested arbitrarily deep. Changes made within a transaction must be visible via GET immediately (even before COMMIT), but must be completely discarded on ROLLBACK." So within a transaction, all modifications (SET, DELETE) are stored in the current transaction's buffer and also visible for subsequent GET commands until they are committed? Usually, nested transactions: BEGIN starts a new transaction; changes made inside that transaction go into that transaction's own scope. When COMMIT is called, it commits innermost open transaction, merging its changes into parent transaction (not directly into global storage if it is a nested transaction). I need to understand exactly how merging works.
+
+Let's parse the description: "COMMIT — commit the innermost open transaction, merging its changes into the parent transaction (not directly into global storage if it is a nested transaction). If there are no open transactions — output 'NO TRANSACTION'. ROLLBACK — rollback the innermost open transaction, discarding all changes made within it. If there are no open transactions — output 'NO TRANSACTION'."
+
+Thus we need to maintain a stack of active transactions. Each transaction can have its own dict (or maybe just store pending changes). When BEGIN is encountered, push a new transaction object onto the stack.
+
+When SET or DELETE occurs, where does it go? Typically, if there is an open transaction, the change should be recorded in that transaction's buffer, but not yet visible to GET until commit? However requirement: "Changes made within a transaction must be visible via GET immediately (even before COMMIT)". That means for any key accessed with GET inside a transaction, it returns current value from the global store OR maybe also from the transaction's local changes? Let's think.
+
+If we have nested transactions:
+
+- Initially no open transaction. Global store is empty.
+- BEGIN -> start transaction 1 (stack size=1).
+- SET <key> = "value" -> This should set key in current transaction's buffer and also be visible via GET immediately, even before commit? The phrase: "Transactions can be nested arbitrarily deep. Changes made within a transaction must be visible via GET immediately (even before COMMIT), but must be completely discarded on ROLLBACK." Means that while inside a transaction, any subsequent GET will see the changes made since the last commit of that transaction? Or they are always visible because they're part of current transaction's state. So we could have each transaction maintain its own map of key->value (maybe also incorporate global store?). But need to handle merging on COMMIT: "COMMIT — commit the innermost open transaction, merging its changes into the parent transaction (not directly into global storage if it is a nested transaction)." That suggests that when you exit the innermost transaction with COMMIT, its pending changes are merged into its parent transaction. So after COMMIT, the changes become part of the parent's state and thus visible globally.
+
+Thus we need to implement a stack where each entry is a dictionary representing that transaction's changes (or maybe full store?). Usually for nested transactions like in databases: inner transaction may have separate writes; commit merges them into outer. So we can maintain a structure:
+
+- Global store `store`: dict of key -> value (persistent, visible after all commits/rollbacks).
+- Transaction stack: list of dicts representing each open transaction's pending changes relative to global? Or full state?
+
+Simplify: We'll treat each transaction as having its own local "overwrites" that are applied on commit to the parent. That is typical for nested transactions in some simple implementations.
+
+Let's define:
+
+- `global_store`: dict of key -> value (the final values after all committed changes, not including uncommitted/pending changes from open transactions). The global store only gets updated by COMMIT events and possibly initial SET? Hmm need to decide.
+
+But also requirement: "GET <key> — output the current value of the key, or 'NULL' if the key is not set". It says "if the key is not set" (i.e., not in store). So we can treat absence as NULL. But while inside a transaction, maybe GET returns something from that transaction's pending changes? Let's interpret: Suppose we do BEGIN; SET foo=1; GET foo -> should return 1 even before COMMIT. That means after BEGIN, the local transaction sees its own writes and they become visible to subsequent GETs, but not yet merged into global store. So we need to make GET see the current value in the innermost active transaction's buffer (or maybe also consider any previous changes). This matches "changes made within a transaction must be visible via GET immediately (even before COMMIT)".
+
+Thus algorithm:
+
+- Maintain a stack of transaction contexts: each element is a dict representing pending updates for that transaction relative to global state. However, we might just store the entire set of changes in this transaction's local map. When we do SET or DELETE inside a transaction, we add to current transaction's map (overriding previous values). Then GET: If there is an active transaction on stack (i.e., len(stack)>0), then return the value from that transaction's map for key; if not found, maybe check global store? But since they said changes must be visible immediately even before commit, we might want to treat the current top of stack as overriding any previous values. For keys not set in any active transaction (i.e., no entry in the topmost dict), should we look at global store? It could be that after COMMIT merging, they get into global. But if there is a nested transaction, maybe inner transaction changes also visible via GET directly; but I think for simplicity: If inside any open transaction stack, GET returns value from innermost (top) transaction's map. If not found in that map, return "NULL". However what about keys that have been set globally before entering transaction? For example: SET foo=1 (global), then BEGIN, then GET foo -> Should it return 1 (the previous global setting) or maybe the new transaction resets it to something else? Typically nested transactions would isolate changes; but the problem statement didn't specify explicit behavior for keys set outside of a transaction. Let's interpret: "Changes made within a transaction must be visible via GET immediately (even before COMMIT), but must be completely discarded on ROLLBACK." This suggests that any change inside a transaction is only in memory and not persisted until commit; but also they are visible to GET even before commit, meaning they appear as if committed locally. So the prior global value might be hidden or overridden? It's ambiguous.
+
+Often in such simple implementations, you treat each transaction as having its own dict that starts empty on BEGIN, and any SET/DELETE inside modifies it; when COMMIT, the changes (the entire inner dict) are merged into parent (i.e., add those key-value pairs to parent's store or update). For keys not present in parent but present only in child transaction? The phrase: "merging its changes into the parent transaction (not directly into global storage if it is a nested transaction)." Means that when we commit inner, its modifications become part of parent's pending changes. So ultimately after all commits, everything ends up in global store.
+
+Thus approach:
+
+- Global store: holds base values set before any BEGIN? Or maybe after final COMMIT merges everything into global.
+
+We can manage using stack where each element is a dict representing the current transaction's modifications relative to global store (i.e., delta). But then merging at commit adds those deltas to parent's local modifications. This may become complicated but doable.
+
+Simplify: Represent the whole "state" for each active transaction as a dict of key->value that overrides any previous value in that transaction context. And maintain a global dict `global_store`. When we encounter BEGIN:
+
+- Push a new empty dict onto stack (for current transaction). Actually we may want to treat the top dict as changes specific to this transaction. But then when we do GET, we need to check the topmost dict first: if key present there, return that value; else maybe check global store? However typical behavior: inside a transaction, you might have modifications but also inherited previous values from before BEGIN (which could be in global). Not sure.
+
+Let's design simple semantics:
+
+- There is always a "current" transaction context. When no active transactions, current = None.
+- For GET key:
+  - If there is an active transaction and key is in current transaction dict: return that value.
+  - Else if no active transaction (or maybe after rollback?), check global store? The problem says "output the current value of the key, or 'NULL' if the key is not set". So we need to decide what constitutes "set". Possibly only if key exists in any transaction's dict at some level. But with nested transactions, keys may have been set earlier and later rolled back; after rollback they disappear.
+
+Given complexity, maybe easiest: treat each open transaction as a separate namespace that is not merged into global until commit. So GET inside a transaction sees its own modifications only. The global store holds values from the most recent COMMIT of all transactions (i.e., after merging). But initially before any BEGIN, there's no active transaction; so GET looks in global? But if key never set, return "NULL". Let's implement:
+
+- Maintain a stack `tx_stack`. Each element is a dict representing changes pending for that transaction. Initially empty.
+
+- Global store: dict for persisted values after commits. We'll also keep it as base; but maybe we can ignore global until commit? Actually we need to support BEGIN before any SET. That would create new transaction context, and subsequent GET should see whatever is in the current dict (maybe none). So output "NULL" if not set.
+
+- When SET <key> <value>: If there is an active transaction (len(tx_stack)>0), then we add/update entry for that key in `tx_stack[-1]` to value. This change becomes visible via GET inside this transaction as soon as we do GET or even later? It should be immediate after SET, but not necessarily until commit. So we just modify the top dict.
+
+- If no active transaction (i.e., stack empty), then we set in global store: `global_store[key] = value`. This matches "SET <key> <value>" sets value globally? Probably yes.
+
+- GET <key>: 
+   - If there is an open transaction (stack not empty): return the value from top dict if key present, else "NULL". Actually we might also consider that global store may have a higher precedence? I'd go with: If stack not empty -> look at current top dict; if key in it, output its value; else output "NULL" (since no change is stored there). But maybe they expect to return the global store's value for keys set outside transaction but still visible after commit. Hmm.
+
+- DELETE <key>: 
+   - If stack not empty: delete from top dict? Possibly remove key if present, or just ignore if not.
+   - Else: delete from global_store (if exists).
+
+But we also need to handle BEGIN and COMMIT and ROLLBACK:
+
+- BEGIN: push a new empty dict onto stack. So before commit of inner transaction, it will have its own modifications.
+
+- COMMIT: If there is an active transaction (stack not empty), pop the topmost dict, merge its changes into the parent transaction. "Merging its changes into the parent transaction (not directly into global storage if it is a nested transaction)." Means we need to take the inner dict and add/update its key-value pairs into the next level up? Typically merging means we incorporate those changes into the parent's pending changes, which may be represented as adding them to the parent's current dict before pushing back onto stack. Since after commit, the parent remains on stack (as top), so we need to update that.
+
+Implementation: Suppose stack = [outer_dict] and we push inner_dict -> stack becomes [outer_dict, inner_dict]. On COMMIT:
+
+- Let inner_dict = stack.pop(). Now we need to merge inner_dict into outer_dict. But there could be multiple levels. For example BEGIN (outer) -> BEGIN (inner1) -> SET ... -> COMMIT (inner1). At that point before commit, stack is [outer, inner1]. We pop inner1, and then merge its entries into outer: for each key,value in inner1: outer_dict[key] = value (or maybe if key exists already in outer, we could decide to keep inner's value? Typically merging replaces with inner). Then push outer back onto stack. So after commit, stack remains [outer] but now outer has merged changes.
+
+Thus algorithm for COMMIT:
+
+- If len(stack) == 0: output "NO TRANSACTION". (No open transaction)
+- else:
+   - pop top dict (inner).
+   - For each key, value in inner.items():
+       - Set `stack[-1][key] = value` (i.e., update outer dict). Actually need to handle if stack only had one element? If len(stack) == 1: that means there is no parent; i.e., top-level transaction. According to spec: "COMMIT — commit the innermost open transaction, merging its changes into the parent transaction (not directly into global storage if it is a nested transaction)." So for top-level transaction (no parent), we should just discard inner? Or do we need to store globally? The phrase says "if there are no open transactions — output 'NO TRANSACTION'". It doesn't say what happens when you commit the innermost open transaction but there is none above? Maybe if BEGIN at global level creates a top-level transaction, and then COMMIT that top-level should make changes visible to global store. But they said merging into parent not directly into global storage if it's nested transaction. For top-level (no parent), we probably just apply changes to global store immediately because there is no outer to merge into? Or maybe after commit of top-level, the changes become part of "global" as well? Let's parse: "COMMIT — commit the innermost open transaction, merging its changes into the parent transaction (not directly into global storage if it is a nested transaction). If there are no open transactions — output 'NO TRANSACTION'." So for innermost open transaction that has a parent, we merge into parent. For top-level (i.e., BEGIN at global level and then COMMIT?), there is no parent; but "merging its changes into the parent transaction" implies maybe you just discard? Hmm.
+
+Let's examine typical nested transactions: Usually, you start a transaction with BEGIN, do some operations inside that inner transaction, then COMMIT will commit it, making those changes visible in the outer world. If there is no outer (i.e., outermost), then you might be committing at global level; but they said "If there are no open transactions — output 'NO TRANSACTION'". This covers case when stack empty before BEGIN? Actually on COMMIT command, we need to check if any transaction is currently open. If none, output NO TRANSACTION.
+
+Thus for top-level: Suppose we just do BEGIN (pushes new dict). Then we do SET foo=1; then GET foo -> should see 1. Then COMMIT (innermost) -> Should commit that inner transaction. Since it's innermost and has no parent? But there is an implicit outer global store which might be considered the "parent"? They said merge into parent if it is a nested transaction, not directly into global storage if it is a nested transaction. This suggests that for top-level BEGIN (i.e., before any other BEGIN), we treat its parent as global? But they say "not directly into global storage if it is a nested transaction". That is ambiguous.
+
+Let's design behavior:
+
+- Global store holds values after final commit of the outermost transactions and also initial SETs when no active transaction. When we have an open top-level transaction (i.e., stack has one element representing this transaction), then we do not merge into another; rather, on COMMIT we just discard changes? Or maybe they become part of global store because there is nothing to merge into.
+
+Let's look at typical semantics for nested transactions in a simple key-value store: If you start a new transaction (BEGIN) and set some keys inside it, those sets are not visible outside until commit; but inside the transaction you can still GET them. So after COMMIT of inner, they become part of global store? Usually yes: The changes become visible to others. For nested ones, you'd need to keep a stack.
+
+Thus maybe our earlier design (with separate dicts per transaction) is correct and we just update global store on commit for the topmost dict that doesn't have parent? But it's simpler to treat everything as pending deltas until COMMIT merges into parent or discards. At the end, after all commands, we need to output only for GET commands: "one string for each GET command". Also output for COMMIT/ROLLBACK when they output "NO TRANSACTION" (i.e., if no open transaction). So we don't need to output anything for SET or DELETE.
+
+Thus implement:
+
+- `global_store = {}` (persisted after commits? Actually maybe not needed; but for GET outside of any active transaction, we might fallback to global store? But if there is an uncommitted transaction, GET should see that transaction's changes. So only when no open transactions or commit/rollback happen do we need to output "NO TRANSACTION". So `global_store` may not be used except maybe at final? Not required for output.
+
+- `stack = []` (list of dicts). Each dict is the pending changes for a transaction level. The top dict corresponds to innermost open transaction.
+
+- For each command line:
+
+  - Strip lines, ignore empty lines.
+
+  - Parse first word:
+
+    - "SET": expects at least two arguments: key and value. We'll split by spaces; but value may contain spaces? Usually not; assume no spaces in values for this simple implementation. So `parts = line.split()` ; if len(parts) < 2 -> maybe ignore? But we can just handle.
+
+    - If stack non-empty: modify top dict: `stack[-1][key] = value`. (If key already present, update). Else: set in global_store: `global_store[key] = value`? But note that if later BEGIN occurs, the previous global setting is lost unless we commit. So maybe better to store only delta changes, and maintain a separate "committed" copy on push to stack. Let's think.
+
+Simpler approach: Instead of having both global_store and per-transaction dicts, treat each transaction as its own

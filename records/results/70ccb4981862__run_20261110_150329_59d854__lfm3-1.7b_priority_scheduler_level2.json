@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_150329_59d854",
+  "host_id": "70ccb4981862",
+  "model": "lfm3-1.7b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-10 15:18:27",
+  "passed": 0,
+  "total": 0,
+  "failures": [
+    "[TRUNCATED] priority_scheduler/level2: no final answer: the output is reasoning only (3819 tokens), the context window or token limit ran out; raise the context length / max tokens in the server's model settings"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

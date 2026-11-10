@@ -1,0 +1,176 @@
+import re
+
+def _compile_condition(cond, params):
+    """Recursively compiles a single condition into an SQL segment and collects parameters."""
+    if 'field' not in cond or 'op' not in cond:
+        raise ValueError("Invalid atomic condition structure.")
+
+    field = cond['field']
+    op = cond['op'].upper()
+    value = cond['value']
+
+    # Handle IS NULL / IS NOT NULL (no parameter required)
+    if op == 'IS NULL':
+        return f"{field} IS NULL"
+    if op == 'IS NOT NULL':
+        return f"{field} IS NOT NULL"
+
+    # Handle LIKE operator (parameter required)
+    if op == 'LIKE':
+        if not isinstance(value, str):
+            raise TypeError("'LIKE' operator requires a string value.")
+        placeholder = f"${len(params) + 1}"
+        params.append(value)
+        return f"{field} LIKE {placeholder}"
+
+    # Handle standard comparison operators (=, !=, >, <, >=, <=) (parameter required)
+    if isinstance(value, list):
+        raise TypeError(f"Comparison operator {op} requires a single scalar value, not a list.")
+
+    # Standard comparison
+    placeholder = f"${len(params) + 1}"
+    params.append(value)
+    return f"{field} {op} {placeholder}"
+
+def _compile_where(condition, params):
+    """Recursively compiles a WHERE clause tree."""
+    if 'AND' in condition:
+        parts = [_compile_where(c, params) for c in condition['AND']]
+        return f"({' AND '.join(parts)})"
+
+    elif 'OR' in condition:
+        parts = [_compile_where(c, params) for c in condition['OR']]
+        return f"({' OR '.join(parts)})"
+
+    else:
+        # Atomic condition
+        return _compile_condition(condition, params)
+
+def compile_query(query: dict) -> dict:
+    """
+    Compiles a structured query AST into a parameterized SQL string and parameters, 
+    supporting JOINs, GROUP BY, and extended operators.
+
+    Args:
+        query: Dictionary representing the query AST.
+
+    Returns:
+        A dictionary containing "sql" (string) and "params" (list of values).
+    """
+
+    # --- 1. Build SELECT clause ---
+    select_cols = query.get('select', ['*'])
+    select_str = ", ".join(select_cols)
+
+    # --- 2. Build WHERE clause and collect parameters ---
+    where_sql = ""
+    params = []
+
+    if 'where' in query:
+        try:
+            where_sql = _compile_where(query['where'], params)
+        except Exception as e:
+            raise ValueError(f"Error compiling WHERE clause: {e}")
+
+    # --- 3. Build JOIN clauses ---
+    join_parts = []
+    if 'joins' in query:
+        for join in query['joins']:
+            join_type = join.get('type', 'INNER').upper()
+            table = join['table']
+            on_condition = f"{join.get('left_col')}:{join.get('right_col')}"
+            
+            # Construct JOIN string: {type} JOIN table ON condition
+            join_str = f"{join_type} JOIN {table} ON {on_condition}"
+            join_parts.append(join_str)
+
+    # --- 4. Build GROUP BY clause ---
+    group_by_str = ""
+    if 'groupBy' in query:
+        group_fields = [f"{col}" for col in query['groupBy']]
+        group_by_str = f"GROUP BY {', '.join(group_fields)}"
+
+    # --- 5. Assemble Final SQL Query ---
+    base_query = f"SELECT {select_str} FROM {query['table']}"
+    
+    where_clause = ""
+    if where_sql:
+        where_clause = f"WHERE {where_sql}"
+
+    # Combine parts
+    query_parts = [
+        base_query,
+        where_clause,
+        *join_parts,  # Unpack the list of JOIN statements
+        group_by_str,
+    ]
+
+    # Filter out empty parts and join them
+    compiled_sql = " ".join([part for part in query_parts if part])
+    
+    return {
+        "sql": compiled_sql.strip(),
+        "params": params
+    }
+
+if __name__ == '__main__':
+    # Example 1: Simple AND condition (re-testing basic functionality)
+    query1 = {
+        'table': 'products',
+        'select': ['name', 'price'],
+        'where': {
+            'AND': [
+                {'field': 'category', 'op': '=', 'value': 'Electronics'},
+                {'field': 'price', 'op': '>', 'value': 100}
+            ]
+        },
+        'orderBy': [
+            {'field': 'price', 'dir': 'DESC'}
+        ],
+        'limit': 10
+    }
+
+    result1 = compile_query(query1)
+    print("--- Example 1 (Basic Test) ---")
+    print(f"SQL: {result1['sql']}")
+    print(f"Params: {result1['params']}\n")
+
+    # Example 4: Complex Query with JOIN, GROUP BY, and new operators
+    query4 = {
+        'table': 'orders',
+        'select': ['o.id', 'c.name'],
+        'where': {
+            'AND': [
+                {'field': 'status', 'op': '=', 'value': 'PENDING'},
+                {'OR': [
+                    {'field': 'total', 'op': '>', 'value': 500},
+                    {'field': 'client_id', 'op': 'IS NULL'} # IS NULL - no param
+                ]}
+            ]
+        },
+        'joins': [
+            {'type': 'LEFT', 'table': 'clients', 'left_col': 'id', 'right_col': 'client_id'}
+        ],
+        'groupBy': ['o.id', 'c.name'],
+    }
+
+    result4 = compile_query(query4)
+    print("--- Example 4 (Complex Query with JOIN/IS NULL) ---")
+    print(f"SQL: {result4['sql']}")
+    print(f"Params: {result4['params']}\n")
+
+    # Example 5: LIKE operator test
+    query5 = {
+        'table': 'articles',
+        'select': ['title'],
+        'where': {
+            'AND': [
+                {'field': 'title', 'op': 'LIKE', 'value': 'Python%'}
+            ]
+        }
+    }
+
+    result5 = compile_query(query5)
+    print("--- Example 5 (LIKE Operator Test) ---")
+    print(f"SQL: {result5['sql']}")
+    print(f"Params: {result5['params']}\n")

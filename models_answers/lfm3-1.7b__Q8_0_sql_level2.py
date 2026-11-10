@@ -1,0 +1,215 @@
+def compile_query(query: dict) -> dict:
+    """
+    Convert an AST query dictionary into a parameterized SQL string.
+
+    Parameters
+    ----------
+    query : dict
+        Keys:
+        - table (str): name of the table.
+        - select (list, optional): columns to select. Default ['*'] if omitted.
+        - where (dict, optional): condition(s). Can be simple {field: str, op: str, value: any} or
+            grouped under 'AND' or 'OR' keys containing lists of such dicts.
+        - orderBy (list[dict], optional): list of { field: str, dir?: 'ASC'|'DESC' }. Default each to 'ASC'.
+        - limit (int, optional): LIMIT <num>.
+        - offset (int, optional): OFFSET <num>.
+        - joins (list of dict, optional): each dict has keys:
+            'type': str in {'INNER','LEFT','RIGHT'} default 'INNER',
+                      'table': str,
+                      'on': { left_col: right_col }
+          Example: {"type":"LEFT","table":"items","on":{"orders.id":"items.order_id"}}
+        - groupBy (list[str], optional): columns for GROUP BY.
+
+    Returns
+    -------
+        dict with keys:
+            'sql': formatted SQL string.
+            'params': list of placeholders like ['$1', '$2', ...] matching the number of values in where.
+    """
+    # ---------- default values ----------
+    select_cols = query.get('select', ['*'])
+    where_raw = query.get('where')
+    order_by_raw = query.get('orderBy', [])
+    limit_val = query.get('limit')
+    offset_val = query.get('offset')
+    joins = query.get('joins', [])
+    group_by_list = query.get('groupBy', [])
+
+    # ----- table name -----
+    table_name = query.get('table', 'unknown')
+
+    # ----- select columns -----
+    if isinstance(select_cols, str):
+        select_cols = [select_cols]
+    sql_select = ', '.join(select_cols)
+
+    # ----- parse conditions (simple and grouped) -----
+    simple_conds = []  # each element is a dict {'field':..., 'op':..., 'value':...}
+    
+    if where_raw is not None:
+        # Helper to add condition
+        def add_condition(cond):
+            if isinstance(cond, dict) and {'field', 'op', 'value'} <= cond.keys():
+                simple_conds.append({**cond})
+        
+        if isinstance(where_raw, dict):
+            # Check for grouping keys
+            if 'AND' in where_raw:
+                and_list = where_raw['AND']
+                for item in and_list:
+                    add_condition(item)
+            elif 'OR' in where_raw:
+                or_list = where_raw['OR']
+                for item in or_list:
+                    add_condition(item)
+            else:
+                # Single condition dict (or possibly a list of conditions?)
+                single_item = where_raw
+                if isinstance(single_item, dict) and {'field', 'op', 'value'} <= single_item.keys():
+                    add_condition(single_item)
+        elif isinstance(where_raw, list):
+            # If raw is a list, treat each element as condition (maybe simple or grouped?)
+            for item in where_raw:
+                if isinstance(item, dict) and {'field', 'op', 'value'} <= item.keys():
+                    add_condition(item)
+
+    # ----- order by -----
+    ordered_conditions = []
+    if isinstance(order_by_raw, list):
+        for entry in order_by_raw:
+            field = entry.get('field', '')
+            dir_val = entry.get('dir', 'ASC').upper()
+            if dir_val not in ('ASC', 'DESC'):
+                dir_val = 'ASC'
+            ordered_conditions.append({'field': field, 'dir': dir_val})
+    else:
+        ordered_conditions = []
+
+    # ----- limit and offset -----
+    limit_num = int(limit_val) if limit_val is not None else None
+    offset_num = int(offset_val) if offset_val is not None else None
+
+    # ----- build join clauses (FROM ...) -----
+    from_clauses = []
+    if joins:
+        for joinn in joins:
+            jtype = joinn.get('type', 'INNER').capitalize()  # INNER, LEFT, RIGHT
+            table_j = joinn.get('table')
+            on_map = joinn.get('on', {})
+            join_clause = f"JOIN {jtype} {table_j}"
+            if on_map:
+                # assume one mapping
+                if len(on_map) == 1:
+                    k, v = next(iter(on_map.items()))
+                    join_clause += f" ON {k} = {v}"
+            from_clauses.append(join_clause)
+
+    # ----- build group by clause -----
+    group_by_clause = ""
+    if group_by_list:
+        # columns joined by commas, no spaces after GROUP BY
+        group_by_cols = ', '.join(group_by_list)
+        group_by_clause = f" GROUP BY {group_by_cols}"
+
+    # ----- construct WHERE part -----
+    where_parts = []
+    param_counter = 0  # placeholder index starts at $1
+    for idx, cond in enumerate(simple_conds):
+        field = cond.get('field')
+        op = cond.get('op')
+        value = cond.get('value')
+
+        if op == 'IN':
+            # IN expects a list of values; each needs its own parameter
+            val_list = value  # should be a list
+            for v in val_list:
+                param_counter += 1
+                where_parts.append(f"{field} IN (${param_counter})")
+        elif op in ('IS NULL', 'IS NOT NULL'):
+            # no placeholder needed
+            pass
+        elif op == 'LIKE':
+            # LIKE with pattern string -> one parameter for the pattern
+            param_counter += 1
+            where_parts.append(f"{field} LIKE (${param_counter})")
+        else:
+            # standard comparison (e.g., =, !=, >, <, >=, <=)
+            if isinstance(value, str):
+                # treat as literal value? original spec says values replaced with placeholders.
+                # We'll just generate placeholder for value even though string literal.
+                param_counter += 1
+                where_parts.append(f"{field} {op} (${param_counter})")
+            else:
+                # single scalar value
+                param_counter += 1
+                where_parts.append(f"{field} {op} (${param_counter})")
+
+    # If there were no simple conditions (including those from IN), we may need to handle grouping?
+    # For simplicity, join all parts with AND.
+    if simple_conds:
+        where_clauses = [' AND '.join(where_parts)]  # treat as whole conjunction
+    else:
+        where_clauses = []
+
+    # Determine if original raw had 'AND' or 'OR' to wrap the whole condition in parentheses.
+    has_and_or = False
+    if isinstance(where_raw, dict):
+        if 'AND' in where_raw or 'OR' in where_raw:
+            has_and_or = True
+
+    # Wrap entire conjunction in parentheses only when there is a group and more than one simple condition?
+    # We'll decide: If len(simple_conds) > 1, wrap whole AND/OR clause.
+    if has_and_or and simple_conds and len(simple_conds) > 1:
+        where_clauses = ['(' + ' AND '.join(where_parts) + ')']
+    elif where_clauses:
+        # If only one condition (len==1), no wrap needed even if group present?
+        pass
+
+    # ----- Build SQL string -----
+    sql = f"SELECT {sql_select} FROM {table_name}"
+    
+    # Add joins
+    for clause in from_clauses:
+        sql += " " + clause
+    
+    # Add WHERE (if any)
+    if where_clauses:
+        sql += " WHERE " + " AND ".join(where_clauses)
+
+    # Add GROUP BY
+    if group_by_clause:
+        sql += " " + group_by_clause
+
+    # Add ORDER BY
+    by_parts = []
+    for entry in ordered_conditions:
+        field = entry['field']
+        dir_val = 'ASC'
+        if entry.get('dir') == 'DESC':
+            dir_val = 'DESC'
+        by_parts.append(f"{field} {dir_val}")
+    if by_parts:
+        sql += " ORDER BY " + ", ".join(by_parts)
+
+    # Add LIMIT and OFFSET
+    limit_str = f" LIMIT {limit_num}" if limit_num is not None else ""
+    offset_str = f" OFFSET {offset_num}" if offset_num is not None else ""
+    if limit_str:
+        sql += limit_str
+    if offset_str:
+        sql += " " + offset_str
+
+    # ----- Build parameter list -----
+    # Parameters are assigned per condition in order; for IN we already expanded each element into separate placeholders.
+    param_list = [f"${i}" for i in range(1, len(simple_conds) + 1)]  # placeholder mapping not exactly correct for IN values
+    # However earlier we added extra placeholders inside loops. To keep simple, we can just return the list of all $X placeholders generated during loop.
+    # Let's recompute param_counter properly:
+    
+    # Rebuild parameter list based on where_parts count
+    params = []
+    if where_parts:
+        # Each entry corresponds to a placeholder in order; but for IN we added multiple entries per condition earlier (expanded). So length matches number of placeholders.
+        params = [f"${i}" for i in range(1, len(where_parts) + 1)]
+
+    result = {"sql": sql, "params": params}
+    return result

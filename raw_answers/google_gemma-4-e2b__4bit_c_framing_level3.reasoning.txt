@@ -1,0 +1,47 @@
+
+Thinking Process:
+
+1.  **Analyze the Request:** The goal is to implement a streaming parser using the previously defined ring buffer (Level 1) and the packet decoder function (Level 2).
+    *   Need `feed_bytes` to handle incoming data and manage the ring buffer capacity.
+    *   Need `get_next_packet` to search for, validate, and extract a complete packet from the ring buffer.
+    *   Requirements: Handle fragmentation, discard noise/false starts, only extract *complete* packets.
+
+2.  **Review Existing Code Structure (Level 1 & 2):**
+    *   `ringbuf_t`, `ringbuf_init`, `ringbuf_push`, `ringbuf_pop`, `ringbuf_available`, `ringbuf_free_space`. (These are fine).
+    *   `decode_packet`: This function is designed to work on a continuous stream (`const uint8_t *stream, int stream_len`). I need to adapt its logic or rewrite the searching mechanism to work on buffered data, likely using `ringbuf_pop` (or reading directly from the buffer).
+
+3.  **Implement `feed_bytes`:**
+    *   Takes data and length.
+    *   Iterates through the input data, calling `ringbuf_push` for each byte.
+    *   Handles overflow (if `ringbuf_push` returns -1, discard remaining bytes).
+
+4.  **Implement `get_next_packet`:**
+    *   This is the core logic. Since packets are complex (variable length payload), I need to iterate through the buffer, check for `0xAA`, determine the expected total length, and if enough data is available, validate it.
+    *   Since we are reading from the buffer (pop operation), I need to ensure I handle the current packet's structure completely before deciding to pop.
+
+    *   **Packet Structure Check:**
+        1. Find `0xAA` (Start).
+        2. Read `type`, `len`.
+        3. Calculate `required_total = 3 + len + 1`.
+        4. Check if `ringbuf_available()` >= `required_total`.
+        5. If sufficient, extract the required bytes into a temporary stream view or directly from the buffer (this is tricky because `ringbuf_pop` only retrieves one byte at a time).
+
+    *   **Refining `get_next_packet` implementation strategy:** Instead of reading byte-by-byte until the packet is found, it's often easier in a ring buffer context to read fixed chunks sequentially.
+
+    *   *Self-Correction/Simplification:* The existing `decode_packet` logic searched a continuous stream. I need to adapt this search mechanism to work on the buffered data, where indices are relative to the buffer start (or I need a specialized function that reads multiple bytes sequentially).
+
+    *   Let's implement the decoding logic directly within `get_next_packet`, ensuring we extract exactly what is needed for validation before committing to a pop.
+
+5.  **Drafting `get_next_packet` (Focus on extraction and validation):**
+    *   Need a robust loop that looks for 0xAA. Since the ring buffer stores data sequentially, we can iterate through the currently available portion of the buffer.
+
+    *   If a packet is found:
+        a. Perform validation (checksum calculation).
+        b. If valid, extract the required bytes (Type, Length, Payload, Checksum).
+        c. Use `ringbuf_pop` multiple times to simulate reading the packet data, or copy them out if possible (if array indexing is reliable). Since the decoder logic relies on offset pointers, reading directly from the buffer and advancing the pointer is best.
+
+    *   *Constraint Check:* The requirement states: "If packet is incomplete (awaiting future chunks) or buffer is empty, return -1 without discarding incomplete packet data." This implies we should only pop if the *entire* packet is present.
+
+6.  **Final Code Assembly:** Integrate the decoder logic and the new feeder/getter functions into the provided structure. (Ensure pointer handling is correct, especially for `out_payload` and `out_type`).
+
+(Implementing the code now.)

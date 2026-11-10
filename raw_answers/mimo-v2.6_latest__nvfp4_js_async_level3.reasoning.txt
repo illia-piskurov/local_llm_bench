@@ -1,0 +1,131 @@
+Let me write the full implementation.
+
+Key design:
+- Worker pool of `concurrency` workers, each pulls next index.
+- Each task: attempt with retries/backoff/timeout.
+- On task failure: if retries remain, retry; else record settled result.
+- On signal abort: reject immediately.
+- settled mode: record results as settled objects.
+
+Implementation:
+
+```javascript
+async function pMap(items, mapper, options) {
+  const opts = ...;
+  const concurrency = opts.concurrency ?? 1;
+  const retries = opts.retries ?? 0;
+  const backoffMs = opts.backoffMs ?? 0;
+  const timeoutMs = opts.timeoutMs ?? 0;
+  const signal = opts.signal;
+
+  if (signal && signal.aborted) {
+    const reason = signal.reason ?? new Error('Aborted');
+    return Promise.reject(reason);
+  }
+
+  if (items.length === 0) return [];
+
+  const results = new Array(items.length);
+  let pending = 0;
+  let nextIndex = 0;
+
+  async function run() {
+    while (pending < concurrency) {
+      if (nextIndex >= items.length) return;
+      const index = nextIndex++;
+      pending++;
+      try {
+        results[index] = await runAttempt(index);
+      } catch (error) {
+        if (settled) results[index] = { status: 'rejected', reason: error };
+        else throw error;
+      }
+      pending--;
+    }
+  }
+  await Promise.all(Array.from({length: concurrency}, run));
+  return settled ? results.map(...) : results;
+}
+```
+
+Wait — in settled mode, cancellation via signal still rejects. So we need to check signal during run loop.
+
+runAttempt:
+```javascript
+async function runAttempt(index) {
+  let remaining = retries;
+  while (true) {
+    const promise = mapper(items[index], index);
+    if (timeoutMs > 0) {
+      const timer = new Promise(resolve => setTimeout(resolve, timeoutMs));
+      try {
+        return await Promise.race([promise, timer.then(() => { throw new Error('Timeout'); })]);
+      } finally { clearTimeout(timer._id); }
+    }
+    return promise;
+  }
+}
+```
+
+Hmm, but the timer should be cleared even if the promise resolves early. Using `timer._id` is hacky. Better:
+
+```javascript
+const timer = setTimeout(() => { throw new Error('Timeout'); }, timeoutMs);
+const timerId = timer._id;
+```
+
+Actually `setTimeout` returns a Timeout object with `.unref()` etc. In Node, `setTimeout` returns a Timeout object. In browsers, it returns a number. `clearTimeout(timer._id)` works in both. But cleaner:
+
+```javascript
+const timer = new Promise(resolve => setTimeout(resolve, timeoutMs));
+const timerId = timer._id;
+try {
+  return await Promise.race([promise, timer.then(() => { throw new Error('Timeout'); })]);
+} finally {
+  clearTimeout(timerId);
+}
+```
+
+That's fine.
+
+Cancellation check: after each await, check `signal?.aborted`. Also check before starting next task.
+
+Let me write:
+
+```javascript
+async function run() {
+  while (pending < concurrency) {
+    if (signal?.aborted) {
+      const reason = signal.reason ?? new Error('Aborted');
+      throw reason;
+    }
+    ...
+  }
+}
+```
+
+But if a task is in flight and signal aborts, the worker finishes, pending decrements, loop checks signal again → throws. Good.
+
+Also need to check signal inside runAttempt after each retry.
+
+Also, in settled mode, cancellation still rejects — so the catch in run() should rethrow when signal aborted.
+
+Let me write the final code.
+
+Also note: `signal.reason` — standard AbortSignal has `reason`. If undefined, use new Error('Aborted').
+
+Also, mapper may throw synchronously — need try/catch around it.
+
+Let me write it.
+
+Also preserve Level 1: options as number → { concurrency: options }.
+
+Edge: `opts.concurrency ?? 1` — if concurrency is 0? Then run() never runs, returns []. Hmm, but with concurrency 0, pending stays 0, loop never executes, returns []. That's fine-ish. Actually maybe should throw? Keep simple.
+
+Let me write the code.
+
+Also, in settled mode, the returned array should be in order of items (index order). Since results[index] is set, mapping works.
+
+One more: when signal aborts mid-flight, we should also make sure in-flight tasks are cancelled. We can't easily cancel a promise, but we can just let it finish and check signal after. That's acceptable.
+
+Write final.

@@ -1,0 +1,178 @@
+We need to extend the existing implementation. The user says: "Extend your implementation with a critical path calculation function:
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None
+
+tasks is a dictionary where each value is a tuple of (duration, dependencies_list). The function must return the length of the critical path — the total duration of the longest dependent sequence of tasks (classic critical path method). If the dependency graph contains a cycle, return None.
+
+Preserve the signature and behavior of topo_sort."
+
+So we need to produce a single Python file with both functions: `topo_sort` (already defined) and now `critical_path`. However note that existing code uses `tasks` as dict mapping task name to list of dependencies. For critical path, tasks values are tuple of (duration, dependencies_list). So we need to parse each task's duration and its dependency list.
+
+We also must preserve the behavior of `topo_sort` exactly? The user says "Preserve the signature and behavior of topo_sort." Means we should not modify it. We can keep as is.
+
+Now implement `critical_path`.
+
+Approach: For critical path in DAG, we need longest path (in terms of sum of durations) from source tasks (with indegree 0) to sinks? Actually typical CPM: each node has a duration; edges represent dependencies (i.e., must finish before). The critical path is the maximum total delay along any path, computed as longest path weighted by durations. Since we have DAG.
+
+We can compute using topological order and DP: for each task in topo order, compute max_path_to_node = max( max_path_to_predecessor + duration_of_current_task ), or simply propagate distances. But careful: tasks dictionary contains dependencies list (list of predecessor tasks). The critical path function signature takes `tasks` where each value is tuple (duration, dependencies_list). So for each task name t, we have (duration_t, deps_t). We need to compute longest total duration from start? Usually CPM calculates earliest start times: Ea = 0; for each predecessor, ES + duration. The critical path length is max(E_f - E_s) where f is finish time of node. Equivalent to sum of durations along the longest chain.
+
+Simplify: We can compute topological order using Kahn's algorithm and also dynamic programming for longest distance from any source (indegree 0). Since we have DAG or cycle detection needed; if graph has cycle return None.
+
+Implementation details:
+
+- Input `tasks`: dict[str, tuple[int, list[str]]]. Example: {"A": (3, []), "B": (2, ["A"]), "C": (4, ["B", "A"])}.
+
+- For each task name t, we need its duration and dependencies. So iterate over tasks items.
+
+- Build adjacency for graph edges from dependency to dependent? Typically edge: dependency -> task (i.e., task depends on dep). In the earlier topo_sort they built adj as outgoing edges: for each task t with deps list dep_list, for each d in dep_list: add edge from d to t (adj[d].append(t)). That matches adjacency representing "depends on" direction. So indegree counts number of dependencies that must be completed before t.
+
+For critical path we need longest path sum of durations along edges. The DP can compute the maximum total duration from any start node to each task: For a node, its earliest finish time = max(earliest finish times of predecessors) + duration[node]. Starting nodes (no deps) have earliest finish 0? Actually if there is no predecessor, then earliest start is 0; we can treat their longest path length as just duration. But easier: compute for each node the longest distance from any source along DAG.
+
+Let's define `duration_map = {name: duration}` and `deps_list[name] = dependencies`. Build adjacency (as in topo_sort) mapping from dependency -> list of dependent tasks? In earlier code, they added edge d->t. So we can reuse that structure but need also durations.
+
+Alternatively compute using Kahn's algorithm as we did for topologically ordering and tracking indegree; while processing nodes we can update longest path distances similarly: maintain a `dist` (longest distance from source) for each node, initialized to 0 maybe? Let's reason:
+
+- For nodes with no dependencies (i.e., not in any dependency list of others), they are sources. The longest path ending at that node is just its own duration if it has no predecessors? Actually the total length from start includes sum of durations along path up to node, including its own duration. So for a source node with indegree 0 and maybe dependencies empty (or not in any deps list), we can set dist = duration[node] because there's no predecessor adding extra.
+
+But typical DP: For each node u processed in topological order, compute `dist[u]` as max over predecessors' `dist[pred] + duration(u?)` Wait careful: When processing node u, we have already computed distances for its dependencies (predecessors). But our adjacency built earlier is from dependency to dependent; i.e., edge d->t. So predecessor of t are the elements in dep_list[t]. For each such predecessor p, there is an edge p -> t. In Kahn's algorithm we popped node u and then for v in adj[u] (i.e., outgoing edges) decrement indegree of v etc. That means for each task t that depends on u (u is dependency), when processing u we update its dependents.
+
+Thus to compute longest path, we can do: When we pop node u from queue, we have already known the maximum distance to u? We can maintain an array `max_dist` initially 0. For source nodes (indegree==0) we need max_dist[u] = duration of that task? Actually for a source with no dependencies, its earliest start is 0; but total path length from start includes its own duration. So we might compute the longest distance to node as maximum over all paths ending at that node: sum of durations along edges plus the node's duration. The algorithm using DP in topological order can be:
+
+Initialize `dist = {node: 0 for node in nodes}`. Also maybe set dist[node] initially to 0 and then when we process each edge (u->v), we do: `if dist[v] < dist[u] + durations[v]`? But that would double count duration of v. Let's define more precisely:
+
+We have tasks with durations d[t]. The longest path ending at node t is the maximum sum of durations along edges from a source to t, plus d[t]? Actually typical CPM: For each task i, its total project duration (makespan) if it is on critical path includes its own duration. So we can define `earliest_start` and `latest_start`, but for longest path length we just sum durations along chain including the node's duration.
+
+Thus we can compute DP as:
+
+- Let `dp[t]` = longest total duration from any source to t (including t's duration). For source nodes with no dependencies, dp[t] = d[t].
+
+- For each edge u -> v (i.e., u is dependency of v), we have that you cannot start v until u finishes. So dp[v] = max(dp[v], dp[u] + d[v])? Wait, but dp[u] includes duration of u; if we add d[v] again would double count? Actually the path length to v includes durations of all nodes on path including both u and v: sum over durations of nodes. So for edge u->v, total path length to v = max(prev_max_path_to_u + d[u]? No). Let's think:
+
+Define `dp[t]` as longest path from any source (starting at some source) to node t inclusive of its own duration? Or maybe we want the maximum sum of durations along incoming edges plus itself. The typical recurrence: For node v with dependencies p1, p2,..., pk (i.e., p_i -> v edges), `dp[v] = max(dp[p_i] + d[v])`? That seems off because dp[p_i] includes its own duration; adding another d[v] would sum both.
+
+Better to define `earliest_finish_time[t]` as the earliest time when task t finishes (including its duration). For source tasks with no deps, earliest_finish = 0 + d[t] = d[t]. Then for each dependency p of v: earliest_finish[t] = max(earliest_finish[p]) + d[v]. Actually typical CPM: The finish time of task is start time + duration; and start time >= max(earliest_finish of its predecessors). So we can compute `finishing_time[t] = max(finishing_time[p] for p in deps[t]) + d[t]`. If no dependencies, finishing_time[t] = 0 + d[t] = d[t].
+
+Thus to get longest path (critical path length) across tasks, we need to find the maximum `finishing_time` among all nodes.
+
+We can implement by first computing topological order via Kahn's algorithm and while processing each node in that order compute its finishing time using already computed earliest? Actually for DP we need to have processed predecessors before. So if we process nodes in a topological order where dependencies come before dependents, then when we encounter node v, all its deps (predecessors) have been processed earlier; we can take max of their `finishing_time` values and add d[v].
+
+Hence algorithm:
+
+- Input: tasks dict mapping task name -> tuple(duration, dependencies_list). Dependencies list is list of predecessor tasks.
+
+- Build adjacency from dependency to dependent? Actually for DP we need reverse edges (predecessors) to compute max over them. But we can also process nodes in topological order where we know all predecessors before node: In Kahn's algorithm using outgoing edges, the queue initially contains nodes with indegree 0; those are sources. When we pop a source u, we process its outgoing edges (i.e., tasks that depend on it). However for DP, to compute finishing time of dependent v (which uses u as predecessor), we need to update when processing u, not when popping v. In earlier Kahn's implementation they added edge d->t and updated indegree[t]. That means adjacency[d] includes t; i.e., outgoing from dependency to dependent.
+
+Thus while iterating nodes in order of pop from queue (u popped = source), we can propagate: For each dependent v in adj[u], decrement indegree[v]; if indegree becomes zero, push. So the node u is processed before its dependents? Actually typical Kahn's algorithm processes all sources first; but they still keep a queue and add nodes whose indegree reaches 0 after removal of predecessors. This yields an ordering where for each edge p->v, p appears earlier in topological order than v (since we decrement indegree when processing p). So yes, when we pop u, its dependents are not yet processed; but we can still compute something? To get longest path lengths we need to know finishing time of predecessor before computing dependent's. However if we process nodes as they become indegree 0, this order is a valid topological ordering (like we output node after all its dependencies have been removed). Actually in Kahn's algorithm, when you pop u from the queue, it means all its incoming edges have been processed? Wait: The typical implementation for Kahn uses adjacency list of outgoing edges. Starting nodes with indegree 0 are pushed; while queue not empty: pop node u; add to result; for each v in adj[u]: decrement indegree[v]; if indegree[v]==0 push. This yields a topological order where each node is output after its predecessors have been processed (since when processing predecessor p, we would decrement indegree of successor s and possibly push it later). Actually at the moment you pop u, you haven't yet removed edges from earlier nodes that pointed to u? Hmm but typical algorithm ensures that before pushing node onto queue we remove all incoming edges. The result order is topological.
+
+Thus when we process a node u (pop), its dependencies have already been considered and removed; but its finishing time maybe known as earliest finish = max over predecessors' finish + duration[u]? However we need to know the maximum of predecessor's finishing times, which may not be fully computed yet if they haven't been processed? Let's think: In typical topological sorting using Kahn, you compute indegree and output nodes when indegree becomes 0. The node u has indegree 0 at that moment; all its dependencies have already had their outgoing edges processed (i.e., they were removed). But we might not know the finishing times of those dependencies? Actually we need to compute them before outputting u, but they might be later in order because topological sort ensures each node's predecessors appear earlier. So when processing u, all its predecessors have already been output and have their distances computed. That matches typical DP: process nodes in topological order; for each node u, you can set dp[u] = max(dp[predecessors]) + duration[u]; but we need to know predecessor dp values which are available if they were processed earlier.
+
+Thus we could implement critical_path using this approach:
+
+- Build indegree and adjacency (outgoing from dependency). Also compute `duration_map`.
+
+- Initialize `dp` dict with each node's `finish_time = 0`.
+
+- Also maintain a queue of nodes with indegree zero; but before processing, we need to know dp for predecessors? Actually we can't set dp[u] until we have processed its predecessors. Since we process nodes in order (like while loop), when popping u from queue at that point, all its predecessors should have been already popped and thus have dp values computed? Not necessarily: If there is a cycle or multiple components, but typical algorithm works.
+
+Simplify: Use Kahn's algorithm to get topological order list `order` as nodes are appended after popping. Then compute longest path by iterating over that order: for each node in order (except maybe sources), compute its finish time = max(finish_time of its dependencies) + duration[node]. However we need the dependency info: deps_list[node] gives list of predecessors.
+
+Thus steps:
+
+- Extract nodes set as before.
+- Build adjacency and indegree.
+- Also build reverse mapping: for each node, list of incoming edges (predecessors). Could be used to compute max predecessor finish. But easier: while computing longest path, we can iterate over nodes in topological order; for each node, get its duration and deps. If no dependencies, then finish = duration[node]. Else finish = max(finish[p] for p in deps) + duration[node].
+
+We need `finish` values for predecessors already computed because they appear earlier (since dependencies are before). So we can store a dict `finish_time`. We'll initialize all to 0. Then iterate nodes in topological order:
+
+for node in top_order:
+    max_pred_finish = 0
+    if deps not empty: max_pred_finish = max(finish_time[p] for p in deps)
+    else: max_pred_finish = 0 (or maybe -inf? but no predecessor means start at time 0)
+    finish_time[node] = max_pred_finish + duration[node]
+
+After computing all, the critical path length is max(finish_time.values()) (the longest total duration from source to any node). Actually that's exactly the longest chain sum.
+
+If there are nodes not reachable? but all tasks in graph. The result should be integer or None if cycle.
+
+We also need to detect cycles: If after processing all nodes we cannot have len(top_order) == number of nodes, then cycle exists and return None.
+
+Now implement `critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None`.
+
+The input dictionary mapping each task name to (duration, dependencies). Need to handle that some tasks may not appear as keys in the dependency lists? But we consider all nodes from both keys and values. Use same node collection method.
+
+Implementation steps:
+
+1. Extract set of all nodes: start with keys; for each value's dependency list, add them to set.
+
+2. Build adjacency (outgoing edges) for Kahn's algorithm: For each task t in tasks:
+   - duration_t = value[0] (first element)
+   - deps_list = value[1] (second element, which is a list of dependencies).
+   - For each dep in deps_list:
+        adj[dep].append(t)   # edge from dependency to dependent
+        indegree[t] += 1
+
+But we need indegree for each node. We'll create indegree dict initialized to zero.
+
+We also may need reverse adjacency (predecessors). Not needed if using topological order list and dependencies.
+
+Simplify: Build `nodes` set as described, then initialize:
+
+adj = {node: [] for node in nodes}
+indegree = {node: 0 for node in nodes}
+
+Then iterate tasks items. For each t, dep_list:
+   for d in dep_list:
+       adj[d].append(t)
+       indegree[t] += 1
+
+We also need duration map:
+
+duration_map = {}
+for t, (dur, _) in tasks.items(): # we can ignore dependencies part after extracting
+    duration_map[t] = dur
+
+But careful: The tuple includes both duration and dependencies list. So for each entry tasks[t], it's like (duration, deps). We'll unpack accordingly.
+
+Implementation:
+
+```
+def critical_path(tasks):
+    nodes = set()
+    # keys
+    nodes.update(tasks.keys())
+    # gather all dependencies values
+    for value in tasks.values():
+        if isinstance(value, tuple) and len(value) >= 2:
+            # assume (duration, deps)
+            deps = value[1]
+            nodes.update(deps)
+    # ensure only strings? maybe.
+    
+    adj = {node: [] for node in nodes}
+    indegree = {node: 0 for node in nodes}
+    duration = {}
+    
+    for t, (dur, dep_list) in tasks.items():
+        duration[t] = dur
+        for d in dep_list:
+            adj[d].append(t)
+            indegree[t] += 1
+    
+    # Kahn's algorithm to get topological order
+    from collections import deque
+    queue = deque([node for node in nodes if indegree[node] == 0])
+    topo_order = []
+    while queue:
+        u = queue.popleft()
+        topo_order.append(u)
+        for v in adj[u]:
+            indegree[v] -= 1
+            if indegree[v] == 0:
+                queue.append(v)
+    
+    # If len(topo_order) != len(nodes): cycle -> return None
+    if len(topo_order) != len(nodes):
+        return None
+    
+    # Compute finish times (longest path) using topological order
+    finish = {node: 

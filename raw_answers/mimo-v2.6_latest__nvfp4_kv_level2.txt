@@ -1,0 +1,83 @@
+```python
+class KVStore:
+    def __init__(self):
+        self.storage = {}
+        self.tx_stack = []  # list of change dicts, innermost last
+        self.watches = {}  # key -> value visible at watch time
+
+    def set(self, key, value):
+        old = self.get(key)
+        if old != value:
+            self.notify(key, old, value)
+        if self.tx_stack:
+            self.tx_stack[-1][key] = value
+        else:
+            self.storage[key] = value
+
+    def get(self, key):
+        for tx in reversed(self.tx_stack):
+            if key in tx:
+                return tx[key]
+        return self.storage.get(key, "NULL")
+
+    def delete(self, key):
+        old = self.get(key)
+        if key in self.storage:
+            del self.storage[key]
+        if old != "NULL":
+            self.notify(key, old, "NULL")
+
+    def begin(self):
+        self.tx_stack.append({})
+
+    def commit(self):
+        if not self.tx_stack:
+            return "NO TRANSACTION"
+        tx = self.tx_stack.pop()
+        if self.tx_stack:
+            self.tx_stack[-1].update(tx)
+        else:
+            self.storage.update(tx)
+        return ""
+
+    def rollback(self):
+        if not self.tx_stack:
+            return "NO TRANSACTION"
+        self.tx_stack.pop()
+        return ""
+
+    def notify(self, key, old, new):
+        if key in self.watches:
+            print(f"WATCH {key} {old} -> {new}")
+
+
+def run(program: str) -> list[str]:
+    store = KVStore()
+    outputs = []
+    for line in program.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split()
+        cmd = parts[0]
+        if cmd == "SET":
+            store.set(parts[1], parts[2])
+        elif cmd == "GET":
+            outputs.append(store.get(parts[1]))
+        elif cmd == "DELETE":
+            store.delete(parts[1])
+        elif cmd == "BEGIN":
+            store.begin()
+        elif cmd == "COMMIT":
+            outputs.append(store.commit())
+        elif cmd == "ROLLBACK":
+            outputs.append(store.rollback())
+        elif cmd == "COUNT":
+            outputs.append(str(sum(1 for v in store.get_values() if v == parts[1])))
+        elif cmd == "WATCH":
+            store.watches[parts[1]] = store.get(parts[1])
+    return outputs
+
+    def get_values(self):
+        for key in self.storage:
+            yield self.storage[key]
+```

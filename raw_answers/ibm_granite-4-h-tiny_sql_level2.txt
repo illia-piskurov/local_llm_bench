@@ -1,99 +1,103 @@
 ```python
 def compile_query(query: dict) -> dict:
-    def build_where(node):
+    def build_conditions(node):
         if isinstance(node, dict):
+            cond_type = next(iter(node))
+            conditions = node[cond_type]
             parts = []
-            for key, value in node.items():
-                if key == 'AND':
-                    sub_parts = [build_where(c) for c in value]
-                    parts.append(f"({') AND ('.join(sub_parts)})")
-                elif key == 'OR':
-                    sub_parts = [build_where(c) for c in value]
-                    parts.append(f"({') OR ('.join(sub_parts)})")
-                else:
-                    field, op, val = value
-                    if isinstance(val, (int, float)):
-                        params.append(val)
-                        parts.append(f"{field} {op}")
-                    elif isinstance(val, str):
-                        if op == 'IN':
-                            placeholders = ', '.join(['%s'] * len(val))
-                            params.extend(val)
-                            parts.append(f"{field} IN ({placeholders})")
-                        elif op in ['IS NULL', 'IS NOT NULL']:
-                            parts.append(f"{field} {op}")
-                        elif op == 'LIKE':
-                            params.append(val)
-                            parts.append(f"{field} LIKE %s")
-                    else:
-                        raise ValueError("Unsupported value type for operator")
-            return ' AND '.join(parts) if len(parts) > 1 else parts[0] if parts else ''
-        return ''
+            for c in conditions:
+                parts.append(build_conditions(c))
+            op_map = {'AND': ' AND ', 'OR': ' OR '}
+            return f"({op_map[cond_type].join(parts)})"
+        elif isinstance(node, list):
+            parts = [build_conditions(x) for x in node]
+            return ' AND '.join(parts)
+        else:
+            field, op, value = node['field'], node['op'], node['value']
+            if op == 'IN':
+                placeholders = ', '.join(f"${{({i+1)})}}" for i in range(len(value)))
+                return f"{field} IN ({placeholders})"
+            elif op == 'IS NULL':
+                return f"{field} IS NULL"
+            elif op == 'IS NOT NULL':
+                return f"{field} IS NOT NULL"
+            elif op == 'LIKE':
+                placeholder = f"${{{len(params_list)}}}"
+                params_list.append(value)
+                return f"{field} LIKE {placeholder}"
+            else:
+                if op in ['=', '!=', '>', '<', '>=', '<=']:
+                    placeholder = f"${{{len(params_list)}}}"
+                    params_list.append(value)
+                    return f"{field} {op} {placeholder}"
+                raise ValueError(f"Unsupported operator: {op}")
 
-    def build_select(node):
-        if node.get('select') is None:
-            return '*'
-        cols = node['select']
-        if isinstance(cols, str):
-            cols = [cols]
-        return ', '.join(cols)
+    def build_select(columns):
+        if columns is None or columns == ['*']:
+            return "SELECT *"
+        return f"SELECT {', '.join(columns)}"
 
-    def build_order_by(node):
-        if 'orderBy' not in node or not node['orderBy']:
-            return ''
+    def build_from(table):
+        return f"FROM {table}"
+
+    def build_joins(joins):
         parts = []
-        for item in node['orderBy']:
-            field = item.get('field')
-            direction = item.get('dir', 'ASC')
-            parts.append(f"{field} {direction}")
-        return ' ORDER BY ' + ', '.join(parts)
-
-    def build_limit_offset(node):
-        limit = node.get('limit')
-        offset = node.get('offset')
-        parts = []
-        if limit is not None:
-            parts.append(f"LIMIT {limit}")
-        if offset is not None:
-            parts.append(f"OFFSET {offset}")
-        return ' '.join(parts)
-
-    def build_joins(node):
-        if 'joins' not in node or not node['joins']:
-            return ''
-        parts = []
-        for join in node['joins']:
+        for join in joins:
             type_ = join.get('type', 'INNER')
-            table = join.get('table')
-            on_clause = join.get('on')
-            parts.append(f"{type_} JOIN {table}")
-            if on_clause:
-                parts.append(" ON ")
-                parts.extend(build_where(on_clause))
-        return ' '.join(parts)
+            table_name = join['table']
+            on_condition = join['on']
+            on_parts = [f"{left} = {right}" for left, right in on_condition.items()]
+            parts.append(f"{type_} JOIN {table_name} ON " + ", ".join(on_parts))
+        return " ".join(parts)
 
-    params = []
+    def build_group_by(group_by):
+        if group_by:
+            return f"GROUP BY {', '.join(group_by)}"
+        return ""
 
-    table = query.get('table')
-    select_clause = build_select(query)
-    where_clause = build_where(query.get('where', {}))
-    group_by_clause = query.get('groupBy')
-    order_by_clause = build_order_by(query)
-    limit_offset_clause = build_limit_offset(query)
-    joins_clause = build_joins(query)
+    def build_order_by(order_by):
+        parts = []
+        for item in order_by:
+            field, direction = item['field'], item.get('dir', 'ASC')
+            parts.append(f"{field} {direction}")
+        return "ORDER BY " + ", ".join(parts)
 
-    sql = f"SELECT {select_clause}"
-    if joins_clause:
-        sql += f" {joins_clause}"
-    sql += f" FROM {table}"
-    if where_clause:
-        sql += f" WHERE {where_clause}"
-    if group_by_clause:
-        sql += f" GROUP BY {', '.join(group_by_clause)}"
-    if order_by_clause:
-        sql += f" {order_by_clause}"
-    if limit_offset_clause:
-        sql += f" {limit_offset_clause}"
+    params_list = []
 
-    return {"sql": sql, "params": params}
+    sql_parts = []
+
+    if 'table' not in query or not isinstance(query['table'], str):
+        raise ValueError("Table name is required")
+    sql_parts.append(build_select(query.get('select')))
+    sql_parts.append(build_from(query['table']))
+
+    joins = query.get('joins', [])
+    if joins:
+        sql_parts.append(build_joins(joins))
+
+    where = query.get('where')
+    if where:
+        cond_sql = build_conditions(where)
+        sql_parts.append(f"WHERE {cond_sql}")
+
+    group_by = query.get('groupBy')
+    if group_by:
+        sql_parts.append(build_group_by(group_by))
+
+    order_by = query.get('orderBy')
+    if order_by:
+        sql_parts.append(build_order_by(order_by))
+
+    limit_val = query.get('limit')
+    if limit_val is not None and isinstance(limit_val, int):
+        sql_parts.append(f"LIMIT {limit_val}")
+
+    offset_val = query.get('offset')
+    if offset_val is not None and isinstance(offset_val, int):
+        sql_parts.append(f"OFFSET {offset_val}")
+
+    sql_query = " ".join(sql_parts)
+
+    compiled_query = {"sql": sql_query, "params": params_list}
+    return compiled_query
 ```

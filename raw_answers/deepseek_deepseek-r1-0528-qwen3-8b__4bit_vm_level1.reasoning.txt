@@ -1,0 +1,17 @@
+
+We are going to implement a stack-based interpreter for the given instructions.
+ Steps:
+ 1. Split the program string into lines and ignore empty or comment lines (#).
+ 2. We'll have a stack (list) to hold the values.
+ 3. For each non-empty and non-comment line, split into command and argument (if any).
+ 4. Implement each instruction as per the description.
+
+ Important: 
+ - For operations that require two values (POP, ADD, SUB, MUL, DIV): if there aren't at least two elements, raise an error with line number.
+ - For DUP: requires one value to duplicate. If the stack has less than one, error.
+ - For SWAP: requires two values to swap. If there aren't at least two, error.
+ - For PRINT: requires one value on the stack. If there isn't at least one, error.
+
+ We'll return a list of strings that were printed by the PRINT instructions (in order).
+
+ Let's code accordingly.

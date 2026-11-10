@@ -1,0 +1,40 @@
+```python
+from collections import deque
+from typing import Dict, List, Set, Union
+
+def topo_sort(tasks: Dict[str, List[str]]) -> List[str] | None:
+    # Collect all task names (keys and any dependencies that appear as values)
+    nodes: Set[str] = set(tasks.keys())
+    for deps in tasks.values():
+        nodes.update(deps)
+
+    # Initialize adjacency list (outgoing edges) and indegree for each node
+    adj: Dict[str, List[str]] = {node: [] for node in nodes}
+    indegree: Dict[str, int] = {node: 0 for node in nodes}
+
+    # Build graph from dependency lists:
+    # For each task t with dependencies dep_list,
+    # add an edge from each dependency d to t.
+    for t, dep_list in tasks.items():
+        for d in dep_list:
+            adj[d].append(t)
+            indegree[t] += 1
+
+    # Kahn's algorithm
+    queue = deque([node for node in nodes if indegree[node] == 0])
+    result: List[str] = []
+
+    while queue:
+        u = queue.popleft()
+        result.append(u)
+        for v in adj[u]:
+            indegree[v] -= 1
+            if indegree[v] == 0:
+                queue.append(v)
+
+    # If we processed all nodes, the graph is a DAG; otherwise there was a cycle.
+    if len(result) != len(nodes):
+        return None
+
+    return result
+```

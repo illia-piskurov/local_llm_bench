@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_150329_59d854",
+  "host_id": "70ccb4981862",
+  "model": "lfm3-1.7b",
+  "benchmark": "lua_game_ai",
+  "level": "level1",
+  "tested_at": "2026-11-10 16:02:39",
+  "passed": 0,
+  "total": 7,
+  "failures": [
+    "Lua syntax error: error loading code: [string \"<python>\"]:95: syntax error near 'end'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,62 +1,58 @@
-from typing import Dict, List, Tuple
+from collections import deque
 
-def topo_sort(tasks: Dict[str, List[str]]) -> List[str] | None:
-    indeg = {t: 0 for t in tasks}
-    graph = {}
-    for task, deps in tasks.items():
-        graph[task] = []
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    indegree = {}
+    for task in tasks:
+        indegree[task] = 0
+    for prereq in tasks.values():
+        for p in prereq:
+            indegree[p] = indegree.get(p, 0) + 1
+
+    zero_indeg = deque([t for t, d in indegree.items() if d == 0])
+    order: list[str] = []
+    
+    while zero_indeg:
+        node = zero_indeg.popleft()
+        order.append(node)
+        for succ, deps in tasks.items():
+            if node in deps:
+                indegree[succ] -= 1
+                if indegree[succ] == 0:
+                    zero_indeg.append(succ)
+
+    return None if len(order) != len(tasks) else order
+
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    if not tasks:
+        return 0
+
+    indegree = {}
+    for task in tasks:
+        indegree[task] = 0
+    for deps in tasks.values():
         for d in deps:
-            if d not in tasks:
-                continue
-            indeg[task] += 1
-            graph.setdefault(d, []).append(task)
+            indegree[d] = indegree.get(d, 0) + 1
 
-    queue = [t for t in tasks if indeg[t] == 0]
-    order: List[str] = []
-    while queue:
-        u = queue.pop(0)
-        order.append(u)
-        for v in graph.get(u, []):
-            indeg[v] -= 1
-            if indeg[v] == 0:
-                queue.append(v)
+    zero_indeg = deque([t for t, d in indegree.items() if d == 0])
+    order: list[str] = []
+    
+    while zero_indeg:
+        node = zero_indeg.popleft()
+        order.append(node)
+        for succ, deps in tasks.items():
+            if node in deps:
+                indegree[succ] -= 1
+                if indegree[succ] == 0:
+                    zero_indeg.append(succ)
 
-    return order if len(order) == len(tasks) else None
-
-
-def critical_path(tasks: Dict[str, Tuple[int, List[str]]]) -> int | None:
-    # Build indegree map and adjacency list
-    indeg = {t: 0 for t in tasks}
-    graph = {}
-    durations: Dict[str, int] = {}
-    best_pred_sum: Dict[str, int] = {}
-
-    for task, (d, deps) in tasks.items():
-        durations[task] = d
-        graph[task] = []
-        for d in deps:
-            if d not in tasks:
-                continue
-            indeg[task] += 1
-            graph.setdefault(d, []).append(task)
-
-    # Kahn's algorithm with DP tracking max sum of predecessor durations
-    queue = [t for t in tasks if indeg[t] == 0]
-    order: List[str] = []
-    while queue:
-        u = queue.pop(0)
-        order.append(u)
-        for v in graph.get(u, []):
-            # candidate sum up to v via u
-            cand = best_pred_sum[u] + durations[u]
-            if cand > best_pred_sum[v]:
-                best_pred_sum[v] = cand
-            indeg[v] -= 1
-            if indeg[v] == 0:
-                queue.append(v)
-
+    # Detect cycle
     if len(order) != len(tasks):
         return None
 
-    # Critical path length is max (best sum up to node + its own duration)
-    return max(best_pred_sum[t] + durations[t] for t in tasks)
+    finish = {}
+    for node in order:
+        pred_finish = max(finish[p] for p in tasks[node][1]) if tasks[node][1] else 0
+        finish[node] = tasks[node][0] + pred_finish
+
+    return max(finish.values()) if finish else 0

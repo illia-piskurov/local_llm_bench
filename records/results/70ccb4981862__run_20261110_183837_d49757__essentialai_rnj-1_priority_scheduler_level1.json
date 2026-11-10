@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261110_183837_d49757",
+  "host_id": "70ccb4981862",
+  "model": "essentialai/rnj-1",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-10 18:42:38",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: expected ['b', 'c', 'a'], got None",
+    "dependency_unlocks_later: expected ['a', 'b', 'c'], got None",
+    "single_worker_duration_tiebreak: expected ['b', 'c', 'a'], got None",
+    "resource_limit_and_priority: expected ['compile', 'lint', 'test', 'package', 'deploy'], got None",
+    "simultaneous_unlocks: expected ['root', 'c', 'd', 'b'], got None"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

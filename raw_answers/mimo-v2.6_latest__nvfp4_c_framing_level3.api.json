@@ -1,0 +1,27 @@
+{
+  "model": "mimo-v2.6:latest",
+  "created_at": "2026-11-09T16:39:15.440546Z",
+  "message": {
+    "role": "assistant",
+    "content": "```c\n#include <stdint.h>\n#include <string.h>\n\n#define BUFFER_SIZE 512\n\nstatic uint8_t buffer[BUFFER_SIZE];\nstatic size_t head;\nstatic size_t count;\n\nvoid ringbuf_init(void)\n{\n    head = 0;\n    count = 0;\n}\n\nint ringbuf_push(uint8_t byte)\n{\n    if (count == BUFFER_SIZE) {\n        return -1;\n    }\n\n    buffer[head] = byte;\n    head = (head + 1) % BUFFER_SIZE;\n    count++;\n\n    return 0;\n}\n\nint ringbuf_pop(void)\n{\n    if (count == 0) {\n        return -1;\n    }\n\n    int byte = buffer[head];\n    head = (head + 1) % BUFFER_SIZE;\n    count--;\n\n    return byte;\n}\n\nint ringbuf_available(void)\n{\n    return (int)count;\n}\n\nint ringbuf_free_space(void)\n{\n    return BUFFER_SIZE - ringbuf_available();\n}\n\nint decode_packet(const uint8_t *stream, int stream_len,\n                  uint8_t *out_payload, int *out_type)\n{\n    if (stream == NULL || out_type == NULL || stream_len < 4) {\n        return -1;\n    }\n\n    for (int i = 0; i + 4 <= stream_len; i++) {\n        if (stream[i] != 0xAA) {\n            continue;\n        }\n\n        uint8_t type = stream[i + 1];\n        uint8_t len = stream[i + 2];\n\n        if (i + 3 + len >= stream_len) {\n            continue;\n        }\n\n        uint8_t checksum = 0;\n        for (uint8_t j = 0; j < len; j++) {\n            checksum ^= stream[i + 3 + j];\n        }\n\n        if (stream[i + 3 + len] != checksum) {\n            continue;\n        }\n\n        if (out_payload != NULL && len > 0) {\n            memcpy(out_payload, stream + i + 3, len);\n        }\n\n        *out_type = type;\n        return (int)len;\n    }\n\n    return -1;\n}\n\nvoid feed_bytes(const uint8_t *data, int len)\n{\n    if (data == NULL || len <= 0) {\n        return;\n    }\n\n    for (int i = 0; i < len; i++) {\n        ringbuf_push(data[i]);\n    }\n}\n\nint get_next_packet(uint8_t *out_payload, int *out_type)\n{\n    if (out_payload == NULL || out_type == NULL || ringbuf_available() == 0) {\n        return -1;\n    }\n\n    size_t start = head;\n    size_t remaining = count;\n\n    while (remaining >= 4) {\n        uint8_t magic = buffer[start];\n        uint8_t type = buffer[start + 1];\n        uint8_t len = buffer[start + 2];\n\n        if (magic != 0xAA || len > remaining - 3) {\n            start++;\n            remaining--;\n            continue;\n        }\n\n        uint8_t checksum = 0;\n        for (uint8_t j = 0; j < len; j++) {\n            checksum ^= buffer[(start + 3 + j) % BUFFER_SIZE];\n        }\n\n        if (buffer[(start + 3 + len) % BUFFER_SIZE] != checksum) {\n            start++;\n            remaining--;\n            continue;\n        }\n\n        if (out_payload != NULL && len > 0) {\n            memcpy(out_payload, buffer + (start + 3) % BUFFER_SIZE, len);\n        }\n\n        *out_type = type;\n        head = (start + 4) % BUFFER_SIZE;\n        count -= 4;\n        return (int)len;\n    }\n\n    return -1;\n}\n```",
+    "thinking": "Need to preserve ring buffer functions from Level 1 and decode_packet from Level 2, add feed_bytes and get_next_packet.\n\nNote: feed_bytes discards bytes that don't fit — but if buffer is full, we can't even check for a valid packet. Hmm, requirement says \"If buffer overflows, discard bytes that do not fit.\" So just push.\n\nget_next_packet: scan ring buffer for valid packet, skipping noise. Need to handle wraparound.\n\nLet me write it."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 70136313125,
+  "load_duration": 1787416,
+  "prompt_eval_count": 1094,
+  "prompt_eval_cached_count": 5,
+  "prompt_eval_duration": 6492568625,
+  "eval_count": 1004,
+  "eval_duration": 63588180750,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1094,
+    "total_output_tokens": 1004,
+    "tokens_per_second": 15.789097724737156,
+    "time_to_first_token_seconds": 6.492568625,
+    "model_load_time_seconds": 0.001787416,
+    "reasoning_output_tokens": 135
+  }
+}

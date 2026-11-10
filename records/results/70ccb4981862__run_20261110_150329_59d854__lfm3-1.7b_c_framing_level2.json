@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_150329_59d854",
+  "host_id": "70ccb4981862",
+  "model": "lfm3-1.7b",
+  "benchmark": "c_framing",
+  "level": "level2",
+  "tested_at": "2026-11-10 15:41:45",
+  "passed": 0,
+  "total": 8,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/lfm3-1.7b__Q8_0_c_framing_level2.c:110:31: error: assignment to cast is illegal, lvalue casts are not supported\n  110 |                 out_payload[--(size_t)k] = stream[i + 3 + k]; // careful with indexing: better use a local pointer\n      |                             ~~^~~~~~~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/lfm3-1.7b__Q8_0_c_framing_level2.c:115:18: warning: initializing 'uint8_t *' (aka 'unsigned char *') with an expression of type 'const uint8_t *' (aka 'const unsigned char *') discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]\n  115 |         uint8_t *payload_start = &stream[i + 3];\n      |                  ^               ~~~~~~~~~~~~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/lfm3-1.7b__Q8_0_c_framing_level2.c:117:36: error: array subscript is not an integer\n  117 |             out_payload[k] = stream[payload_start + k];\n      |                                    ^~~~~~~~~~~~~~~~~~\n1 warning and 2 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

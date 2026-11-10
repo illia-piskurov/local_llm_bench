@@ -1,0 +1,29 @@
+{
+  "run_id": "run_20261110_142847_03f2af",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6-distill-qwen-9b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-10 14:29:52",
+  "passed": 3,
+  "total": 18,
+  "failures": [
+    "push_print: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "add: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "sub_order: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "mul: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "div_order: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "div_truncate: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "dup: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "swap: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "pop: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "comments_and_blank_lines: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "multiple_prints: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "print_does_not_pop: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "negative_numbers: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "empty_program: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'",
+    "complex_chain: unexpected exception/timeout: AttributeError: 'StackError' object has no attribute 'needed'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

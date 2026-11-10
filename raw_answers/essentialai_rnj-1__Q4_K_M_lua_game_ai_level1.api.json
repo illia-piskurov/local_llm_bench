@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```lua\nlocal BT = {}\n\nBT.SUCCESS = \"SUCCESS\"\nBT.FAILURE = \"FAILURE\"\nBT.RUNNING = \"RUNNING\"\n\nfunction BT.Action(fn)\n    local node = {}\n    function node:tick(ctx)\n        local result = fn(ctx)\n        if result == true or result == BT.SUCCESS then\n            return BT.SUCCESS\n        elseif result == false or result == BT.FAILURE then\n            return BT.FAILURE\n        else\n            return BT.RUNNING\n        end\n    end\n    function node:reset()\n    end\n    return node\nend\n\nfunction BT.Condition(predicate)\n    local node = {}\n    function node:tick(ctx)\n        if predicate(ctx) then\n            return BT.SUCCESS\n        else\n            return BT.FAILURE\n        end\n    end\n    function node:reset()\n    end\n    return node\nend\n\nfunction BT.Sequence(children)\n    local node = { children = children, index = 1 }\n    function node:tick(ctx)\n        for i = node.index, #node.children do\n            local result = node.children[i]:tick(ctx)\n            if result == BT.FAILURE then\n                node.index = 1\n                return BT.FAILURE\n            elseif result == BT.RUNNING then\n                node.index = i + 1\n                return BT.RUNNING\n            end\n        end\n        node.index = 1\n        return BT.SUCCESS\n    end\n    function node:reset()\n        node.index = 1\n    end\n    return node\nend\n\nfunction BT.Selector(children)\n    local node = { children = children, index = 1 }\n    function node:tick(ctx)\n        for i = node.index, #node.children do\n            local result = node.children[i]:tick(ctx)\n            if result == BT.SUCCESS then\n                node.index = 1\n                return BT.SUCCESS\n            elseif result == BT.RUNNING then\n                node.index = i + 1\n                return BT.RUNNING\n            end\n        end\n        node.index = 1\n        return BT.FAILURE\n    end\n    function node:reset()\n        node.index = 1\n    end\n    return node\nend\n\nreturn BT\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 505,
+    "total_output_tokens": 458,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 15.551301992775144,
+    "time_to_first_token_seconds": 3.10471
+  }
+}

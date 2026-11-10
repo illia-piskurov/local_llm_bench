@@ -1,0 +1,13 @@
+{
+  "run_id": "run_20261109_182717_dba783",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "js_async",
+  "level": "level1",
+  "tested_at": "2026-11-09 18:54:01",
+  "passed": 7,
+  "total": 7,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

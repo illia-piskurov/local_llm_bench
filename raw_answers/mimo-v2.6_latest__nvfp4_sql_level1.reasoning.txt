@@ -1,0 +1,90 @@
+Let me write a compiler from AST to parameterized SQL.
+
+Key details:
+- Traversal order for params: left-to-right. For AND/OR, traverse in order.
+- Values from where conditions replaced with $1, $2, ...
+- Need to handle nested conditions.
+
+Let me write it.
+
+```python
+def compile_query(query: dict) -> dict:
+    sql = _compile_select(query)
+    params = []
+    return {"sql": sql, "params": params}
+```
+
+I'll build a recursive function that returns (sql_fragment, params).
+
+For a leaf condition: `field op value` -> `field op $n` and append value.
+
+For AND/OR: join with AND/OR, wrap in parens if >1.
+
+SQL string building: I'll build the whole query string.
+
+Let me write:
+
+```python
+def _compile_condition(cond, params):
+    if cond is None:
+        return None, params
+    if isinstance(cond, dict):
+        if 'AND' in cond:
+            conds = cond['AND']
+            if len(conds) > 1:
+                parts = [_compile_condition(c, params) for c in conds]
+                sql = ' AND '.join(p[0] for p in parts)
+                return f"({sql})", params
+            return parts[0][0], params
+        elif 'OR' in cond:
+            ...
+        else:
+            return _compile_leaf(cond, params)
+    else:
+        return _compile_leaf(cond, params)
+```
+
+Wait, but AND/OR keys — the leaf dict has 'field', 'op', 'value'. So checking 'AND' in cond works.
+
+For leaf:
+```python
+def _compile_leaf(cond, params):
+    field = cond['field']
+    op = cond['op']
+    value = cond['value']
+    placeholder = f"${len(params)+1}"
+    params.append(value)
+    return f"{field} {op} {placeholder}"
+```
+
+Then build full SQL:
+
+```python
+def compile_query(query):
+    sql = []
+    params = []
+    sql.append(f"SELECT {', '.join(query.get('select', ['*']))}")
+    if query.get('where'):
+        sql.append("WHERE")
+        cond_sql, params = _compile_condition(query['where'], params)
+        sql.append(cond_sql)
+    if query.get('orderBy'):
+        sql.append("ORDER BY")
+        for item in query['orderBy']:
+            field = item['field']
+            dir = item.get('dir', 'ASC')
+            sql.append(f"{field} {dir}")
+    if query.get('limit') is not None:
+        sql.append(f"LIMIT {query['limit']}")
+    if query.get('offset') is not None:
+        sql.append(f"OFFSET {query['offset']}")
+    return {"sql": ' '.join(sql), "params": params}
+```
+
+Hmm, but the AND/OR wrapping: "if conditions > 1, wrap in parentheses". So for exactly 1, no parens.
+
+Let me write it cleanly.
+
+Also need to handle the case where a condition is a list? No, spec says dict.
+
+Let me write the final code.

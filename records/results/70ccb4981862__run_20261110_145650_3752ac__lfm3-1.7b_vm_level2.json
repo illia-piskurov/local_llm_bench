@@ -1,0 +1,22 @@
+{
+  "run_id": "run_20261110_145650_3752ac",
+  "host_id": "70ccb4981862",
+  "model": "lfm3-1.7b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-11-10 15:00:45",
+  "passed": 19,
+  "total": 27,
+  "failures": [
+    "dup: unexpected exception/timeout: ValueError: Line 3: ADD needs two operands, got 1 on stack",
+    "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: Label 'skip' not defined",
+    "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+    "countdown_loop: unexpected exception/timeout: IndexError: Line 3: DUP on empty stack",
+    "count_up_loop: unexpected exception/timeout: ValueError: Line 4: ADD needs two operands, got 1 on stack"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

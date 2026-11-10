@@ -1,0 +1,127 @@
+{
+  "id": "run_20261109_161350_adac6e",
+  "host_id": "70ccb4981862",
+  "model_key": "mimo-v2.6:latest",
+  "model_name": "mimo-v2.6:latest",
+  "quantization": "nvfp4",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "mimo-v2.6:latest",
+      "display_name": "mimo-v2.6:latest",
+      "architecture": "qwen3_5",
+      "quantization": "nvfp4",
+      "quantization_bits": null,
+      "size_bytes": 8711267221,
+      "params_string": "9.4B",
+      "max_context_length": 262144,
+      "format": "safetensors",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-09 16:13:50",
+  "completed_at": "2026-11-09 16:18:57",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-09 16:15:22",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-09 16:16:47",
+      "passed": 20,
+      "total": 27,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: LabelNotFoundError: Label 'skip' not defined on line 2: JMP/JZ/JNZ target",
+        "jz_taken_when_zero: unexpected exception/timeout: LabelNotFoundError: Label 'zero' not defined on line 2: JMP/JZ/JNZ target",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: LabelNotFoundError: Label 'zero' not defined on line 2: JMP/JZ/JNZ target",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: LabelNotFoundError: Label 'nz' not defined on line 2: JMP/JZ/JNZ target",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: LabelNotFoundError: Label 'nz' not defined on line 2: JMP/JZ/JNZ target",
+        "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+        "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-09 16:18:57",
+      "passed": 26,
+      "total": 37,
+      "failures": [
+        "unconditional_jump_skips_code: unexpected exception/timeout: LabelNotFoundError: Label 'skip' not defined on line 2: JMP/JZ/JNZ target",
+        "jz_taken_when_zero: unexpected exception/timeout: LabelNotFoundError: Label 'zero' not defined on line 2: JMP/JZ/JNZ target",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: LabelNotFoundError: Label 'zero' not defined on line 2: JMP/JZ/JNZ target",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: LabelNotFoundError: Label 'nz' not defined on line 2: JMP/JZ/JNZ target",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: LabelNotFoundError: Label 'nz' not defined on line 2: JMP/JZ/JNZ target",
+        "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+        "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']",
+        "call_ret_basic: unexpected exception/timeout: LabelNotFoundError: Label 'double' not defined on line 2: JMP/JZ/JNZ target",
+        "call_ret_nested: unexpected exception/timeout: LabelNotFoundError: Label 'func_a' not defined on line 1: JMP/JZ/JNZ target",
+        "recursive_factorial: unexpected exception/timeout: LabelNotFoundError: Label 'fact' not defined on line 2: JMP/JZ/JNZ target",
+        "recursive_fibonacci: unexpected exception/timeout: LabelNotFoundError: Label 'fib' not defined on line 2: JMP/JZ/JNZ target"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-09 16:15:21",
+      "stats": {
+        "input_tokens": 285,
+        "total_output_tokens": 1322,
+        "reasoning_output_tokens": 618,
+        "tokens_per_second": 16.15171804798595,
+        "time_to_first_token_seconds": 2.277157125,
+        "model_load_time_seconds": 6.022266708
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-09 16:16:44",
+      "stats": {
+        "input_tokens": 1129,
+        "total_output_tokens": 1167,
+        "reasoning_output_tokens": 76,
+        "tokens_per_second": 15.0678374425854,
+        "time_to_first_token_seconds": 4.643578166,
+        "model_load_time_seconds": 0.003779292
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-09 16:18:53",
+      "stats": {
+        "input_tokens": 1527,
+        "total_output_tokens": 1658,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 14.102120317155666,
+        "time_to_first_token_seconds": 8.881755666,
+        "model_load_time_seconds": 0.003929792
+      }
+    }
+  ]
+}

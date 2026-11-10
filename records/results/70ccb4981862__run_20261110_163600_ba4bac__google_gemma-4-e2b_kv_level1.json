@@ -1,0 +1,22 @@
+{
+  "run_id": "run_20261110_163600_ba4bac",
+  "host_id": "70ccb4981862",
+  "model": "google/gemma-4-e2b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-11-10 16:47:58",
+  "passed": 7,
+  "total": 15,
+  "failures": [
+    "commit_no_transaction: expected ['NO TRANSACTION'], got []",
+    "rollback_no_transaction: expected ['NO TRANSACTION'], got []",
+    "simple_transaction_commit: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+    "rollback_restores_delete: expected ['NULL', '5'], got ['None', '5']",
+    "nested_commit_propagates_to_outer_only: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+    "rollback_after_commit_is_no_transaction: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+    "multiple_keys_independent: expected ['2', '1', '2'], got ['NULL', '1', '2']",
+    "set_new_key_inside_transaction: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

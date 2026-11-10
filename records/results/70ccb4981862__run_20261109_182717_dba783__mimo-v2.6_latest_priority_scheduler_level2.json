@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261109_182717_dba783",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-09 18:30:16",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception: NameError: name 'graph' isn't defined",
+    "parallel_tasks_reduce_makespan: unexpected exception: NameError: name 'graph' isn't defined",
+    "dependencies_and_workers: expected order=['a', 'c', 'b', 'd'], ms=11, cp=11; got order=None, ms=None, cp=None",
+    "critical_path_longer_than_worker_parallelism: unexpected exception: NameError: name 'graph' isn't defined",
+    "wide_graph_with_unlocks: expected order=['compile', 'fetch', 'test', 'package'], ms=8, cp=8; got order=None, ms=None, cp=None"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

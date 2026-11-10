@@ -1,0 +1,160 @@
+We need to understand the problem. The user previously gave an implementation for decode_packet within ringbuf context? Actually they've posted a "Assistant" response which includes some code for decode_packet and ringbuf functions etc. Now the new request: "Extend your implementation with a streaming parser supporting network data fragmentation."
+
+We need to implement:
+
+- void feed_bytes(const uint8_t *data, int len) — feeds incoming bytes into the ring buffer. If buffer overflows, discard bytes that do not fit.
+
+- int get_next_packet(uint8_t *out_payload, int *out_type) — checks the ring buffer for a completed packet (format from Level 2: 0xAA, type, len, payload, checksum):
+  - If a full valid packet is found: pop it from the ring buffer (advancing the buffer), copy payload to out_payload, write type to *out_type, and return payload length.
+  - If noise bytes or false 0xAA headers precede the packet, discard noise up to the next candidate.
+  - If packet is incomplete (awaiting future chunks) or buffer is empty, return -1 without discarding incomplete packet data.
+
+Preserve all functions from Level 1 and Level 2.
+
+Return only C code in a single ```c ... ``` block, with no explanations outside.
+
+We need to incorporate the existing ringbuf_functions? Let's recall previous code. There's a static buffer[BUFFER_SIZE], front, rear, count; and functions: ringbuf_init, ringbuf_push, ringbuf_pop, ringbuf_available, ringbuf_free_space. Then decode_packet function defined earlier.
+
+Now we need to add feed_bytes and get_next_packet that operate on the same ring buffer? The problem states: "Data arrives in arbitrary chunks into the ring buffer and is extracted as packets complete." So feed_bytes should push bytes into the ring buffer (maybe using existing ringbuf_push). If buffer overflows, discard bytes that do not fit. That suggests we need to maintain count.
+
+Also get_next_packet should check for a completed packet: meaning after reading some bytes, maybe there may be incomplete data at end of stream? We need to handle scanning for start marker 0xAA within the ring buffer and also beyond? The description says "If no valid packet found or insufficient data, return -1." Also "Preserve all functions from Level 1 and Level 2." So we must keep previous definitions.
+
+We need to implement get_next_packet that returns payload length (int) and sets out_type pointer. It should pop the packet from the ring buffer if a full valid packet is found: i.e., after feeding enough bytes, there may be multiple packets in buffer; we need to check for a complete packet at current front? Or just look ahead? Typically ring buffer circular queue with front index.
+
+We have functions ringbuf_pop which returns value and advances front. But that's used to retrieve the oldest element? Actually typical ringbuf: front points to next write position, rear is write pointer; count is number of elements. We need to manage scanning for start marker 0xAA at any location in buffer.
+
+Let's examine existing code:
+
+- In decode_packet, they scan stream from i=0 forward, looking for stream[i]==0xAA. They check i+1 and i+2 etc. So it scans linearly, not using ringbuf. But now we have feed_bytes feeding into the ringbuf which maintains front/ rear. get_next_packet should perhaps use those to pop or find a packet.
+
+But maybe they want us to adapt decode_packet logic for streaming? Let's parse requirements:
+
+- "Preserve all functions from Level 1 and Level 2." Means we need to keep existing definitions (ringbuf_init, ringbuf_push, etc.) as is.
+
+- Implement feed_bytes(const uint8_t *data, int len): push bytes into the buffer. If overflows (count == BUFFER_SIZE), discard new bytes that do not fit. So just call ringbuf_push for each byte? But we must handle overflow: maybe if count==BUFFER_SIZE, we skip pushing.
+
+- Implement get_next_packet(uint8_t *out_payload, int *out_type): It should "checks the ring buffer for a completed packet (format from Level 2: 0xAA, type, len, payload, checksum)". So we need to detect if there is a full packet in the buffer. Since the buffer may contain partial packets, we need to see if at some position we have magic byte 0xAA and then enough fields for length and payload and checksum.
+
+Given that data arrives fragmented across feed_bytes calls, we might accumulate bytes; after each push we should check for completed packet(s). The function get_next_packet probably just checks the current state of buffer: maybe it looks at front? Or scans from front until a complete packet is found. It returns payload length and type if a full valid packet exists; else -1.
+
+We also need to maintain count of elements in buffer (ringbuf_pop etc). However, get_next_packet should pop the packet when found (advancing buffer). That matches description: "If a full valid packet is found: pop it from the ring buffer (advancing the buffer), copy payload to out_payload... and return payload length." So we need to treat a complete packet as a sequence of 4 bytes header + len + payload + checksum. The total length = 3+len+1.
+
+Thus, get_next_packet should locate a start marker at position front? Or maybe the buffer is used such that front points to earliest unread element; after feeding many bytes, we need to find next packet starting from the current front (or scanning). Since ringbuf_pop returns front value and decrements count etc. But we might not want to lose other elements if multiple packets in buffer.
+
+Better approach: Keep an index scanning through the buffer sequentially until a full packet is found; then pop it, return length and type. If none found within remaining bytes (i.e., insufficient data or no header), return -1 without discarding any incomplete data. Also skip noise before valid packet: i.e., if there are 0xAA markers but missing fields (like len=0 etc) we should discard them.
+
+Implementation details:
+
+- The ring buffer is circular with front and rear indices and count. When feeding bytes via feed_bytes, we push each byte using ringbuf_push? That will overwrite older entries when full; but if we want to keep previous data for later extraction, maybe not appropriate. But level says "Data arrives in arbitrary chunks into the ring buffer and is extracted as packets complete." So typical approach: maintain a buffer that holds all bytes received so far; we may need to read from front and pop as needed.
+
+Simplify: Use existing ringbuf functions but also implement new feed_bytes and get_next_packet. Let's design:
+
+We have static variables in ringbuf: buffer[BUFFER_SIZE], front, rear, count.
+
+- push: if full (count==BUFFER_SIZE) return -1? But they defined ringbuf_push returning 0 or -1 indicating success? In current code: int ringbuf_push(uint8_t byte) { if (count == BUFFER_SIZE) return -1; buffer[rear]=byte; rear = (rear+1)%BUFFER_SIZE; ++count; return 0; }
+
+- pop: int ringbuf_pop(void) { if count==0 return -1; int val=buffer[front]; front=(front+1)%BUFFER_SIZE; --count; return (int)val; }
+
+Thus push adds at rear, pops from front. This is a queue.
+
+Now get_next_packet should "pop" the packet when found. So we can call pop to remove it and get its value. But pop returns only the value of popped element, not entire packet info. However we need type and len fields as well. The ringbuf doesn't store them; each entry is a single byte. So we cannot directly extract header from one push.
+
+Thus perhaps feed_bytes pushes individual bytes into buffer individually using ringbuf_push. Then after enough pushes, there might be multiple entries in the buffer: e.g., for a packet we need to have sequence of 4+ len+1 bytes as separate pushes. The pop function removes only one byte at a time from front; we cannot extract whole packet by just popping all.
+
+Therefore get_next_packet must implement scanning logic on top of ringbuf, maybe reading the buffer sequentially from current position (front) to see if there is a complete packet starting at some index. Could be easier: maintain a separate scanning pointer but not required by spec. Since they ask "Preserve all functions from Level 1 and Level 2", we can just reuse existing push/pop etc.
+
+Given the complexity, maybe we should implement get_next_packet to treat ring buffer as a linear array where we keep an index 'cur' that points to next byte to process (like feed_bytes pushes into buffer, but also updates cur). But they gave front and rear indices. Perhaps we can just use count and front pointer: scanning from front forward until find 0xAA start marker with enough following bytes.
+
+Simplify: Write get_next_packet as a function that does:
+
+- If count == 0 return -1.
+- Starting index = front (since front points to next element to be read? Actually in push, we add at rear; pop removes from front. So the logical order is: buffer[front], [front+1], ..., [rear-1] are stored. The oldest element at front. So scanning for a packet could start at front and advance.
+
+But implementing robustly might be tricky but doable in small code.
+
+Let's design get_next_packet:
+
+Input: out_payload (size_t maybe) pointer to write payload, int *out_type.
+We need to check if there is a complete valid packet somewhere ahead. Since we can't know the length of the payload without reading len field and then payload bytes; but we can locate start at index i where stream[i]==0xAA.
+
+Thus implement scanning as in decode_packet: iterate through buffer from current position? But we need to have pointer into underlying array 'stream' which is global or passed. In get_next_packet, they pass out_payload and out_type but not stream pointer. So maybe they expect us to use static internal buffer and front/rear? Or perhaps feed_bytes pushes directly into a shared memory region, and get_next_packet uses that same ringbuf.
+
+Given the function signatures: decode_packet takes const uint8_t *stream, int stream_len, etc., while get_next_packet takes only output pointers. So maybe get_next_packet reads from the static buffer as well? But there is no stream pointer argument. Possibly they expect us to treat global variables for buffer and front/rear.
+
+We need to decide on implementation approach that satisfies typical expectations of such assignments: Keep ringbuf functions unchanged; add feed_bytes and get_next_packet using those same static variables.
+
+Implementation details:
+
+- We'll keep the existing static buffer, front=0, rear=0, count=0; but these will be used by ringbuf_init etc. After each push or pop we need to update them accordingly.
+
+But note: In current code they have ringbuf functions that manipulate those static variables directly (no external). So get_next_packet can call appropriate internal functions like ringbuf_push? Actually feed_bytes needs to add bytes into the buffer; we could just loop over data, and for each byte try ringbuf_push; if returns -1 (full), skip.
+
+- For get_next_packet: It should examine buffer for a full packet. Since we cannot directly iterate over all entries easily using front/rear without popping them, but perhaps we can treat the buffer as containing multiple complete packets interleaved? However typical design is to keep at most one incomplete packet in ring; when enough data arrives to form a complete packet, it will be extracted via pop.
+
+But requirement: "If a full valid packet is found: pop it from the ring buffer (advancing the buffer), copy payload to out_payload, write type to *out_type, and return payload length." So we need to implement detection of full packet: check if there are at least 3+len+1 bytes starting at some position that matches header.
+
+Given limited time, maybe we can implement get_next_packet as:
+
+- While count>0:
+   - Get next byte from front (i.e., ringbuf_pop returns the value). But pop removes it; we don't want to remove partial data. So not good.
+
+Better: Use a simple scanning loop over buffer array indices using front and rear? Let's think of state:
+
+Suppose we have count=0 initially, all zeros. After pushing some bytes, count increments and rear moves. Then after processing, pop reduces count and front moves forward.
+
+To find next complete packet without destroying data, we could simply scan the raw memory for pattern 0xAA then type then len etc., but that may be O(N^2). However given constraints small (BUFFER_SIZE=512) it's fine.
+
+Thus implement get_next_packet as scanning from current stream pointer? But no stream pointer. Maybe they assume global variables: buffer, front, rear, count. So we can just use those.
+
+Simplify further: Use decode_packet to find a packet starting at some index i (like scanning forward). Since we have feed_bytes feeding data into buffer, after each call we might want to check for next packet in the buffer by calling something like get_next_packet which loops over indices? Could be simpler: implement get_next_packet as:
+
+- If count == 0 return -1.
+- Set i = front; // start scanning at current front
+- While i < BUFFER_SIZE:
+   - if stream[i] != 0xAA: i++; continue;
+   - else (found magic):
+       - Check that we have enough bytes after: need i+1 and i+2 within count? Not trivial due to circular buffer.
+But since ringbuf is a queue, the elements are stored in order of pushes. So indices from front to rear-1 contain elements in order. However memory may be overwritten when pushing beyond capacity; but we can ignore.
+
+Given all this complexity, I'll aim for a straightforward albeit possibly not perfectly efficient solution that meets specs: implement feed_bytes by looping over data and calling ringbuf_push per byte; if push returns -1 (full), just discard the byte. Then implement get_next_packet as scanning from front index until we find a complete packet.
+
+We need to maintain static variables for buffer, front, rear, count across calls. So after each feed_bytes we call ringbuf_push for each byte and update count automatically? But ringbuf_push updates global state; so we can just loop data: for (int j=0;j<len;++j) { int ret = ringbuf_push(data[j]); if(ret != 0){ continue; } // but push returns -1 on full, which indicates failure. However it also increments count only on success? In current code push increments count before returning 0 or -1. So we cannot differentiate failures from successful pushes except by checking return value. But if push fails (returns -1), that means buffer is full; we should discard the byte and maybe not increment count. But we can't just call push again because it would also fail. We'll need to handle manually: we could keep a separate counter for number of bytes pushed successfully.
+
+Simplify: In feed_bytes, loop over data, attempt to push each byte. If push returns -1 (buffer full), simply ignore and continue. That's okay; we can just not increment count for that byte because push didn't add it? But push increments count only on success; if fails due to full, maybe count stays same? Let's see: In current code:
+
+int ringbuf_push(uint8_t byte) {
+    if (count == BUFFER_SIZE) return -1;
+    buffer[rear] = byte;
+    rear = (rear + 1) % BUFFER_SIZE;
+    ++count;
+    return 0;
+}
+
+So it returns 0 on success, and increments count. If full, returns -1 without modifying anything.
+
+Thus to implement feed_bytes we can do:
+
+for (int i=0; i<len; ++i) {
+    int ret = ringbuf_push(data[i]);
+    if (ret == -1) continue; // overflow, discard
+}
+
+That's fine; but note that after each push, rear increments and count changes. So we need to update front? No.
+
+Now get_next_packet: We'll scan the buffer from index 0? But we have static front pointer indicating where next element will be popped? Actually after many pushes/pop operations, front may not equal 0. We can just use the buffer array and treat it as circular; but scanning whole array might be easier.
+
+Given that count <= BUFFER_SIZE=512, simple linear scan is fine.
+
+Implementation plan for get_next_packet:
+
+- If count == 0: return -1.
+
+- Set i = front (the index of next element to pop?). But we need to locate a complete packet; could start scanning from front and look at each possible start position. For each candidate start index s, check if stream[s] == 0xAA. Then read type = stream[s+1], len = stream[s+2]. Need to ensure that there are enough bytes: s + 3 + len < BUFFER_SIZE? Actually we need total length of packet (including checksum) <= BUFFER_SIZE? But we can just check if within array bounds and also not exceed the count of remaining elements. However easier: we treat scanning over whole buffer as a logical sequence: from index front to rear-1 inclusive, then wrap around? That's messy.
+
+Given limited time, I'll implement simple linear search across entire buffer (including all entries) regardless of ringbuf structure. To do this, we can just iterate through the global array 'buffer' and check each index for pattern 0xAA at position i such that i+2 < BUFFER_SIZE? Not exactly because payload may extend beyond buffer size if len > remaining space; but they said "If no valid packet found or insufficient data, return -1 without discarding incomplete packet data." So we should not assume full. We'll just check within stream_len (the number of bytes that have been fed). But get_next_packet doesn't receive stream_len. Maybe we can treat buffer as the ring and only consider indices that are still marked for reading (count>0). However again complicated.
+
+Alternative: Use existing decode_packet scanning logic inside get_next_packet; but we need to pass stream pointer etc. Not present.
+
+Given the ambiguous spec, I think they expect us to implement feed_bytes and get_next_packet as simple wrappers around ringbuf functions, maybe reusing decode_packet? Let's examine decode_packet signature: it takes stream pointer, stream_len, out_payload, out_type. It returns payload length. That could be used by get_next_packet but they'd pass data arrays.
+
+But

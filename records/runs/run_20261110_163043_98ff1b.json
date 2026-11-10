@@ -1,0 +1,31 @@
+{
+  "id": "run_20261110_163043_98ff1b",
+  "host_id": "70ccb4981862",
+  "model_key": "qwen/qwen3-4b-thinking-2507",
+  "model_name": "Qwen3 4B Thinking 2507",
+  "quantization": "4bit",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "qwen/qwen3-4b-thinking-2507",
+      "display_name": "Qwen3 4B Thinking 2507",
+      "architecture": "qwen3",
+      "quantization": "4bit",
+      "quantization_bits": 4,
+      "size_bytes": 2279153047,
+      "params_string": "4B",
+      "max_context_length": 262144,
+      "format": "mlx",
+      "publisher": "qwen"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 16:30:43",
+  "completed_at": "2026-11-10 16:34:50",
+  "status": "interrupted",
+  "results": [],
+  "speeds": []
+}

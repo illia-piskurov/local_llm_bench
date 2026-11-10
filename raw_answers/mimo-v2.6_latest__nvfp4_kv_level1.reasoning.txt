@@ -1,0 +1,81 @@
+Let me implement a nested transaction KV store.
+
+Design:
+- Global storage: dict key -> value.
+- Transaction stack: list of dicts (changes).
+- SET in transaction: store in transaction's change dict.
+- GET: check transaction stack top change dict first, then global.
+- COMMIT: if no open transaction -> "NO TRANSACTION". Else pop innermost, merge into parent (or global if no parent).
+- ROLLBACK: if no open transaction -> "NO TRANSACTION". Else pop innermost, discard.
+
+Edge: what if a key is set both in transaction and global? Transaction takes precedence.
+
+Let me write it.
+
+```python
+class KVStore:
+    def __init__(self):
+        self.storage = {}
+        self.tx_stack = []  # list of dicts
+
+    def set(self, key, value):
+        if not self.tx_stack:
+            self.storage[key] = value
+        else:
+            self.tx_stack[-1][key] = value
+
+    def get(self, key):
+        for tx in reversed(self.tx_stack):
+            if key in tx:
+                return tx[key]
+        return self.storage.get(key, "NULL")
+
+    def commit(self):
+        if not self.tx_stack:
+            return "NO TRANSACTION"
+        tx = self.tx_stack.pop()
+        if self.tx_stack:
+            self.tx_stack[-1].update(tx)
+        else:
+            self.storage.update(tx)
+        return ""
+
+    def rollback(self):
+        if not self.tx_stack:
+            return "NO TRANSACTION"
+        self.tx_stack.pop()
+        return ""
+```
+
+run(program):
+```python
+def run(program):
+    store = KVStore()
+    outputs = []
+    for line in program.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split()
+        cmd = parts[0]
+        if cmd == "SET":
+            store.set(parts[1], parts[2])
+        elif cmd == "GET":
+            outputs.append(store.get(parts[1]))
+        elif cmd == "DELETE":
+            store.delete(parts[1])
+        elif cmd == "BEGIN":
+            store.begin()
+        elif cmd == "COMMIT":
+            outputs.append(store.commit())
+        elif cmd == "ROLLBACK":
+            outputs.append(store.rollback())
+    return outputs
+```
+
+DELETE: pop from global if exists.
+
+Should I use class or plain functions? Either fine. Keep it simple.
+
+Note: "NO TRANSACTION" output for COMMIT/ROLLBACK when no open transactions. Done.
+
+Write final code.

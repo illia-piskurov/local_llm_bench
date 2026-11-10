@@ -258,6 +258,8 @@ def test_detect_truncation_signals():
     assert "fence" in lmstudio.detect_truncation({}, "```python\nx = 1\n", 100)
     assert "reasoning tag" in lmstudio.detect_truncation({}, "<think>still thinking", 100)
     assert lmstudio.detect_truncation({}, "<think>a</think>\n```python\nx\n```", 100) is None
+    assert "no final answer" in lmstudio.detect_truncation({}, "", None, has_reasoning=True)
+    assert lmstudio.detect_truncation({"stats": {"total_output_tokens": 10**6}}, ok, None) is None
 
 
 def test_ask_model_flags_truncated_and_does_not_mutate_config(monkeypatch):
@@ -272,7 +274,7 @@ def test_ask_model_flags_truncated_and_does_not_mutate_config(monkeypatch):
     cfg = lmstudio.GenerationConfig(max_tokens=50)
     res = lmstudio.ask_model("m", [{"role": "user", "content": "x"}], temperature=0.7, config=cfg)
     assert res.truncated
-    assert cfg.temperature == 0.0
+    assert cfg.temperature is None
 
 
 def test_generate_with_retry_doubles_budget(monkeypatch):
@@ -293,6 +295,31 @@ def test_generate_with_retry_doubles_budget(monkeypatch):
     assert not res.truncated
     assert [p["max_output_tokens"] for p in sent] == [100, 200]
     assert cfg.max_tokens == 100
+
+
+def test_lmstudio_payload_omits_unset_sampling_and_length(monkeypatch):
+    import lmstudio
+
+    sent: list[dict] = []
+    complete = {"output": [{"type": "message", "content": "```python\nx = 1\n```"}], "stats": {}}
+    _fake_post(monkeypatch, [complete], sent)
+    lmstudio.ask_model("m", [{"role": "user", "content": "x"}])
+    assert not {"temperature", "top_p", "max_output_tokens", "context_length"} & sent[0].keys()
+    assert lmstudio.GenerationConfig().to_dict().keys() == {"seed", "timeout_seconds"}
+
+
+def test_reasoning_only_reply_is_truncated_without_retry(monkeypatch):
+    import pytest
+
+    import runner
+
+    sent: list[dict] = []
+    reasoning_only = {"output": [{"type": "reasoning", "content": "Actually, wait..."}], "stats": {}}
+    _fake_post(monkeypatch, [reasoning_only], sent)
+
+    with pytest.raises(runner.GenerationTruncatedError, match="no final answer"):
+        runner._generate_with_retry("m", [{"role": "user", "content": "x"}], None, runner._default_console)
+    assert len(sent) == 1
 
 
 def test_generate_with_retry_gives_up_at_cap(monkeypatch):

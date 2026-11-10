@@ -1,0 +1,31 @@
+{
+  "id": "run_20261110_161305_a7f65e",
+  "host_id": "70ccb4981862",
+  "model_key": "lfm-3-coder-claude-distill",
+  "model_name": "LFM 3 Coder Claude Distill",
+  "quantization": "Q8_0",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "lfm-3-coder-claude-distill",
+      "display_name": "LFM 3 Coder Claude Distill",
+      "architecture": "lfm3",
+      "quantization": "Q8_0",
+      "quantization_bits": 8,
+      "size_bytes": 1846241056,
+      "params_string": "1.7B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": "mradermacher"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 16:13:05",
+  "completed_at": "2026-11-10 16:13:06",
+  "status": "interrupted",
+  "results": [],
+  "speeds": []
+}

@@ -1,0 +1,32 @@
+```python
+from collections import defaultdict
+from typing import Dict, List, Optional
+
+
+def topo_sort(tasks: Dict[str, List[str]]) -> List[str]:
+    # Build adjacency list (outgoing edges) and indegree counter.
+    adj = defaultdict(list)       # node -> list of dependent nodes
+    indeg = {node: 0 for node in tasks}   # incoming edge counts
+
+    for task, deps in tasks.items():
+        for dep in deps:
+            adj[dep].append(task)          # edge from dependency to the dependent task
+            indeg[task] += 1                # this dependency increases indegree of `task`
+
+    # Kahn's algorithm
+    queue = deque([node for node, deg in indeg.items() if deg == 0])
+    
+    result = []
+    while queue:
+        u = queue.popleft()
+        result.append(u)
+        for v in adj[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                queue.append(v)
+
+    # If we couldn't process all nodes, there is a cycle
+    if len(result) != len(tasks):
+        return None
+    return result
+```

@@ -2,103 +2,180 @@ def run(program: str) -> list[str]:
     lines = [line.strip() for line in program.splitlines() if line.strip() and not line.strip().startswith("#")]
     stack = []
     output = []
-    labels = {}
-    current_label_index = 0
+    label_map = {}
+    line_number = 0
 
     def error(msg):
-        raise ValueError(f"Error at line {len(output)+1}: {msg}")
+        raise ValueError(f"Error at line {line_number}: {msg}")
 
-    label_map = {}
-
-    for i, line in enumerate(lines, start=1):
+    current_label = None
+    for line in lines:
+        line_number += 1
         parts = line.split()
         cmd = parts[0]
-        if cmd == "PUSH":
-            try:
+
+        try:
+            if cmd == "LABEL":
+                current_label = parts[1]
+            elif cmd == "JMP":
+                target = label_map[parts[1]]
+                stack.pop()  # value is discarded but must be popped
+                line_number = target - 1
+            elif cmd == "JZ":
+                if len(stack) < 1:
+                    error("not enough values on the stack for JZ")
+                a = stack.pop()
+                if a == 0:
+                    target = label_map[parts[1]]
+                    line_number = target - 1
+            elif cmd == "JNZ":
+                if len(stack) < 1:
+                    error("not enough values on the stack for JNZ")
+                a = stack.pop()
+                if a != 0:
+                    target = label_map[parts[1]]
+                    line_number = target - 1
+            elif cmd == "PUSH":
                 value = int(parts[1])
-            except (IndexError, ValueError):
-                error("Missing number after PUSH")
-            stack.append(value)
-        elif cmd == "POP":
-            if not stack:
-                error("POP from empty stack")
-            stack.pop()
-        elif cmd == "ADD":
-            if len(stack) < 2:
-                error("ADD requires two values on the stack")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a + b)
-        elif cmd == "SUB":
-            if len(stack) < 2:
-                error("SUB requires two values on the stack")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a - b)
-        elif cmd == "MUL":
-            if len(stack) < 2:
-                error("MUL requires two values on the stack")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a * b)
-        elif cmd == "DIV":
-            if len(stack) < 2:
-                error("DIV requires two values on the stack")
-            b = stack.pop()
-            a = stack.pop()
-            if b == 0:
-                error("Division by zero")
-            stack.append(a // b)
-        elif cmd == "DUP":
-            if not stack:
-                error("DUP from empty stack")
-            stack.append(stack[-1])
-        elif cmd == "SWAP":
-            if len(stack) < 2:
-                error("SWAP requires two values on the stack")
-            stack[-1], stack[-2] = stack[-2], stack[-1]
-        elif cmd == "PRINT":
-            if not stack:
-                error("PRINT from empty stack")
-            output.append(str(stack[-1]))
-        elif cmd.startswith("LABEL"):
-            try:
-                label_name = parts[1]
-                labels[label_name] = i
-            except (IndexError, ValueError):
-                error("Invalid LABEL format")
-        elif cmd == "JMP":
-            if len(parts) != 2:
-                error("JMP requires a label argument")
-            target_line = labels.get(parts[1])
-            if target_line is None:
-                error(f"Undefined label: {parts[1]}")
-            i = target_line
-        elif cmd == "JZ":
-            if len(parts) != 2:
-                error("JZ requires a label argument")
-            try:
-                value = int(stack.pop())
-            except (IndexError, ValueError):
-                error("Invalid value for JZ")
-            target_line = labels.get(parts[1])
-            if target_line is None:
-                error(f"Undefined label: {parts[1]}")
-            if value == 0:
-                i = target_line
-        elif cmd == "JNZ":
-            if len(parts) != 2:
-                error("JNZ requires a label argument")
-            try:
-                value = int(stack.pop())
-            except (IndexError, ValueError):
-                error("Invalid value for JNZ")
-            target_line = labels.get(parts[1])
-            if target_line is None:
-                error(f"Undefined label: {parts[1]}")
-            if value != 0:
-                i = target_line
-        else:
-            raise ValueError(f"Unknown command: {cmd}")
+                stack.append(value)
+            elif cmd == "POP":
+                if not stack:
+                    error("stack underflow")
+                stack.pop()
+            elif cmd == "ADD":
+                if len(stack) < 2:
+                    error("not enough values on the stack for ADD")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a + b)
+            elif cmd == "SUB":
+                if len(stack) < 2:
+                    error("not enough values on the stack for SUB")
+                a, b = stack.pop(), stack.pop()
+                stack.append(b - a)
+            elif cmd == "MUL":
+                if len(stack) < 2:
+                    error("not enough values on the stack for MUL")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a * b)
+            elif cmd == "DIV":
+                if len(stack) < 2:
+                    error("not enough values on the stack for DIV")
+                a, b = stack.pop(), stack.pop()
+                if b == 0:
+                    error("division by zero")
+                stack.append(b // a)
+            elif cmd == "DUP":
+                if not stack:
+                    error("stack underflow")
+                stack.append(stack[-1])
+            elif cmd == "SWAP":
+                if len(stack) < 2:
+                    error("not enough values on the stack for SWAP")
+                stack[-1], stack[-2] = stack[-2], stack[-1]
+            elif cmd == "PRINT":
+                if not stack:
+                    error("stack underflow")
+                output.append(str(stack[-1]))
+            else:
+                error(f"unknown command: {cmd}")
+        except (IndexError, ValueError) as e:
+            raise ValueError(f"Syntax or value error at line {line_number}: {e}")
+
+    return output
+
+def create_label_map(lines):
+    label_map = {}
+    current_label = None
+    for i, line in enumerate(lines):
+        parts = line.split()
+        cmd = parts[0]
+        if cmd == "LABEL":
+            current_label = parts[1]
+        elif cmd in ["JMP", "JZ", "JNZ"]:
+            label_map[current_label] = i + 1
+    return label_map
+
+def run(program: str) -> list[str]:
+    lines = [line.strip() for line in program.splitlines() if line.strip() and not line.strip().startswith("#")]
+    stack = []
+    output = []
+    label_map = {}
+    line_number = 0
+
+    def error(msg):
+        raise ValueError(f"Error at line {line_number}: {msg}")
+
+    current_label = None
+    for i, line in enumerate(lines):
+        line_number += 1
+        parts = line.split()
+        cmd = parts[0]
+
+        try:
+            if cmd == "LABEL":
+                current_label = parts[1]
+            elif cmd == "JMP":
+                target = label_map[parts[1]]
+                stack.pop()  # value is discarded but must be popped
+                line_number = target - 1
+            elif cmd == "JZ":
+                if len(stack) < 1:
+                    error("not enough values on the stack for JZ")
+                a = stack.pop()
+                if a == 0:
+                    target = label_map[parts[1]]
+                    line_number = target - 1
+            elif cmd == "JNZ":
+                if len(stack) < 1:
+                    error("not enough values on the stack for JNZ")
+                a = stack.pop()
+                if a != 0:
+                    target = label_map[parts[1]]
+                    line_number = target - 1
+            elif cmd == "PUSH":
+                value = int(parts[1])
+                stack.append(value)
+            elif cmd == "POP":
+                if not stack:
+                    error("stack underflow")
+                stack.pop()
+            elif cmd == "ADD":
+                if len(stack) < 2:
+                    error("not enough values on the stack for ADD")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a + b)
+            elif cmd == "SUB":
+                if len(stack) < 2:
+                    error("not enough values on the stack for SUB")
+                a, b = stack.pop(), stack.pop()
+                stack.append(b - a)
+            elif cmd == "MUL":
+                if len(stack) < 2:
+                    error("not enough values on the stack for MUL")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a * b)
+            elif cmd == "DIV":
+                if len(stack) < 2:
+                    error("not enough values on the stack for DIV")
+                a, b = stack.pop(), stack.pop()
+                if b == 0:
+                    error("division by zero")
+                stack.append(b // a)
+            elif cmd == "DUP":
+                if not stack:
+                    error("stack underflow")
+                stack.append(stack[-1])
+            elif cmd == "SWAP":
+                if len(stack) < 2:
+                    error("not enough values on the stack for SWAP")
+                stack[-1], stack[-2] = stack[-2], stack[-1]
+            elif cmd == "PRINT":
+                if not stack:
+                    error("stack underflow")
+                output.append(str(stack[-1]))
+            else:
+                error(f"unknown command: {cmd}")
+        except (IndexError, ValueError) as e:
+            raise ValueError(f"Syntax or value error at line {line_number}: {e}")
 
     return output

@@ -1,0 +1,116 @@
+BT = {}
+
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+BT.Action = function(fn)
+    local node = {
+        type = "action",
+        fn = fn,
+        status = BT.SUCCESS,
+    }
+
+    function node:tick(ctx)
+        local result = self.fn(ctx)
+        if result == true or result == BT.SUCCESS then
+            return BT.SUCCESS
+        elseif result == false or result == BT.FAILURE then
+            return BT.FAILURE
+        else
+            return BT.RUNNING
+        end
+    end
+
+    function node:reset()
+        self.status = BT.SUCCESS
+    end
+
+    return node
+end
+
+BT.Condition = function(predicate)
+    local node = {
+        type = "condition",
+        predicate = predicate,
+        status = BT.SUCCESS,
+    }
+
+    function node:tick(ctx)
+        if predicate(ctx) then
+            return BT.SUCCESS
+        else
+            return BT.FAILURE
+        end
+    end
+
+    function node:reset()
+        self.status = BT.SUCCESS
+    end
+
+    return node
+end
+
+BT.Sequence = function(children)
+    local node = {
+        type = "sequence",
+        children = children,
+        index = 1,
+        status = BT.SUCCESS,
+    }
+
+    function node:tick(ctx)
+        local child = children[self.index]
+        if not child then
+            return BT.SUCCESS
+        end
+
+        local result = child:tick(ctx)
+        if result == BT.SUCCESS then
+            self.index = self.index + 1
+            return BT.SUCCESS
+        elseif result == BT.RUNNING then
+            return BT.RUNNING
+        else
+            return BT.FAILURE
+        end
+    end
+
+    function node:reset()
+        self.index = 1
+    end
+
+    return node
+end
+
+BT.Selector = function(children)
+    local node = {
+        type = "selector",
+        children = children,
+        index = 1,
+        status = BT.SUCCESS,
+    }
+
+    function node:tick(ctx)
+        local child = children[self.index]
+        if not child then
+            return BT.SUCCESS
+        end
+
+        local result = child:tick(ctx)
+        if result == BT.SUCCESS then
+            return BT.SUCCESS
+        elseif result == BT.RUNNING then
+            return BT.RUNNING
+        else
+            self.index = self.index + 1
+            return BT.FAILURE
+        end
+    end
+
+    function node:reset()
+        self.index = 1
+    end
+
+    return node
+end

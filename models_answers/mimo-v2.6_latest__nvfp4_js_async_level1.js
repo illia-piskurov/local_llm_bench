@@ -1,0 +1,38 @@
+async function pMap(items, mapper, options) {
+  const concurrency = options === undefined || options === null
+    ? 1
+    : typeof options === 'number'
+      ? options
+      : options.concurrency;
+
+  if (items.length === 0) {
+    return [];
+  }
+
+  const results = new Array(items.length);
+  let pending = 0;
+  let nextIndex = 0;
+
+  async function run() {
+    while (pending < concurrency) {
+      if (nextIndex >= items.length) {
+        return;
+      }
+
+      const index = nextIndex++;
+      pending++;
+
+      try {
+        results[index] = await mapper(items[index], index);
+      } catch (error) {
+        pending--;
+        throw error;
+      }
+
+      pending--;
+    }
+  }
+
+  await Promise.all(Array.from({ length: items.length }, (_, i) => run()));
+  return results;
+}

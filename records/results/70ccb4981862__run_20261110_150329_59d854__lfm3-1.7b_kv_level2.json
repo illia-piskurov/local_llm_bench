@@ -1,0 +1,23 @@
+{
+  "run_id": "run_20261110_150329_59d854",
+  "host_id": "70ccb4981862",
+  "model": "lfm3-1.7b",
+  "benchmark": "kv",
+  "level": "level2",
+  "tested_at": "2026-11-10 15:23:42",
+  "passed": 16,
+  "total": 25,
+  "failures": [
+    "simple_transaction_rollback: expected ['5'], got ['10']",
+    "nested_transactions: expected ['20', '10', 'NULL'], got ['20', '20', '20']",
+    "multiple_keys_independent: expected ['2', '1', '2'], got ['NULL', '99', '2']",
+    "count_basic: expected ['2'], got []",
+    "count_zero: expected ['0'], got []",
+    "count_respects_transaction: expected ['2', '1'], got []",
+    "count_after_delete: expected ['1'], got []",
+    "watch_no_change_no_notification: expected [], got ['WATCH a 5 -> 5']",
+    "watch_delete: expected ['WATCH a 5 -> NULL'], got []"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

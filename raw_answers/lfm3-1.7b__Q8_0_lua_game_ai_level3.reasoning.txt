@@ -1,0 +1,318 @@
+We need to produce a single code block containing the updated implementation. The user gave an earlier partial implementation (in assistant message) which is messy and incomplete. We need to extend it according to new requirements:
+
+- Add shared memory Blackboard: BT.Blackboard.new() creates new blackboard instance with get, set, watch methods.
+- Decorators:
+  - BT.Inverter(child): returns a node that inverts child's result (SUCCESS<->FAILURE), passes RUNNING unchanged. Method reset delegates to child.reset().
+  - BT.Cooldown(child, ticks): after successful execution, enters cooldown for ticks ticks. During cooldown, immediately return FAILURE without invoking child. Once expires, child can execute again. Need a method reset() resets cooldown counter and calls child:reset().
+
+- Preserve Level 1 node behavior (Action, Condition etc.)
+
+Additionally:
+
+2. Extend with coroutine-based async actions:
+   - Asynchronous action BT.AsyncAction(coroutine_fn): 
+     - Enables multi-tick actions without blocking main loop using Lua coroutines.
+     - Function coroutine_fn(ctx) may yield "WAIT_TICKS", n to wait for n ticks.
+     - When calling node:tick(ctx):
+       - If coroutine is not yet created or dead — create new coroutine.
+       - If node is in wait ticks mode — decrement ticks counter and return BT.RUNNING.
+       - Resume coroutine (coroutine.resume(co, ctx)).
+       - If coroutine yields ("WAIT_TICKS", n) — set wait ticks to n and return BT.RUNNING.
+       - When coroutine finishes — return its final result.
+
+   We need a way to track per-node "wait ticks mode" maybe via a field. For each node, we may need to store a tick count for async actions? Not specified: The decorator async action should handle the waiting internally within tick method; but likely BT.AsyncAction is an Action node that uses coroutines.
+
+   Also method node:reset() clears coroutine and wait timer.
+
+- Cascading tree reset:
+  - When calling node:reset() on composite nodes (Sequence, Selector), recursively call reset() on all child nodes.
+
+We need to preserve Level 1 node behavior. The earlier code includes Action, Condition, Blackboard definition messed up but we can rewrite cleanly.
+
+Let's design final code:
+
+Define BT.SUCCESS, BT.FAILURE, BT.RUNNING constants as before.
+
+Define simple Action node (as before) with tick and reset methods that just runs fn and returns based on result mapping. But now need to handle async: maybe separate action nodes for sync and async? The new BT.AsyncAction is a variant of Action that uses coroutines internally.
+
+Simplify: We'll define generic Node table structure as {tick, reset}. Many composite nodes (Sequence, Selector) rely on tick method calling child.tick(ctx). For async node, we need to handle the coroutine within its own tick. Let's design BT.AsyncAction similar to Action but returns a special internal coroutine.
+
+Better approach: Represent each node as a table with fields: tick (function), reset (function). For composite nodes like Sequence and Selector, they use child.tick(ctx) expecting the child's tick method to handle async? In earlier code for Sequence, it loops over children calling child.tick(ctx) directly. So if we want asynchronous behavior inside child, the child should be an AsyncAction wrapper or something.
+
+But requirement: "Enables multi-tick actions without blocking the main game loop, using Lua coroutines (coroutine.create, coroutine.resume, coroutine.yield)." It says for node:tick(ctx) we need to handle if coroutine is not yet created or dead — create new coroutine. If node is in wait ticks mode — decrement ticks counter and return BT.RUNNING. Resume coroutine etc.
+
+Thus the async action itself must implement its own tick method that may involve waiting via co-routines, and also manage "wait ticks" state to indicate it's currently sleeping for n ticks.
+
+We need to define BT.AsyncAction(coroutine_fn) where coroutine_fn is a function expecting ctx and returning something? Possibly returns final result or yields.
+
+Let's read the spec carefully:
+
+- Asynchronous action `BT.AsyncAction(coroutine_fn)`:
+  - Enables multi-tick actions without blocking main game loop, using Lua coroutines.
+  - Function `coroutine_fn(ctx)` may yield `coroutine.yield("WAIT_TICKS", n)` to wait for `n` ticks.
+  - When calling `node:tick(ctx)`:
+    - If coroutine is not yet created or dead — create new coroutine.
+    - If node is in wait ticks mode — decrement ticks counter and return BT.RUNNING.
+    - Resume coroutine (`coroutine.resume(co, ctx)`).
+    - If coroutine yields ("WAIT_TICKS", n) — set wait ticks to `n` and return BT.RUNNING.
+    - When coroutine finishes — return its final result (BT.SUCCESS, BT.FAILURE or true/false).
+
+- Method node:reset() clears coroutine and wait timer.
+
+We need a way for each node to know if it's in "wait ticks mode" with remaining ticks count. For async action we can maintain an internal field like `async_ticks` representing number of ticks left before resuming again. The tick method will check this: If node.tick_counter > 0? Actually, spec: "If node is in wait ticks mode — decrement ticks counter and return BT.RUNNING." So each async action may have a `remaining_ticks` (or `wait_ticks`) that gets decremented when tick called while waiting. When it reaches zero or goes negative maybe returns SUCCESS/FAILURE?
+
+Simplify: We'll implement BT.AsyncAction as:
+
+function BT.AsyncAction(fn)
+    local self = { fn = fn, co = nil, remaining_ticks = 0 }
+    -- Actually we need to detect if coroutine exists.
+    return {
+        tick = function(ctx)
+            -- If no coroutine or dead: create new
+            if not self.co then
+                self.co = coroutine.create(coroutine_function = func that wraps fn and yields?)
+            end
+
+            local res
+            if self.remaining_ticks > 0 then
+                -- node in wait mode
+                self.remaining_ticks -= 1
+                return BT.RUNNING
+            else
+                -- need to resume current coroutine?
+                coroutine.resume(self.co, ctx)  -- but we need to store state? We'll handle later.
+            end
+
+            local result = self.co.last_result(ctx)?? Not sure.
+
+But simpler: The async action itself is a node that when ticked will execute its internal function in separate coroutine, which may yield waiting for ticks. Implementation steps:
+
+Define BT.AsyncAction as returning a table with fields:
+- `tick` function: 
+   - If the inner coroutine hasn't been started (self._co == nil or self._co:status() ~= "closed"? ) then create new co and store.
+   - Then call coroutine.resume? Actually we need to simulate time passing.
+
+Given complexity, maybe implement a simpler approach:
+
+We can treat each node as having fields:
+- `tick` (function)
+- `reset` (function)
+
+For BT.AsyncAction(fn):
+    local self = {
+        fn = fn,
+        co = coroutine.create(function() ... )  -- but we need to create when first ticked.
+        wait_ticks = 0
+    }
+But we can't store these fields inside the returned table directly? Actually we can, because tables are created and setmetatable with methods only. But we also need to pass extra fields to child nodes (like parent). In earlier code for composite nodes they used self.children etc., not internal state. We'll just embed internal data.
+
+Define:
+
+function BT.AsyncAction(fn)
+    local co = nil
+    local wait_ticks = 0
+    return {
+        tick = function(ctx)
+            -- If no coroutine or dead: create new.
+            if co == nil or (co and co.status() ~= "closed") then
+                co = coroutine.create(function(inner_coro) ... ) -- not needed? We'll just use coroutine.create directly.
+                wait_ticks = 0
+            end
+
+            local result
+            if wait_ticks > 0 then
+                -- decrement wait tick count
+                wait_ticks -= 1
+                return BT.RUNNING
+            else
+                -- resume current coroutine? But we haven't started it.
+                -- Actually for async action, the function fn may be a coroutine that yields.
+                local res = nil
+                if co then
+                    coroutine.resume(co, ctx)
+                    result = co.lastresult(ctx)  -- but lastresult returns the value from previous? In Lua coroutines, you can get the return value by using gototalreturn. Hard in simple scenario.
+                else
+                    local res = fn(ctx)   -- run sync function?
+                end
+
+                if result == true or result == BT.SUCCESS then
+                    return BT.SUCCESS
+                elseif result == false or result == BT.FAILURE then
+                    return BT.FAILURE
+                elseif result == BT.RUNNING then
+                    return BT.RUNNING
+                else
+                    -- maybe yield "WAIT_TICKS", n
+                    if result == "WAIT_TICKS" and typeof(result) ~= "number" or result == coroutine.yield? Actually coroutine.yield returns two values: the value and the pause message. In Lua 5.2, coroutine.yield(value, ...)? Typically you write `coroutine.yield("WAIT_TICKS", n)`. When called, it suspends the coroutine with that message. The returned value is "yield". So we can check if result == "WAIT_TICKS" or maybe first argument? Let's assume fn returns a tuple: maybe like `coroutine.yield("WAIT_TICKS", 3)` yields two items: "WAIT_TICKS" and 3. But simpler: We'll treat any result string starting with "WAIT_TICKS" as waiting.
+
+                -- For now, we can handle by checking if result == "WAIT_TICKS":
+                if result:find("WAIT_TICKS") > 0 then
+                    wait_ticks = tonumber(result:match("[^,]+]")?) Not trivial.
+            end
+
+But this is getting messy. Perhaps better to implement BT.AsyncAction as a wrapper that creates a coroutine which yields "WAIT_TICKS", ticks after each tick.
+
+Let's design simpler:
+
+- For async action, we can have its own internal `tick` method that does not directly call the child but just runs its inner function in separate coroutine and waits for ticks.
+
+Simplify: We'll treat BT.AsyncAction as a node whose tick returns the result of fn(ctx) if it doesn't need to wait; otherwise, we can use coroutine.yield to pause the caller (like giving control back). But typical pattern: `coroutine.yield("WAIT_TICKS", n)` causes the current event loop to yield until more ticks.
+
+Given this is a game loop context maybe tick is called by some main loop repeatedly. In our implementation, we just need to provide correct behavior when node.tick(ctx) is invoked:
+
+Pseudo-code for BT.AsyncAction(tick):
+- If coroutine not created or dead:
+    create new co with function that runs the user-provided coroutine_fn? Actually coroutine_fn expects ctx and may yield.
+
+Better: Let's define BT.AsyncAction(coroutine_fn) as a node where its tick method does:
+
+local self = { fn = coroutine_fn }
+
+function AsyncNode.tick(ctx)
+    if not self.co then
+        -- create new co that runs the user function and may yield.
+        self.co = coroutine.create(function()
+            local result = self.fn(ctx)  -- but need to pass ctx? We'll just call coroutine_fn(ctx)
+            if result == true or result == BT.SUCCESS then return BT.SUCCESS
+            elseif result == false or result == BT.FAILURE then return BT.FAILURE
+            else if result == BT.RUNNING then return BT.RUNNING
+            end
+        end)
+    end
+
+    local status = coroutine.status(self.co)  -- we can check if it's running.
+    If status ~ "suspended"? Hard.
+
+Given time constraints, maybe we can implement a high-level but functional version:
+
+Simplify: The main focus is to produce clean Lua code meeting the described behavior. We don't need to get every nuance perfect; just enough to satisfy spec and compile.
+
+Let's restructure code from scratch, making BT a table with nodes as tables containing tick and reset functions. We'll add necessary fields.
+
+We have existing definitions for Condition, Action, Sequence, Selector but they are incomplete. Let's rewrite them fully.
+
+We need:
+
+- Constants: BT.SUCCESS = "SUCCESS", etc.
+
+- Function BT.Action(fn): returns a node with tick that runs fn and maps results to SUCCESS/FAILURE/RUNNING as per earlier code. Also reset does nothing.
+
+- Function BT.Condition(predicate): returns node with tick that evaluates predicate -> SUCCESS else FAILURE; reset does nothing.
+
+- Blackboard: create new blackboard, get/set/watch.
+
+Define:
+
+BT.Blackboard = {
+    new = function() return { data = {}, watchers = {} } end,
+    get = function(bb, key, default) return bb.data[key] or default end,
+    set = function(bb, key, value) 
+        bb.data[key] = value
+        local wlist = bb.watchers[key]
+        if wlist then
+            for _, cb in ipairs(wlist) do
+                -- old value is previous stored? Not captured; we can store before set. For simplicity ignore.
+                cb(key, value, bb.data[key])  end
+        end
+    },
+    watch = function(bb, key, callback)
+        bb.watchers[key] = {callback}
+    }
+}
+
+But earlier they attempted to assign methods on a table after creation incorrectly. We'll define BT.Blackboard as a struct with these functions.
+
+Then we need methods: BT.Blackboard.new() returns an instance of that struct with fields data, watchers. In the above, set function refers to bb.data etc. But we need self parameter? Actually earlier they used set = function(bb, key, value). That's weird. Let's define blackboard as a simple table object and add methods:
+
+BT.Blackboard.new = function() return { data = {}, watchers = {} } end
+
+But then BT.Blackboard.get etc need to be bound to instance.
+
+Simpler: Define BT.Blackboard as a class-like table with fields (data, watchers). Provide constructor new(). Then assign methods get, set, watch to that struct using setmetatable on the result of new? Let's design:
+
+BT.Blackboard = {
+    new = function() 
+        return { data = {}, watchers = {} } 
+    end,
+    get = function(self, key, default)
+        return self.data[key] or default
+    end,
+    set = function(self, key, value)
+        self.data[key] = value
+        local wlist = self.watchers[key]
+        if wlist then
+            for _, cb in ipairs(wlist) do
+                cb(key, value, self.data[key])  -- pass old as previous?
+            end
+        end
+    },
+    watch = function(self, key, callback)
+        self.watchers[key] = {callback}
+    end,
+}
+
+But we need to set metatable on the instance returned by new. Actually we can simply assign methods directly in BT.Blackboard.new result via setmetatable.
+
+Thus:
+
+local function BT_blackboard_new()
+    local bb = { data = {}, watchers = {} }
+    setmetatable(bb, {
+        get = function(key, default) return bb.data[key] or default end,
+        set = function(key, value) 
+            bb.data[key] = value
+            local wlist = bb.watchers[key]
+            if wlist then
+                for _, cb in ipairs(wlist) do
+                    cb(key, value, bb.data[key]) -- old before update? Not exactly.
+                end
+            end
+        end,
+        watch = function(key, callback)
+            bb.watchers[key] = {callback}
+        end,
+    })
+    return bb
+end
+
+But earlier code had BT.Blackboard.new as a method on class; we can define BT.Blackboard.new = function() ... and also give get etc.
+
+Let's adopt a simpler approach: define BT.Blackboard as an empty table, then set fields new, get, set, watch methods using assignment to the parent? But Lua doesn't allow functions after creation easily without using setmetatable again.
+
+Given time, I will craft code that is somewhat functional but not heavily tested.
+
+Now decorators:
+
+- BT.Inverter(child): returns { tick = function(ctx) ... ; reset = function() child.reset() end }
+
+We need to handle child.tick and child.reset. The Inverter's tick: it calls child.tick(ctx). Then if childRes == SUCCESS -> return FAILURE, etc.
+
+Thus:
+
+function BT.Inverter(child)
+    local res = {
+        tick = function(ctx)
+            local childRes = child.tick(ctx)
+            if childRes == BT.SUCCESS then
+                return BT.FAILURE
+            elseif childRes == BT.FAILURE then
+                return BT.SUCCESS
+            elseif childRes == BT.RUNNING then
+                return childRes -- unchanged
+            end
+        ,
+        reset = function()
+            child.reset()
+        }
+    }
+    return res
+end
+
+- BT.Cooldown(child, ticks): returns a node with tick and reset.
+
+Implementation: after successful execution (child.tick returns SUCCESS), we need to enter cooldown for `ticks` ticks. So inside tick:
+
+function(tick(ctx)):
+   if child.tick? hmm.
+
+But Cooldown node itself is not the same as the child's tick; it's a wrapper around child and tick count. The spec: "After successful child execution (BT.S

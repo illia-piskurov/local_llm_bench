@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261110_145650_3752ac",
+  "host_id": "70ccb4981862",
+  "model": "lfm3-1.7b",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-11-10 15:03:25",
+  "stats": {
+    "input_tokens": 1603,
+    "total_output_tokens": 5816,
+    "reasoning_output_tokens": 3990,
+    "tokens_per_second": 36.88341990122525,
+    "time_to_first_token_seconds": 2.249895,
+    "model_load_time_seconds": null
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261110_183837_d49757",
+  "host_id": "70ccb4981862",
+  "model": "essentialai/rnj-1",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-11-10 18:47:23",
+  "passed": 4,
+  "total": 6,
+  "failures": [
+    "where_and_or_nested: SQL: expected 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', got 'SELECT id, email FROM users WHERE (status = $1) {op} ((role = $2) {op} (age >= $3))'",
+    "multiple_and_conditions: SQL: expected 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', got 'SELECT * FROM logs WHERE (level = $1) {op} (code != $2) {op} (timestamp > $3)'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

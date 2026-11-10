@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261110_183837_d49757",
+  "host_id": "70ccb4981862",
+  "model": "essentialai/rnj-1",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-10 18:39:14",
+  "passed": 14,
+  "total": 18,
+  "failures": [
+    "div_by_zero: expected error, but execution succeeded ([])",
+    "swap: expected ['1'], got ['-1']",
+    "stack_underflow_add: expected error, but execution succeeded ([])",
+    "stack_underflow_pop: expected error, but execution succeeded ([])"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

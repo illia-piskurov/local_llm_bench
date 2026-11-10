@@ -1,0 +1,1 @@
+Implement topo sort with cycle detection. Use DFS or Kahn's algorithm. Handle self-dependency as cycle.

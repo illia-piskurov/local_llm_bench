@@ -1,0 +1,27 @@
+{
+  "model": "mimo-v2.6:latest",
+  "created_at": "2026-11-09T15:37:57.549978Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    \"\"\"Return a topologically sorted list of task names, or None if the\n    dependency graph contains a cycle.\"\"\"\n    if not tasks:\n        return []\n\n    graph = {task: set(dependencies) for task, dependencies in tasks.items()}\n    visited: set[str] = set()\n    path: set[str] = set()\n    result: list[str] = []\n\n    def visit(task_name: str) -> None:\n        if task_name not in graph:\n            return\n\n        if task_name in path:\n            path.discard(task_name)\n            result.reverse()\n            return\n\n        if task_name in visited:\n            return\n\n        path.add(task_name)\n        for dependency in graph[task_name]:\n            visit(dependency)\n        path.discard(task_name)\n        visited.add(task_name)\n        result.append(task_name)\n\n    for task_name in graph:\n        visit(task_name)\n\n    return result\n```",
+    "thinking": "Implement topo sort with cycle detection. Use DFS or Kahn's algorithm. Handle self-dependency as cycle."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 24080312417,
+  "load_duration": 6244899625,
+  "prompt_eval_count": 178,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 1393713916,
+  "eval_count": 250,
+  "eval_duration": 16367442917,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 178,
+    "total_output_tokens": 250,
+    "tokens_per_second": 15.274224646315288,
+    "time_to_first_token_seconds": 1.393713916,
+    "model_load_time_seconds": 6.244899625,
+    "reasoning_output_tokens": 25
+  }
+}

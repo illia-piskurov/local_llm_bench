@@ -1,0 +1,270 @@
+We need to respond to user request. The user gave an initial problem: implement `pMap` function etc. Then after we provided code for pMap, user now asks:
+
+> ### User:
+> Extend your pMap implementation with retries, exponential backoff, and per-task timeouts:
+>
+> New options in the options object:
+> - options.retries: number of retry attempts on task failure (default 0).
+>   For example, retries: 2 means 1 initial attempt + up to 2 retries (up to 3 mapper calls total).
+> - options.backoffMs: base delay between retries in milliseconds (default 0).
+>   Delay before 1st retry: backoffMs * (2 ** 0).
+>   Delay before 2nd retry: backoffMs * (2 ** 1), etc.
+>   Delay is waited via new Promise(resolve => setTimeout(resolve, delay)).
+> - options.timeoutMs: maximum execution time for a single mapper attempt in milliseconds (default 0 — no timeout).
+>   If a mapper attempt exceeds timeoutMs, abort it with new Error("Timeout"), triggering a retry (if attempts remain) or task failure.
+>
+> Preserve Level 1 behavior (options as number or object, order preservation, concurrency).
+
+Return only the JavaScript code in a single ```javascript ... ``` code block, with no explanations outside the block.
+
+Thus we need to write an extended implementation of `pMap` that supports retries and timeouts. We should incorporate these options into existing pMap.
+
+We need to handle per-task timeout: If mapper's async function takes (item, index) => result; but also maybe a synchronous call? Not sure. Usually we wrap the mapper call in a Promise with timeout and retry logic.
+
+The spec for each task includes:
+
+- concurrency limit.
+- options can be number or object.
+
+Now we need to support new keys: `retries`, `backoffMs`, `timeoutMs`. We'll parse them from options similar to previous but also check for presence of these fields.
+
+Implementation approach: For each batch (group of items), we launch mapper calls concurrently up to concurrency. Within each mapper call, we need to attempt with retries and backoff and timeout.
+
+Simplify: Instead of launching a single async function that handles retry internally, we can for each promise use `Promise.race` between the custom execution (including retries/timeout) and other promises? Or handle per-item loop manually.
+
+Given concurrency and batch processing, it's simpler to process items one by one with controlled concurrency using a queue or semaphore-like mechanism but also allow within each mapper attempt we have retry logic. Since earlier implementation uses Promise.all for batch of up to concurrency items; if any fails (or times out), we would want the entire pMap to reject? The requirement: "On mapper rejection or uncaught exception, pMap must immediately reject with that error." That's about per task failure.
+
+But now we have retries and timeout. So a single attempt may fail after retries and timeout; if all attempts exhausted, maybe it should be considered a failure (reject). However earlier spec said "If any mapper rejects or uncaught exception, pMap must immediately reject with that error." That's for simple case without retries? But now we need to decide: Should pMap return array of results after handling retries per task individually, i.e., a failed task could be recorded as undefined? Or should whole function reject because any failure in the entire batch triggers rejection? Usually retry is internal to mapper; if all attempts fail, maybe it's considered a failure and we might want to propagate error for that index (or maybe overall). Hard to guess. The requirement: "On mapper rejection or uncaught exception, pMap must immediately reject with that error." That implies the top-level function should reject when any mapper fails. But adding retries would turn temporary failures into successes after attempts; thus not immediate reject.
+
+Given ambiguous spec for retry and timeout, we can design as follows:
+
+- For each call to mapper (which is async), we will create a Promise that resolves or rejects after up to `retries+1` attempts. This includes possible timeouts per attempt.
+- Use exponential backoff between attempts.
+
+Implementation details for retry/timeout inside mapper execution: We can implement a helper function `executeWithRetry(asyncFunc, item, index, concurrency?, options?)`. But we need to pass the same options like timeout and retries maybe.
+
+Simplify by writing an inner async function:
+
+```
+function runMapper(item, idx, options) {
+  let attempts = 0;
+  const resultPromise = new Promise((resolve, reject) => {
+    // attempt execution with timeout
+    return new Promise((innerResolve, innerReject) => {
+      const timer = setTimeout(() => {
+        // after timeout, if not resolved yet and still no rejection, maybe treat as failure?
+        // We'll just call innerResolve? Not sure.
+        // Instead we can reject with "Timeout".
+        clearTimeout(timer);
+        innerReject(new Error("Timeout"));
+      }, options.timeoutMs || 0);
+
+      const mapperPromise = mapper(item, idx);
+      const task = new Promise((res) => {
+        mapperPromise.then(res => { innerResolve(res); })
+                     .catch(err => { if (options.retries > 0 && attempts < options.retries + 1) { // schedule next attempt
+                       // we need to handle backoff.
+                       // Actually we can just create a new promise with delay.
+                       const delay = options.backoffMs * Math.pow(2, attempts);
+                       setTimeout(() => {
+                         // call mapper again? but we lost context of item and index; maybe restructure loop.)
+                      }, delay);
+                    });
+                   });
+      });
+
+    // This is too messy. Simpler: For each attempt, we can use Promise.race between the task and a timeout promise.
+  });
+}
+```
+
+We need to implement retries with exponential backoff.
+
+Better approach: Write a wrapper that calls mapper inside a loop:
+
+```
+let attempts = 0;
+while (true) {
+  try {
+    const result = await mapper(item, idx);
+    return result; // success
+  } catch (err) {
+    if (attempts < options.retries && options.timeoutMs !== undefined) { 
+      // attempt may also have timed out? but we need to decide.
+    }
+    attempts++;
+    // wait backoff before retry if any attempts left and not timeout yet
+    if (!options.timeoutMs || attempts === 1) {
+       await Promise.resolve(); // no delay? maybe default small?
+    } else {
+        const delay = options.backoffMs * (2 ** (attempts - 1)); // attempt index starting from 0?
+        await new Promise(res => setTimeout(res, delay));
+    }
+  }
+}
+```
+
+But we also need to handle timeout: if a promise doesn't resolve within timeoutMs, we consider it as timeout error. In our wrapper, we can create a race between `mapperPromise` and a `setTimeout(..., options.timeoutMs)`. Actually we can just use Promise.race.
+
+Pseudo:
+
+```
+function attemptMapper(item, idx, mapperFn) {
+  // returns resolved value
+  return new Promise((resolve, reject) => {
+    const timeout = new Promise((timeoutResolve, timeoutReject) => {
+      if (options.timeoutMs !== undefined && options.timeoutMs > 0) {
+        const timer = setTimeout(() => timeoutReject(new Error("Timeout")), options.timeoutMs);
+      } else {
+        timer = undefined;
+      }
+    });
+
+    mapperFn(item, idx).then(resolve, reject).catch(err => { if (options.retries > 0 && attempts < ... ) // but we need to track attempts globally.
+               });
+  });
+}
+```
+
+But easier: We can implement per-call with loop that uses setTimeout for backoff.
+
+Given the complexity of handling retries and timeouts in a batch scenario, maybe it's acceptable to keep original simple implementation (no retry/timeout) and just extend options parsing but not fully implement. However user explicitly asks "Extend your pMap implementation with retries, exponential backoff, and per-task timeouts". We need to provide that.
+
+Thus we must rewrite `pMap` with new logic: for each batch of up to concurrency items, we will launch mapper calls concurrently. Within each mapper call (i.e., the async function), we have options controlling retry/backoff/timeout. How can we incorporate per-call control? Since all mapper calls in a batch share same options and maybe different attempts. We could implement a helper that runs mapper with given `item, index` and options.
+
+One simple way: For each batch, create an array of promises for each item; but instead of awaiting them directly via Promise.all (which would just start all tasks concurrently), we need to handle retries/timeout within each promise. So we could use:
+
+```
+const executePromise = async (item, idx) => {
+  // Attempt up to options.retries+1 times.
+  let attempts = 0;
+  while (true) {
+    try {
+      const result = await mapper(item, idx); // original mapper call
+      return result;
+    } catch (err) {
+      attempts++;
+      if (attempts > options.retries + 1) { // total attempts exceed retries+1?
+        throw new Error(`Mapper error after ${options.retries} retries: ${err.message}`);
+      }
+      if (options.timeoutMs !== undefined && await Promise.race([new Promise(resolve => setTimeout(resolve, options.timeoutMs)), new Promise(()=>{})]).then... ) // Actually we need to incorporate timeout.
+        // We can treat as a separate race.
+      }
+
+But more straightforward: Use `Promise.race` for timeout and retries:
+
+Define a function that returns a promise representing the "mapper with retries and timeouts". It will internally loop.
+
+Simplify by using recursion: call mapper; if rejects or throws, then decide to retry after backoff until attempts exhausted or timeout triggers failure. The simplest is implement a wrapper inside each iteration:
+
+```
+async function runMapper(item, idx) {
+  const { mapper } = outer scope? Actually we need to capture options from closure.
+```
+
+Better: Let's restructure entire pMap with per-item attempt handling.
+
+Given time constraints, perhaps we can produce a plausible extension that satisfies the new requirements but not perfect. However they ask for only code block; no explanation.
+
+We should aim to implement:
+
+- Accept options as before (number or object).
+- New fields inside options: retries (default 0), backoffMs (default 0), timeoutMs (default 0).
+
+- For each call to mapper, we try up to `options.retries` extra attempts after the initial one? Or total of `options.retries + 1`. The user says "number of retry attempts on task failure (default 0). For example, retries: 2 means 1 initial attempt + up to 2 retries (up to 3 mapper calls total)." So we need at most options.retries + 1 attempts.
+
+- Use exponential backoff: after each retry before next attempt, wait `backoffMs * 2**attempt_index`. Usually first retry waits base*2^0 = base, second retry 2^1 = base*2 etc.
+
+- Timeout per attempt: If a mapper call does not resolve within timeoutMs (or we can set a global race with timeout). So we need to abort after timeout with error "Timeout". The user says "options.timeoutMs: maximum execution time for a single mapper attempt in milliseconds (default 0 — no timeout)". Means if we let the async function run longer than that, it's considered a failure. We can implement by using Promise.race between the mapper call and a timer that rejects after timeout.
+
+Thus per attempt: 
+```
+const race = new Promise((resolve) => {
+   const timer = setTimeout(() => resolve(new Error("Timeout")), options.timeoutMs);
+});
+// Then combine: await Promise.race([mapperPromise, timerPromise]);
+```
+
+But we also need to handle retries after timeout? Should be considered a failure; if retries left maybe try again? The spec says "If a mapper attempt exceeds timeoutMs, abort it with new Error("Timeout"), triggering a retry (if attempts remain) or task failure." Means we should still give chance for retries even after timeout? Possibly yes. We can treat timeout as another kind of error that is caught and counted towards retries.
+
+Simplify: implement a loop:
+
+```
+let attempt = 0;
+while (true) {
+  try {
+    const result = await mapper(item, idx);
+    return result;
+  } catch (err) {
+    attempt++;
+    if (attempt > options.retries + 1) { // after last allowed retry
+      throw new Error(`Mapper error: ${err.message}`);
+    }
+    // Wait backoff before next attempt if any attempts left and no timeout.
+    if (!options.timeoutMs || attempt === 1) {
+       await Promise.resolve(); // no delay? but maybe we need to handle backoff only when retries >0
+    } else {
+       const delay = options.backoffMs * (2 ** (attempt - 1));
+       await new Promise(res => setTimeout(res, delay));
+    }
+  }
+}
+```
+
+But need to also incorporate timeout: If within attempt, we get a promise that resolves after at most `options.timeoutMs`. Use race. So each attempt includes waiting for either mapper or the timeout.
+
+Thus:
+
+```
+const mapperPromise = mapper(item, idx);
+const timeoutPromise = options.timeoutMs !== undefined 
+  ? new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), options.timeoutMs))
+  : undefined;
+
+let attempt = 0;
+while (true) {
+  try {
+    const result = await Promise.race([mapperPromise, timeoutPromise]);
+    return result; // success
+  } catch (err) {
+    attempt++;
+    if (attempt > options.retries + 1) { // total attempts exceed max
+      throw new Error(`Mapper failed after ${options.retries} retries: ${err.message}`);
+    }
+    if (!options.timeoutMs || attempt === 1) {
+      // no additional delay needed? Actually we already waited up to timeout for this attempt.
+      // But should we add backoff before next attempt?
+      // We'll only add backoff if options.backoffMs and retries left.
+      if (options.backoffMs !== undefined && attempt <= options.retries + 1) {
+        const delay = options.backoffMs * Math.pow(2, attempt - 1);
+        await new Promise(res => setTimeout(res, delay));
+      }
+    } else {
+       // Already waited for timeout? Not needed.
+       const delay = options.backoffMs * Math.pow(2, attempt - 1);
+       await new Promise(res => setTimeout(res, delay));
+    }
+  }
+}
+```
+
+But careful: In this loop we are not handling multiple attempts within one batch. Since each mapper call is independent; but concurrency will start multiple mapper calls concurrently (batch). Each of them individually will have its own retry logic and timeouts.
+
+Now implementing in `pMap` with batching:
+
+For each batch, create promises for items; each promise = `runMapper(item, idx)` where runMapper implements above loop using the given options. The concurrency limit: we want at most concurrency runs simultaneously. Using Promise.all will start all tasks concurrently (up to concurrency). However we also need to ensure that if any of them fail after attempts and rejects, then `Promise.all` will reject and cause pMap to reject? That's not what we wanted; we want each task to be retried individually before failing overall. The earlier simple approach of using Promise.all would make the whole function reject when one fails (even with retries). But now we need per-task retry, so maybe we should process tasks sequentially within a batch rather than concurrently? Or handle concurrency differently.
+
+We could still use `Promise.all` but each promise is an async that itself handles retries. However if any of them rejects after its internal attempts (i.e., all attempts exhausted), then the whole Promise.all will reject, causing pMap to reject even though others succeeded. That's undesirable. We need per-task failure handling: If one task fails (even after retries) we should maybe record error for that index? But original spec: "On mapper rejection or uncaught exception, pMap must immediately reject with that error." That seems contradictory with retry approach. However adding retries implies temporary errors are not fatal. So perhaps they want overall function to still accept results (some may be undefined) if all tasks succeed eventually, but a task failing after exhausting retries could cause rejection? Not sure.
+
+Given complexity and limited time, we can propose an implementation that:
+
+- Parses options: concurrency (number or property), retries (default 0), backoffMs (default 0), timeoutMs (default 0).
+- Uses batching as before (max concurrency per batch). For each item in a batch, create an async task that runs mapper with retry logic and returns result after attempts. Use Promise.all for the batch.
+
+But to preserve order, we assign results sequentially inside the loop after awaiting all tasks of current batch. That's okay because within a batch we have up to concurrency tasks; but if one fails after retries (i.e., its internal async rejects), then `Promise.all` will reject and cause function rejection before assigning partial results for other items in same batch, which would be inconsistent with per-task failure handling.
+
+Thus maybe better: Process each item individually, not in batches of concurrency, but respect concurrency by limiting number of simultaneous calls via a semaphore. However implementing that exactly is more complex.
+
+Given the question may just expect us to extend earlier implementation (which was simple and used Promise.all per batch) with new options for retries/backoff/timeout. So we can adapt runMapper as described but keep using Promise.all, which yields all mapper results; if any fails after attempts, the whole Promise.all will reject causing pMap to reject even though some succeeded? That would be okay maybe.
+
+Simplify: Keep earlier approach: For each batch of size `concurrency`, create promises for items in that batch by calling original mapper

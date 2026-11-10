@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261110_135305_0bbb8b",
+  "host_id": "70ccb4981862",
+  "model": "coder-lfm3-1.7b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-10 14:08:24",
+  "stats": {
+    "input_tokens": 565,
+    "total_output_tokens": 5788,
+    "reasoning_output_tokens": 4962,
+    "tokens_per_second": 48.45166090736304,
+    "time_to_first_token_seconds": 1.046788,
+    "model_load_time_seconds": null
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "model": "mimo-v2.6:latest",
+  "created_at": "2026-11-09T16:54:01.297242Z",
+  "message": {
+    "role": "assistant",
+    "content": "```javascript\nasync function pMap(items, mapper, options) {\n  const concurrency = options === undefined || options === null\n    ? 1\n    : typeof options === 'number'\n      ? options\n      : options.concurrency;\n\n  if (items.length === 0) {\n    return [];\n  }\n\n  const results = new Array(items.length);\n  let pending = 0;\n  let nextIndex = 0;\n\n  async function run() {\n    while (pending < concurrency) {\n      if (nextIndex >= items.length) {\n        return;\n      }\n\n      const index = nextIndex++;\n      pending++;\n\n      try {\n        results[index] = await mapper(items[index], index);\n      } catch (error) {\n        pending--;\n        throw error;\n      }\n\n      pending--;\n    }\n  }\n\n  await Promise.all(Array.from({ length: items.length }, (_, i) => run()));\n  return results;\n}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 13734306292,
+  "load_duration": 53632625,
+  "prompt_eval_count": 230,
+  "prompt_eval_cached_count": 226,
+  "prompt_eval_duration": 192300792,
+  "eval_count": 217,
+  "eval_duration": 13306725250,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 230,
+    "total_output_tokens": 217,
+    "tokens_per_second": 16.307543435602234,
+    "time_to_first_token_seconds": 0.192300792,
+    "model_load_time_seconds": 0.053632625
+  },
+  "think_budget": {
+    "limit": 8192,
+    "discarded_thinking_tokens": 8193
+  }
+}

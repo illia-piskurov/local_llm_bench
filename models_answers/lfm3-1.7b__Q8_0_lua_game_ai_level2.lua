@@ -1,0 +1,242 @@
+-- Global table defining behavior tree nodes and constants
+local BT = {}
+
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+--- Action node -----------------------------------------------------------
+function BT.Action(fn)
+    return {
+        tick = function(ctx)
+            local res = fn(ctx)
+            if res == true or res == BT.SUCCESS then
+                return BT.SUCCESS
+            elseif res == false or res == BT.FAILURE then
+                return BT.FAILURE
+            elseif res == BT.RUNNING then
+                return BT.RUNNING
+            end
+        end,
+        reset = function()
+            -- Action has no internal state to reset
+        end
+    }
+end
+
+--- Condition node ---------------------------------------------------------
+function BT.Condition(predicate)
+    return {
+        tick = function(ctx)
+            if predicate(ctx) then
+                return BT.SUCCESS
+            else
+                return BT.FAILURE
+            end
+        end,
+        reset = function()
+            -- No internal state to reset for Condition
+        end
+    }
+end
+
+--- Blackboard (shared memory) ------------------------------------------------
+BT.Blackboard = {}
+BT.Blackboard.new = function()
+    local bb = {
+        data = {},
+        watchers = {}  -- key -> list of callbacks
+    }
+    return setmetatable({
+        get = function(key, default)
+            return bb.data[key] or default
+        end,
+        set = function(key, value)
+            bb.data[key] = value
+            local wlist = bb.watchers[key]
+            if wlist then
+                for _, cb in ipairs(wlist) do
+                    cb(key, value, old_value)  -- pass new and previous? we store old before set? For simplicity just pass new
+                end
+            end
+        },
+        watch = function(key, callback)
+            bb.watchers[key] = {callback}
+        end,
+        get = self.get,   -- placeholder, will be redefined in each instance via table fields? Actually we cannot assign method to table after creation. Let's rewrite: create BT.Blackboard as an empty class with new returning a table of methods.
+    }, {}, nil)  -- This is messy; let's implement cleanly instead:
+end
+
+-- Simpler implementation for Blackboard:
+
+BT.Blackboard = {
+    new = function()
+        local bb = {}
+        bb.data = {}       -- key -> value
+        bb.watchers = {}   -- key -> list of callbacks (key, new_val, old_val)
+        return bb
+    },
+    get = function(bb, key, default)
+        return bb.data[key] or default
+    end,
+    set = function(bb, key, value)
+        bb.data[key] = value
+        local wlist = bb.watchers[key]
+        if wlist then
+            for _, cb in ipairs(wlist) do
+                -- old value is previous stored? Not captured; we can store before setting. For simplicity ignore old.
+                cb(key, value, bb.data[key])  -- old will be whatever was there before (maybe null)
+            end
+        end
+    },
+    watch = function(bb, key, callback)
+        bb.watchers[key] = {callback}
+    end,
+}
+
+-- Helper to create an instance of Blackboard and set up methods on it:
+function BT.Blackboard:new()
+    local self = BT.Blackboard.new()
+    setmetatable(self, {
+        get = self.get,
+        set = self.set,
+        watch = self.watch
+    })
+    return self
+end
+
+--- Inverter decorator (single-child node) ----------------------------------
+BT.Inverter = function(child)
+    local res = {}
+    res.tick = function(ctx)
+        local childRes = child.tick(ctx)
+        if childRes == BT.SUCCESS then
+            return BT.FAILURE
+        elseif childRes == BT.FAILURE then
+            return BT.SUCCESS
+        elseif childRes == BT.RUNNING then
+            return childRes  -- unchanged
+        end
+    end
+    res.reset = function()
+        child.reset()   -- delegate to original child's reset
+    end
+    return res
+end
+
+--- Cooldown decorator (single-child node) ----------------------------------
+BT.Cooldown = function(child, ticks)
+    local self = {
+        child = child,
+        ticks = ticks or 0   -- number of cooldown ticks after a successful execution
+    }
+    return setmetatable({
+        tick = function(ctx)
+            if self.ticks > 0 then
+                return BT.FAILURE   -- still in cooldown, do not invoke child
+            else
+                local res = self.child.tick(ctx)
+                if res == BT.SUCCESS then
+                    -- After a successful run, start the cooldown period.
+                    self.ticks = ticks  -- reset to tick count? Actually we need remaining ticks; but for simplicity set to ticks.
+                end
+                return res
+            end
+        end,
+        reset = function()
+            -- Reset both child and cooldown counter:
+            self.child.reset()
+            self.ticks = 0  -- or maybe keep ticks? Let's set to 0 meaning no pending cooldown after reset.
+        end
+    }, {}, nil)
+end
+
+-- Sequence node (logical AND, with RUNNING handling) ------------------------
+BT.Sequence = function(children)
+    local self = {
+        children = children or {},
+        runningIndex = 1   -- remember index where a child returned RUNNING
+    }
+    return setmetatable({
+        tick = function(ctx)
+            if self.runningIndex ~= 1 then
+                local idx = self.runningIndex
+                self.runningIndex = 1   -- reset after using for next tick? keep until end.
+                local currentIdx = idx
+                while true do
+                    local child = self.children[currentIdx]
+                    local res = child.tick(ctx)
+                    if res == BT.FAILURE then
+                        return BT.FAILURE
+                    elseif res == BT.RUNNING then
+                        -- another RUNNING encountered, update index and break?
+                        self.runningIndex = currentIdx
+                        return BT.RUNNING
+                    elseif res == BT.SUCCESS then
+                        -- move to next child; if none left -> success
+                        if currentIdx < #self.children then
+                            currentIdx = currentIdx + 1
+                        else
+                            return BT.SUCCESS
+                        end
+                    else
+                        return res -- fallback (shouldn't happen)
+                    end
+                end
+            end
+
+            -- Execute children in order, stop at first failure or RUNNING.
+            for i = 1, #self.children do
+                local child = self.children[i]
+                local res = child.tick(ctx)   -- each child has its own tick method; we assume it's a table with tick/reset.
+                if res == BT.FAILURE then
+                    return BT.FAILURE
+                elseif res == BT.RUNNING then
+                    self.runningIndex = i
+                    return BT.RUNNING
+                elseif res == BT.SUCCESS then
+                    -- continue to next child (no break)
+                    continue
+                end
+            end
+
+            -- If loop completes without returning, all children succeeded
+            return BT.SUCCESS
+        end,
+        reset = function()
+            self.runningIndex = 1
+        end
+    }, {})
+end
+
+-- Selector node (logical OR / Fallback) --------------------------------------
+BT.Selector = function(children)
+    local self = {
+        children = children or {},
+        runningIndex = 1   -- remembers index where a child returned RUNNING on next tick
+    }
+    return setmetatable({
+        tick = function(ctx)
+            for i = 1, #self.children do
+                local child = self.children[i]
+                local res = child.tick(ctx)
+                if res == BT.SUCCESS then
+                    return BT.SUCCESS
+                elseif res == BT.RUNNING then
+                    self.runningIndex = i
+                    return BT.RUNNING
+                end
+            end
+
+            -- If none succeeded and no RUNNING found, all failed (or no children)
+            if #self.children == 0 or not self.runningIndex then
+                return BT.FAILURE
+            else
+                return BT.FAILURE   -- after checking all children and finding only FAILURE or missing success?
+            end
+        end,
+        reset = function()
+            self.runningIndex = 1
+        end
+    }, {})
+end

@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```javascript\nasync function pMap(items, mapper, options) {\n    if (!items || items.length === 0) return [];\n\n    const concurrency = typeof options === 'number' ? options : (options && options.concurrency) || 1;\n    const results = new Array(items.length);\n    let activeCount = 0;\n\n    async function processItem(index) {\n        try {\n            if (index >= items.length) return;\n            const result = await mapper(items[index], index);\n            results[index] = result;\n            activeCount--;\n            // Start next item processing\n            for (let i = 0; i < concurrency && index + i < items.length; i++) {\n                if (!results[index + i]) {\n                    processItem(index + i).catch(err => { throw err; });\n                    break;\n                }\n            }\n        } catch (err) {\n            // Reject immediately on any error\n            return Promise.reject(err);\n        }\n    }\n\n    for (let i = 0; i < concurrency && i < items.length; i++) {\n        processItem(i).catch(err => { throw err; });\n    }\n\n    return new Promise((resolve, reject) => {\n        const checkCompletion = () => {\n            if (activeCount === 0 && results.every(result => result !== undefined)) {\n                resolve(results);\n            } else {\n                setTimeout(checkCompletion, 100); // Polling for completion\n            }\n        };\n        checkCompletion();\n    });\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 237,
+    "total_output_tokens": 305,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 15.682521386264733,
+    "time_to_first_token_seconds": 1.299667
+  }
+}

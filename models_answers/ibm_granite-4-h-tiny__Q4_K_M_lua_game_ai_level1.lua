@@ -8,85 +8,95 @@ BT.RUNNING = "RUNNING"
 -- Action node
 function BT.Action(fn)
     return {
-        tick = function(ctx)
+        tick = function(self, ctx)
             local result = fn(ctx)
-            if result == true or result == BT.SUCCESS then
-                return BT.SUCCESS
-            elseif result == false or result == BT.FAILURE then
-                return BT.FAILURE
-            else
+            if type(result) == "boolean" then
+                return result and BT.SUCCESS or BT.FAILURE
+            elseif result == BT.RUNNING then
                 return BT.RUNNING
+            else -- Assume result is string status from now on
+                return result
             end
         end,
-        reset = function() end
+        reset = function(self)
+            -- No state to reset for Action node
+        end
     }
 end
 
 -- Condition check node
 function BT.Condition(predicate)
     return {
-        tick = function(ctx)
-            if predicate(ctx) then
-                return BT.SUCCESS
-            else
-                return BT.FAILURE
-            end
+        tick = function(self, ctx)
+            return predicate(ctx) and BT.SUCCESS or BT.FAILURE
         end,
-        reset = function() end
+        reset = function(self)
+            -- No state to reset for Condition node
+        end
     }
 end
 
--- Sequence node (logical AND)
+-- Sequence composite node (logical AND)
 function BT.Sequence(children)
     local index = 1
+
     return {
-        tick = function(ctx)
+        tick = function(self, ctx)
             while true do
                 if index > #children then
                     return BT.SUCCESS
-                elseif index < 1 then
-                    error("Invalid sequence index")
+                elseif index <= 0 then -- Invalid case, should never occur
+                    error("Invalid sequence execution state.")
                 end
-                
-                local result = children[index]:tick(ctx)
+
+                local child = children[index]
+                local result = child:tick(ctx)
+
                 if result == BT.FAILURE then
+                    index = nil -- Reset on failure
                     return BT.FAILURE
                 elseif result == BT.RUNNING then
+                    index = nil -- Remember current running node
                     return BT.RUNNING
                 end
-                
+
                 index = index + 1
             end
         end,
-        reset = function()
+        reset = function(self)
             index = 1
         end
     }
 end
 
--- Selector node (logical OR / Fallback)
+-- Selector composite node (logical OR / Fallback)
 function BT.Selector(children)
     local index = 1
+
     return {
-        tick = function(ctx)
+        tick = function(self, ctx)
             while true do
                 if index > #children then
                     return BT.FAILURE
-                elseif index < 1 then
-                    error("Invalid selector index")
+                elseif index <= 0 then -- Invalid case, should never occur
+                    error("Invalid selector execution state.")
                 end
-                
-                local result = children[index]:tick(ctx)
+
+                local child = children[index]
+                local result = child:tick(ctx)
+
                 if result == BT.SUCCESS then
+                    index = nil -- Reset on success
                     return BT.SUCCESS
                 elseif result == BT.RUNNING then
+                    index = nil -- Remember current running node
                     return BT.RUNNING
                 end
-                
+
                 index = index + 1
             end
         end,
-        reset = function()
+        reset = function(self)
             index = 1
         end
     }

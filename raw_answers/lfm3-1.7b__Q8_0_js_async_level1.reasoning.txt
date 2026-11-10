@@ -1,0 +1,275 @@
+We need to implement `pMap` async function. Let's parse requirements:
+
+- Signature: `async function pMap(items, mapper, options)`
+- Parameters:
+  - items: array of items to process.
+  - mapper: async function of form `async (item, index) => result`.
+  - options: number (e.g., 2) defining concurrency, or options object { concurrency: 2 }. If options is omitted or undefined, default concurrency is 1.
+
+- Requirements:
+  - If items empty (length 0), return an empty array [].
+  - Concurrency limit: at most `concurrency` async calls to mapper may run concurrently. As soon as one finishes, the next task starts.
+  - Order preservation: returned array of results must strictly match initial order of items (indices 0..n-1), regardless of completion order.
+  - On mapper rejection or uncaught exception, pMap must immediately reject with that error.
+
+Interpretation: We need to process each item by calling `mapper(item, index)` where `index` is the position in original array. The mapper returns a promise (since it's async). We'll run them concurrently up to concurrency limit. But we also need to preserve order of results as per input items.
+
+One way: Use an array to collect promises and track indices; but we must respect concurrency: only allow at most `concurrency` pending tasks at any time. Could implement using a queue or a semaphore (like async/await with Promise.allSettled? Not exactly). Since mapper is async, we need to start tasks possibly in parallel but limit number running concurrently.
+
+Simplify: We can process items sequentially but within each step await the next mapper call; that would have concurrency 1. But they want ability to set concurrency > 1.
+
+Common pattern for limited concurrency: Use `p-limit` library? Not allowed, we implement manually.
+
+We can maintain an array of results indexed by original index. For each item, we schedule a new promise using `mapper(item, idx)`. We'll keep track of currently running promises and wait until one finishes before starting next, but that would be effectively sequential. However we need to allow concurrency: up to concurrency tasks in flight at same time.
+
+We can implement with a loop over items and use a variable `running` count; for each item, if current concurrent tasks < concurrency (or 0), start the mapper call and push its promise onto an array. But we also need to await them in order? The requirement: "As soon as one finishes, the next task starts." That suggests we should process items sequentially but allow overlapping of mapper calls up to limit.
+
+Specifically: As soon as a task finishes (i.e., mapper resolves), the next item's mapper call can start immediately. This is typical of concurrency control: you have limited parallelism; while one is running, new ones may be launched.
+
+Thus we can implement using an iterator that processes items and runs them with a loop that maintains a queue of promises; but need to limit concurrent tasks.
+
+Simpler approach: Use `Promise.all` with `limit`? But no built-in limit. Could use recursion: for each item, call mapper and await if concurrency > 1? Not straightforward.
+
+Alternative: We can implement by using an array of promises for all items; then we can process them in order while tracking number of ongoing tasks. Use a loop with `for (let i = 0; i < items.length; i++)` and inside, call mapper for item at index i; but if concurrency >1, you need to allow multiple calls simultaneously. But if you just sequentially await each, you'll have concurrency 1 regardless.
+
+Thus we must implement something like: maintain a promise array `inFlight = []` storing promises for items currently being processed. Also keep track of completed results in result array indexed by original index. For each item i:
+
+- If `inFlight.length < optionsConcurrency || (optionsConcurrency === 1 && ???)`. Actually need to decide: when concurrency is 2, we can start up to 2 mapper calls at the same time. So if there's less than concurrency pending/inflight and maybe also not yet started? We'll start a new promise for current item; but before adding to `inFlight`, check if already reached limit.
+
+- However, this naive approach would allow overlapping beyond one call because we might have multiple calls started at same time. But we must ensure that while we are awaiting the first mapper's result (i.e., after it resolves), we can start next item's mapper. That is natural: The `inFlight` array holds promises for items currently being processed; when a promise resolves, we remove it and move to next.
+
+Thus algorithm:
+
+```
+async function pMap(items, mapper, options) {
+  let concurrency = 1;
+  if (options && typeof options === 'object' && options.concurrency !== undefined) {
+    // assume options may have other fields but only concurrency matters.
+    const opts = options;
+    if (opts.concurrency !== undefined) concurrency = opts.concurrency;
+  } else if (options !== undefined && typeof options === 'number') {
+    concurrency = options;
+  }
+  // default to 1
+
+  if (items.length === 0) return [];
+
+  const results = new Array(items.length);
+  let runningCount = 0; // number of active mapper calls currently in progress
+  // We'll manage promises using an array for current tasks.
+  // But we also need to keep track of which index each promise corresponds to.
+
+  // Create a function that processes next item:
+  // Actually easier: iterate items with for loop, but we need to allow concurrency. So we can do:
+
+  const results = [];
+  const pendingPromises = [];
+
+  for (let i = 0; i < items.length; i++) {
+    if (pendingPromises.length >= concurrency && concurrency > 0) {
+      // Wait? Actually we need to start new after previous finishes. But our loop is sequential, so we can't allow overlapping because we are at same iteration.
+      // So we need to implement a more event-driven approach: use async iteration with setTimeout? Not good.
+
+      // Better approach: Use an array of promises for all items initially and then process them by awaiting each one but using concurrency limiting via Promise.race or something else?
+
+      // Let's think differently.
+    }
+  }
+}
+```
+
+Given complexity, maybe we can implement using `Promise.all` with a limit like chunking items into groups based on concurrency? For example, if concurrency = N, we could split the array into chunks of size N and process each chunk concurrently via Promise.all, then flatten results preserving order. But that would not guarantee "as soon as one finishes, next task starts" because tasks within a chunk start together; but maybe acceptable.
+
+But requirement: "As soon as one finishes, the next task starts." That suggests we should allow overlapping tasks beyond chunks. So perhaps chunking is insufficient for arbitrary concurrency > 1? Actually if you split into groups of size N and run each group concurrently using Promise.all on each group, then while one group is awaiting, other groups start. But within a group, all tasks start at the same time; but "as soon as one finishes" would be after finishing first item in group, not before starting others? The phrase ambiguous: They may mean that we should not have more than concurrency items running simultaneously; and when any of them completes, the next (subsequent) item can begin. So basically a simple queue with limited parallelism.
+
+Thus implement using a loop with `setImmediate` or async/await with a controlled number of concurrent calls.
+
+Simplify: Use a while loop that processes each index but uses Promise.allSettled to gather results? Not exactly.
+
+Given typical interview tasks, they might expect something like:
+
+```
+async function pMap(items, mapper, options) {
+  const concurrency = options === undefined ? 1 : (typeof options === 'object' ? options.concurrency : options);
+  if (items.length === 0) return [];
+  const results = new Array(items.length);
+  let completedCount = 0;
+  // We'll use a queue of indices.
+  // Keep an array for current tasks that are pending.
+  const activeTasks = [];
+  // For each item, we push its mapper promise and await all with concurrency limit.
+
+  // Use async generator? Not needed.
+
+  // Approach: While there are items left:
+  let index = 0;
+  while (index < items.length) {
+    if (activeTasks.length >= concurrency && index < items.length) {
+      // Need to wait for current tasks? We can just continue, but we need to not start new until a previous finishes.
+      // This approach might be tricky.
+
+      // Instead, break out and yield? 
+    } else {
+      const task = mapper(items[index], index);
+      activeTasks.push(task);
+      index++;
+    }
+  }
+}
+```
+
+But this will cause tasks to queue up sequentially if concurrency >0 but we only start one per iteration. Not good.
+
+Better: Use `async` generator that yields items, and process with a controlled concurrency using `p-limit`. But implement manually:
+
+We can maintain an array `tasks` of promises for each item; after creating all tasks, we can await them in order? No, need to preserve order.
+
+One method: Use a queue and process items one by one, but when the number of currently running tasks is less than concurrency, start new. That's essentially:
+
+```
+let current = 0;
+const results = [];
+
+for (let i = 0; i < items.length; ) {
+  // Check if we can start next task
+  while (current < items.length) {
+    const task = mapper(items[i], i);
+    // If concurrency > 0 and active tasks count is less than limit, break to start.
+    if ((options === undefined || options && typeof options === 'number') ? (activeCount < concurrency) : ... )
+  }
+}
+```
+
+This still not straightforward.
+
+Given time constraints, perhaps we can implement a simple but correct solution: For each item, create a promise `mapper(item,i)` and push onto an array of promises. Then we can "await" them in order using `for await...of`? Not possible because it's not async iterable.
+
+But we can use the fact that mapper returns a promise; we need to produce results array where index i corresponds to result of item i. If we simply do:
+
+```
+const promises = items.map((item, idx) => mapper(item, idx));
+const results = [];
+for (let i = 0; i < items.length; i++) {
+  results[i] = await Promise.resolve(promises[i]);
+}
+```
+
+This will process sequentially, concurrency=1. To allow concurrency >1 we could use `Promise.all` for a batch of promises but still sequential.
+
+Given the difficulty, maybe they expect us to implement concurrency using `Promise.all` with limited number of runs: For each item, we can create a promise and then await them in parallel up to concurrency? Not typical.
+
+Alternatively, perhaps "concurrency" refers only to how many mapper calls are started concurrently. So we could use an approach like:
+
+```
+let limit = 1;
+const results = [];
+let index = 0;
+
+async function processNext() {
+  if (index >= items.length) return;
+  const item = items[index];
+  // If there is already a running mapper for this index? Not possible.
+
+  let task;
+  if (limit > 0) {
+    task = mapper(item, index);
+  } else {
+    // Wait until previous resolves? Hmm.
+  }
+  results.push(await task);
+  limit--;
+  // If limit reaches 0, we might need to restart?
+}
+
+processNext();
+```
+
+This is messy.
+
+Given typical CodeSignal/LeetCode style tasks, they'd expect a simple implementation using `Promise.all` with a concurrency limit by splitting items into chunks of size 'concurrency'. That yields results in order if you flatten the chunks: e.g., for chunk i from 0 to step = concurrency, call mapper on each item in chunk (in order) but wait for all in chunk. This will give correct order because within a chunk we process sequentially and across chunks we produce results in order of indices as long as we maintain array order.
+
+Let's test: Suppose items = [a,b,c,d], concurrency=2. Split into chunks: chunk0: [a,b]; chunk1:[c,d]. For each chunk, we call mapper on its items sequentially (i.e., one after another) but we await the Promise.all of that chunk (which runs them concurrently). This might violate "as soon as one finishes, next task starts" because inside a chunk all tasks run concurrently. But maybe it's okay.
+
+But they said: "As soon as one finishes, the next task starts." That suggests after finishing one mapper call we should start another, i.e., overlapping. The chunk approach overlaps more than needed but still respects concurrency limit (max 2 at any time). Actually within a chunk of size 2 both run concurrently; that's up to 2 concurrent. So it meets the limit.
+
+But "as soon as one finishes" would mean we want them to be started sequentially? Hard to parse.
+
+I think typical expectation: you have a concurrency limit on how many tasks are in progress at once. The chunk approach may start more than 1 at the same time (if chunk size > concurrency). So they might not accept that. However, we can implement an event-driven version using `setImmediate` or async loops.
+
+Given simplicity and likely test cases (small arrays), maybe sequential is fine? But they explicitly mention options for concurrency.
+
+Let's design a correct implementation:
+
+We'll maintain an array `results` initialized with empty placeholders. We'll also have an index pointer for next item to process after previous finishes, but we allow up to `concurrency` in-flight tasks at any time.
+
+Pseudo:
+
+```
+async function pMap(items, mapper, options) {
+  let concurrency = 1;
+  if (options !== undefined) {
+    // If options is a number or object with 'concurrency' property
+    if (typeof options === 'number') {
+      concurrency = options;
+    } else if (options && typeof options === 'object' && options.concurrency !== undefined) {
+      concurrency = options.concurrency;
+    }
+  }
+
+  if (items.length === 0) return [];
+
+  const results = new Array(items.length);
+  // We'll track which promises are currently pending.
+  let active = []; // stores {index, promise}
+  // Iterate over items with a loop that processes until all resolved.
+  // Use async function to await next result.
+
+  // Instead of complex event loop, we can just use a simple approach:
+  // For each item, create a mapper call and push onto an array `tasks`.
+  // Then use `for await...of`? Not possible because tasks are promises not async generators.
+
+  // Let's implement using a queue of indices that need to be processed.
+  let remaining = items.length;
+  while (remaining > 0) {
+    const batchSize = Math.min(concurrency, remaining);
+    const chunk = [];
+    for (let i = 0; i < batchSize; i++) {
+      const item = items[remainingIndex + i]; // but we need to track original index.
+    }
+  }
+
+```
+
+We lose original indices.
+
+Better: Keep original index from outer loop. So we can just iterate over indices and maintain a queue of tasks currently running, but we also need to decide when to start new task given concurrency limit.
+
+Simplify with `for` loops and `Promise.all`:
+
+```
+const chunkSize = 1;
+let currentIdx = 0;
+
+async function processChunk(startIdx, endIdx) {
+  const promises = [];
+  for (let i = startIdx; i < endIdx; i++) {
+    // Note: we need to track original index i.
+    promises.push(mapper(items[i], i));
+  }
+  return await Promise.all(promises);
+}
+
+// Then combine results:
+const allResults = [];
+for (let chunkStart = 0; chunkStart < items.length; chunkStart += concurrency) {
+  const chunkEnd = Math.min(chunkStart + concurrency, items.length);
+  const resultChunk = await processChunk(chunkStart, chunkEnd);
+  // resultChunk is array of results for indices chunkStart..chunkEnd-1 in same order.
+  allResults.push(...resultChunk);
+}
+return allResults;
+```
+
+But this will produce results per chunk in the right order. However, mapper may reject or throw; we need to "immediately reject with that error". If any promise rejects within a chunk, `Promise.all` will reject and abort entire function? Actually we call async function pMap: if any mapper throws or resolves rejection, the outer await will propagate rejection. But here we are using Promise.all for each chunk; if one chunk's promises all resolve but another's may reject, the overall processChunk will reject only within that chunk (since we only await its Promise.all). If a chunk has a rejection, `processChunk` will reject and we would need to catch it per chunk. But we can't easily handle because we are not async/await inside loop? Actually we do: allResults = []; for each chunk: const resultChunk = await processChunk(...); ... So if one chunk's Promise.all throws, the whole for-await will throw, causing overall pMap to reject with that error. That matches requirement: "On mapper rejection or uncaught exception, pMap must immediately reject with that error." However, we need also preserve order across chunks; flattening is correct.
+
+But concurrency inside each chunk may be up to `concurrency`. This approach yields tasks starting at the same time for all items in a chunk. That means while processing first item of chunk 0 (item0), you start mapper calls for items0,1,...? Actually if we create promises for entire chunk and then await Promise.all, all mapper calls run concurrently. That's concurrency = number of items per chunk. If chunk size equals concurrency, it's okay but may exceed actual concurrency limit because they are running simultaneously (concurrency is allowed to be at most concurrency). However our chunk approach uses exactly concurrency tasks for each chunk; if we set concurrency=2, and item count = 5, then chunks: [0,1] size 2 -> run both concurrently. Then second chunk [2,3] concurrently (two more) while first still awaiting? Actually the loop processes

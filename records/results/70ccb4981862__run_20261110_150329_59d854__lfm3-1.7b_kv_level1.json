@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_150329_59d854",
+  "host_id": "70ccb4981862",
+  "model": "lfm3-1.7b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-11-10 15:20:51",
+  "passed": 0,
+  "total": 15,
+  "failures": [
+    "failed to load solution: Syntax error in solution: invalid syntax (<unknown>, line 1)"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,85 @@
+{
+  "id": "run_20261110_133326_002eb5",
+  "host_id": "70ccb4981862",
+  "model_key": "coder-lfm3-1.7b",
+  "model_name": "Coder Lfm3 1.7B",
+  "quantization": "Q4_K_M",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "coder-lfm3-1.7b",
+      "display_name": "Coder Lfm3 1.7B",
+      "architecture": "lfm3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": 4,
+      "size_bytes": 1099629841,
+      "params_string": "1.7B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": "AJ-Gonzalez"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 13:33:26",
+  "completed_at": "2026-11-10 13:35:54",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 13:35:45",
+      "passed": 0,
+      "total": 18,
+      "failures": [
+        "failed to load solution: Function run(...) not found in solution"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-10 13:35:54",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-10 13:35:54",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[GENERATION FAILED] Model generation failed or timed out"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 13:35:45",
+      "stats": {
+        "input_tokens": 285,
+        "total_output_tokens": 7907,
+        "reasoning_output_tokens": 7872,
+        "tokens_per_second": 57.17271604888544,
+        "time_to_first_token_seconds": 0.65231,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

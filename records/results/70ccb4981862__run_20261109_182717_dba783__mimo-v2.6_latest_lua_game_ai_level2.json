@@ -1,0 +1,21 @@
+{
+  "run_id": "run_20261109_182717_dba783",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "lua_game_ai",
+  "level": "level2",
+  "tested_at": "2026-11-09 19:24:31",
+  "passed": 5,
+  "total": 12,
+  "failures": [
+    "sequence_all_success: assertion returned false",
+    "sequence_short_circuit_failure: assertion returned false",
+    "sequence_resumes_running_child: assertion returned false",
+    "selector_first_success: assertion returned false",
+    "selector_all_failure: assertion returned false",
+    "selector_resumes_running_child: assertion returned false",
+    "composite_ai_tree: assertion returned false"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

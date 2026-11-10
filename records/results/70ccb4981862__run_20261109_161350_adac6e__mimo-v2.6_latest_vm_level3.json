@@ -1,0 +1,25 @@
+{
+  "run_id": "run_20261109_161350_adac6e",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-11-09 16:18:57",
+  "passed": 26,
+  "total": 37,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: LabelNotFoundError: Label 'skip' not defined on line 2: JMP/JZ/JNZ target",
+    "jz_taken_when_zero: unexpected exception/timeout: LabelNotFoundError: Label 'zero' not defined on line 2: JMP/JZ/JNZ target",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: LabelNotFoundError: Label 'zero' not defined on line 2: JMP/JZ/JNZ target",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: LabelNotFoundError: Label 'nz' not defined on line 2: JMP/JZ/JNZ target",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: LabelNotFoundError: Label 'nz' not defined on line 2: JMP/JZ/JNZ target",
+    "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+    "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']",
+    "call_ret_basic: unexpected exception/timeout: LabelNotFoundError: Label 'double' not defined on line 2: JMP/JZ/JNZ target",
+    "call_ret_nested: unexpected exception/timeout: LabelNotFoundError: Label 'func_a' not defined on line 1: JMP/JZ/JNZ target",
+    "recursive_factorial: unexpected exception/timeout: LabelNotFoundError: Label 'fact' not defined on line 2: JMP/JZ/JNZ target",
+    "recursive_fibonacci: unexpected exception/timeout: LabelNotFoundError: Label 'fib' not defined on line 2: JMP/JZ/JNZ target"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

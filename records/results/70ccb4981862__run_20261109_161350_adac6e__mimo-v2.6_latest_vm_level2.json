@@ -1,0 +1,21 @@
+{
+  "run_id": "run_20261109_161350_adac6e",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-11-09 16:16:47",
+  "passed": 20,
+  "total": 27,
+  "failures": [
+    "unconditional_jump_skips_code: unexpected exception/timeout: LabelNotFoundError: Label 'skip' not defined on line 2: JMP/JZ/JNZ target",
+    "jz_taken_when_zero: unexpected exception/timeout: LabelNotFoundError: Label 'zero' not defined on line 2: JMP/JZ/JNZ target",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: LabelNotFoundError: Label 'zero' not defined on line 2: JMP/JZ/JNZ target",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: LabelNotFoundError: Label 'nz' not defined on line 2: JMP/JZ/JNZ target",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: LabelNotFoundError: Label 'nz' not defined on line 2: JMP/JZ/JNZ target",
+    "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+    "count_up_loop: expected ['1', '2', '3', '4', '5'], got ['1']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

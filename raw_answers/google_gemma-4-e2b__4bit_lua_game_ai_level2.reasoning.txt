@@ -1,0 +1,37 @@
+
+Thinking Process:
+
+1.  **Analyze the Request:** The goal is to extend the existing Behavior Tree framework in Lua by adding a Blackboard system and two decorators (`Inverter`, `Cooldown`).
+
+2.  **Implement the Blackboard (`BT.Blackboard`):**
+    *   Needs storage (a table/dictionary).
+    *   Needs `new()`.
+    *   Needs `get(key, default)`.
+    *   Needs `set(key, value)` which must trigger watchers.
+    *   Needs `watch(key, callback)`. This implies a mechanism for storing watchers (e.g., a map of keys to lists of callbacks).
+
+3.  **Implement Decorators:** Decorators wrap a single child node and modify its output or behavior.
+
+    *   **`BT.Inverter(child)`:**
+        *   When `tick()` is called, it calls the child.
+        *   It checks the result and flips SUCCESS/FAILURE. RUNNING passes through.
+
+    *   **`BT.Cooldown(child, ticks)`:**
+        *   Needs internal state (a counter/timer).
+        *   When `tick()` is called:
+            *   If in cooldown, return FAILURE immediately. Decrement counter. If counter reaches 0, exit cooldown/allow execution.
+            *   If not in cooldown, execute the child. If successful, start/reset the cooldown timer.
+        *   This decorator needs to manage state across ticks.
+
+4.  **Integrate Decorators into the BT structure:** Since decorators modify flow, they should wrap the child node behavior.
+
+5.  **Review Existing BT structure:** The previous implementation used a `createNode` helper and specific behavior for composite nodes (Sequence/Selector). The new decorators will need to handle the flow correctly.
+
+6.  **Drafting the Code (Self-Correction/Refinement):**
+
+    *   *Blackboard:* Ensure watchers are stored correctly and callbacks fire upon value change.
+    *   *Decorators:* Since decorators modify the tick flow, they must handle state transitions carefully.
+
+    *(Self-Correction on Decorator implementation:* The prompt implies the decorator should wrap an existing node. I need to ensure the returned object is still a valid BT node interface, or that the decorator handles the flow of its wrapped child correctly.)
+
+7.  **Final Code Assembly:** Combine all parts into a cohesive Lua structure, ensuring proper method calls and state handling. (Focus on making the decorators work seamlessly with `tick()`.)

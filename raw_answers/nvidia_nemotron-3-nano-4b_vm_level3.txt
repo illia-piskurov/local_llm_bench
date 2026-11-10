@@ -1,125 +1,137 @@
 ```python
-def run(program: str) -> list[str]:
+from typing import List
+
+def run(program: str) -> List[str]:
+    stack: List[int] = []
     lines = program.splitlines()
-    stack = []
-    output = []
-    label_map = {}
-    call_stack = []          # stores 1‑based line indices to resume from
-    memory = {}              # var name → value
+    labels: dict[str, int] = {}
+    memory: dict[str, int] = {}
+    call_stack: list[int] = []
+    output: List[str] = []
 
-    for idx, line in enumerate(lines):
-        line = line.strip()
-        if not line or line.startswith('#'):
+    i = 0
+    while i < len(lines):
+        raw = lines[i].strip()
+        if not raw or raw.startswith('#'):
+            i += 1
             continue
-        tokens = line.split()
-        op = tokens[0]
 
-        # LABEL
+        parts = raw.split()
+        op = parts[0].upper()
+        name = None
+        arg = ''
+
+        # LABEL definition
         if op == 'LABEL':
-            name = tokens[1]
-            label_map[name] = idx + 1
+            name = parts[1]
+            labels[name] = i
+            i += 1
             continue
 
-        # CALL / RET
+        # JMP, JZ, JNZ (conditional jump)
+        elif op in ('JMP', 'JZ', 'JNZ'):
+            if name not in labels:
+                raise ValueError(f"Line {i}: Label '{name}' is undefined")
+            target_line = labels[name]
+            i = target_line
+            continue
+
+        # CALL / RET (subroutine call stack)
         elif op == 'CALL':
-            target_name = tokens[1]
-            if target_name not in label_map:
-                raise ValueError(f"Line {idx+1}: undefined label '{target_name}'")
-            call_stack.append(idx + 2)          # resume after this line
-            idx = label_map[target_name] - 1    # jump to label
+            name = parts[1]
+            if name not in labels:
+                raise ValueError(f"Line {i}: Label '{name}' is undefined")
+            call_stack.append(i)          # push return address
+            i = labels[name]               # jump to label, continue loop
             continue
         elif op == 'RET':
             if not call_stack:
-                raise ValueError(f"Line {idx+1}: RET with empty call stack")
-            return_addr = call_stack.pop()
-            idx = return_addr - 1               # resume at that line
+                raise ValueError(f'Line {i}: No active CALL to unwind')
+            return_line = call_stack.pop()
+            i = return_line + 1           # resume after subroutine
             continue
 
-        # Comparison operations
-        elif op in ('EQ', 'GT', 'LT'):
-            if len(tokens) != 3:
-                raise ValueError(f"Line {idx+1}: {op} expects two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            result = 1 if (op == 'EQ' and a == b) or (op == 'GT' and a > b) or (op == 'LT' and a < b) else 0
-            stack.append(result)
-            continue
-
-        # Named variables
-        elif op == 'STORE':
-            var = tokens[1]
-            if not stack:
-                raise ValueError(f"Line {idx+1}: STORE on empty stack")
-            value = stack.pop()
-            memory[var] = value
-            continue
-        elif op == 'LOAD':
-            var = tokens[1]
-            if var not in memory:
-                raise ValueError(f"Line {idx+1}: LOAD from undefined variable '{var}'")
-            stack.append(memory[var])
-            continue
-
-        # Existing instructions (unchanged)
+        # PUSH / POP
         elif op == 'PUSH':
-            n = int(tokens[1])
-            stack.append(n)
-
+            stack.append(int(parts[1]))
+            i += 1
         elif op == 'POP':
             if not stack:
-                raise ValueError(f"Line {idx+1}: POP on empty stack")
+                raise ValueError(f"Line {i}: Stack underflow (cannot POP)")
             stack.pop()
+            i += 1
 
-        elif op == 'ADD':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx+1}: ADD requires two values, got {len(stack)}")
+        # BINARY arithmetic: ADD, SUB, MUL, DIV
+        else:
+            if len(parts) < 3:
+                raise ValueError(f"Line {i}: Not enough operands for '{op}'")
             b = stack.pop()
             a = stack.pop()
-            stack.append(a + b)
 
-        elif op == 'SUB':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx+1}: SUB requires two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a - b)
+            try:
+                if op == 'ADD':
+                    result = a + b
+                elif op == 'SUB':
+                    result = a - b
+                elif op == 'MUL':
+                    result = a * b
+                elif op == 'DIV':
+                    if b == 0:
+                        raise ZeroDivisionError(f"Line {i}: Division by zero")
+                    result = a // b
+            except Exception as exc:
+                raise
 
-        elif op == 'MUL':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx+1}: MUL requires two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a * b)
+            stack.append(result)
+            i += 1
 
-        elif op == 'DIV':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx+1}: DIV requires two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            if b == 0:
-                raise ValueError(f"Line {idx+1}: division by zero")
-            stack.append(a // b)
-
+        # DUP / SWAP
         elif op == 'DUP':
             if not stack:
-                raise ValueError(f"Line {idx+1}: DUP on empty stack")
+                raise ValueError(f"Line {i}: Stack underflow (cannot DUP)")
             stack.append(stack[-1])
-
+            i += 1
         elif op == 'SWAP':
             if len(stack) < 2:
-                raise ValueError(f"Line {idx+1}: SWAP requires two values, got {len(stack)}")
-            a = stack.pop()
-            b = stack.pop()
+                raise ValueError(f"Line {i}: Not enough values to SWAP")
+            a, b = stack.pop(), stack.pop()
             stack.append(a)
             stack.append(b)
+            i += 1
 
+        # PRINT
         elif op == 'PRINT':
-            if not stack:
-                raise ValueError(f"Line {idx+1}: PRINT on empty stack")
             output.append(str(stack[-1]))
+            i += 1
+
+        # EQ / GT / LT (comparison operations)
+        elif op in ('EQ', 'GT', 'LT'):
+            b = stack.pop()
+            a = stack.pop()
+            if op == 'EQ':
+                result = 1 if a == b else 0
+            elif op == 'GT':
+                result = 1 if a > b else 0
+            elif op == 'LT':
+                result = 1 if a < b else 0
+            stack.append(result)
+            i += 1
+
+        # STORE / LOAD (named variables)
+        elif op == 'STORE':
+            var = parts[1]
+            value = stack.pop()
+            memory[var] = value
+            i += 1
+        elif op == 'LOAD':
+            var = parts[1]
+            if var not in memory:
+                raise ValueError(f'Line {i}: LOAD from undefined variable '{var}'')
+            stack.append(memory[var])
+            i += 1
 
         else:
-            raise ValueError(f"Line {idx+1}: unknown instruction '{op}'")
+            raise ValueError(f"Line {i}: Unknown instruction '{op}'")
 
     return output
 ```

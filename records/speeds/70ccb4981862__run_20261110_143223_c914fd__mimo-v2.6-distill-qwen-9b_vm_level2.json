@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261110_143223_c914fd",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6-distill-qwen-9b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-11-10 14:34:47",
+  "stats": {
+    "input_tokens": 1227,
+    "total_output_tokens": 979,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 12.60607096777129,
+    "time_to_first_token_seconds": 8.308615,
+    "model_load_time_seconds": null
+  }
+}

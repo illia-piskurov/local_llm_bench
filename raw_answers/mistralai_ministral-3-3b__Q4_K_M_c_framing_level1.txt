@@ -10,8 +10,7 @@ static size_t tail = 0;   // Next read position (circular index)
 static bool is_full = false;
 
 void ringbuf_init(void) {
-    head = 0;
-    tail = 0;
+    head = tail = 0;
     is_full = false;
 }
 
@@ -19,33 +18,36 @@ int ringbuf_push(uint8_t byte) {
     if (is_full || ((head + 1) % BUFFER_SIZE) == tail) {
         return -1; // Buffer full
     }
-
     buffer[head] = byte;
     head = (head + 1) % BUFFER_SIZE;
 
-    if (tail == head && is_full) {
+    if (tail == head && is_full) { // Only update is_full if we just wrapped around
         is_full = false;
+    } else {
+        is_full = true; // Buffer is now full
     }
+
     return 0;
 }
 
 int ringbuf_pop(void) {
-    if (tail == head && !is_full) {
+    if (head == tail && !is_full) {
         return -1; // Buffer empty
     }
-
     uint8_t byte = buffer[tail];
     tail = (tail + 1) % BUFFER_SIZE;
 
-    if (head == tail) {
+    if (head == tail) { // Only update is_full if we just wrapped around
         is_full = false;
+    } else {
+        is_full = true; // Buffer is now full
     }
+
     return byte;
 }
 
 int ringbuf_available(void) {
-    size_t available = head - tail;
-    if (available < 0) available += BUFFER_SIZE; // Handle circular wrap
+    size_t available = (tail > head) ? (BUFFER_SIZE - tail + head) : (head - tail);
     return available;
 }
 

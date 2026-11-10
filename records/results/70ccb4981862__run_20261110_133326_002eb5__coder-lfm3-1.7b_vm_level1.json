@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_133326_002eb5",
+  "host_id": "70ccb4981862",
+  "model": "coder-lfm3-1.7b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-10 13:35:45",
+  "passed": 0,
+  "total": 18,
+  "failures": [
+    "failed to load solution: Function run(...) not found in solution"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

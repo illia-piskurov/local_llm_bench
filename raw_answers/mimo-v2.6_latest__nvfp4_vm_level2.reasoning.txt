@@ -1,0 +1,5 @@
+Need to add label resolution. Labels defined at current position — need to track line numbers of labels. Since comments/empty lines are skipped, "current position" means the line where LABEL appears.
+
+JMP/JZ/JNZ need to look up label line numbers. Labels defined before use. If label not defined, raise clear error.
+
+Let me write it.

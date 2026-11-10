@@ -1,0 +1,55 @@
+We need to implement `plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None`.
+
+Let me parse the description carefully.
+
+We have tasks defined as a dictionary mapping task name (str) -> tuple of three elements:
+- duration: integer time units
+- deps: list of task names that must finish before this task can start
+- priority: task priority; higher priority tasks must start earlier.
+
+Interpretation: For each task, we need to know its dependencies. The `deps` field is a list of other task names (strings) that must be completed before starting this task. Also there's a `priority`. Higher priority should have started earlier; but how do we interpret "must start earlier"? Usually higher priority tasks are more important and should be scheduled first. But the execution rules: tasks run non-preemptively, at most workers tasks can run simultaneously (i.e., limited parallelism). When multiple tasks are ready to run, select first by highest priority, then shortest duration, then alphabetical task name.
+
+Also "If there is a cyclic dependency in tasks, return None."
+
+We need to implement the scheduler. Input: `tasks` dict: each key is a task name; value is tuple (duration, deps, priority). Actually reading: `def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None`. So tasks: mapping from task name to tuple of three ints? Let's examine the tuple types:
+
+`(duration, deps, priority)` where:
+- duration: integer
+- deps: list of strings (the names that must complete before this task can start)
+- priority: int
+
+But it says `tuple[int, list[str], int]`. So first element is an int (duration), second a list of strings (deps), third an int (priority). This matches.
+
+Now we need to return a list of strings, which represents the order in which tasks are started/run? Or completed? The problem statement: "Return only the Python code in a single ```python ... ``` code block, with no explanations outside the block." So we just output the code for `plan_order`.
+
+We must design algorithm that respects dependencies and limited workers.
+
+Let me think about the typical scheduling simulation. We need to produce an execution timeline perhaps? But they ask: "Implement a task scheduler with dependencies, priorities, and a limited worker pool in a single Python file." And then define:
+
+```
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None
+```
+
+Return only the code. So we must implement this function.
+
+We need to handle cyclic dependencies: if any cycle exists in dependency graph (i.e., a task depends on another which eventually creates a cycle), then return None.
+
+Let me define `tasks` dict as mapping from task name -> tuple (duration, deps, priority).
+
+Goal: produce an execution order of tasks? Or the schedule with workers and dependencies? It says "Return only the Python code in a single ```python ... ``` code block". So I'll just implement the function.
+
+But we need to decide what exactly it returns. The docstring: `plan_order(tasks, workers) -> list[str] | None`. Typically, "order" might be an execution order (i.e., chronological start/finish?) or perhaps a flat list of task names in the order they would run given constraints? Let's infer from typical scheduling problems.
+
+We need to handle dependencies: tasks with no deps can start immediately. Tasks that become ready after their dependencies have completed. Workers = number of parallel threads; we can simulate using discrete time steps where up to `workers` tasks are running (i.e., the pool). The rule: when multiple tasks are ready, select first by highest priority (largest priority? higher is more important), then shortest duration, then alphabetical name. "Higher priority tasks must start earlier" suggests that among tasks with same priority, shorter ones go first; also tie-breaking alphabetically.
+
+We need to consider the `priority` field: higher value = higher priority? Usually in priority scheduling, higher number means higher priority (i.e., run more urgently). The phrase "higher priority tasks must start earlier" suggests that they should be scheduled before lower-priority ones. So we need to always pick the ready task with highest priority; if equal, shortest duration; if still tie, alphabetical.
+
+If multiple tasks become ready at exactly the same timestamp (i.e., their start times are identical), then "append them to the returned list[str] following the same priority tie-breaking rule." That indicates we need to output a flat list of task names in order they start? Or finish? Let's read: "Execution rules:
+- Tasks run non-preemptively;
+- At most workers tasks can run simultaneously;
+- When multiple tasks are ready to run, select first by highest priority,
+  then shortest duration, then alphabetical task name;
+- If multiple tasks start at the exact same timestamp, append them to the returned list[str] following the same priority tie-breaking rule;
+- If there is a cyclic dependency in tasks, return None."
+
+So this describes how we pick among ready tasks. Then we output something - "Return only the Python code ... Return list of strings". It says: `list[str]`. Which order? The phrase "If multiple tasks start at the exact same timestamp, append them to the returned list[str] following the same priority tie-breaking rule" suggests that the return value is a flat ordered list of task names (the ones being started). That seems plausible: we need to output the schedule's execution steps as a sequence where each step corresponds to starting tasks

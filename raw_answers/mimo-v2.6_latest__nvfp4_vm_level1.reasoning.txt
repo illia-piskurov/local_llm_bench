@@ -1,0 +1,80 @@
+Implement a simple stack-based language interpreter in a single Python file.
+
+Requirements:
+- Single file, no external dependencies.
+- Clear error with line number for insufficient stack.
+- Division by zero error with line number.
+- run(program: str) -> list[str]
+
+Let me write it.
+
+Instructions: PUSH <n>, POP, ADD, SUB, MUL, DIV, DUP, SWAP, PRINT.
+
+Comments: empty lines and lines starting with "#".
+
+Line numbers — probably 1-based counting all lines including comments? I'll count all lines (comments included) since they're part of the program. That's the natural reading.
+
+Let me write clean code.
+
+```python
+class StackUnderflowError(Exception):
+    def __init__(self, line_number, instruction):
+        self.line_number = line_number
+        self.instruction = instruction
+        message = f"Stack underflow on line {line_number}: {instruction} needs more values on the stack"
+        super().__init__(message)
+
+
+class DivideByZeroError(Exception):
+    def __init__(self, line_number, instruction):
+        self.line_number = line_number
+        self.instruction = instruction
+        message = f"Division by zero on line {line_number}: {instruction}"
+        super().__init__(message)
+
+
+def run(program: str) -> list[str]:
+    stack = []
+    output = []
+    lines = program.splitlines()
+    for index, raw_line in enumerate(lines, start=1):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if not parts:
+            continue
+        instruction = parts[0]
+        try:
+            execute_instruction(stack, instruction, parts[1:], index)
+        except StackUnderflowError as e:
+            raise e from None
+        except DivideByZeroError as e:
+            raise e from None
+    return output
+
+
+def execute_instruction(stack, instruction, arguments, line_number):
+    if instruction == "PUSH":
+        if not arguments:
+            raise StackUnderflowError(line_number, "PUSH")
+        value = int(arguments[0])
+        stack.append(value)
+    elif instruction == "POP":
+        if not stack:
+            raise StackUnderflowError(line_number, "POP")
+        stack.pop()
+    elif instruction == "ADD":
+        if len(stack) < 2:
+            raise StackUnderflowError(line_number, "ADD")
+        b = stack.pop()
+        a = stack.pop()
+        stack.append(a + b)
+    ...
+```
+
+Actually simpler: define a helper that pops n values. Let me just write it straightforwardly.
+
+Also handle unknown instruction? Not required but nice to raise error. I'll add a clear error for unknown instruction.
+
+Let me write the final code.

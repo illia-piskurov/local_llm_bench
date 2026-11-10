@@ -1,211 +1,239 @@
-import sys
+from typing import Dict, Any, List, Tuple, Set
 
-class InMemKVStore:
-    """
-    Реализует in-memory key-value хранилище с вложенными транзакциями, 
-    поддерживающее команды COUNT, WATCH, SNAPSHOT и RESTORE.
-    """
+class Transaction:
+    """Represents an active transaction scope and its accumulated changes."""
+    def __init__(self, parent: 'Transaction' = None):
+        # Key -> Value (or marker for delete: None) changes pending in this transaction
+        self.pending_changes: Dict[str, Any] = {}
+        self.parent = parent
+
+    def apply_change(self, key: str, value: Any):
+        """Records a change within this transaction scope."""
+        self.pending_changes[key] = value
+
+    def commit(self):
+        """
+        Finalizes the changes made in this transaction.
+        If a parent exists, these changes are merged into the parent's state.
+        """
+        if self.parent:
+            for key, value in self.pending_changes.items():
+                self.parent.apply_change(key, value)
+        else:
+            # This is the innermost transaction. Commit means applying changes to the global store.
+            for key, value in self.pending_changes.items():
+                # Apply directly to the global store (which is the implicit 'parent')
+                self.parent.store[key] = value
+
+    def rollback(self):
+        """Discards all pending changes in this transaction."""
+        self.pending_changes = {}
+
+class KeyValueStore:
     def __init__(self):
-        # Глобальное, зафиксированное состояние (committed state)
-        self.store = {}
-        # Стек для управления транзакциями. Каждый элемент - это словарь, 
-        # представляющий изменения текущего уровня транзакции.
-        self.transaction_stack = []
-        # Хранилище для наблюдателей: {key: set_of_watchers}
-        self.watchers = {}
-        # Хранилище для снимков состояния: {name: state}
-        self.snapshots = {}
+        # Global storage for actual committed data
+        self.store: Dict[str, Any] = {}
+        # Stack to manage nested transactions. The base level is implicit (global store).
+        self.transaction_stack: List[Transaction] = []
+        # Set to track keys that are currently being watched
+        self.watched_keys: Set[str] = set()
+        # Storage for snapshots {name: state}
+        self.snapshots: Dict[str, Dict[str, Any]] = {}
 
-    def _get_current_scope(self):
-        """Возвращает текущий рабочий контекст (самый верхний уровень)."""
-        return self.transaction_stack[-1] if self.transaction_stack else {}
+    def _get_current_transaction(self) -> Transaction | None:
+        """Returns the current innermost transaction, or None if stack is empty."""
+        if self.transaction_stack:
+            return self.transaction_stack[-1]
+        return None
 
-    def get(self, key):
-        """Получает значение. Ищет его в текущем контексте, затем в родительских."""
-        # 1. Проверяем текущий рабочий контекст (для обеспечения видимости внутри транзакции)
-        current_scope = self._get_current_scope()
-        if key in current_scope:
-            return current_scope[key]
+    def _get_current_visible_value(self, key: str) -> Any:
+        """Helper to get the current visible value of a key, respecting transactions."""
+        current_txn = self._get_current_transaction()
 
-        # 2. Если не найдено, ищем в родительских контекстах (вложенные транзакции)
-        for scope in reversed(self.transaction_stack):
-            if key in scope:
-                return scope[key]
-        
-        # 3. Ищем в глобальном хранилище
-        return self.store.get(key, "NULL")
+        if current_txn is None:
+            # Read directly from global store
+            return self.store.get(key, "NULL")
+        else:
+            # Read from the transaction's pending changes first.
+            if key in current_txn.pending_changes:
+                return current_txn.pending_changes[key]
+            else:
+                # If not in delta, check the committed state (from parent/global)
+                if current_txn.parent:
+                    return current_txn.parent.store.get(key, "NULL")
+                else:
+                    return "NULL"
 
-    def set(self, key, value):
-        """Устанавливает значение (влияет на текущий контекст) и уведомляет WATCH."""
-        current_scope = self._get_current_scope()
-        old_value = current_scope.get(key, None)
-        
-        # 1. Обновляем текущий рабочий контекст
-        current_scope[key] = value
 
-        # 2. Уведомление WATCH (проверяем только если это не глобальное изменение)
-        if key in self.watchers:
-            new_visible_value = self.get(key)
-            
-            if old_value != new_visible_value:
-                # В реальной системе здесь бы выводилось сообщение, но для соответствия 
-                # требованию формата "WATCH <key> <старое_значение> -> <новое_значение>", 
-                # мы должны убедиться, что это уведомление происходит в момент SET/DELETE.
-                pass
+    def set(self, key: str, value: Any):
+        current_txn = self._get_current_transaction()
 
-        # 3. Если нет транзакций, обновляем глобальное хранилище
-        if not self.transaction_stack:
+        if current_txn is None:
+            # No transaction open, modify global store directly.
+            old_value = self.store.get(key, "NULL")
             self.store[key] = value
+            new_value = self.store[key]
+
+            if key in self.watched_keys:
+                self._watch_notification(key, old_value, new_value)
+
+        else:
+            # Transaction open, record change in the transaction's delta.
+            old_value = self._get_current_visible_value(key)
+            current_txn.apply_change(key, value)
+
+            if key in self.watched_keys:
+                self._watch_notification(key, old_value, value)
 
 
-    def delete(self, key):
-        """Удаляет ключ (влияет на текущий контекст) и уведомляет WATCH."""
-        current_scope = self._get_current_scope()
-        old_value = current_scope.get(key, None)
+    def get(self, key: str) -> Any:
+        return self._get_current_visible_value(key)
 
-        # 1. Удаляем из текущего рабочего контекста
-        if key in current_scope:
-            del current_scope[key]
 
-        # 2. Уведомление WATCH (проверяем только если это не глобальное изменение)
-        if key in self.watchers:
-            new_visible_value = self.get(key)
-            
-            if old_value != new_visible_value:
-                pass
+    def delete(self, key: str):
+        current_txn = self._get_current_transaction()
 
-        # 3. Если нет транзакций, удаляем из глобального хранилища
-        if not self.transaction_stack:
+        if current_txn is None:
+            # No transaction open, modify global store directly.
+            old_value = self.store.get(key)
             if key in self.store:
                 del self.store[key]
+                new_value = None # Deletion is represented by setting to None
+                if key in self.watched_keys:
+                    self._watch_notification(key, old_value, new_value)
+        else:
+            # Transaction open, record the deletion in the transaction's delta.
+            old_value = self._get_current_visible_value(key)
+            current_txn.apply_change(key, None) # Using None as a deletion marker
+            
+            if key in self.watched_keys:
+                self._watch_notification(key, old_value, None)
+
+
+    def _watch_notification(self, key: str, old_value: Any, new_value: Any):
+        """Internal function to generate the WATCH notification string."""
+        # Format NULL explicitly for output consistency
+        old_str = "NULL" if old_value == "NULL" else str(old_value)
+        new_str = "NULL" if new_value == "NULL" else str(new_value)
+        print(f"WATCH {key} {old_str} -> {new_str}")
 
 
     def begin(self):
-        """Начинает новую транзакцию."""
-        self.transaction_stack.append({})
+        """Starts a new transaction layer."""
+        new_txn = Transaction(parent=None) # Root transactions are effectively the global store proxy
+        self.transaction_stack.append(new_txn)
 
     def commit(self):
-        """Фиксирует самую внутреннюю открытую транзакцию, сливая изменения в родительскую."""
-        if not self.transaction_stack:
-            # print("NO TRANSACTION") # Убрано для соответствия требованию "не печатать"
-            return
+        current_txn = self._get_current_transaction()
 
-        changes = self.transaction_stack.pop()
-        
-        # Сливаем изменения в родительский контекст (или глобальное хранилище)
-        if not self.transaction_stack:
-            self.store.update(changes)
-        else:
-            parent_scope = self._get_current_scope()
-            parent_scope.update(changes)
+        if current_txn is None:
+            return # No transaction to commit
 
-    def rollback(self):
-        """Отменяет все изменения самой внутренней транзакции."""
-        if not self.transaction_stack:
-            # print("NO TRANSACTION") # Убрано для соответствия требованию "не печатать"
-            return
-
-        # Отбрасываем изменения самой внутренней транзакции
+        current_txn.commit()
         self.transaction_stack.pop()
 
-    def count(self, value):
-        """Выводит количество ключей, чьё текущее значение равно <value>."""
-        count = 0
-        # Проверяем все ключи в глобальном хранилище
-        for val in self.store.values():
-            if val == value:
-                count += 1
-        print(count)
 
-    def watch(self, key):
-        """Начинает наблюдение за ключом."""
-        if key not in self.watchers:
-            self.watchers[key] = set()
-        self.watchers[key].add(key) # Добавляем сам ключ в список наблюдаемых
+    def rollback(self):
+        current_txn = self._get_current_transaction()
 
-    def snapshot(self, name):
-        """Сохраняет полное текущее состояние хранилища."""
-        if name in self.snapshots:
-            # Перезаписываем существующий snapshot
-            pass
-        else:
-            # Сохраняем глубокую копию всего состояния
-            snapshot_state = {
-                'store': self.store.copy(),
-                'transaction_stack': self.transaction_stack.copy(),
-                'watchers': self.watchers.copy()
-            }
-            self.snapshots[name] = snapshot_state
+        if current_txn is None:
+            return # No transaction to rollback
 
-    def restore(self, name):
-        """Восстанавливает полное состояние из ранее сохранённого snapshot."""
+        current_txn.rollback()
+        self.transaction_stack.pop()
+
+    def snapshot(self, name: str):
+        """Saves the complete current state of the store and transaction environment."""
+        self.snapshots[name] = {
+            'store': self.store.copy(),
+            # We save the list of transactions, ensuring their internal pending_changes are captured.
+            'transaction_stack': list(self.transaction_stack), 
+            'watched_keys': self.watched_keys.copy()
+        }
+
+    def restore(self, name: str):
+        """Restores the complete state from a previously saved snapshot."""
         if name not in self.snapshots:
-            # В случае отсутствия snapshot, считаем ошибкой или игнорируем
+            # Should handle error case, but per requirements we just proceed/ignore if not found.
             return 
-        
+
         saved_state = self.snapshots[name]
-        
-        # Восстанавливаем глобальное состояние
-        self.store.update(saved_state['store'])
-        
-        # Восстанавливаем стек транзакций (это критически важно для сохранения контекста)
+        self.store = saved_state['store']
+        # Restore the transaction stack exactly as it was
         self.transaction_stack = saved_state['transaction_stack']
-        
-        # Восстанавливаем список наблюдателей
-        self.watchers = saved_state['watchers']
+        self.watched_keys = saved_state['watched_keys']
 
-    def run(self, program: str) -> list[str]:
-        """
-        Выполняет программу и возвращает список строк вывода.
-        """
-        lines = []
-        commands = program.strip().split('\n')
 
-        for line in commands:
-            line = line.strip()
-            if not line:
-                continue
+def run(program: str) -> List[str]:
+    """
+    Processes a string of commands and returns the output for GET operations.
+    """
+    store = KeyValueStore()
+    output: List[str] = []
 
-            parts = line.split()
-            command = parts[0]
-            args = parts[1:]
+    for line in program.strip().split('\n'):
+        line = line.strip()
+        if not line:
+            continue
 
-            try:
-                if command == "SET":
-                    key, value = args[0], args[1]
-                    self.set(key, value)
-                elif command == "GET":
-                    key = args[0]
-                    result = self.get(key)
-                    lines.append(str(result))
-                elif command == "DELETE":
-                    key = args[0]
-                    self.delete(key)
-                elif command == "BEGIN":
-                    self.begin()
-                elif command == "COMMIT":
-                    self.commit()
-                elif command == "ROLLBACK":
-                    self.rollback()
-                elif command == "COUNT":
-                    value = args[0]
-                    self.count(value)
-                elif command == "WATCH":
-                    key = args[0]
-                    self.watch(key)
-                elif command == "SNAPSHOT":
-                    name = args[0]
-                    self.snapshot(name)
-                elif command == "RESTORE":
-                    name = args[0]
-                    self.restore(name)
-            except IndexError:
-                # Игнорируем некорректные команды без аргументов
-                pass
+        parts = line.split()
+        command = parts[0]
 
-        return lines
+        if command == "SET":
+            if len(parts) == 3:
+                key, value = parts[1], parts[2]
+                store.set(key, value)
 
-def execute_program(program: str) -> list[str]:
-    """Внешняя функция для запуска хранилища."""
-    store = InMemKVStore()
-    return store.run(program)
+        elif command == "GET":
+            if len(parts) == 2:
+                key = parts[1]
+                result = store.get(key)
+                output.append(str(result))
+
+        elif command == "DELETE":
+            if len(parts) == 2:
+                key = parts[1]
+                store.delete(key)
+
+        elif command == "BEGIN":
+            store.begin()
+
+        elif command == "COMMIT":
+            store.commit()
+            # COMMIT produces no output
+
+        elif command == "ROLLBACK":
+            store.rollback()
+            # ROLLBACK produces no output
+
+        elif command == "COUNT":
+            if len(parts) == 2:
+                try:
+                    value = int(parts[1])
+                    count = 0
+                    # Iterate over committed keys
+                    for key, val in store.store.items():
+                        if val == value:
+                            count += 1
+                    output.append(str(count))
+                except ValueError:
+                    # Handle invalid count value gracefully if needed, though not strictly required by prompt
+                    pass
+
+        elif command == "WATCH":
+            if len(parts) == 2:
+                key = parts[1]
+                store.watched_keys.add(key)
+
+        elif command == "SNAPSHOT":
+            if len(parts) == 2:
+                name = parts[1]
+                store.snapshot(name)
+
+        elif command == "RESTORE":
+            if len(parts) == 2:
+                name = parts[1]
+                store.restore(name)
+
+
+    return output

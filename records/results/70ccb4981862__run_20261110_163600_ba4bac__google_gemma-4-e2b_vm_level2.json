@@ -1,0 +1,21 @@
+{
+  "run_id": "run_20261110_163600_ba4bac",
+  "host_id": "70ccb4981862",
+  "model": "google/gemma-4-e2b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-11-10 16:38:04",
+  "passed": 20,
+  "total": 27,
+  "failures": [
+    "multiple_prints: unexpected exception/timeout: IndexError: ADD failed: Not enough operands. Stack size is 0 at line 5.",
+    "print_does_not_pop: unexpected exception/timeout: IndexError: PRINT failed: Stack is empty at line 3.",
+    "unconditional_jump_skips_code: unexpected exception/timeout: NameError: JMP failed: Label 'skip' not defined.",
+    "jz_taken_when_zero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined.",
+    "jz_not_taken_when_nonzero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined.",
+    "jnz_taken_when_nonzero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined.",
+    "jnz_not_taken_when_zero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined."
+  ],
+  "manual_score": null,
+  "comment": ""
+}

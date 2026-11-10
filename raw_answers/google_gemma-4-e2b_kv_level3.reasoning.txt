@@ -1,0 +1,66 @@
+
+Thinking Process:
+
+1.  **Understand the Goal:** Implement `SNAPSHOT <name>` and `RESTORE <name>` commands for the `KeyValueStore`. These commands must save and restore the entire state, including committed data, open transactions (transaction stack), and watched keys.
+
+2.  **Analyze the `KeyValueStore` structure:**
+    *   `self.store`: Committed data (dict).
+    *   `self.transaction_stack`: List of `Transaction` objects.
+    *   `self.watched_keys`: Set of strings.
+
+3.  **Implement `SNAPSHOT <name>`:**
+    *   Needs to save the current state of the store and relevant structures.
+    *   The saved structure should be a dictionary or similar container keyed by the name, holding all necessary components.
+
+    *   What needs to be saved?
+        1.  `self.store` (committed data).
+        2.  `self.transaction_stack` (the state of open transactions/depth).
+        3.  `self.watched_keys` (the set of watched keys).
+
+    *   Need a new storage mechanism, likely a dictionary mapping names to these saved states.
+
+4.  **Implement `RESTORE <name>`:**
+    *   Needs to load the saved state.
+    *   Must replace the current store, transaction stack, and watched keys with the saved values.
+    *   Crucially, if transactions were open during the snapshot, they must be restored in their exact state (pending changes).
+
+5.  **Handling Nested Transactions and State Preservation:**
+    *   The `Transaction` objects themselves hold pending changes. These need to be fully preserved when the stack is saved.
+
+6.  **Refactoring `KeyValueStore` methods:**
+    *   Need to add storage for snapshots.
+
+7.  **Implementing `run` command handling:**
+    *   Need to parse the new commands (`SNAPSHOT`, `RESTORE`).
+
+---
+**Detailed Implementation Steps (Focusing on the changes):**
+
+*   **`KeyValueStore.__init__`:** (Already set up)
+*   **`KeyValueStore.snapshot(name)`:**
+    ```python
+    self.snapshots[name] = {
+        'store': self.store.copy(), # Deep copy might be safer, but shallow copy of dict is fine if values are primitives/immutable.
+        'transaction_stack': list(self.transaction_stack), # Copy the stack structure
+        'watched_keys': self.watched_keys.copy() # Copy the set
+    }
+    ```
+*   **`KeyValueStore.restore(name)`:**
+    ```python
+    if name not in self.snapshots:
+        # Handle error/skip if necessary, though prompt implies this is fine.
+        return
+
+    saved_state = self.snapshots[name]
+    self.store = saved_state['store']
+    self.transaction_stack = saved_state['transaction_stack']
+    self.watched_keys = saved_state['watched_keys']
+    ```
+
+*   **Updating `run`:**
+    *   Handle `SNAPSHOT <name>`: Check if the command is valid and call the store method.
+    *   Handle `RESTORE <name>`: Check if the command is valid and call the store method.
+
+*(Self-Correction during implementation): The `Transaction` objects themselves are mutable. When saving the stack, we save references to these transactions, and their internal `pending_changes` are already tracked correctly by the transaction implementation. Copying the list reference is sufficient to preserve the stack structure.*
+
+Let's integrate this into the provided class structure.

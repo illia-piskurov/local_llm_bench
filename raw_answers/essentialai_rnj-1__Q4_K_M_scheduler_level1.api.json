@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    def dfs(task):\n        if task in visiting:\n            return False  # Cycle detected\n        if task not in visited:\n            visiting.add(task)\n            for dep in tasks.get(task, []):\n                if not dfs(dep):\n                    return False\n            visiting.remove(task)\n            visited.add(task)\n            result.append(task)\n        return True\n\n    visited = set()\n    visiting = set()\n    result = []\n    for task in tasks:\n        if task not in visited and not dfs(task):\n            return None  # Cycle detected\n    return result[::-1]\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 192,
+    "total_output_tokens": 138,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 18.66572747629146,
+    "time_to_first_token_seconds": 1.438101
+  }
+}

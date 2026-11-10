@@ -1,21 +1,32 @@
 ```python
 def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    def longest_path(task):
+        if task not in durations and task not in dependencies:
+            return 0
+        duration = durations.get(task, 0)
+        dep_duration = sum(longest_path(dep) for dep in dependencies.get(task, []))
+        return duration + dep_duration
+
+    visited = set()
+
     def dfs(task):
-        if task in memo:
-            return memo[task]
-        duration, deps = tasks[task]
-        max_dep_duration = 0
-        for dep in deps:
-            max_dep_duration = max(max_dep_duration, dfs(dep))
-        memo[task] = duration + max_dep_duration
-        return memo[task]
+        if task in visited:
+            return 0
+        visited.add(task)
+        max_child_duration = 0
+        for dep in tasks.get(task, ()):
+            max_child_duration = max(max_child_duration, longest_path(dep))
+        visited.remove(task)
+        return max_child_duration
 
-    memo = {}
-    if topo_sort(tasks) is None:
-        return None
+    durations = {task: duration for task, (duration, _) in tasks.items()}
+    dependencies = {task: deps for task, (_, deps) in tasks.items()}
 
-    result = 0
-    for task in tasks:
-        result = max(result, dfs(task))
-    return result
+    total_critical_length = 0
+    for task in tasks.keys():
+        if task not in visited:
+            path_length = longest_path(task)
+            total_critical_length = max(total_critical_length, path_length)
+
+    return total_critical_length if not any(cycle for cycle in dfs(task) == False for task in tasks.keys()) else None
 ```

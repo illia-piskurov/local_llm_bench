@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261109_173733_bdc9b8",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-09 17:37:57",
+  "stats": {
+    "input_tokens": 178,
+    "total_output_tokens": 250,
+    "reasoning_output_tokens": 25,
+    "tokens_per_second": 15.274224646315288,
+    "time_to_first_token_seconds": 1.393713916,
+    "model_load_time_seconds": 6.244899625
+  }
+}

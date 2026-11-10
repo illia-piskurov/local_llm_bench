@@ -1,0 +1,262 @@
+We need to implement function `topo_sort(tasks: dict[str, list[str]]) -> list[str] | None`. Input: tasks dictionary where key = task name (str), value = list of dependency task names that must complete prior. So we have directed edges from dependencies to the task? Typically for topological sort, if A depends on B, then B must come before A. The given representation: tasks[t] is a list of dependencies (i.e., prerequisites) for task t. So if t has dependency d in its list, then d must be completed before t. So we need to produce an ordering such that for each key and each dep in value list, the dep appears earlier.
+
+We need to return list of all task names in topological order (strictly after dependencies). If graph contains a cycle, return None.
+
+Implementation: Use Kahn's algorithm or DFS with detection. Since tasks might not have entries for leaf nodes? The dictionary may only contain tasks that exist; maybe there could be tasks with empty dependency lists. Also maybe some tasks appear as dependencies but not keys in the dict? Usually they'd be included if present. But we should handle all tasks: union of keys and values? Let's parse typical usage: "tasks is a dictionary where the key is the task name (str), and the value is a list of dependency task names that must complete prior to this task." That implies each key corresponds to a task; its dependencies are listed. So we can assume all tasks appear as keys, but also could have tasks not appearing as keys? If they don't appear, then they aren't part of graph? I think it's safe to consider only keys.
+
+We need to return list of all task names in topological order. Complexity O(V+E). We'll compute indegree for each node: number of dependencies (incoming edges?). Let's define adjacency: For each task t, its dependencies are items that must be before t; i.e., there is an edge from dependency -> t? Usually we have directed graph where nodes are tasks and edges indicate "must come after"? Actually if d is a dependency for t, then d precedes t. So direction from d to t (d->t). In Kahn's algorithm: we need indegree of each node counting number of prerequisites it has? Wait typical topological sort: For directed edge u -> v meaning u must come before v. Then indegree(v) counts incoming edges. Here we have dependencies for task t: list of tasks that must be done before t. So those dependencies are prerequisites, so there is an edge from dependency -> t (i.e., dependency precedes). Thus indegree(t) = len(dependencies[t])? Actually each dependency contributes one incoming edge to t. Because edges go into t from its dependencies. Then we need nodes with zero indegree: tasks that have no prerequisites.
+
+Thus algorithm:
+
+- Initialize adjacency list or just compute indegrees.
+- For each task and its dep list:
+    - for each d in deps:
+        - add edge d -> task (i.e., increase indegree of task by 1)
+We need to avoid duplicate edges if a task appears multiple times? Possibly not, but we can handle using set.
+
+Simpler: Use DFS-based cycle detection and ordering via post-order. But Kahn is straightforward.
+
+Implementation steps:
+1. Determine all nodes: keys of tasks.
+2. Compute indegree for each node = 0 initially.
+3. For each node t in tasks:
+    - for each dep in tasks[t]:
+        - add edge dep -> t (i.e., indegree[t] += 1)
+4. Also need to ensure that if there are dependencies referencing nodes not in keys, we may need to handle? But given dictionary includes all tasks as keys, I think it's fine.
+
+5. Then perform Kahn:
+    - queue = collections.deque([node for node in nodes if indegree[node] == 0])
+    - result = []
+    - While queue: pop left (or pop) and append to result; then for each neighbor? Wait we need adjacency list of outgoing edges? To reduce indegree, we need to know which tasks depend on current node. That is reverse direction: from dep -> task means that when we process a dependency d, we should decrement the indegree of its downstream tasks (t). So we need adjacency list of outgoing edges: for each task t and its dependencies d, we can add edge d->t, but also maybe we want to know which tasks depend on d? That is, from node d, there are many tasks that require it. We can build graph: for each dep in tasks[t], we have an edge from dep to t. So adjacency list: out_edges[dep] = [t]. Then when processing dep (which has indegree zero), we need to decrement indegree of all its targets.
+
+Thus better construct:
+
+- adj = {node: [] for node in nodes}
+- indegree = {node: 0 for node in nodes}
+
+For each task t, deps = tasks[t]:
+    for d in deps:
+        if d not in adj? We'll add later.
+        adj[d].append(t) # edge from dep to task
+        indegree[t] += 1
+
+Note: It's possible that a dependency is not a key (like external node). But we can include all nodes present as keys and also maybe dependencies appear only as values. To be safe, we should consider the set of all tasks = union of keys and values.
+
+Thus:
+
+all_nodes = set(tasks.keys())
+for deps in tasks.values():
+    all_nodes.update(deps)
+
+Now create indegree dict for each node (including those not appearing as key). But some nodes may have no dependencies and also appear only as dependency but not a key? Possibly. For topological ordering, we need to output all task names; if there is a task name that appears only as a dependency but never as a key in tasks, do we need to include it? The problem statement: "tasks is a dictionary where the key is the task name (str), and the value is a list of dependency task names that must complete prior to this task." So if there's a task not listed as a key, it doesn't have its own definition; but perhaps it appears only as dependency. Typically in such problems all tasks are keys. But we can handle generically: include nodes from values too.
+
+Algorithm steps:
+
+- Initialize indegree for each node = 0.
+- Build adjacency list (outgoing edges) for each node.
+- For each task t, deps = tasks[t]:
+    - For each d in deps:
+        - If d not already processed? We just add edge d->t. So we need to ensure we have adjacency entries for d and t.
+
+Simplify: Use collections.defaultdict(list) for adj, and indegree default dict.
+
+Pseudo:
+
+from collections import deque
+
+def topo_sort(tasks):
+    # nodes = set of all tasks
+    nodes = set(tasks.keys())
+    for deps in tasks.values():
+        nodes.update(deps)
+    
+    # Initialize structures
+    indegree = {node: 0 for node in nodes}
+    adj = {node: [] for node in nodes}  # adjacency list outgoing
+    
+    for t, dep_list in tasks.items():  # only iterate over keys provided; but need to also consider nodes that appear only as dependencies? They are already in nodes
+        for d in dep_list:
+            if d != t: # maybe self-dependency? ignore?
+                adj[d].append(t)
+                indegree[t] += 1
+    
+    # Kahn's algorithm
+    queue = deque([node for node in nodes if indegree[node] == 0])
+    result = []
+    
+    while queue:
+        u = queue.popleft()
+        result.append(u)
+        for v in adj[u]:
+            indegree[v] -= 1
+            if indegree[v] == 0:
+                queue.append(v)
+    
+    if len(result) != len(nodes):
+        # there is a cycle
+        return None
+    
+    return result
+
+But careful: For nodes that are not keys, they may have no outgoing edges but indegree zero maybe? They will be included in nodes set and initial queue.
+
+Potential duplicate edge additions: If the same dependency appears multiple times for a task (maybe list includes duplicates). Adding adjacency twice might cause indegree to increase more than needed. Typically we should consider unique dependencies. But given typical input, it's okay but better to use sets or not worry about double counting causing cycle detection? Duplicates would just increment indegree incorrectly leading to false positive cycles. So we could handle by using a set of edges per node.
+
+Simpler: Since tasks is a dict where each value list may contain dependencies that are also keys, we can treat them as unique. Usually they'd be unique. I'll assume no duplicates.
+
+Potential issue: For nodes not in tasks keys but appear only as dependency, the adjacency list for them will have outgoing edges to their dependent tasks (since we added edge d->t). That's fine; they get indegree from those incoming edges and may become zero if none of them depend on them. This ensures they are processed.
+
+Thus algorithm works.
+
+Edge Cases: If there is a self-loop like task A depends on itself, then adjacency[A].append(A) (edge from A to A) and indegree[A] +=1 => indegree becomes 1; Kahn will never have node with indegree zero, result length < nodes -> return None. That's correct.
+
+Complexity: O(N+E).
+
+Now implement in Python code:
+
+```
+from collections import deque
+from typing import Dict, List, Union
+
+def topo_sort(tasks: Dict[str, List[str]]) -> List[str] | None:
+    # gather all nodes (tasks)
+    nodes = set(tasks.keys())
+    for deps in tasks.values():
+        nodes.update(deps)
+    
+    # ensure adjacency and indegree initialized
+    adj = {node: [] for node in nodes}
+    indegree = {node: 0 for node in nodes}
+    
+    for t, dep_list in tasks.items():
+        for d in dep_list:
+            if d != t:  # ignore self? but still add edge to avoid missing; but self adds cycle detection. Keep it.
+                adj[d].append(t)
+                indegree[t] += 1
+    
+    # Kahn's algorithm
+    queue = deque([node for node in nodes if indegree[node] == 0])
+    result = []
+    
+    while queue:
+        u = queue.popleft()
+        result.append(u)
+        for v in adj[u]:
+            indegree[v] -= 1
+            if indegree[v] == 0:
+                queue.append(v)
+    
+    if len(result) != len(nodes):
+        return None
+    
+    return result
+```
+
+Potential bug: For nodes that are only dependencies and not keys, they may have outgoing edges from adj (since we added edges when processing tasks where they appear as dependency). However indegree for those nodes is incremented via the adjacency? Wait we never increased indegree of a node if it appears only as dependency. In our loop, we add edge d->t only; so indegree[t] increments but indegree[d] not changed (since no one depends on d yet unless we later process t's outgoing edges). For nodes that appear only in values and have no entries in tasks keys, they will still be present in adj because we initialized all nodes. But adjacency for them is empty; fine.
+
+But note: When we added edge from d to t, we didn't consider the case where a node appears both as dependency of multiple tasks (multiple edges). That's okay; indegree[t] increments each time.
+
+One nuance: We might have processed dependencies incorrectly if a task's dependency list includes a node that is not in nodes? But we added all values to nodes set. So fine.
+
+Now test:
+
+Example:
+tasks = {
+    'A': ['B'],
+    'B': [],
+    'C': ['A']
+}
+But here C depends on A, and B has no deps. Graph: B -> A (since B is dependency of A). Actually for A's list: B is dep => edge B->A? Wait we treat d as dependency for t; so add edge from d to t. So for 'A': ['B'] means B must be before A, thus edge B->A. In code: d='B', t='A' -> adj['B'].append('A'), indegree['A']++.
+
+For 'B': [] no edges.
+For 'C': ['A'] => add edge A->C and indegree[C]++.
+
+Now nodes = {'A','B','C'} plus maybe others. Let's compute:
+- Initialize indegree all zero.
+Processing tasks:
+
+t='A', dep_list=['B']: adj['B'].append('A'); indegree['A']=1
+t='B', dep_list=[]: nothing.
+t='C', dep_list=['A']: adj['A'].append('C'); indegree['C']=1
+
+adj after:
+adj = {'A': ['C'], 'B': ['A'], ...}
+indegree = {'A':1, 'B':0, 'C':1}
+
+queue initial nodes with indegree zero: B.
+
+Process B -> result=['B']; neighbors of B: adj['B']=['A']; decrement indegree[A] to 0; append A to queue. Now queue has A.
+
+Next pop A -> result=['B','A']; neighbors of A: ['C']; indegree[C]-- from 1 to 0; append C.
+
+Now queue contains C, pop C -> result=['B','A','C'].
+
+All processed length =3 == nodes=3 => return list.
+
+Check order: B before A before C. That respects dependencies? B is dependency of A (so B before A), and A before C. So correct.
+
+If there's a cycle: tasks={'A':['B'], 'B':['C'], 'C':['A']}. nodes = {A,B,C}. Process:
+
+- t='A', deps ['B'] => adj['B'].append('A'); indegree['A']+=1 (now 1)
+- t='B', deps ['C'] => adj['C'].append('B'); indegree['B']+=1 (now 1)
+- t='C', deps ['A'] => adj['A'].append('C'); indegree['C']+=1 (now 1)
+
+adj: B->[A]; C->[B]; A->[C]. indegree all 1, no zero. queue empty initially -> result = [].
+
+After loop len(result)=0 !=3 => return None.
+
+Works.
+
+Now about tasks that have dependencies referencing tasks not in dictionary? Example: tasks={'A':['B']} but B is not a key; we added B to nodes via update from deps, so it exists. But there is no entry for B's own dependencies. In this case, adjacency and indegree for B will be zero initially, but we didn't add any edges where B is dependency of A? Wait we added edge d->t only when processing tasks[t] list: For t='A', dep_list = ['B']; we do adj[d].append(t) -> adj['B'].append('A'); indegree['A']+=1. So adjacency for 'B' gets an outgoing to 'A'. So B's indegree maybe? We never incremented indegree for B; but does that cause any issue? For Kahn, we need indegree of each node (including B). Initially indegree[B] =0 (since no incoming edges). However there is a path from B->A. But because indegree of A is 1 and we process B first: queue includes nodes with indegree zero -> B and maybe others? Yes B has indegree zero, so will be processed before A, resulting in result order that respects dependencies? Let's see: We want order such that dependencies (B) come before A. Our algorithm processes B (since indegree 0), adds to result, then decrements indegree of its outgoing neighbors (adj[B] = [A]) -> indegree[A] becomes 0 and gets added. So final order will be B, A ... which is correct: B before A.
+
+Thus even if dependency not a key, it's fine.
+
+Edge Cases: tasks dict may contain keys whose values are empty lists; that means no dependencies. They should be placed early (or anywhere as they have indegree zero). Our algorithm will treat them as nodes with adjacency list maybe none.
+
+Also potential duplicate edges from same node to same target? For t='A' deps = ['B','B']; we would add adj['B'].append('A') twice, causing indegree[A] incremented by 2 incorrectly. But that's okay if input doesn't have duplicates; else we could dedupe using set but not needed for simple tests.
+
+Complexities: O(V+E) time.
+
+Now about returning type annotation: The function signature in the prompt uses "list[str] | None". Python version? Use from typing import List, Optional. But we can just return list or None.
+
+Implement:
+
+```
+def topo_sort(tasks):
+    # code
+```
+
+We need to adhere to single file, no external dependencies.
+
+Let's write final code block with proper imports and docstring maybe optional but not needed. We'll include type hints as given: `tasks: dict[str, List[str]] -> List[str] | None`. In Python 3.10+ we can use `list[str]`. But I'd keep just standard typing.
+
+We also need to consider that tasks might be passed with keys and values that are not unique; but it's okay.
+
+One more nuance: When building nodes set, we used tasks.keys() which returns a view; iterating over them is fine. For each dep in tasks.values(), we update set. But note that if some value contains items that appear as keys already, no harm.
+
+Potential memory/performance for large graphs but okay.
+
+Now code:
+
+```
+from collections import deque
+from typing import Dict, List, Set
+
+def topo_sort(tasks: Dict[str, List[str]]) -> List[str] | None:
+    # collect all nodes (task names)
+    nodes = set(tasks.keys())
+    for deps in tasks.values():
+        nodes.update(deps)
+    
+    # initialize adjacency and indegree
+    adj: Dict[str, List[str]] = {node: [] for node in nodes}
+    indegree: Dict[str, int] = {node: 0 for node in nodes}
+    
+    for t, dep_list in tasks.items():
+        for d in dep_list:
+            # edge from dependency d to task t
+            adj[d].append(t)
+            indegree[t] += 1
+    
+    queue = deque([node for node in nodes if indegree[node] == 0])
+    result: List

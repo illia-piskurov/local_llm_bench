@@ -2,9 +2,9 @@
 def compile_query(query: dict) -> dict:
     def _build_where_clause(cond):
         if isinstance(cond, dict) and 'AND' in cond:
-            return f"({', '.join(_build_where_clause(c) for c in cond['AND'])}) AND"
+            return f"({', '.join(_build_where_clause(c) for c in cond['AND'])})"
         elif isinstance(cond, dict) and 'OR' in cond:
-            return f"({', '.join(_build_where_clause(c) for c in cond['OR'])}) OR"
+            return f"({', '.join(_build_where_clause(c) for c in cond['OR'])})"
         else:
             field, op, value = cond
             if op == '=':
@@ -29,50 +29,53 @@ def compile_query(query: dict) -> dict:
         for cond in order_conditions:
             field, dir_ = cond.get('field'), cond.get('dir', 'ASC')
             clauses.append(f"{field} {'DESC' if dir_ == 'DESC' else 'ASC'}")
-        return ", ".join(clauses)
+        return " ORDER BY " + ", ".join(clauses)
 
-    # Build SQL parts
-    select_clause = "SELECT " + (", ".join(query['select']) if query['select'] else "*")
-    where_clause = ""
-    if 'where' in query:
-        where_clause = _build_where_clause(query['where'])
+    def _build_limit_offset():
+        limit = query.get('limit', None)
+        offset = query.get('offset', None)
+        parts = []
+        if limit is not None:
+            parts.append(f"LIMIT {limit}")
+        if offset is not None:
+            parts.append(f"OFFSET {offset}")
+        return " ".join(parts)
 
-    order_by_clause = ""
-    if 'orderBy' in query:
-        order_by_clause = f"ORDER BY {_build_order_by_clause(query['orderBy'])}"
+    # Build SELECT clause
+    select_clause = "SELECT "
+    if query.get('select') == ['*']:
+        select_clause += "*"
+    else:
+        select_clause += ", ".join(query['select'])
 
-    limit_clause = ""
-    offset_clause = ""
-    if 'limit' in query:
-        limit_clause = f"LIMIT {query['limit']}"
-    if 'offset' in query:
-        offset_clause = f"OFFSET {query['offset']}"
-
-    sql = f"SELECT {select_clause} FROM {query['table']}"
-    if where_clause:
-        sql += " WHERE " + where_clause
-    if order_by_clause:
-        sql += " " + order_by_clause
-    if limit_clause:
-        sql += " " + limit_clause
-    if offset_clause:
-        sql += " " + offset_clause
-
-    # Collect parameters in left-to-right traversal order
+    # Build WHERE clause with parameter placeholders
+    where_placeholders = []
     params = []
-    def _collect_params(cond, param_idx=1):
-        nonlocal params
-        if isinstance(cond, dict) and 'AND' in cond:
-            for c in cond['AND']:
-                _collect_params(c, param_idx)
-        elif isinstance(cond, dict) and 'OR' in cond:
-            for c in cond['OR']:
-                _collect_params(c, param_idx)
-        else:
-            _, op, value = cond
-            if op in ('=', '!=', '>', '<', '>=', '<='):
+    if 'where' in query and query['where'] is not None:
+        def _traverse_and_collect(cond):
+            nonlocal params
+            if isinstance(cond, dict) and 'AND' in cond:
+                for c in cond['AND']:
+                    _traverse_and_collect(c)
+            elif isinstance(cond, dict) and 'OR' in cond:
+                for c in cond['OR']:
+                    _traverse_and_collect(c)
+            else:
+                _, op, value = cond
+                where_placeholders.append(f"?")
                 params.append(value)
 
-    _collect_params(query.get('where', {}))
-    return {"sql": sql.replace("?", f"${param_idx}", 1), "params": params}
+        _traverse_and_collect(query['where'])
+        where_clause = _build_where_clause(query['where'])
+    else:
+        where_clause = ""
+
+    # Build SQL query
+    sql = f"{select_clause} FROM {query['table']}"
+    if where_clause:
+        sql += " WHERE " + where_clause
+    sql += _build_order_by_clause(query.get('orderBy', []))
+    sql += _build_limit_offset()
+
+    return {"sql": sql, "params": params}
 ```

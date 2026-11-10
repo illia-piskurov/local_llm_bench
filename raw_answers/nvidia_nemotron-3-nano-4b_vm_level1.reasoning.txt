@@ -1,75 +1,63 @@
-We need to output just the Python code implementing interpreter. Must be single file with function run(program: str) -> list[str]. Should parse lines, ignore comments/empty. Maintain stack as list (top at end). For each line, split tokens. Determine instruction. Need error handling: if not enough values raise ValueError with message "Line X: ...". Also division by zero raise ValueError.
+We need to output only code in a single python block. Provide implementation with function run(program). We'll parse lines, keep line numbers for errors.
 
-Return list of printed strings.
+Implement stack as list.
+
+Iterate over non-empty non-comment lines, split.
+
+For each instruction:
+
+PUSH n -> int(n); push.
+
+POP -> pop (if not empty else error line+1)
+
+ADD -> need >=2; b = pop(); a = pop(); push(a+b). Actually order: pop two values, push sum. Usually second popped is second operand? For ADD typical order doesn't matter.
+
+SUB: pop b then a => a - b.
+
+MUL: product.
+
+DIV: integer division a // b ; check b !=0 else error line+1.
+
+DUP: if stack not empty else error.
+
+SWAP: need >=2.
+
+PRINT: print top without popping; output string? "Print the value on top". So return list of printed strings, each as str(value). Probably just f"{value}"? We'll convert to string.
+
+Return list of those strings in order they were printed.
+
+Raise errors with line numbers. Use raise ValueError(f"Line {line_num}: ...").
+
+We must ignore blank lines and comments starting with '#'.
 
 Implementation details:
 
-def run(program):
-    lines = program.splitlines()
-    stack = []
-    output = []
-    for idx, line in enumerate(lines, start=1):
-        line = line.strip()
-        if not line or line.startswith('#'):
-            continue
-        tokens = line.split()
-        op = tokens[0]
-        if op == 'PUSH':
-            n = int(tokens[1])
-            stack.append(n)
-        elif op == 'POP':
-            if not stack:
-                raise ValueError(f"Line {idx}: POP on empty stack")
-            stack.pop()
-        elif op == 'ADD':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx}: ADD requires two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a + b)
-        elif op == 'SUB':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx}: SUB requires two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a - b)
-        elif op == 'MUL':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx}: MUL requires two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a * b)
-        elif op == 'DIV':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx}: DIV requires two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            if b == 0:
-                raise ValueError(f"Line {idx}: division by zero")
-            stack.append(a // b)
-        elif op == 'DUP':
-            if not stack:
-                raise ValueError(f"Line {idx}: DUP on empty stack")
-            stack.append(stack[-1])
-        elif op == 'SWAP':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx}: SWAP requires two values, got {len(stack)}")
-            a = stack.pop()
-            b = stack.pop()
-            stack.append(a)
-            stack.append(b)
-        elif op == 'PRINT':
-            if not stack:
-                raise ValueError(f"Line {idx}: PRINT on empty stack")
-            output.append(str(stack[-1]))
-        else:
-            raise ValueError(f"Line {idx}: unknown instruction '{op}'")
-    return output
+def run(program: str) -> List[str]:
 
-But need to ensure error messages include line number. Use f"Line {idx}: ...".
+stack = []
 
-Return list of strings.
+lines = program.splitlines()
 
-Edge: DUP duplicates top value; if stack empty, raise error.
+for idx, line in enumerate(lines, start=1):
 
-Now produce final code block only.
+    if not line or line.startswith('#'):
+
+        continue
+
+    parts = line.split()
+
+    instruction = parts[0].upper()
+
+    # ... handle.
+
+Need to raise error at this line number: idx+? Since idx is line number. Use idx (since enumerated start=1). So raise ValueError(f"Line {idx}: ...").
+
+If division by zero: same.
+
+If stack insufficient: raise same.
+
+Return list.
+
+Edge: after PRINT we don't pop, so printed value stays top; can be printed again later.
+
+Let's produce code.

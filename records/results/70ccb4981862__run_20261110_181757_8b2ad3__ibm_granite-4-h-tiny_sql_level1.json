@@ -1,0 +1,17 @@
+{
+  "run_id": "run_20261110_181757_8b2ad3",
+  "host_id": "70ccb4981862",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-11-10 18:25:39",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "simple_where_equality: exception/timeout: TypeError: string indices must be integers, not str",
+    "where_and_or_nested: exception/timeout: TypeError: string indices must be integers, not str",
+    "multiple_and_conditions: exception/timeout: TypeError: string indices must be integers, not str"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,49 @@
+
+Thinking Process:
+
+1.  **Analyze the Request:** The goal is to extend the existing interpreter (`run` function) with support for:
+    *   Subroutines (CALL, RET).
+    *   Comparison operations (EQ, GT, LT).
+    *   Named variables (STORE, LOAD).
+
+2.  **Review Existing Structure:** The current implementation uses a standard instruction loop, manages a `stack`, tracks `output`, and handles labels.
+
+3.  **Implement New Instructions:** I need to integrate the new logic within the `try...except` block, following the pattern established for other instructions.
+
+    *   **`CALL <name>`:**
+        *   Needs to push the return address (current instruction pointer/index, or perhaps just a marker, but since we are using a flat list structure, pushing the current index is safest).
+        *   Needs to jump to `<name>`. (Similar implementation to `JMP`).
+
+    *   **`RET`:**
+        *   Needs to pop the return address from the call stack.
+        *   Needs to jump to that address. (This requires careful handling of the instruction pointer if we were tracking it globally, but since `i` tracks position in `lines`, jumping back means setting `i` to a specific previous point).
+
+    *   **`EQ` (Equality):**
+        *   Pop $b$, pop $a$. Compare $a == b$. Push 1 (if equal) or 0 (if not equal).
+
+    *   **`GT` (Greater Than):**
+        *   Pop $b$, pop $a$. Compare $a > b$. Push 1 or 0.
+
+    *   **`LT` (Less Than):**
+        *   Pop $b$, pop $a$. Compare $a < b$. Push 1 or 0.
+
+    *   **`STORE <var>`:**
+        *   Pop value $V$. Store $V$ into the variable map (memory).
+
+    *   **`LOAD <var>`:**
+        *   Check if `<var>` exists in the variable map. If not, error.
+        *   Push `var[key]` onto the stack.
+
+4.  **Implementation Details & Refinement (Focus on flow control):**
+
+    *   *Helper for Jumps:* The current `JMP`, `JZ`, `JNZ` logic handles setting `i` directly to a previously processed line index and using `continue`. I will reuse this logic for `CALL` (jump) and `RET` (jump back).
+
+    *   *Handling State:* Ensure `labels` and the new variable map are correctly accessed.
+
+5.  **Drafting the Code Integration (Self-Correction during drafting):** I need to ensure that error handling is robust, especially for stack underflow or missing variables/labels. Since the provided code uses `i` to track position, jumps should calculate the target line index correctly.
+
+    *   When implementing `CALL` and `RET`, since `i` is the index of the current instruction, we need a way to store where execution should resume. Since simple instruction fetching is linear, using global jumps relies on finding the target index in `labels`.
+
+    *   For simplicity and matching the existing style, I'll assume that a jump targets a known label index.
+
+6.  **Final Code Construction:** Integrate all new instruction handlers into the main `if/elif` structure. (This step is done during the final output generation). (Skipping detailed internal iteration here, focusing on structure and error handling).

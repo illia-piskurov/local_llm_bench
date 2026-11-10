@@ -1,264 +1,254 @@
-import sys
-
 def run(program: str) -> list[str]:
     """
-    Интерпретирует программу стекового языка с поддержкой меток, условных переходов, 
-    подпрограмм, сравнений и именованных переменных.
-
-    Args:
-        program: Многострочный текст программы.
-
-    Returns:
-        Список строк, которые были выведены функцией PRINT.
+    Interprets a stack-based program and returns a list of printed output strings,
+    supporting conditional jumps, labels, subroutines, comparisons, and named variables.
     """
-    lines = program.split('\n')
+    lines = program.strip().split('\n')
     stack = []
     output = []
-
-    # 1. Предварительная обработка: Собираем все метки и их номера строк
     labels = {}
-    for i, line in enumerate(lines):
+    variables = {}  # Dictionary to simulate memory/variables
+    call_stack = [] # Stack for subroutine return addresses (markers)
+
+    i = 0
+    while i < len(lines):
         line_num = i + 1
-        parts = line.split()
-        if parts and parts[0] == "LABEL":
-            label_name = parts[1]
-            labels[label_name] = line_num
+        raw_line = lines[i]
+        
+        # Clean the line: remove leading/trailing whitespace and ignore comments/empty lines
+        line = raw_line.strip()
 
-    # 2. Исполнение с учетом управления потоком (PC)
-    pc = 0  # Program Counter (индекс текущей строки)
-
-    # --- Дополнительные структуры данных ---
-    call_stack = []  # Стек вызовов для адресов возврата
-    variables = {}   # Словарь для именованных переменных
-    # ---------------------------------------
-
-    while pc < len(lines):
-        line = lines[pc].strip()
-        line_num = pc + 1
-
-        # Игнорировать пустые строки и комментарии
-        if not line or line.startswith('#'):
-            pc += 1
+        if not line or line.startswith("#"):
+            i += 1
             continue
 
         parts = line.split()
         if not parts:
-            pc += 1
+            i += 1
             continue
 
-        command = parts[0]
-        args = parts[1:]
+        instruction = parts[0].upper()
 
         try:
-            # --- Стандартные стековые операции ---
-            if command == "PUSH":
-                if len(args) != 1:
-                    raise ValueError("Недостаточно аргументов для PUSH")
-                value = int(args[0])
+            if instruction == "PUSH":
+                if len(parts) != 2:
+                    raise ValueError("PUSH requires one argument (number).")
+                value = int(parts[1])
                 stack.append(value)
 
-            elif command == "POP":
+            elif instruction == "POP":
                 if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (POP)")
+                    raise IndexError(f"POP failed: Stack is empty at line {line_num}.")
                 stack.pop()
 
-            elif command == "PRINT":
-                if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (PRINT)")
-                print(stack[-1])
-                output.append(str(stack[-1]))
-
-            # --- Бинарные операции ---
-            elif command in ("ADD", "MUL"):
+            elif instruction == "ADD":
                 if len(stack) < 2:
-                    raise IndexError(f"Ошибка на строке {line_num}: Недостаточно элементов для {command}")
-                
+                    raise IndexError(f"ADD failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
                 b = stack.pop()
                 a = stack.pop()
-                
-                if command == "ADD":
-                    stack.append(a + b)
-                elif command == "MUL":
-                    stack.append(a * b)
+                stack.append(a + b)
 
-            elif command in ("SUB", "DIV"):
+            elif instruction == "SUB":
                 if len(stack) < 2:
-                    raise IndexError(f"Ошибка на строке {line_num}: Недостаточно элементов для {command}")
+                    raise IndexError(f"SUB failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()  # b is the subtrahend
+                a = stack.pop()  # a is the minuend
+                stack.append(a - b)
 
-                b = stack.pop()  # Операнд, который идет первым в аргументах
-                a = stack.pop()  # Операнд, который идет вторым в аргументах
-
-                if command == "SUB":
-                    result = a - b
-                    stack.append(result)
-                elif command == "DIV":
-                    if b == 0:
-                        raise ZeroDivisionError(f"Ошибка на строке {line_num}: Деление на ноль")
-                    result = a // b
-                    stack.append(result)
-
-            # --- Управление стеком и потоком (Базовое) ---
-            elif command == "DUP":
-                if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (DUP)")
-                top = stack[-1]
-                stack.append(top)
-
-            elif command == "SWAP":
+            elif instruction == "MUL":
                 if len(stack) < 2:
-                    raise IndexError(f"Ошибка на строке {line_num}: Недостаточно элементов для SWAP")
-                
-                a = stack.pop()
+                    raise IndexError(f"MUL failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
                 b = stack.pop()
-                stack.append(a)
-                stack.append(b)
-
-            # --- Операции сравнения (EQ, GT, LT) ---
-            elif command in ("EQ", "GT", "LT"):
-                if len(stack) < 2:
-                    raise IndexError(f"Ошибка на строке {line_num}: Недостаточно элементов для сравнения {command}")
-                
-                # b - операнд, который идет первым в аргументах (снимаем его первым)
-                b = stack.pop()
-                # a - операнд, который идет вторым в аргументах (снимаем его вторым)
                 a = stack.pop()
+                stack.append(a * b)
 
-                result = 0
-                if command == "EQ":
-                    if a == b:
-                        result = 1
-                elif command == "GT":
-                    if a > b:
-                        result = 1
-                elif command == "LT":
-                    if a < b:
-                        result = 1
+            elif instruction == "DIV":
+                if len(stack) < 2:
+                    raise IndexError(f"DIV failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()  # Divisor
+                a = stack.pop()  # Dividend
+
+                if b == 0:
+                    raise ZeroDivisionError(f"DIV failed: Division by zero at line {line_num}.")
                 
+                # Integer division
+                result = int(a / b) 
                 stack.append(result)
 
-            # --- Операции с переменными (STORE, LOAD) ---
-            elif command == "STORE":
-                if len(args) != 1:
-                    raise ValueError("STORE требует одного аргумента (имя переменной)")
-                var_name = args[0]
+            elif instruction == "DUP":
                 if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (STORE)")
+                    raise IndexError(f"DUP failed: Stack is empty at line {line_num}.")
+                top = stack[-1]
+                stack.append(top)
+                stack.append(top)
+
+            elif instruction == "SWAP":
+                if len(stack) < 2:
+                    raise IndexError(f"SWAP failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(b)
+                stack.append(a)
+
+            elif instruction == "PRINT":
+                if not stack:
+                    raise IndexError(f"PRINT failed: Stack is empty at line {line_num}.")
                 value = stack.pop()
+                output.append(str(value))
+
+            # --- New Instructions Start Here ---
+
+            elif instruction == "LABEL":
+                if len(parts) != 2:
+                    raise ValueError("LABEL requires one argument (name).")
+                label_name = parts[1]
+                labels[line_num] = label_name
+
+            elif instruction == "JMP":
+                if len(parts) != 2:
+                    raise ValueError("JMP requires one argument (label name).")
+                target_label = parts[1]
+                
+                if target_label not in labels:
+                    raise NameError(f"JMP failed: Label '{target_label}' not defined.")
+                
+                # Jump implementation
+                target_index = -1
+                for k, v in labels.items():
+                    if v == target_label:
+                        target_index = k
+                        break
+
+                if target_index != -1:
+                    i = target_index
+                    continue 
+                else:
+                     raise NameError(f"JMP failed: Label '{target_label}' not found.")
+
+
+            elif instruction == "JZ":
+                if len(parts) != 2:
+                    raise ValueError("JZ requires one argument (label name).")
+                target_label = parts[1]
+
+                if not stack:
+                    raise IndexError(f"JZ failed: Stack is empty at line {line_num}.")
+
+                value = stack.pop()
+                if value == 0:
+                    # Jump implementation
+                    target_index = -1
+                    for k, v in labels.items():
+                        if v == target_label:
+                            target_index = k
+                            break
+                    if target_index != -1:
+                        i = target_index
+                        continue 
+
+            elif instruction == "JNZ":
+                if len(parts) != 2:
+                    raise ValueError("JNZ requires one argument (label name).")
+                target_label = parts[1]
+
+                if not stack:
+                    raise IndexError(f"JNZ failed: Stack is empty at line {line_num}.")
+                
+                value = stack.pop()
+                if value != 0:
+                    # Jump implementation
+                    target_index = -1
+                    for k, v in labels.items():
+                        if v == target_label:
+                            target_index = k
+                            break
+                    if target_index != -1:
+                        i = target_index
+                        continue 
+
+            # --- Subroutine/Memory Instructions ---
+            
+            elif instruction == "CALL":
+                if len(parts) != 2:
+                    raise ValueError("CALL requires one argument (label name).")
+                target_label = parts[1]
+
+                if target_label not in labels:
+                    raise NameError(f"CALL failed: Label '{target_label}' not defined.")
+
+                # Push current instruction pointer (i) onto call stack
+                call_stack.append(i)
+
+                # Jump implementation
+                target_index = -1
+                for k, v in labels.items():
+                    if v == target_label:
+                        target_index = k
+                        break
+
+                if target_index != -1:
+                    i = target_index
+                    continue
+                else:
+                     raise NameError(f"CALL failed: Label '{target_label}' not found.")
+
+            elif instruction == "RET":
+                if not call_stack:
+                    raise IndexError("RET failed: Call stack is empty.")
+                
+                # Pop return address
+                return_index = call_stack.pop()
+                
+                # Set instruction pointer to the return address and continue (skip i+=1)
+                i = return_index 
+                continue
+
+            elif instruction == "EQ":
+                if len(stack) < 2:
+                    raise IndexError(f"EQ failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(1 if a == b else 0)
+
+            elif instruction == "GT":
+                if len(stack) < 2:
+                    raise IndexError(f"GT failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(1 if a > b else 0)
+
+            elif instruction == "LT":
+                if len(stack) < 2:
+                    raise IndexError(f"LT failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(1 if a < b else 0)
+
+            elif instruction == "STORE":
+                if not stack:
+                    raise IndexError(f"STORE failed: Stack is empty at line {line_num}.")
+                value = stack.pop()
+                var_name = parts[1]
                 variables[var_name] = value
 
-            elif command == "LOAD":
-                if len(args) != 1:
-                    raise ValueError("LOAD требует одного аргумента (имя переменной)")
-                var_name = args[0]
+            elif instruction == "LOAD":
+                if len(parts) != 2:
+                    raise ValueError("LOAD requires one argument (variable name).")
+                var_name = parts[1]
+
                 if var_name not in variables:
-                    raise NameError(f"Ошибка на строке {line_num}: Переменная '{var_name}' не найдена")
+                    raise NameError(f"LOAD failed: Variable '{var_name}' not defined or stored.")
+                
                 value = variables[var_name]
                 stack.append(value)
 
-            # --- Управление потоком (JMP, JZ, JNZ) ---
-            elif command == "LABEL":
-                pass 
-
-            elif command == "JMP":
-                if len(args) != 1:
-                    raise ValueError("JMP требует одного аргумента (имя метки)")
-                target_label = args[0]
-                if target_label not in labels:
-                    raise NameError(f"Ошибка на строке {line_num}: Метка '{target_label}' не найдена")
-                pc = labels[target_label]
-
-            elif command == "JZ":
-                if len(args) != 1:
-                    raise ValueError("JZ требует одного аргумента (имя метки)")
-                target_label = args[0]
-                if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (JZ)")
-                
-                condition = stack.pop()
-                if condition == 0:
-                    pc = labels[target_label]
-                else:
-                    pc += 1
-
-            elif command == "JNZ":
-                if len(args) != 1:
-                    raise ValueError("JNZ требует одного аргумента (имя метки)")
-                target_label = args[0]
-                if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (JNZ)")
-
-                condition = stack.pop()
-                if condition != 0:
-                    pc = labels[target_label]
-                else:
-                    pc += 1
-
-            # --- Подпрограммы (CALL, RET) ---
-            elif command == "CALL":
-                if len(args) != 1:
-                    raise ValueError("CALL требует одного аргумента (имя метки)")
-                target_label = args[0]
-                if target_label not in labels:
-                    raise NameError(f"Ошибка на строке {line_num}: Метка '{target_label}' не найдена")
-                
-                # Сохраняем адрес возврата (инструкция следующая за CALL)
-                call_stack.append(pc + 1)
-                pc = labels[target_label]
-
-            elif command == "RET":
-                if not call_stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек вызовов пуст (RET)")
-                
-                return_address = call_stack.pop()
-                pc = return_address
-
             else:
-                raise ValueError(f"Неизвестная команда '{command}' на строке {line_num}")
+                raise ValueError(f"Unknown instruction '{instruction}' at line {line_num}.")
 
-        except (IndexError, ZeroDivisionError, ValueError, NameError) as e:
-            print(f"RUNTIME ERROR: {e} на строке {line_num}", file=sys.stderr)
-            # В случае ошибки можно остановить выполнение или продолжить.
-            pass
-
-        # Если команда не была JMP/JZ/JNZ/CALL/RET, PC увеличивается на 1
-        if command not in ("JMP", "JZ", "JNZ", "CALL", "RET"):
-            pc += 1
-
+        except (IndexError, ValueError, ZeroDivisionError, NameError) as e:
+            # Re-raise relevant errors found during execution
+            raise e
+        
+        i += 1
 
     return output
-
-if __name__ == '__main__':
-    # Пример использования с метками, ветвлениями, переменными и подпрограммами
-    program_example = """
-LABEL start
-PUSH 10
-STORE x       # x = 10
-PUSH 5
-STORE y       # y = 5
-ADD           # Stack: [15]
-PRINT         # Output: 15
-
-LABEL check_y
-LOAD y        # Stack: [15, 5]
-PUSH 10
-GT           # Сравнивает 10 и 5. (10 > 5) -> 1
-JZ fail       # Если результат == 0, перейти к fail
-PRINT         # Output: 1
-
-LABEL end_calc
-LOAD x        # Stack: [10]
-PUSH 2
-MUL           # Stack: [20]
-PRINT         # Output: 20
-
-JMP end_calc  # Переход к расчету
-
-LABEL fail
-PRINT failure # Вывод ошибки (если условие было ложным)
-"""
-
-    print("--- Запуск программы с ветвлением, сравнениями и переменными ---")
-    results = run(program_example)
-    print("\n--- Результаты (выводы PRINT) ---")
-    for res in results:
-        print(res)

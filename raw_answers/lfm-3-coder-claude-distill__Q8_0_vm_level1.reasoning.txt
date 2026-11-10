@@ -1,0 +1,352 @@
+### Analyze the Request
+
+I need to implement a simple stack-based language interpreter in a single Python file. Let me break this down carefully.
+
+**Supported Instructions:**
+- `PUSH <n>` — push number n onto the stack
+- `POP` — pop value from the stack
+- `ADD` — pop two values (b, then a), push their sum
+- `SUB` — pop two values (b, then a), push a - b
+- `MUL` — pop two values, push product
+- `DIV` — pop two values (b, then a), push a // b
+- `DUP` — duplicate value on top of the stack
+- `SWAP` — swap top two values
+- `PRINT` — print top of stack
+
+**Comments:**
+- Empty lines and lines starting with "#" are comments → skip them
+
+**Error Handling:**
+- Not enough values for an operation → raise clear error with line number
+- Division by zero → raise clear error with line number
+
+**Return Value:**
+- `run(program: str) -> list[str]` returning a list of printed strings (output from PRINT)
+
+**Output Format:** Only the code in a single ```python ... ``` block, no explanations outside.
+
+---
+
+### Breakdown
+
+I'll need:
+1. A class or just functions to handle the interpreter
+2. Parse the program line by line with error tracking (line numbers)
+3. Execute instructions
+4. Handle errors appropriately
+5. Return list of printed strings
+
+Let me think about the implementation approach:
+
+- I'll create a `Stack` class or use a simple Python list as the stack
+- Use `enumerate(program.splitlines())` to get line numbers
+- For each non-comment, non-empty line:
+  - Strip whitespace and skip if empty or starts with "#"
+  - Parse the instruction: split by space
+  - If it's an unknown keyword → raise error (though not specified explicitly)
+  - Execute based on the operation
+
+**For PUSH <n>:**
+- Need to parse "n" from arguments. It could be like `PUSH 42` or even with negative numbers.
+- I'll handle this by checking if there are more than 2 arguments, then try to convert argument[1] to int. If it fails, raise ValueError.
+
+**For POP:**
+- Pop once. Raise error if stack is empty.
+
+**For ADD/SUB/MUL/DIV:**
+- Need at least 2 values on the stack (b first, then a based on pop order)
+- For SUB: pop b, pop a; push a - b
+- For DIV: need to check for division by zero (a / b where b is the second popped value)
+
+**For DUP:**
+- Push two copies of top value.
+
+**For SWAP:**
+- Pop two values and push them in reverse order.
+
+**For PRINT:**
+- Print the top value without popping. So I'll accumulate outputs.
+
+Let me think about return format more carefully: "Return only the code in a single ```python ... ``` block, without any explanations outside the block." So just pure code.
+
+Now let me write this out:
+
+```python
+import re
+
+def run(program: str) -> list[str]:
+    stack = []
+    outputs = []
+
+    lines = program.splitlines()
+
+    for line_num, raw_line in enumerate(lines, start=1):
+        stripped = raw_line.strip()
+        
+        # Skip empty lines and comments
+        if not stripped or stripped.startswith('#'):
+            continue
+        
+        parts = stripped.split()
+        if not parts:
+            continue  # safety
+
+        op = parts[0].upper()
+
+        try:
+            if op == 'PUSH':
+                if len(parts) < 2:
+                    raise ValueError(f"Line {line_num}: PUSH requires an argument, got '{stripped}'")
+                try:
+                    value = int(parts[1])
+                except ValueError:
+                    raise ValueError(f"Line {line_num}: PUSH expects a number, got '{parts[1]}'")
+                stack.append(value)
+
+            elif op == 'POP':
+                if len(stack) < 1:
+                    raise ValueError(f"Line {line_num}: POP requires at least one value on the stack")
+                stack.pop()
+
+            elif op in ('ADD', 'SUB', 'MUL', 'DIV'):
+                if len(stack) < 2:
+                    raise ValueError(f"Line {line_num}: Operation '{op}' requires two values, got {len(stack)}")
+                
+                b = stack.pop()
+                a = stack.pop()
+                
+                if op == 'ADD':
+                    result = a + b
+                elif op == 'SUB':
+                    result = a - b
+                elif op == 'MUL':
+                    result = a * b
+                elif op == 'DIV':
+                    if b == 0:
+                        raise ValueError(f"Line {line_num}: DIV by zero (b={b})")
+                    result = a // b
+
+                stack.append(result)
+
+            elif op == 'DUP':
+                if len(stack) < 1:
+                    raise ValueError(f"Line {line_num}: DUP requires at least one value on the stack")
+                stack.append(stack[-1])
+
+            elif op == 'SWAP':
+                if len(stack) < 2:
+                    raise ValueError(f"Line {line_num}: SWAP requires at least two values on the stack")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a)
+                stack.append(b)
+
+            else:
+                raise ValueError(f"Unknown instruction '{op}' on line {line_num}")
+
+        except (ValueError, IndexError) as e:
+            raise RuntimeError(str(e))
+
+    return outputs
+```
+
+Wait, I'm catching IndexError but also handling empty stack. Let me think about whether `IndexError` is needed... 
+
+Actually for POP: if the stack is empty, `stack.pop()` raises `IndexError`. So I could either catch that separately or just let it propagate. But the requirement says to raise a clear error with the line number. So catching and re-raising might be cleaner.
+
+Let me refine:
+
+```python
+import re
+
+def run(program: str) -> list[str]:
+    stack = []
+    outputs = []
+
+    lines = program.splitlines()
+
+    for line_num, raw_line in enumerate(lines, start=1):
+        stripped = raw_line.strip()
+        
+        # Skip empty lines and comments
+        if not stripped or stripped.startswith('#'):
+            continue
+        
+        parts = stripped.split()
+        if len(parts) < 1:
+            continue
+
+        op = parts[0].upper()
+
+        try:
+            if op == 'PUSH':
+                if len(parts) < 2:
+                    raise ValueError(f"Line {line_num}: PUSH requires an argument, got '{stripped}'")
+                value_str = parts[1]
+                try:
+                    value = int(value_str)
+                except ValueError:
+                    raise ValueError(f"Line {line_num}: PUSH expects a number, got '{value_str}'")
+                stack.append(value)
+
+            elif op == 'POP':
+                if len(stack) < 1:
+                    raise IndexError(f"Line {line_num}: POP requires at least one value on the stack")
+                stack.pop()
+
+            elif op in ('ADD', 'SUB', 'MUL', 'DIV'):
+                if len(stack) < 2:
+                    raise ValueError(f"Line {line_num}: '{op}' requires two values, got {len(stack)}")
+                
+                b = stack.pop()
+                a = stack.pop()
+                
+                if op == 'ADD':
+                    result = a + b
+                elif op == 'SUB':
+                    result = a - b
+                elif op == 'MUL':
+                    result = a * b
+                elif op == 'DIV':
+                    if b == 0:
+                        raise ZeroDivisionError(f"Line {line_num}: DIV by zero (b={b})")
+                    result = a // b
+
+                stack.append(result)
+
+            elif op == 'DUP':
+                if len(stack) < 1:
+                    raise IndexError(f"Line {line_num}: DUP requires at least one value on the stack")
+                stack.append(stack[-1])
+
+            elif op == 'SWAP':
+                if len(stack) < 2:
+                    raise ValueError(f"Line {line_num}: SWAP requires two values, got {len(stack)}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a)
+                stack.append(b)
+
+            else:
+                raise ValueError(f"Unknown instruction '{op}' on line {line_num}")
+
+        except (IndexError, ValueError) as e:
+            # Wrap IndexError into our own clear error to match requirements
+            if isinstance(e, IndexError):
+                raise RuntimeError(f"Line {line_num}: Stack underflow — not enough values for operation '{op}'") from e
+            else:
+                raise
+
+    return outputs
+```
+
+Hmm, I'm wrapping IndexError. Actually let me think about whether this is necessary. The requirement says "raise a clear error with the line number." A ValueError or ZeroDivisionError already has the message and we can prepend the line number in my own messages. Let me simplify by just raising appropriate exceptions directly rather than catching them:
+
+```python
+def run(program: str) -> list[str]:
+    stack = []
+    outputs = []
+
+    lines = program.splitlines()
+
+    for line_num, raw_line in enumerate(lines, start=1):
+        stripped = raw_line.strip()
+        
+        # Skip empty lines and comments
+        if not stripped or stripped.startswith('#'):
+            continue
+        
+        parts = stripped.split()
+        if len(parts) < 1:
+            continue
+
+        op = parts[0].upper()
+
+        try:
+            if op == 'PUSH':
+                if len(parts) < 2:
+                    raise ValueError(f"Line {line_num}: PUSH requires an argument, got '{stripped}'")
+                value_str = parts[1]
+                try:
+                    value = int(value_str)
+                except ValueError:
+                    raise ValueError(f"Line {line_num}: PUSH expects a number, got '{value_str}'")
+                stack.append(value)
+
+            elif op == 'POP':
+                if len(stack) < 1:
+                    raise IndexError(f"Line {line_num}: POP requires at least one value on the stack")
+                stack.pop()
+
+            elif op in ('ADD', 'SUB', 'MUL', 'DIV'):
+                if len(stack) < 2:
+                    raise ValueError(f"Line {line_num}: '{op}' requires two values, got {len(stack)}")
+                
+                b = stack.pop()
+                a = stack.pop()
+                
+                if op == 'ADD':
+                    result = a + b
+                elif op == 'SUB':
+                    result = a - b
+                elif op == 'MUL':
+                    result = a * b
+                elif op == 'DIV':
+                    if b == 0:
+                        raise ZeroDivisionError(f"Line {line_num}: DIV by zero (b={b})")
+                    result = a // b
+
+                stack.append(result)
+
+            elif op == 'DUP':
+                if len(stack) < 1:
+                    raise IndexError(f"Line {line_num}: DUP requires at least one value on the stack")
+                stack.append(stack[-1])
+
+            elif op == 'SWAP':
+                if len(stack) < 2:
+                    raise ValueError(f"Line {line_num}: SWAP requires two values, got {len(stack)}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a)
+                stack.append(b)
+
+            else:
+                raise ValueError(f"Unknown instruction '{op}' on line {line_num}")
+
+        except IndexError as e:
+            # Wrap into our own clear error format
+            raise RuntimeError(f"Line {e.args[0].split(':')[0] + 1}: Stack underflow — not enough values for operation '{op}'") from e
+
+    return outputs
+```
+
+Hmm, the index error message is awkward. Let me think of a cleaner approach.
+
+Actually, let me reconsider. I think catching IndexError and wrapping it is fine but the message could be better. Or I could just do:
+
+```python
+if len(stack) < 1:
+    raise RuntimeError(f"Line {line_num}: POP requires at least one value on the stack")
+stack.pop()
+```
+
+No, that's redundant. Let me keep a clean approach.
+
+Actually, let me reconsider the whole design once more. The `int(value_str)` conversion: what if someone writes `PUSH -5`? That works fine because int handles negatives. What about very large numbers or floats? The spec says "push number n", so int seems right. I'll stick with that.
+
+Also, I should think about whether to handle `DUP` when stack is empty — yes, my code does raise an error for that case.
+
+Let me also consider: what if there are extra arguments on a PUSH? Like `PUSH 5 10`. My current code takes only parts[1] and ignores the rest. That seems reasonable since "one per line" suggests exactly one argument. But I could be more explicit by requiring len(parts) == 2. Actually, let me make it more strict: if there are extra arguments for PUSH/DIV (like in DIV), I should handle that.
+
+For DIV specifically: `DIV b a` means pop b then a and push a // b. So I need to know that parts[1] is b. My code handles this correctly since after the check len(stack) >= 2, I always do b = stack.pop() first.
+
+But what if someone writes `PUSH 5 10 20`? Then parts would be ['PUSH', '5', '10', '20']. My code takes value_str = parts[1] which is '5'. So it ignores the extra 10 and 20. That's probably fine for a simple interpreter.
+
+Let me also add a quick test in my head:
+
+```python
+program = """
+# A simple stack-based language
+
+PUS

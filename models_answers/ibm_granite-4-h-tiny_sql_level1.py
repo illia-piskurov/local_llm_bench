@@ -1,67 +1,67 @@
 def compile_query(query: dict) -> dict:
-    def build_where(node):
+    def build_conditions(node):
         if isinstance(node, dict):
+            cond_type = next(iter(node))
+            conditions = node[cond_type]
             parts = []
-            for key, value in node.items():
-                if key == 'AND':
-                    sub_parts = [build_where(c) for c in value]
-                    parts.append(f"({') AND ('.join(sub_parts)})")
-                elif key == 'OR':
-                    sub_parts = [build_where(c) for c in value]
-                    parts.append(f"({') OR ('.join(sub_parts)})")
-                else:
-                    field, op, val = value
-                    if isinstance(val, (int, float)):
-                        params.append(val)
-                        parts.append(f"{field} {op}")
-                    elif isinstance(val, str):
-                        params.append(val)
-                        parts.append(f"{field} = %s")
-            return ' AND '.join(parts) if len(parts) > 1 else parts[0] if parts else ''
-        return ''
+            for c in conditions:
+                parts.append(build_conditions(c))
+            op_map = {'AND': ' AND ', 'OR': ' OR '}
+            return f"({op_map[cond_type].join(parts)})"
+        elif isinstance(node, list):
+            parts = [build_conditions(x) for x in node]
+            return ' AND '.join(parts)
+        else:
+            field, op, value = node['field'], node['op'], node['value']
+            if op in ['=', '!=', '>', '<', '>=', '<=']:
+                placeholder = f"${{{len(params_list)}}}"
+                params_list.append(value)
+                return f"{field} {op} {placeholder}"
+            else:
+                raise ValueError(f"Unsupported operator: {op}")
 
-    def build_select(node):
-        if node.get('select') is None:
-            return '*'
-        cols = node['select']
-        if isinstance(cols, str):
-            cols = [cols]
-        return ', '.join(cols)
+    def build_select(columns):
+        if columns is None or columns == ['*']:
+            return "SELECT *"
+        return f"SELECT {', '.join(columns)}"
 
-    def build_order_by(node):
-        if 'orderBy' not in node or not node['orderBy']:
-            return ''
+    def build_from(table):
+        return f"FROM {table}"
+
+    def build_order_by(order_by):
         parts = []
-        for item in node['orderBy']:
-            field = item.get('field')
-            direction = item.get('dir', 'ASC')
+        for item in order_by:
+            field, direction = item['field'], item.get('dir', 'ASC')
             parts.append(f"{field} {direction}")
-        return ' ORDER BY ' + ', '.join(parts)
+        return "ORDER BY " + ", ".join(parts)
 
-    def build_limit_offset(node):
-        limit = node.get('limit')
-        offset = node.get('offset')
-        parts = []
-        if limit is not None:
-            parts.append(f"LIMIT {limit}")
-        if offset is not None:
-            parts.append(f"OFFSET {offset}")
-        return ' '.join(parts)
+    params_list = []
 
-    params = []
+    sql_parts = []
 
-    table = query.get('table')
-    select_clause = build_select(query)
-    where_clause = build_where(query.get('where', {}))
-    order_by_clause = build_order_by(query)
-    limit_offset_clause = build_limit_offset(query)
+    if 'table' not in query or not isinstance(query['table'], str):
+        raise ValueError("Table name is required")
+    sql_parts.append(build_select(query.get('select')))
+    sql_parts.append(build_from(query['table']))
 
-    sql = f"SELECT {select_clause} FROM {table}"
-    if where_clause:
-        sql += f" WHERE {where_clause}"
-    if order_by_clause:
-        sql += f" {order_by_clause}"
-    if limit_offset_clause:
-        sql += f" {limit_offset_clause}"
+    where = query.get('where')
+    if where:
+        cond_sql = build_conditions(where)
+        sql_parts.append(f"WHERE {cond_sql}")
 
-    return {"sql": sql, "params": params}
+    order_by = query.get('orderBy')
+    if order_by:
+        sql_parts.append(build_order_by(order_by))
+
+    limit_val = query.get('limit')
+    if limit_val is not None and isinstance(limit_val, int):
+        sql_parts.append(f"LIMIT {limit_val}")
+
+    offset_val = query.get('offset')
+    if offset_val is not None and isinstance(offset_val, int):
+        sql_parts.append(f"OFFSET {offset_val}")
+
+    sql_query = " ".join(sql_parts)
+
+    compiled_query = {"sql": sql_query, "params": params_list}
+    return compiled_query

@@ -1,27 +1,72 @@
-def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+import heapq
+from typing import Dict, List, Tuple
+
+def plan_order(tasks: Dict[str, Tuple[int, List[str], int]], workers: int) -> List[str] | None:
     all_tasks = set(tasks.keys())
-    started = []
-    time = 0
+    dur = {t: tasks[t][0] for t in all_tasks}
+    preds = {t: tasks[t][1] for t in all_tasks}
+    prio = {t: tasks[t][2] for t in all_tasks}
+
+    # Build graph and compute indegrees for cycle detection
+    indeg = {t: 0 for t in all_tasks}
+    graph = {}
+    for child, deps in preds.items():
+        indeg[child] += len(deps)
+        for dep in deps:
+            graph.setdefault(dep, []).append(child)
+
+    # Kahn's algorithm to detect cycles
+    indeg_copy = indeg.copy()
+    q = [t for t in all_tasks if indeg_copy[t] == 0]
+    order = []
+    while q:
+        curr = q.pop(0)
+        order.append(curr)
+        nxts = graph.get(curr, [])
+        for child in nxts:
+            indeg_copy[child] -= 1
+            if indeg_copy[child] == 0:
+                q.append(child)
+
+    if len(order) != len(all_tasks):
+        return None
+
+    completed = set()
+    started = set()
+    result: List[str] = []
+    events: List[Tuple[int, str, str]] = []  # (time, 'finish', task)
+    current_time = 0
 
     while True:
-        # tasks that are not yet started and whose dependencies are satisfied
         ready = [
             t for t in all_tasks
-            if t not in started
-            and all(d == '' or d in started for d in tasks[t][1])
+            if not started[t]
+            and (not preds[t] or all(d in completed for d in preds[t]))
         ]
         if not ready:
             break
 
-        # sort by priority (desc), duration (asc), name (asc)
-        ready.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))
-
+        # Choose up to workers tasks: priority > duration < name
+        ready.sort(key=lambda x: (-prio[x], dur[x], x))
         selected = ready[:workers]
-        started.extend(selected)
 
-        if selected:
-            min_dur = min(tasks[t][0] for t in selected)
-            time += min_dur
+        for t in selected:
+            result.append(t)
+            started.add(t)
 
-    # if any task remains unstarted, there is a cycle
-    return None if len(started) != len(all_tasks) else started
+        # Schedule finish events
+        for t in selected:
+            heapq.heappush(events, (current_time + dur[t], 'finish', t))
+
+        # Process all finishes at current_time
+        while events and events[0][0] == current_time:
+            _, _, task = heapq.heappop(events)
+            completed.add(task)
+
+        if not events:
+            break
+
+        next_time = events[0][0]
+        current_time = next_time
+
+    return result

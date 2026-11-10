@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261110_181757_8b2ad3",
+  "host_id": "70ccb4981862",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-10 18:24:08",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception/timeout: TypeError: 'bool' object isn't iterable",
+    "simple_chain: unexpected exception/timeout: TypeError: 'bool' object isn't iterable",
+    "diamond_pick_longer_branch: unexpected exception/timeout: TypeError: 'bool' object isn't iterable",
+    "independent_tasks: unexpected exception/timeout: TypeError: 'bool' object isn't iterable",
+    "wide_graph: unexpected exception/timeout: TypeError: 'bool' object isn't iterable"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

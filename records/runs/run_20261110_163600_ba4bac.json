@@ -1,0 +1,703 @@
+{
+  "id": "run_20261110_163600_ba4bac",
+  "host_id": "70ccb4981862",
+  "model_key": "google/gemma-4-e2b",
+  "model_name": "Gemma 4 E2B",
+  "quantization": "4bit",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "google/gemma-4-e2b",
+      "display_name": "Gemma 4 E2B",
+      "architecture": "gemma4",
+      "quantization": "4bit",
+      "quantization_bits": 4,
+      "size_bytes": 4372431878,
+      "params_string": "2B",
+      "max_context_length": 131072,
+      "format": "mlx",
+      "publisher": "google"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 16:36:00",
+  "completed_at": "2026-11-10 17:06:27",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:36:55",
+      "passed": 16,
+      "total": 18,
+      "failures": [
+        "multiple_prints: unexpected exception/timeout: IndexError: ADD failed: Not enough operands. Stack size is 0 at line 5.",
+        "print_does_not_pop: unexpected exception/timeout: IndexError: PRINT failed: Stack is empty at line 3."
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:38:04",
+      "passed": 20,
+      "total": 27,
+      "failures": [
+        "multiple_prints: unexpected exception/timeout: IndexError: ADD failed: Not enough operands. Stack size is 0 at line 5.",
+        "print_does_not_pop: unexpected exception/timeout: IndexError: PRINT failed: Stack is empty at line 3.",
+        "unconditional_jump_skips_code: unexpected exception/timeout: NameError: JMP failed: Label 'skip' not defined.",
+        "jz_taken_when_zero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined.",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined.",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined.",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined."
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-10 16:39:50",
+      "passed": 26,
+      "total": 37,
+      "failures": [
+        "multiple_prints: unexpected exception/timeout: IndexError: ADD failed: Not enough operands. Stack size is 0 at line 5.",
+        "print_does_not_pop: unexpected exception/timeout: IndexError: PRINT failed: Stack is empty at line 3.",
+        "unconditional_jump_skips_code: unexpected exception/timeout: NameError: JMP failed: Label 'skip' not defined.",
+        "jz_taken_when_zero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined.",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined.",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined.",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: NameError: JMP failed: Label 'end' not defined.",
+        "call_ret_basic: unexpected exception/timeout: NameError: CALL failed: Label 'double' not defined.",
+        "call_ret_nested: unexpected exception/timeout: NameError: CALL failed: Label 'func_a' not defined.",
+        "recursive_factorial: unexpected exception/timeout: NameError: CALL failed: Label 'fact' not defined.",
+        "recursive_fibonacci: unexpected exception/timeout: NameError: CALL failed: Label 'fib' not defined."
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:40:56",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:42:01",
+      "passed": 6,
+      "total": 6,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:43:45",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: unexpected exception: TypeError: string indices must be integers, not str",
+        "dependency_unlocks_later: unexpected exception: TypeError: string indices must be integers, not str",
+        "single_worker_duration_tiebreak: unexpected exception: TypeError: string indices must be integers, not str",
+        "resource_limit_and_priority: unexpected exception: TypeError: string indices must be integers, not str",
+        "simultaneous_unlocks: unexpected exception: TypeError: string indices must be integers, not str"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:46:20",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: expected order=['a'], ms=5, cp=5; got order=['a'], ms=5, cp=0",
+        "parallel_tasks_reduce_makespan: unexpected exception: TypeError: string indices must be integers, not str",
+        "dependencies_and_workers: unexpected exception: TypeError: string indices must be integers, not str",
+        "critical_path_longer_than_worker_parallelism: unexpected exception: TypeError: string indices must be integers, not str",
+        "wide_graph_with_unlocks: unexpected exception: TypeError: string indices must be integers, not str"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:47:58",
+      "passed": 7,
+      "total": 15,
+      "failures": [
+        "commit_no_transaction: expected ['NO TRANSACTION'], got []",
+        "rollback_no_transaction: expected ['NO TRANSACTION'], got []",
+        "simple_transaction_commit: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['None', '5']",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['NULL', '1', '2']",
+        "set_new_key_inside_transaction: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:49:35",
+      "passed": 10,
+      "total": 25,
+      "failures": [
+        "commit_no_transaction: expected ['NO TRANSACTION'], got []",
+        "rollback_no_transaction: expected ['NO TRANSACTION'], got []",
+        "simple_transaction_commit: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['None', '5']",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['NULL', '1', '2']",
+        "set_new_key_inside_transaction: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "count_basic: expected ['2'], got ['0']",
+        "count_respects_transaction: expected ['2', '1'], got ['0', '0']",
+        "count_after_delete: expected ['1'], got ['0']",
+        "watch_set_new_key: expected ['WATCH a NULL -> 10'], got []",
+        "watch_set_change: expected ['WATCH a 5 -> 10'], got []",
+        "watch_delete: expected ['WATCH a 5 -> NULL'], got []",
+        "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got []"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-10 16:51:13",
+      "passed": 11,
+      "total": 30,
+      "failures": [
+        "commit_no_transaction: expected ['NO TRANSACTION'], got []",
+        "rollback_no_transaction: expected ['NO TRANSACTION'], got []",
+        "simple_transaction_commit: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['None', '5']",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['NULL', '1', '2']",
+        "set_new_key_inside_transaction: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "count_basic: expected ['2'], got ['0']",
+        "count_respects_transaction: expected ['2', '1'], got ['0', '0']",
+        "count_after_delete: expected ['1'], got ['0']",
+        "watch_set_new_key: expected ['WATCH a NULL -> 10'], got []",
+        "watch_set_change: expected ['WATCH a 5 -> 10'], got []",
+        "watch_delete: expected ['WATCH a 5 -> NULL'], got []",
+        "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got []",
+        "snapshot_restores_full_state: unexpected exception/timeout: AttributeError: 'NoneType' object has no attribute 'store'",
+        "restore_preserves_open_transactions: expected ['1'], got ['NULL']",
+        "restore_keeps_watch_registrations: expected ['WATCH a NULL -> 1', 'WATCH a 1 -> 2', 'WATCH a 1 -> 3'], got []",
+        "snapshot_inside_nested_transactions: expected ['1', '2', '1', '2'], got ['NULL', 'NULL', '1', 'NULL']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:52:28",
+      "passed": 5,
+      "total": 6,
+      "failures": [
+        "order_by_limit_offset: SQL: expected 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', got 'SELECT * FROM articles views DESC, id ASC LIMIT 10 OFFSET 20'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:53:46",
+      "passed": 0,
+      "total": 5,
+      "failures": [
+        "left_join_with_group_by: exception/timeout: WASM trap: guest exited with code 1",
+        "multiple_joins_inner_and_left: exception/timeout: WASM trap: guest exited with code 1",
+        "where_in_operator: exception/timeout: WASM trap: guest exited with code 1",
+        "where_is_null_and_like: exception/timeout: WASM trap: guest exited with code 1",
+        "where_is_not_null: exception/timeout: WASM trap: guest exited with code 1"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-10 16:55:35",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "failed to load solution: Syntax error in solution: unterminated string literal (detected at line 55) (<unknown>, line 55)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:56:21",
+      "passed": 3,
+      "total": 4,
+      "failures": [
+        "full_overflow_check: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:57:31",
+      "passed": 7,
+      "total": 8,
+      "failures": [
+        "full_overflow_check: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-10 16:59:01",
+      "passed": 4,
+      "total": 10,
+      "failures": [
+        "full_overflow_check: assertion returned False",
+        "clean_packet: exception too many parameters provided: given 4, expected 2",
+        "with_junk_prefix: exception too many parameters provided: given 4, expected 2",
+        "reject_bad_checksum: exception too many parameters provided: given 4, expected 2",
+        "recover_after_false_magic: exception too many parameters provided: given 4, expected 2",
+        "sequential_packets: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:59:53",
+      "passed": 4,
+      "total": 7,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-10 17:00:51",
+      "passed": 5,
+      "total": 12,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "index_passed: assertion returned False",
+        "retry_transient_failure: assertion returned False",
+        "exponential_backoff: assertion returned False",
+        "timeout_triggers_retry: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-10 17:01:47",
+      "passed": 5,
+      "total": 17,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "index_passed: assertion returned False",
+        "retry_transient_failure: assertion returned False",
+        "exponential_backoff: assertion returned False",
+        "timeout_triggers_retry: assertion returned False",
+        "already_aborted_signal: assertion returned False",
+        "mid_flight_abort: assertion returned False",
+        "settled_all_success: assertion returned False",
+        "settled_mixed_failures: exception object of type 'NoneType' has no len()",
+        "settled_with_retries: exception object of type 'NoneType' has no len()"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-10 17:02:46",
+      "passed": 0,
+      "total": 7,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "sequence_all_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "selector_first_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_all_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-10 17:04:14",
+      "passed": 0,
+      "total": 12,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "sequence_all_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "selector_first_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_all_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "blackboard_get_set: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "blackboard_watchers: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "inverter_decorator: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "cooldown_decorator: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "composite_ai_tree: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-11-10 17:06:27",
+      "passed": 0,
+      "total": 16,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "sequence_all_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "selector_first_success: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_all_failure: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:5: attempt to index a nil value (local 'BT')",
+        "blackboard_get_set: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "blackboard_watchers: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "inverter_decorator: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "cooldown_decorator: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "composite_ai_tree: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')",
+        "async_action_wait_ticks: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "async_action_state_mutation: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "tree_reset_interrupt: exception [string \"<python>\"]:4: attempt to index a nil value (local 'BT')",
+        "full_npc_game_loop: exception [string \"<python>\"]:3: attempt to index a nil value (local 'BT')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:36:54",
+      "stats": {
+        "input_tokens": 293,
+        "total_output_tokens": 2162,
+        "reasoning_output_tokens": 775,
+        "tokens_per_second": 41.11490588560091,
+        "time_to_first_token_seconds": 1.25,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:38:01",
+      "stats": {
+        "input_tokens": 1825,
+        "total_output_tokens": 2439,
+        "reasoning_output_tokens": 904,
+        "tokens_per_second": 37.6129702821257,
+        "time_to_first_token_seconds": 1.104,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-10 16:39:45",
+      "stats": {
+        "input_tokens": 1982,
+        "total_output_tokens": 2924,
+        "reasoning_output_tokens": 763,
+        "tokens_per_second": 29.368978248950757,
+        "time_to_first_token_seconds": 1.455,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:40:55",
+      "stats": {
+        "input_tokens": 188,
+        "total_output_tokens": 1995,
+        "reasoning_output_tokens": 1087,
+        "tokens_per_second": 30.865376844396728,
+        "time_to_first_token_seconds": 0.286,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:42:00",
+      "stats": {
+        "input_tokens": 1240,
+        "total_output_tokens": 1790,
+        "reasoning_output_tokens": 914,
+        "tokens_per_second": 28.423648002734065,
+        "time_to_first_token_seconds": 1.262,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:43:44",
+      "stats": {
+        "input_tokens": 246,
+        "total_output_tokens": 2865,
+        "reasoning_output_tokens": 1038,
+        "tokens_per_second": 27.84733151013987,
+        "time_to_first_token_seconds": 0.236,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:46:18",
+      "stats": {
+        "input_tokens": 2272,
+        "total_output_tokens": 3907,
+        "reasoning_output_tokens": 840,
+        "tokens_per_second": 26.042590068128195,
+        "time_to_first_token_seconds": 2.456,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:47:56",
+      "stats": {
+        "input_tokens": 337,
+        "total_output_tokens": 2814,
+        "reasoning_output_tokens": 950,
+        "tokens_per_second": 29.337433711637303,
+        "time_to_first_token_seconds": 0.543,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:49:32",
+      "stats": {
+        "input_tokens": 2421,
+        "total_output_tokens": 2827,
+        "reasoning_output_tokens": 1034,
+        "tokens_per_second": 30.716218901470043,
+        "time_to_first_token_seconds": 1.865,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-10 16:51:10",
+      "stats": {
+        "input_tokens": 2274,
+        "total_output_tokens": 2906,
+        "reasoning_output_tokens": 786,
+        "tokens_per_second": 31.383925097540523,
+        "time_to_first_token_seconds": 1.912,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:52:27",
+      "stats": {
+        "input_tokens": 375,
+        "total_output_tokens": 2407,
+        "reasoning_output_tokens": 966,
+        "tokens_per_second": 32.82283241753783,
+        "time_to_first_token_seconds": 0.485,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:53:45",
+      "stats": {
+        "input_tokens": 2088,
+        "total_output_tokens": 2264,
+        "reasoning_output_tokens": 653,
+        "tokens_per_second": 30.086783726041524,
+        "time_to_first_token_seconds": 1.943,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-10 16:55:35",
+      "stats": {
+        "input_tokens": 2151,
+        "total_output_tokens": 3147,
+        "reasoning_output_tokens": 745,
+        "tokens_per_second": 29.481350362526047,
+        "time_to_first_token_seconds": 2.437,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:56:21",
+      "stats": {
+        "input_tokens": 286,
+        "total_output_tokens": 1508,
+        "reasoning_output_tokens": 815,
+        "tokens_per_second": 33.2112285399358,
+        "time_to_first_token_seconds": 0.328,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-10 16:57:30",
+      "stats": {
+        "input_tokens": 1324,
+        "total_output_tokens": 2175,
+        "reasoning_output_tokens": 748,
+        "tokens_per_second": 32.1133350807168,
+        "time_to_first_token_seconds": 1.241,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-10 16:59:00",
+      "stats": {
+        "input_tokens": 2045,
+        "total_output_tokens": 2659,
+        "reasoning_output_tokens": 914,
+        "tokens_per_second": 30.570195671827104,
+        "time_to_first_token_seconds": 2.226,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-10 16:59:53",
+      "stats": {
+        "input_tokens": 239,
+        "total_output_tokens": 1708,
+        "reasoning_output_tokens": 1067,
+        "tokens_per_second": 32.58982414653484,
+        "time_to_first_token_seconds": 0.229,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-10 17:00:51",
+      "stats": {
+        "input_tokens": 1145,
+        "total_output_tokens": 1691,
+        "reasoning_output_tokens": 823,
+        "tokens_per_second": 30.22702563090957,
+        "time_to_first_token_seconds": 1.524,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-10 17:01:47",
+      "stats": {
+        "input_tokens": 1411,
+        "total_output_tokens": 1806,
+        "reasoning_output_tokens": 807,
+        "tokens_per_second": 33.58512009973061,
+        "time_to_first_token_seconds": 1.908,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-10 17:02:46",
+      "stats": {
+        "input_tokens": 542,
+        "total_output_tokens": 1696,
+        "reasoning_output_tokens": 639,
+        "tokens_per_second": 28.75678027515809,
+        "time_to_first_token_seconds": 0.757,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-10 17:04:14",
+      "stats": {
+        "input_tokens": 1933,
+        "total_output_tokens": 1984,
+        "reasoning_output_tokens": 534,
+        "tokens_per_second": 23.250530470752327,
+        "time_to_first_token_seconds": 2.375,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-11-10 17:06:27",
+      "stats": {
+        "input_tokens": 2125,
+        "total_output_tokens": 2547,
+        "reasoning_output_tokens": 527,
+        "tokens_per_second": 19.630516920484993,
+        "time_to_first_token_seconds": 2.742,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

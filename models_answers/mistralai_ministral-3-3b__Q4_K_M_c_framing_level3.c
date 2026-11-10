@@ -1,7 +1,6 @@
 #include <stdint.h>
-#include <string.h>
+#include <stdbool.h>
 
-// Ring Buffer Functions (unchanged)
 #define BUFFER_SIZE 512
 
 static uint8_t buffer[BUFFER_SIZE];
@@ -9,9 +8,9 @@ static size_t head = 0;    // Next write position (circular index)
 static size_t tail = 0;   // Next read position (circular index)
 static bool is_full = false;
 
+// Ring Buffer Functions
 void ringbuf_init(void) {
-    head = 0;
-    tail = 0;
+    head = tail = 0;
     is_full = false;
 }
 
@@ -19,33 +18,26 @@ int ringbuf_push(uint8_t byte) {
     if (is_full || ((head + 1) % BUFFER_SIZE) == tail) {
         return -1; // Buffer full
     }
-
     buffer[head] = byte;
     head = (head + 1) % BUFFER_SIZE;
 
-    if (tail == head && is_full) {
-        is_full = false;
-    }
+    is_full = (tail == head && !is_full);
     return 0;
 }
 
 int ringbuf_pop(void) {
-    if (tail == head && !is_full) {
+    if (head == tail && !is_full) {
         return -1; // Buffer empty
     }
-
     uint8_t byte = buffer[tail];
     tail = (tail + 1) % BUFFER_SIZE;
 
-    if (head == tail) {
-        is_full = false;
-    }
+    is_full = (head != tail);
     return byte;
 }
 
 int ringbuf_available(void) {
-    size_t available = head - tail;
-    if (available < 0) available += BUFFER_SIZE; // Handle circular wrap
+    size_t available = (tail > head) ? (BUFFER_SIZE - tail + head) : (head - tail);
     return available;
 }
 
@@ -53,87 +45,78 @@ int ringbuf_free_space(void) {
     return BUFFER_SIZE - ringbuf_available();
 }
 
-// Packet Validation Helper
-static bool validate_packet(const uint8_t *stream, size_t pos,
-                           uint8_t *out_type, uint8_t *out_len,
-                           uint8_t *out_payload, int max_payload_size) {
-    if (pos + 4 > BUFFER_SIZE || stream[pos] != 0xAA) return false;
+// Packet Decoder
+static bool validate_packet(const uint8_t *stream, int pos, size_t len, uint8_t **out_payload, int *out_type) {
+    if (len < 4 || stream[pos] != 0xAA) return false;
 
     uint8_t type = stream[pos + 1];
-    uint8_t len = stream[pos + 2];
+    uint8_t payload_len = stream[pos + 2];
 
-    // Check length validity
-    if (len > max_payload_size || pos + 3 + len > BUFFER_SIZE) {
-        return false;
-    }
+    // Check for valid length
+    if (payload_len > len - pos - 3) return false;
 
     // Calculate expected checksum
     uint8_t calculated_checksum = 0;
-    for (size_t i = pos + 3; i < pos + 3 + len; ++i) {
+    for (int i = pos + 3; i < pos + 3 + payload_len; ++i) {
         calculated_checksum ^= stream[i];
     }
-    if (stream[pos + 4] != calculated_checksum) return false;
 
+    // Verify checksum
+    if ((payload_len == 0 && stream[pos + 3] != 0) ||
+        (payload_len > 0 && stream[pos + 3 + payload_len] != calculated_checksum)) {
+        return false;
+    }
+
+    *out_payload = &stream[pos + 3];
     *out_type = type;
-    *out_len = len;
     return true;
 }
 
-// Packet Decoder Functions
 void feed_bytes(const uint8_t *data, int len) {
-    size_t bytes_remaining = len;
-    const uint8_t *current_data = data;
-
-    while (bytes_remaining > 0 && ringbuf_free_space() > 0) {
-        int push_result = ringbuf_push(*current_data);
-        if (push_result == -1) break; // Buffer full
-        current_data++;
-        bytes_remaining--;
+    for (int i = 0; i < len && ringbuf_free_space() > 0; ++i) {
+        if (ringbuf_push(data[i])) {
+            break; // Buffer full
+        }
     }
 }
 
+static bool is_valid_candidate(const uint8_t *stream, size_t pos) {
+    return stream[pos] == 0xAA;
+}
+
 int get_next_packet(uint8_t *out_payload, int *out_type) {
+    if (!ringbuf_available()) return -1;
+
+    // Skip noise until next candidate
+    while (ringbuf_available() > 0 && !is_valid_candidate(buffer + tail, ringbuf_pop())) {}
+
     size_t pos = tail;
-    bool packet_found = false;
+    uint8_t *stream_ptr = buffer + pos;
+    int remaining_len = ringbuf_available();
 
-    while (pos != head || ringbuf_available() > 0) {
-        // Check for potential packet start
-        if (buffer[pos] == 0xAA && ringbuf_available() >= 4) {
-            uint8_t *packet_start = &buffer[pos];
-            uint8_t type, len;
-            int payload_len;
-
-            if (validate_packet(packet_start, 0, &type, &len, NULL, BUFFER_SIZE)) {
-                // Check if we have enough data for the full packet
-                size_t required_pos = pos + 3 + len;
-                if (required_pos <= head) {
-                    // Packet is complete in current buffer
-                    uint8_t *payload_ptr = &buffer[pos + 3];
-                    memcpy(out_payload, payload_ptr, len);
-                    *out_type = type;
-                    return len;
-
-                    // Advance tail to consume the packet
-                    for (size_t i = pos; i < required_pos; ++i) {
-                        ringbuf_pop();
-                    }
-                } else {
-                    // Packet is fragmented - discard incomplete portion and continue searching
-                    pos = required_pos;
-                    continue;
-                }
-            }
-        }
-
-        // Move to next byte if no packet found yet
-        pos = (pos + 1) % BUFFER_SIZE;
-
-        // If we've looped through the entire buffer without finding a valid packet,
-        // check if there's more data in the buffer that could form a complete packet
-        if (pos == tail && ringbuf_available() > 0) {
-            return -1; // No valid packet found yet, incomplete or no data
-        }
+    if (!is_valid_candidate(stream_ptr, pos)) {
+        return -1; // No valid candidate found
     }
 
-    return -1;
+    while (ringbuf_available() > 0) {
+        size_t current_pos = tail;
+        uint8_t *current_stream = buffer + current_pos;
+
+        if (validate_packet(current_stream, current_pos, remaining_len,
+                           &out_payload, out_type)) {
+            // Packet is valid; copy payload and advance read position
+            int payload_len = *out_type;
+            for (int i = 0; i < payload_len; ++i) {
+                if (!out_payload || i >= sizeof(out_payload)/sizeof(*out_payload)) break;
+                out_payload[i] = ringbuf_pop();
+            }
+            return payload_len;
+        }
+
+        // Move to next byte
+        current_pos++;
+        remaining_len--;
+    }
+
+    return -1; // No valid packet found in buffer
 }

@@ -3,14 +3,14 @@
   "output": [
     {
       "type": "message",
-      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    visited = {}\n    result = []\n\n    def dfs(task):\n        if task in visited:\n            return visited[task]\n        visited[task] = \"visiting\"\n        for dep in tasks.get(task, []):\n            if dfs(dep) == \"cycle\":\n                return \"cycle\"\n        visited[task] = \"visited\"\n        result.append(task)\n        return True\n\n    for task in tasks:\n        if dfs(task) == \"cycle\":\n            return None\n    return result\n```"
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    visited = set()\n    rec_stack = set()\n\n    def dfs(task):\n        if task in rec_stack:\n            return False  # Cycle detected\n        if task not in visited:\n            visited.add(task)\n            rec_stack.add(task)\n            for dep in tasks.get(task, []):\n                if not dfs(dep):\n                    return False\n            rec_stack.remove(task)\n        return True\n\n    order = []\n    for task in tasks.keys():\n        if task not in visited:\n            if not dfs(task):\n                return None  # Cycle found\n            order.append(task)\n\n    return order\n```"
     }
   ],
   "stats": {
     "input_tokens": 170,
-    "total_output_tokens": 123,
+    "total_output_tokens": 143,
     "reasoning_output_tokens": 0,
-    "tokens_per_second": 46.23096383222859,
-    "time_to_first_token_seconds": 0.765937
+    "tokens_per_second": 45.784519351214016,
+    "time_to_first_token_seconds": 0.406853
   }
 }

@@ -1,0 +1,320 @@
+We need to implement a full solution including three functions:
+
+- `plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None`
+
+- `critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None`
+
+- `makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None`
+
+We must keep the signature of `plan_order` unchanged. Return only code in a single python block.
+
+First, understand requirements:
+
+The tasks dictionary maps task name (str) to tuple `(duration, deps, priority)` where:
+
+- duration: integer time units.
+- deps: list of task names that must finish before this task can start.
+- priority: int; higher priority = more important. Means when multiple ready tasks, pick highest priority first.
+
+Execution rules:
+- Tasks run non-preemptively (i.e., once started runs to completion).
+- At most `workers` tasks can run simultaneously.
+- When multiple tasks are ready to run, select first by highest priority, then shortest duration, then alphabetical task name.
+- If multiple start at same timestamp, we need to append them following tie-breaking.
+
+Return only list of strings (the order they start?). Actually earlier the description for plan_order: "Return only the Python code in a single ```python ...``` code block, with no explanations outside the block."
+
+Let's parse original problem statement fully:
+
+> Implement a task scheduler with dependencies, priorities, and a limited worker pool in a single Python file.
+>
+> def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None
+>
+> Each task is defined by a tuple (duration, deps, priority):
+> - duration: task duration in integer time units;
+> - deps: list of task names that must finish before this task can start;
+> - priority: task priority; higher priority tasks must start earlier.
+>
+> Execution rules:
+> - Tasks run non-preemptively;
+> - At most workers tasks can run simultaneously;
+> - When multiple tasks are ready to run, select first by highest priority,
+>   then shortest duration, then alphabetical task name;
+> - If multiple tasks start at the exact same timestamp, append them to the returned list[str] following the same priority tie-breaking rule;
+> - If there is a cyclic dependency in tasks, return None.
+
+We need to implement plan_order. Also we have other functions: critical_path and makespan.
+
+Thus final answer must include code for all three functions within one file (single python block). We'll need to import heapq etc.
+
+Let's design algorithm thoroughly:
+
+### Cycle detection
+
+Given deps lists define dependency direction as "task depends on its prerequisites". Graph directed edges from task to each of its dependencies. A cycle exists if there is a path back to starting node via these edges, i.e., if the graph of dependencies has a directed cycle.
+
+We can detect using DFS or Kahn's algorithm for indegree based on number of outgoing edges? Let's define adjacency as `graph = {task: [dep1, dep2,...]}`. Then a cycle exists in this directed graph. For detection we could compute indegree of each node (the number of nodes that have it as dependency). Actually typical Kahn uses reverse direction; but easier is to just run DFS with visited and recursion stack.
+
+We'll implement:
+
+```
+def has_cycle(deps):
+    # build adjacency: from task to its deps.
+    graph = tasks[task]['deps'] for each task...
+```
+
+But we have tasks dict mapping name->(duration, deps list, priority). So we can extract directly inside function.
+
+Implement detection as earlier:
+
+```
+def has_cycle(tasks):
+    indeg = {}
+    adj = {name: [] for name in info}
+    for name, (_, deps, _) in tasks.items():
+        for dep in deps:
+            # add edge from node to dep
+            adj[name].append(dep)
+    visited = set()
+    rec_stack = set()
+    def dfs(node):
+        if node not in visited:
+            visited.add(node)
+            rec_stack.add(node)
+            for neighbor in adj.get(node, []):
+                if neighbor not in visited:
+                    if dfs(neighbor):
+                        return True
+                elif neighbor in rec_stack:
+                    return True
+            rec_stack.remove(node)
+        return False
+
+    for node in tasks.keys():
+        if node not in visited:
+            if dfs(node):
+                return True
+    return False
+```
+
+But careful: In above, we treat edges from task to its dependencies. However cycles might appear as A depends on B and B depends on A, giving edge A->B and B->A; detection works.
+
+Now for `critical_path`:
+
+We need longest path sum of durations respecting dependencies (i.e., DAG). Need to compute the length (total time) from start to end following dependency edges. Equivalent to find longest path in a directed acyclic graph where each node has weight = duration, and edge weights are zero? Actually we want total cumulative duration along chain: e.g., if A->B (A depends on B? Wait direction). Usually dependency means B must finish before A starts; so there is an edge from B to A or from A to B? Let's define "deps" list for each task indicates tasks that need to be completed first, i.e., prerequisites. So if we have edges from prerequisite -> dependent (prereq points to dependent), then path of dependencies forms a chain: e.g., C depends on B, B depends on A => edge A->B? Actually typical topological order: start with tasks that have no deps (no prereqs). For longest total duration, we need sum of durations along the dependency chain. So if there is path from root to leaf, you add durations of each node.
+
+Thus we can compute critical_path by performing DP on DAG after sorting topologically. Since we also need priority for plan_order but not for critical_path.
+
+Critical_path returns length (int) = maximum sum of durations along any path respecting dependencies, or None if cycle.
+
+Implementation:
+
+- Build adjacency: `graph = {name: [] for name in tasks}`, and reverse? For DP from leaves up to root we need forward edges (prereq -> dependent?). Let's decide direction. Suppose edge from prerequisite -> dependent: i.e., for each dependency d in deps, add edge d->task. Then path from start task (no deps) to leaf includes durations of nodes along that directed path.
+
+Thus:
+
+```
+graph = {name: [] for name in tasks}
+for name, (_, deps, _) in tasks.items():
+    for dep in deps:
+        graph[dep].append(name)  # edge from dep -> task
+```
+
+Now we have a DAG if no cycles. Compute longest path using DP on topological order.
+
+We can get topo order via Kahn's algorithm: compute indegree (number of incoming edges). Incoming edges = number of dependencies? Actually for each node, indegree in this graph is length of deps list (since edges from dep -> node). So we can compute indegree as len(deps) and then BFS.
+
+But easier: we can use DFS to get post-order or just do DP using recursion with memoization. Since tasks count unknown but small maybe fine.
+
+Pseudo:
+
+```
+def critical_path(tasks):
+    if has_cycle(tasks): return None
+
+    # Build graph edges as above
+    graph = {name: [] for name in tasks}
+    indeg = {name: 0 for name in tasks}  # incoming edge count (number of deps)
+    for name, (_, deps, _) in tasks.items():
+        for dep in deps:
+            graph[dep].append(name)
+            indeg[name] += 1
+
+    # topological order via Kahn
+    from collections import deque, defaultdict
+    q = deque([node for node in tasks if indeg[node]==0])
+    topo_order = []
+    while q:
+        node = q.popleft()
+        topo_order.append(node)
+        for nxt in graph.get(node, []):
+            indeg[nxt] -= 1
+            if indeg[nxt]==0:
+                q.append(nxt)
+
+    # now compute longest path length: dp[node]=max(dp[dep]+duration) over all deps? Actually we have edges dep->dependent; so for each node, its incoming dependencies are from graph[dep]? Wait our edge direction is dep->task. So to get longest path ending at node, we need to consider predecessors (its prerequisites). That's more complex.
+
+Simplify: compute critical_path as the maximum total duration along any chain of dependencies starting from a root and going down to leaves. Equivalent to find max sum of durations for nodes in a directed path where each edge goes from lower dependency to higher task? Not exactly. Let's just do DP on DAG using recursion:
+
+```
+def longest_path_from(node):
+    if node not in tasks: return 0
+    deps = set(tasks[node][1]) # but need original tuple
+```
+
+Better to keep original data.
+
+Given time, maybe simplest: compute critical path as sum of durations along each possible dependency chain by exploring all paths and taking max length. For small size we can brute force using DFS with memoization:
+
+- Build adjacency `forward` from task -> its dependents (i.e., tasks that have this task in deps). Because for path you go from root to leaf, following dependencies forward? Actually if A depends on B, then B must finish before A. So the dependency chain goes from leaf (task with no deps) upward via "depends on" edges: leaf -> parent (since leaf has fewer deps). But it's easier to just follow reverse of graph: we have edge dep->task; path in forward direction is from prerequisite to dependent, i.e., root to leaf. So longest path sum = max over all paths following forward edges.
+
+We can compute DP by topological order where we process nodes after all its dependencies (prereqs) are processed. For each node we need total duration of the best path starting at that node? Actually for critical path length from start to end, you consider the entire chain including durations of all tasks on that chain. The longest path length = max over all nodes of sum of durations along any path ending at that node (including its own). Usually it's like "critical path method" in project scheduling: each task has duration; the critical path is the longest path from start to finish.
+
+Given graph defined as dep->dependent edges, we can compute DP where dp[node] = max(duration of node + max(dp[child])? Not exactly. Let's think: If edge direction is from prerequisite -> dependent, then a path goes from source (no deps) to target (has deps). The total time along that path includes durations of all nodes on it. So for each node we can compute the longest sum of durations reachable from it via outgoing edges? Actually if you start at node X and go to its dependent Y, then total time = duration(X) + (max path starting at Y?). But need careful.
+
+We'll implement using DFS with memoization:
+
+```
+def dp(node):
+    if node not in tasks: return 0
+    deps_set = set(tasks[node][1]) # but we have original tuple. We can store data dict.
+```
+
+Better to pre-store for each task:
+- duration
+- priority (not needed)
+- dependencies list
+
+Let's restructure:
+
+```
+task_info = {name: {'duration': dur, 'deps': deps_list, 'priority': prio} for name,(dur,deps,prio) in tasks.items()}
+```
+
+Then graph edges: for each dep in deps, add edge from dep to task. So adjacency list `graph[dep].append(task_name)`.
+
+Now compute longest path sum using DP: For node X, we want the maximum total duration along any path starting at X and following outgoing edges (i.e., moving to dependent tasks). The critical path overall is max over all nodes of dp(node), where dp(X) = durations[X] + max(0, max(dp(child) for child in graph[X]) ). Actually if there are multiple children, we take the longest path among them. That's typical.
+
+Thus implement:
+
+```
+def max_path_from(node):
+    deps_of_node = task_info[node]['deps']  # not needed
+```
+
+But easier: Use recursion with memoization on node name. For each node we compute best continuation length as max over its dependents (graph[node]), of dp(dependent) else 0. Then total for node = durations[node] + best_continuation.
+
+Pseudo:
+
+```
+def critical_path(tasks):
+    # build task_info
+    task_info = {}
+    graph = {name: [] for name in tasks}
+    indeg = {name: 0 for name in tasks}  # not needed now
+
+    for name, (dur, deps, prio) in tasks.items():
+        task_info[name] = {'duration': dur, 'deps': deps}
+        for dep in deps:
+            graph[dep].append(name)
+            indeg[name] += 1   # but not needed now
+
+    visited = {}
+    def dp(node):
+        if node not in task_info: return 0
+        if node in visited:
+            return visited[node]
+        best_child = 0
+        for dependent in graph.get(node, []):
+            child_val = dp(dependent)
+            if child_val > best_child:
+                best_child = child_val
+        total = task_info[node]['duration'] + best_child
+        visited[node] = total
+        return total
+
+    longest = 0
+    for name in tasks.keys():
+        longest = max(longest, dp(name))
+    # If any cycle? Already checked earlier.
+    if has_cycle(tasks): return None else: return longest
+
+```
+
+But we also need to ensure graph is acyclic. We'll perform cycle detection first; then compute DP.
+
+Complexities: recursion depth could be high but fine for small tasks.
+
+Alternatively, use iterative topological order and dynamic programming. But recursive with memoization works if no cycles (we've already ensured).
+
+Implementation details:
+
+- Use `functools.lru_cache` on dp? Since node names strings, we can pass as argument; but need to handle not in task_info case returning 0.
+
+Simpler: define function inside critical_path that uses closure of graph and durations.
+
+Let's implement directly:
+
+```
+def critical_path(tasks):
+    # Build info dict
+    info = {}
+    for name, (dur, deps, prio) in tasks.items():
+        info[name] = {'duration': dur, 'deps': deps}
+    
+    # Build graph edges from dep -> dependent
+    graph = {name: [] for name in info}
+    for name, data in info.items():
+        for dep in data['deps']:
+            if dep in graph:
+                graph[dep].append(name)
+    
+    # Topological sort to ensure no cycles (we already checked)
+    indeg = {name: 0 for name in info}  # incoming edges count
+    for node in info:
+        for dependent in graph.get(node, []):
+            indeg[dependent] += 1
+    
+    from collections import deque
+    q = deque([node for node in info if indeg[node]==0])
+    topo = []
+    while q:
+        node = q.popleft()
+        topo.append(node)
+        for dependent in graph.get(node, []):
+            indeg[dependent] -= 1
+            if indeg[dependent]==0:
+                q.append(dependent)
+    
+    # DP over reversed topol (post-order). Since we have topological order from roots to leaves, the post-order is reverse of topo.
+    dp = {name: 0 for name in info}
+    for node in reversed(topo):
+        total = info[node]['duration']
+        for dependent in graph.get(node, []):  # outgoing edges
+            total += dp[dependent] if dp[dependent] else 0  # but careful: we need max over children; however there may be multiple dependents. In path from node to leaf includes all descendants. But typical DP for longest path is sum of durations along entire chain, not just immediate child. Actually this would double count? Let's think.
+```
+
+Our earlier dp approach using recursion gave total = duration + max(child dp). That gives longest path starting at node going down the most promising branch. So we need to compute maximum among children.
+
+Thus implement:
+
+```
+def longest_path(node):
+    best_child = 0
+    for dependent in graph.get(node, []):
+        child_val = longest_path(dependent)
+        if child_val > best_child:
+            best_child = child_val
+    return info[node]['duration'] + best_child
+```
+
+But we can compute iteratively by DP over reversed topological order: For node in reverse topo (i.e., from leaves up), dp[node] = duration[node] + max(dp[child] for child in graph[node]) . This matches recursion.
+
+Implementation:
+
+```
+dp = {}
+for node in reversed(topo):
+    best_child = 0
+    for dependent in graph.get(node, []):   # outgoing edges to children (dependent tasks)
+        child_val = dp.get(dependent, 0)  # dp[child] already computed because reversed order ensures children processed before parents? Wait in reversed topological order we start from last nodes first. For a DAG where edges go from parent (prerequisite) to dependent (task). In topol order we have root->...->leaf. So reversed gives leaf->...->root. For node, its outgoing edges point to dependents which appear later in topo list. Thus when processing node in reversed topo, the children dp values are already computed because they come after node in original topological? Actually typical topological: if we have order root first then dependent later (edge parent ->

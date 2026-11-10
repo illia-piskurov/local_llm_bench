@@ -1,101 +1,99 @@
 def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
     """
-    Выполняет топологическую сортировку графа зависимостей с использованием алгоритма Кана.
+    Performs a topological sort on task dependencies.
 
     Args:
-        tasks: Словарь, где ключ — имя задачи, а значение — список имён задач, 
-               от которых она зависит (предшественники).
+        tasks: A dictionary where the key is a task and the value is a list 
+               of tasks that must complete before the key task.
 
     Returns:
-        Список имён задач в порядке выполнения, или None, если в графе есть цикл зависимостей.
+        A list of tasks in dependency order, or None if a cycle is detected.
     """
-    
-    # 1. Инициализация структуры данных и сбор всех узлов
-    adj = {}       # Граф смежности (предшественник -> зависимая задача)
-    in_degree = {} # Входящая степень (количество зависимостей для каждой задачи)
-    all_tasks = set()
+    # 1. Build the graph structure (Adjacency List) and identify all nodes.
+    graph = {}
+    all_tasks = set(tasks.keys())
 
-    # Добавляем все задачи в структуру, чтобы учесть и те, что не имеют явных зависимостей
-    for task in tasks:
+    # Initialize all tasks found (keys and values)
+    for task, dependencies in tasks.items():
         all_tasks.add(task)
-        if task not in adj:
-            adj[task] = []
-            in_degree[task] = 0
+        for dependency in dependencies:
+            all_tasks.add(dependency)
 
-    # 2. Построение графа и расчет входящих степеней
-    for dependent_task, prerequisites in tasks.items():
-        for prereq in prerequisites:
-            # Создаем ребро: prereq -> dependent_task
-            if prereq not in adj:
-                adj[prereq] = []
-                in_degree[prereq] = 0
-            
-            # Добавляем ребро в граф (предшественник -> зависимая задача)
-            adj[prereq].append(dependent_task)
-            
-            # Увеличиваем входящую степень зависимой задачи
-            in_degree[dependent_task] += 1
-
-    # Если есть задачи, которые не фигурируют ни в качестве ключей, ни в значениях (т.е., они существуют только как зависимости),
-    # мы должны убедиться, что они включены в in_degree и adj.
+    # Initialize graph nodes and adjacency list for tasks that have dependents
     for task in all_tasks:
-        if task not in in_degree:
-            in_degree[task] = 0
-        if task not in adj:
-            adj[task] = []
+        graph[task] = []
 
+    # Populate the graph: Edge P -> T means P must finish before T starts.
+    for task, dependencies in tasks.items():
+        for dependency in dependencies:
+            # Edge: dependency -> task
+            graph[dependency].append(task)
 
-    # 3. Алгоритм Кана (Kahn's Algorithm)
-    queue = []
-    
-    # Инициализация очереди задачами с нулевой входящей степенью
-    for task, degree in in_degree.items():
-        if degree == 0:
-            queue.append(task)
+    # State tracking for DFS:
+    # visited: Tasks completely processed.
+    # recursion_stack: Tasks currently in the DFS path (used for cycle detection).
+    visited = set()
+    recursion_stack = set()
+    result = []
 
-    sorted_order = []
-    
-    while queue:
-        u = queue.pop(0)  # Извлекаем задачу
-        sorted_order.append(u)
+    def dfs(task: str) -> bool:
+        """
+        Performs DFS starting from 'task'. Returns True if successful, False if a cycle is detected.
+        """
+        if task in recursion_stack:
+            # Cycle detected (back edge)
+            return False
+        if task in visited:
+            # Already fully processed
+            return True
 
-        # Обрабатываем всех соседей (зависимых задач)
-        for v in adj[u]:
-            in_degree[v] -= 1
-            if in_degree[v] == 0:
-                queue.append(v)
+        # Mark current node as visiting
+        recursion_stack.add(task)
 
-    # 4. Проверка на наличие цикла
-    # Если количество отсортированных задач меньше общего количества уникальных задач, то цикл существует.
-    if len(sorted_order) != len(all_tasks):
-        return None  # Цикл обнаружен
-    else:
-        return sorted_order
+        # Visit neighbors
+        for neighbor in graph.get(task, []):
+            if not dfs(neighbor):
+                return False
+
+        # Finished processing this node and its subtree.
+        recursion_stack.remove(task)
+        visited.add(task)
+        
+        # Add to result list (post-order traversal places dependencies before the task itself)
+        result.append(task)
+        return True
+
+    # 2. Perform DFS on all nodes to ensure all components are covered
+    for task in list(all_tasks):
+        if task not in visited:
+            if not dfs(task):
+                return None
+
+    # The DFS method builds the result list in reverse topological order 
+    # (dependency comes first, but the order of independent tasks is arbitrary).
+    return result[::-1]
 
 if __name__ == '__main__':
-    # Пример 1: Правильная зависимость (A зависит от B, B зависит от C)
+    # Example 1: Valid dependencies
     tasks1 = {
-        'A': ['B'],
-        'B': ['C'],
-        'C': []
+        'A': [],       # A has no deps
+        'B': ['A'],    # B depends on A (A -> B)
+        'C': ['A', 'B'],# C depends on A and B (A -> C, B -> C)
+        'D': ['C']     # D depends on C (C -> D)
     }
-    print(f"Пример 1: {topo_sort(tasks1)}")  # Ожидаемый результат: ['C', 'B', 'A']
+    print(f"Test 1 Result: {topo_sort(tasks1)}") # Expected: ['A', 'B', 'C', 'D'] or similar valid order
 
-    # Пример 2: Параллельные задачи (A и B не зависят друг от друга)
+    # Example 2: Cycle (B depends on A, A depends on B)
     tasks2 = {
-        'A': ['C'],
-        'B': ['C'],
-        'C': []
-    }
-    print(f"Пример 2: {topo_sort(tasks2)}")  # Ожидаемый результат: ['C', 'A', 'B'] или ['C', 'B', 'A']
-
-    # Пример 3: Цикл зависимостей (A зависит от B, B зависит от A)
-    tasks3 = {
         'A': ['B'],
         'B': ['A']
     }
-    print(f"Пример 3 (Цикл): {topo_sort(tasks3)}")  # Ожидаемый результат: None
+    print(f"Test 2 Result (Cycle): {topo_sort(tasks2)}") # Expected: None
 
-    # Пример 4: Пустой граф
-    tasks4 = {}
-    print(f"Пример 4 (Пустой): {topo_sort(tasks4)}") # Ожидаемый результат: []
+    # Example 3: Disconnected graph
+    tasks3 = {
+        'X': [],
+        'Y': ['Z'],
+        'Z': []
+    }
+    print(f"Test 3 Result: {topo_sort(tasks3)}") # Expected: [..., 'X', ..., 'Z', 'Y'] (order of X and Z relative to each other is arbitrary)

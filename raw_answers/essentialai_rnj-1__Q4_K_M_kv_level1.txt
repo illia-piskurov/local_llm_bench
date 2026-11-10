@@ -1,0 +1,99 @@
+```python
+class KeyValueStore:
+    def __init__(self):
+        self.global_store = {}
+        self.transaction_stack = []
+
+    def execute_command(self, command: str) -> list[str]:
+        parts = command.split()
+        if not parts:
+            return []
+        
+        cmd = parts[0]
+        args = parts[1:]
+        output = []
+        
+        if cmd == "SET":
+            key, value = args
+            self._set(key, value)
+        elif cmd == "GET":
+            key = args[0]
+            output.append(self._get(key))
+        elif cmd == "DELETE":
+            key = args[0]
+            self._delete(key)
+        elif cmd == "BEGIN":
+            self._begin()
+        elif cmd == "COMMIT":
+            if not self.transaction_stack:
+                output.append("NO TRANSACTION")
+            else:
+                self._commit()
+        elif cmd == "ROLLBACK":
+            if not self.transaction_stack:
+                output.append("NO TRANSACTION")
+            else:
+                self._rollback()
+        
+        return output
+
+    def _set(self, key: str, value: str):
+        current_transaction = self.transaction_stack[-1] if self.transaction_stack else None
+        if current_transaction is not None:
+            current_transaction[key] = value
+        else:
+            self.global_store[key] = value
+
+    def _get(self, key: str) -> str:
+        for transaction in reversed(self.transaction_stack):
+            if key in transaction:
+                return transaction[key]
+        return self.global_store.get(key, "NULL")
+
+    def _delete(self, key: str):
+        current_transaction = self.transaction_stack[-1] if self.transaction_stack else None
+        if current_transaction is not None and key in current_transaction:
+            del current_transaction[key]
+
+    def _begin(self):
+        new_transaction = {}
+        if self.transaction_stack:
+            parent_transaction = self.transaction_stack[-1]
+            for k, v in parent_transaction.items():
+                new_transaction[k] = v
+        self.transaction_stack.append(new_transaction)
+
+    def _commit(self):
+        if len(self.transaction_stack) == 1:
+            # Commit to global store
+            current_transaction = self.transaction_stack.pop()
+            for key, value in current_transaction.items():
+                self.global_store[key] = value
+        else:
+            # Merge into parent transaction
+            parent_transaction = self.transaction_stack[-2]
+            current_transaction = self.transaction_stack.pop()
+            for key, value in current_transaction.items():
+                parent_transaction[key] = value
+
+    def _rollback(self):
+        if len(self.transaction_stack) == 1:
+            # Rollback to global store
+            self.transaction_stack.pop()
+        else:
+            # Discard changes
+            self.transaction_stack.pop()
+
+def run(program: str) -> list[str]:
+    store = KeyValueStore()
+    output = []
+    for line in program.splitlines():
+        if not line.strip():
+            continue
+        result = store.execute_command(line)
+        output.extend(result)
+    return [line for line in output if line]
+
+# Example usage:
+# print(run("SET a 5\nGET a\nBEGIN\nSET b 10\nCOMMIT\nGET b"))
+```

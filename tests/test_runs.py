@@ -378,20 +378,22 @@ def test_mcp_runs_tools(tmp_path, monkeypatch):
 
 def test_generation_config():
     cfg = GenerationConfig()
-    assert cfg.temperature == 0.0
+    assert cfg.temperature is None
     assert cfg.seed == 42
-    assert cfg.top_p == 1.0
-    assert cfg.max_tokens == 16384
+    assert cfg.top_p is None
+    assert cfg.max_tokens is None
     assert cfg.timeout_seconds == 600.0
 
+    # Unset sampling and length parameters are not recorded: the server's own preset applied.
     d = cfg.to_dict()
-    assert d["temperature"] == 0.0
-    assert d["seed"] == 42
-    assert d["max_tokens"] == 16384
+    assert d == {"seed": 42, "timeout_seconds": 600.0}
 
-    restored = GenerationConfig.from_dict(d)
+    explicit = GenerationConfig(temperature=0.6, max_tokens=2048)
+    restored = GenerationConfig.from_dict(explicit.to_dict())
     assert restored.seed == 42
-    assert restored.temperature == 0.0
+    assert restored.temperature == 0.6
+    assert restored.max_tokens == 2048
+    assert restored.top_p is None
 
 
 def test_model_artifact_info():

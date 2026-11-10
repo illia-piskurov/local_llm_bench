@@ -4,119 +4,101 @@ class InMemoryKeyValueStore:
     def __init__(self):
         self.global_store = {}
         self.transactions = []
-        self.watched_keys = {}  # Maps keys to their current watched state (old_value)
-
-    def _push_transaction(self):
-        self.transactions.append({})
-
-    def _pop_transaction(self):
-        if not self.transactions:
-            return None
-        return self.transactions.pop()
+        self.watched_keys = set()
+        self.watch_notifications = []
 
     def run(self, program: str) -> list[str]:
         output = []
         commands = [cmd.strip() for cmd in program.split('\n') if cmd.strip()]
-        current_transactions = []
+        self.transactions = []  # Reset transactions stack
+        self.watched_keys.clear()
 
-        # Parse and execute commands
         for cmd in commands:
             parts = cmd.split()
             if not parts:
                 continue
+            op, *args = parts
 
-            if parts[0] == 'BEGIN':
-                self._push_transaction()
-                current_transactions.append(self.transactions[-1])
-
-            elif parts[0] == 'COMMIT':
-                if len(current_transactions) < 2 or not self.transactions[-1]:
+            if op == 'BEGIN':
+                self.transactions.append({})
+            elif op == 'COMMIT':
+                if not self.transactions or len(self.transactions) < 2:
                     output.append("NO TRANSACTION")
                 else:
-                    parent = current_transactions.pop()
-                    changes = self._pop_transaction()
-                    for key, value in changes.items():
-                        if key in parent:
-                            parent[key] = value
-                        else:
-                            parent[key] = value
-
-            elif parts[0] == 'ROLLBACK':
-                if not self.transactions[-1]:
+                    parent_transaction = self.transactions[-2]
+                    transaction = self.transactions.pop()
+                    for key, value in transaction.items():
+                        parent_transaction[key] = value
+            elif op == 'ROLLBACK':
+                if not self.transactions:
                     output.append("NO TRANSACTION")
                 else:
-                    self._pop_transaction()
+                    self.transactions.pop()
+            elif op == 'SET' and len(args) >= 2:
+                key, value = args[0], args[1]
+                current_transaction = self.transactions[-1] if self.transactions else self.global_store
+                old_value = current_transaction.get(key)
+                current_transaction[key] = value
 
-            elif parts[0] == 'SET' and len(parts) >= 3:
-                key, value = parts[1], parts[2]
-                current_store = self.transactions[-1] if self.transactions else self.global_store
-                old_value = current_store.get(key)
+                # Check for watched keys
+                for watched_key in list(self.watched_keys):
+                    if key == watched_key:
+                        new_val = str(value) if value != "NULL" else "NULL"
+                        old_watched_val = self._get_current_value(watched_key)
+                        if old_watched_val != new_val or (old_watched_val == new_val and not self.transactions):  # Only notify if value changed
+                            output.append(f"WATCH {watched_key} {old_watched_val} -> {new_val}")
 
-                # Check watched keys for notifications
-                for watched_key in list(self.watched_keys.keys()):
-                    if watched_key == key:
-                        new_value = value if value != "NULL" else None  # Handle NULL case
-                        if self.watched_keys[watched_key] != new_value:
-                            output.append(f"WATCH {key} {self.watched_keys[watched_key]} -> {new_value}")
-                            self.watched_keys[watched_key] = new_value
+            elif op == 'DELETE' and len(args) >= 1:
+                key = args[0]
+                current_transaction = self.transactions[-1] if self.transactions else self.global_store
 
-                current_store[key] = value
+                # Check for watched keys
+                old_value = current_transaction.get(key)
+                if key in current_transaction:
+                    del current_transaction[key]
 
-            elif parts[0] == 'GET':
-                key = parts[1]
-                # Check all transactions from innermost to outermost
-                for store in reversed(self.transactions):
-                    if key in store:
-                        output.append(store[key])
-                        break
-                else:
-                    if key in self.global_store:
-                        output.append(self.global_store[key])
-                    else:
-                        output.append("NULL")
+                for watched_key in list(self.watched_keys):
+                    if key == watched_key and old_value != "NULL":
+                        new_val = "NULL"
+                        output.append(f"WATCH {watched_key} {old_value} -> NULL")
 
-            elif parts[0] == 'DELETE' and len(parts) >= 2:
-                key = parts[1]
-                current_store = self.transactions[-1] if self.transactions else self.global_store
-                old_value = current_store.get(key, "NULL")
-                del current_store[key]
-
-                # Check watched keys for notifications
-                for watched_key in list(self.watched_keys.keys()):
-                    if watched_key == key:
-                        output.append(f"WATCH {key} {old_value} -> NULL")
-
-            elif parts[0] == 'COUNT' and len(parts) >= 2:
-                value = parts[1]
-                count = 0
-                # Check all transactions from innermost to outermost
-                for store in reversed(self.transactions):
-                    if value in store.values():
-                        count += store.values().count(value)
-                else:
-                    if value in self.global_store.values():
-                        count += self.global_store.values().count(value)
+            elif op == 'COUNT' and len(args) >= 1:
+                value = args[0]
+                count = sum(1 for key in self._get_all_current_values() if str(self._get_current_value(key)) == str(value))
                 output.append(str(count))
 
-            elif parts[0] == 'WATCH' and len(parts) >= 2:
-                key = parts[1]
-                current_value = None
-                # Check all transactions from innermost to outermost
-                for store in reversed(self.transactions):
-                    if key in store:
-                        current_value = store[key]
-                        break
-                else:
-                    if key in self.global_store:
-                        current_value = self.global_store[key]
+            elif op == 'GET':
+                val = self._get_current_value(args[0])
+                output.append(val)
 
-                self.watched_keys[key] = current_value
+            elif op == 'WATCH' and len(args) >= 1:
+                key = args[0]
+                if key not in self.watched_keys:
+                    self.watched_keys.add(key)
+                    # Check current value immediately
+                    val = self._get_current_value(key)
+                    output.append(f"WATCH {key} NULL -> {val}")
 
         return output
 
+    def _get_all_current_values(self):
+        if self.transactions:
+            transaction = self.transactions[-1]
+            for key in transaction:
+                yield key, transaction[key]
+        else:
+            for key in self.global_store:
+                yield key, self.global_store[key]
+
+    def _get_current_value(self, key):
+        if self.transactions:
+            return self.transactions[-1].get(key, "NULL")
+        else:
+            return self.global_store.get(key, "NULL")
+
 def main():
     store = InMemoryKeyValueStore()
-    program = sys.stdin.read().strip()
+    program = '\n'.join(sys.stdin.readlines())
     results = store.run(program)
     for res in results:
         print(res)

@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_183837_d49757",
+  "host_id": "70ccb4981862",
+  "model": "essentialai/rnj-1",
+  "benchmark": "c_framing",
+  "level": "level2",
+  "tested_at": "2026-11-10 18:50:22",
+  "passed": 0,
+  "total": 8,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/essentialai_rnj-1__Q4_K_M_c_framing_level2.c:65:13: error: call to undeclared library function 'memcpy' with type 'void *(void *, const void *, unsigned long)'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   65 |             memcpy(out_payload, ptr + 3, len);\n      |             ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/essentialai_rnj-1__Q4_K_M_c_framing_level2.c:65:13: note: include the header <string.h> or explicitly provide a declaration for 'memcpy'\n1 error generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

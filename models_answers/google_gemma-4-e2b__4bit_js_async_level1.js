@@ -1,0 +1,75 @@
+async function pMap(items, mapper, options) {
+    if (!items || items.length === 0) {
+        return [];
+    }
+
+    const concurrency = options !== undefined ? options.concurrency : 1;
+    if (concurrency <= 0) {
+        throw new Error("Concurrency limit must be a positive number.");
+    }
+
+    const results = new Array(items.length);
+    const runningPromises = new Set();
+
+    // Helper function to wrap the mapping logic and manage promise resolution
+    const processItem = async (index, item) => {
+        try {
+            const result = await mapper(item, index);
+            results[index] = result;
+            return { index, value: result };
+        } catch (error) {
+            // Re-throw to be caught by Promise.all/Promise.race logic
+            throw error;
+        }
+    };
+
+    // Array to hold the promises that are currently executing or queued
+    const promiseQueue = [];
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+
+        // Define the function that will execute the mapping for this specific index
+        const task = async () => {
+            return processItem(i, item);
+        };
+
+        // Add the task to the queue immediately
+        promiseQueue.push(task());
+
+        // Start processing if we are below the concurrency limit
+        if (runningPromises.size < concurrency) {
+            const taskRunner = promiseQueue.shift(); // Get the next task to run
+
+            const executionPromise = (async () => {
+                try {
+                    // Execute the task function and await its result
+                    const taskResult = await taskRunner();
+                    // Once successful, remove it from the running set
+                    runningPromises.delete(executionPromise);
+                } catch (error) {
+                    // If the task fails, we must immediately halt everything.
+                    throw error;
+                }
+            })();
+
+            runningPromises.add(executionPromise);
+        }
+
+        // If the concurrency limit is reached, we need to wait for one running promise to finish
+        // before adding a new one (implicit wait handled by the loop structure below).
+        while (runningPromises.size >= concurrency) {
+            // Wait for the oldest running promise to finish before proceeding 
+            // (This ensures we don't exceed concurrency, though a more complex queue management 
+            // might be needed for precise fairness/throughput).
+            await Promise.race(Array.from(runningPromises));
+        }
+    }
+
+    // Wait for all remaining promises in the queue to complete
+    const finalResults = await Promise.all(promiseQueue);
+
+    // Since we processed items sequentially (i=0 to N-1), 
+    // the results array should now be correctly populated in order.
+    return results;
+}

@@ -9,7 +9,7 @@ def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
     for task, deps in tasks.items():
         for dep in deps:
             if dep not in adj:
-                return None  # Invalid dependency (not in tasks)
+                return None  # Invalid dependency reference
             adj[dep].append(task)
             in_degree[task] += 1
 

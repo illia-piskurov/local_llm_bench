@@ -1,0 +1,61 @@
+async function pMap(items, mapper, options) {
+    if (!items || items.length === 0) return [];
+
+    const concurrency = typeof options === 'number' ? options : (options && options.concurrency) || 1;
+    const retries = options && options.retries !== undefined ? options.retries : 0;
+    const backoffMs = options && options.backoffMs !== undefined ? options.backoffMs : 0;
+    const timeoutMs = options && options.timeoutMs !== undefined ? options.timeoutMs : 0;
+
+    const results = new Array(items.length);
+    let activeCount = 0;
+
+    async function processItem(index, attempt = 0) {
+        if (index >= items.length) return;
+
+        try {
+            // Create a timeout promise
+            const timeoutPromise = timeoutMs > 0 ? 
+                new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), timeoutMs)) :
+                Promise.resolve();
+
+            // Run the mapper with timeout
+            const result = await Promise.race([mapper(items[index], index), timeoutPromise]);
+
+            results[index] = result;
+            activeCount--;
+        } catch (err) {
+            if (attempt < retries) {
+                // Retry with exponential backoff
+                const delay = backoffMs * (2 ** attempt);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return processItem(index, attempt + 1);
+            }
+            // Reject immediately on all attempts failed
+            return Promise.reject(err);
+        }
+
+        // Start next item processing if there are still items to process and concurrency allows
+        for (let i = 0; i < concurrency && index + i < items.length; i++) {
+            if (!results[index + i]) {
+                processItem(index + i).catch(err => { throw err; });
+                break;
+            }
+        }
+    }
+
+    // Initial processing of the first `concurrency` number of items
+    for (let i = 0; i < concurrency && i < items.length; i++) {
+        processItem(i).catch(err => { throw err; });
+    }
+
+    return new Promise((resolve, reject) => {
+        const checkCompletion = () => {
+            if (activeCount === 0 && results.every(result => result !== undefined)) {
+                resolve(results);
+            } else {
+                setTimeout(checkCompletion, 100); // Polling for completion
+            }
+        };
+        checkCompletion();
+    });
+}

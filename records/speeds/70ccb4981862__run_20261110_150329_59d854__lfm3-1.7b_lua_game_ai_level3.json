@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261110_150329_59d854",
+  "host_id": "70ccb4981862",
+  "model": "lfm3-1.7b",
+  "benchmark": "lua_game_ai",
+  "level": "level3",
+  "tested_at": "2026-11-10 16:10:18",
+  "stats": {
+    "input_tokens": 2504,
+    "total_output_tokens": 6794,
+    "reasoning_output_tokens": 3938,
+    "tokens_per_second": 27.985481644620034,
+    "time_to_first_token_seconds": 4.951125,
+    "model_load_time_seconds": null
+  }
+}

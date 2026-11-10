@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```c\n#include <stdint.h>\n\n#define BUFFER_SIZE 512\n\nstatic uint8_t buffer[BUFFER_SIZE];\nstatic volatile int head = 0;\nstatic volatile int tail = 0;\n\nvoid ringbuf_init(void) {\n    head = 0;\n    tail = 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if ((tail + 1) % BUFFER_SIZE == head) {\n        return -1; // Buffer is full\n    }\n    buffer[tail] = byte;\n    tail = (tail + 1) % BUFFER_SIZE;\n    return 0;\n}\n\nint ringbuf_pop(void) {\n    if (head == tail) {\n        return -1; // Buffer is empty\n    }\n    uint8_t byte = buffer[head];\n    head = (head + 1) % BUFFER_SIZE;\n    return byte;\n}\n\nint ringbuf_available(void) {\n    return (tail - head + BUFFER_SIZE) % BUFFER_SIZE;\n}\n\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - ringbuf_available();\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 257,
+    "total_output_tokens": 220,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 14.182730822001288,
+    "time_to_first_token_seconds": 2.80924
+  }
+}

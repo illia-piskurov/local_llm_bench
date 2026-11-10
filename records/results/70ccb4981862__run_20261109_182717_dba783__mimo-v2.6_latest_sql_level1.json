@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261109_182717_dba783",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-11-09 18:34:40",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "simple_select_all: SQL: expected 'SELECT * FROM products', got 'SELECT *'",
+    "select_specific_columns: SQL: expected 'SELECT id, email, created_at FROM users', got 'SELECT id, email, created_at'",
+    "simple_where_equality: exception/timeout: ValueError: too many values to unpack (expected 2)",
+    "where_and_or_nested: SQL: expected 'SELECT id, email FROM users WHERE (status = $1 AND (role = $2 OR age >= $3))', got 'SELECT id, email WHERE (s AND (r OR a))'",
+    "order_by_limit_offset: SQL: expected 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', got 'SELECT * ORDER BY views DESC id ASC LIMIT 10 OFFSET 20'",
+    "multiple_and_conditions: SQL: expected 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', got 'SELECT * WHERE (l AND c AND t)'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

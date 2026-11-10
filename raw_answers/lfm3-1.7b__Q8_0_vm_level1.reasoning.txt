@@ -1,0 +1,279 @@
+We need to implement an interpreter for a simple stack-based language. The program is passed as multi-line text. We'll have functions: run(program: str) -> list[str], returning list of printed strings (output from PRINT). So we parse lines, ignore empty lines and comments starting with '#'. For each line, we need to handle instructions.
+
+Supported instructions:
+
+- PUSH <n> — push number n onto the stack. The argument is a space separated integer? Probably can be negative? We'll assume int conversion.
+- POP — pop value from the stack.
+- ADD — pop two values, push their sum. (order: pop two values: first pop is b, then a? The description says for SUB: "pop two values (b, then a), push a - b". For MUL: similarly. For DIV: pop two values (b, then a), push a // b. So it's typical stack where top is last pushed; to get a and b, we need to pop the top as second argument? Let's parse each:
+
+We need to define the semantics precisely.
+
+Standard stack operations:
+
+- PUSH n: pushes n onto stack.
+- POP: remove and return top value (pop). No output. Usually just pops.
+- ADD: pop two values, push their sum. The typical order is: take a = top (second popped?), b = next? For addition commutative so no matter. But for SUB it says "pop two values (b, then a), push a - b". So they define first popped value is b, second popped is a. Then compute a - b and push result. Similarly for DIV: pop two values (b, then a), push a // b.
+
+Thus the order matters for subtraction and division.
+
+Let's implement as:
+
+- For ADD: pop top -> x (call it y? but we need both). Actually let's define: stack = [ ... , top]. We'll use operations: a = stack.pop() # this is the last value. But SUB wants a - b where they say pop two values (b, then a). So first popped is b, second popped is a. So we can get b = stack.pop(), a = stack.pop(). Then compute push(a + b?) For ADD: sum of both? Not order-specific.
+
+But for clarity:
+
+Implement functions that take the program lines and return list of outputs from PRINT.
+
+We also need to raise clear errors when not enough values on stack or division by zero, with line number. So we must track line numbers (1-indexed?). The input multi-line text: lines separated by newline. We'll ignore empty lines and comment lines (#). But for error reporting, line number should be the original line number in program? Probably 1-indexed including all lines (including comments?). Usually they'd want line numbers as given in the file. If we ignore empty lines and comments but still need to report which instruction line caused error. I'll treat each non-empty, non-comment line as a line index starting from 1.
+
+Implementation plan:
+
+Define function run(program: str) -> list[str]:
+
+- Initialize stack = [] (list representing stack).
+- Initialize output = [].
+
+- Split program into lines: using splitlines() or iterate over program.split('\n'). Note that there might be trailing newline; handle accordingly.
+
+- For each line number i (starting at 1), strip whitespace? We'll keep original line for error reporting. If line stripped is empty or starts with '#', skip processing and continue to next line, but don't increment output for those lines. However we still need to count them in indexing? Usually you'd ignore them; but the problem says "Empty lines and lines starting with '#' are comments and must be ignored." So they should not affect execution nor printed outputs. For error reporting on missing stack or division by zero, we need line number of instruction.
+
+Thus iterate through lines with index i from 1 to len(lines). If stripped_line.strip() == '' or stripped_line.startswith('#'), then continue (skip). Else process.
+
+Parsing each non-comment/non-empty line: split by spaces. The first token is the command. Then if there are additional tokens, they might be arguments for PUSH only. For others like POP, ADD etc., no args.
+
+Implement mapping:
+
+if line starts with "PUSH": then expect argument n = int(tokens[1])? Actually format: "PUSH <n>". So tokens length >= 2. We'll split accordingly. Example: "PUSH 5" -> ["PUSH", "5"].
+
+Push value.
+
+If POP: just pop stack if possible; else raise error with line number and message.
+
+ADD, SUB, MUL, DIV: they require two pops. For SUB: (b, then a) meaning first popped = b, second popped = a. So compute result = a op b? Let's define:
+
+For ADD: push a + b.
+For SUB: push a - b.
+For MUL: push a * b.
+For DIV: push a // b.
+
+Implement as described.
+
+DUP: duplicate the value on top of stack. Means push another copy of top value (so stack grows by 1). So pop current top, then push it again? Actually "duplicate the value on top" typical means you push another copy onto the stack, resulting in two copies at top. Implementation: pop top (x), then push x again. Equivalent to pushing same value again.
+
+SWAP: swap the top two values on the stack. If there are fewer than 2 elements? Should raise error maybe.
+
+PRINT: print the value on top of the stack (without popping it). We'll get value = stack.pop()? Actually we shouldn't pop, just output current top without removing. So we need to check if stack empty -> error. Then append str(value) to output list.
+
+Note that PRINT returns a string representation. Usually numbers printed as integer? Example: they didn't specify formatting. We'll assume Python's str for the value (int). So push ints, but division yields integer // which may be negative etc. Should we handle floats? It's only integers.
+
+Now define errors:
+
+- If operation requires more values than available on stack -> raise ValueError with line number: "Not enough values on stack for instruction at line X". We'll define custom error message and re-raise as RuntimeError or just use Exception. The run function should catch and perhaps propagate? But requirement: "If the stack does not have enough values for an operation — raise a clear error with the line number. Division by zero — raise a clear error with the line number." So we must raise exceptions when such condition occurs, but our run() will return list of printed strings; we can't catch and continue? Usually we want to implement run that does the parsing and returns output, but if an error occurs during execution, perhaps we should propagate exception. The requirement: "Implement an interpreter ... Return only the code in a single ```python ... ``` block". We'll define run to raise errors as needed; not catching them.
+
+Thus inside loop for each line (non-empty non-comment), we need to handle:
+
+- Parse tokens = line.split()
+  - if first token == 'PUSH': then ensure len(tokens) >= 2, else error. Then push int(tokens[1]).
+- elif token0 == 'POP': pop.
+- elif token0 == 'ADD': need at least 2 values; compute a = stack.pop()? Wait we decided to get b first: b = stack.pop(), then a = stack.pop(). But we also might want to keep the order for subtraction/division. Let's adopt:
+
+For SUB: push (a - b) where a is second popped, b is first popped.
+
+Implementation generic: For binary ops ADD, SUB, MUL, DIV: pop top -> val1, then pop next -> val2? Actually typical stack operation: if we have expression like "ADD" means add the two most recent values. Since they specify order for subtraction and division but not addition etc., maybe both are same because commutative (except negative numbers). But let's implement as per their spec.
+
+Thus:
+
+- For ADD: push a + b where a = stack.pop(), b = stack.pop()? Wait, if we pop first value we get topmost. Suppose stack currently [..., x] with x being top. To compute sum of the two values on stack (the most recent and previous), you need to take both before removing them: a = stack.pop(); b = stack.pop(). That yields a is top, b is next. For addition it's fine either way.
+
+But for SUB they define pop b then a, push a - b. So if we use same code as above (pop b first?), we could implement:
+
+- Let b = stack.pop()
+- If there is still elements: a = stack.pop() else error.
+- Then compute result = op(a, b) accordingly.
+
+Thus for all binary ops, we can pop two values in order of topmost first. For ADD it doesn't matter; but for SUB and DIV they have specific order; so implement as:
+
+if token == 'SUB':
+    if len(stack) < 2: error.
+    else:
+        b = stack.pop()
+        a = stack.pop()
+        result = a - b
+        stack.append(result)
+
+If token == 'DIV':
+    similar, but check division by zero: if b == 0: raise ZeroDivisionError.
+
+For DIV they say push a // b (integer division). So same order as SUB: a is second popped? Wait "pop two values (b, then a), push a // b". That suggests we pop first value = b, second = a. Then compute a // b and push result.
+
+Thus implement:
+
+if token == 'DIV':
+    if len(stack) < 2: error.
+    else:
+        b = stack.pop()
+        a = stack.pop()
+        if b == 0: raise ZeroDivisionError(f"division by zero at line {line_num}")
+        result = a // b
+        stack.append(result)
+
+But note integer division for negative numbers? Python's // does floor division; but they said integer division. We'll just use //.
+
+For MUL: just push a * b, no special order.
+
+ADD: push a + b.
+
+Now DUP: duplicate top value. Implementation:
+
+- if stack empty? Possibly error.
+- else: x = stack.pop()
+- stack.append(x)
+
+Alternatively we can do stack.extend([x, x]) but need to be careful about the pop. Simpler: val = stack[-1]; stack.append(val). But that also counts as one extra push. Could just use:
+
+if len(stack) == 0: raise error.
+else:
+    top = stack.pop()
+    stack.append(top)
+
+But we popped and pushed again; effectively duplicates.
+
+SWAP: swap top two values on stack. If stack size < 2: error.
+
+Implementation: if len(stack) >= 2:
+    a = stack.pop() # top
+    b = stack.pop() # next
+    # push b then a? Actually swapping means order reversed.
+    stack.append(b)
+    stack.append(a)
+
+Alternatively we can do:
+
+temp = stack.pop()
+stack.append(temp)
+stack.append( ... )? Let's just implement: if len(stack) >= 2:
+    x = stack.pop()
+    y = stack.pop()
+    # Now stack is missing top two; push them in reverse order.
+    stack.append(y)
+    stack.append(x)
+
+But need to be careful: After popping both, we have the rest of stack. Then pushing y then x results in original stack with swapped order.
+
+Alternatively could use a temporary variable. We'll implement as described.
+
+Now PRINT: just output str(stack[-1])? Actually print top without removing: So value = stack[-1] if stack else error.
+
+Add to output list: output.append(str(value))
+
+At end of all lines, return output.
+
+We also need to raise clear errors with line number. Let's implement custom exceptions or just use Exception with descriptive message and include line number.
+
+We'll write:
+
+def run(program):
+    output = []
+    stack = []
+    lines = program.splitlines()
+    for idx, raw_line in enumerate(lines, start=1):
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith('#'):
+            continue
+        # split into tokens by whitespace
+        parts = raw_line.split()
+        cmd = parts[0].upper()  # maybe case-insensitive? The problem states one per line: "PUSH <n>". So we'll treat as exactly uppercase.
+        if cmd == 'PUSH':
+            if len(parts) < 2:
+                raise ValueError(f"Line {idx}: PUSH requires argument, missing")
+            try:
+                n = int(parts[1])
+            except ValueError:
+                raise ValueError(f"Line {idx}: PUSH expects integer, got '{parts[1]}'")
+            stack.append(n)
+        elif cmd == 'POP':
+            if len(stack) == 0:
+                raise IndexError(f"Line {idx}: POP from empty stack")
+            stack.pop()
+        elif cmd == 'ADD':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: ADD requires two operands, got {len(stack)} on stack")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a + b)
+        elif cmd == 'SUB':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: SUB requires two operands, got {len(stack)} on stack")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+        elif cmd == 'MUL':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: MUL requires two operands, got {len(stack)} on stack")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a * b)
+        elif cmd == 'DIV':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: DIV requires two operands, got {len(stack)} on stack")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise ZeroDivisionError(f"Line {idx}: Division by zero (b={b})")
+            stack.append(a // b)
+        elif cmd == 'DUP':
+            if len(stack) == 0:
+                raise IndexError(f"Line {idx}: DUP on empty stack")
+            top = stack.pop()
+            stack.append(top)
+        elif cmd == 'SWAP':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: SWAP requires two values, got {len(stack)} on stack")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(b)
+            stack.append(a)
+        elif cmd == 'PRINT':
+            if not stack:
+                raise IndexError(f"Line {idx}: PRINT on empty stack")
+            value = stack[-1]
+            output.append(str(value))
+            # Do NOT pop
+        else:
+            raise ValueError(f"Unknown command '{cmd}' at line {idx}")
+    return output
+
+But note we used parts[0].upper() to handle case variations. The commands are uppercase in description, but could be any? We'll just match exactly as given.
+
+Also for DUP and SWAP: they duplicate or swap top two values; our method pops both then pushes reversed order. That works.
+
+Potential issues:
+
+- For DUP we popped the top element and pushed it again, effectively leaving stack same size. Good.
+
+- For SWAP: after popping both we push b (which was second) then a (top). This results in original order swapped? Let's test: Suppose stack = [x1, x2] where x2 is top. Then we want to swap so becomes [x2, x1]? Actually swapping top two means the positions of top and next become reversed; final stack should have same elements but top now previous element, second from top becomes first? Example original: bottom ... , a (second), b (top). After SWAP, top becomes a, second becomes b. So we need to push a then b at top? Wait typical swap of top two values means exchange the positions of the most recent and next most recent. Starting stack [..., a, b] where b is topmost. After swapping, we want [..., b, a]. That is, now top = b (old top) swapped with second last? Let's reason: Suppose stack has exactly two elements: bottom, top. Swapping them yields top and bottom reversed: new top = bottom, new bottom = top. Implementation: we pop both: first popped = b (top), then a (second). Then push b (the first popped) then a (second popped)? That would give [a,b] again? Let's simulate:
+
+Original stack = [x0, x1] with x1 on top. So list from bottom to top: x0 (index 0) at bottom, x1 at index -1.
+
+Our algorithm: b = stack.pop() => returns x1; now stack is [x0]. Then a = stack.pop() => but there's only x0 left? That would be wrong because we need two values. For two element stack, popping twice yields both elements in reverse order. Let's implement properly:
+
+We want to swap top two: So we should retrieve them and push them back reversed.
+
+Procedure:
+
+- If len(stack) >= 2:
+    - temp = stack.pop() # remove top (call it top)
+    - second = stack.pop() # now second value (the one below top)
+    - stack.append(second) # put second at top
+    - stack.append(temp) # then push original top
+
+This results in stack after pushes: [..., second, temp]? Actually we removed both items; after popping, the remaining stack contains elements below them. Then we append second then temp, which places second on top and temp below it? Wait order: When you append to a list representing stack (list), appending adds at the end (top). So after first append(second) -> now last element is second; after second append(temp) -> last becomes temp. So final top = temp (original topmost value?), bottom? Let's simulate:
+
+Original stack before SWAP: e.g., [..., a, b] where b top.
+
+Step1: temp = stack.pop() => returns b; stack now [..., a].
+Step2: second = stack.pop() => returns a; stack now [...].
+Step3: stack.append(second) -> appends a to end, so stack becomes [... , a].
+Step4: stack.append(temp) -> appends b, final stack = [... , a, b]? That's not swapped. This yields original order again? Let's check:
+
+We want final top = a? Actually original was [..., a, b] (a below

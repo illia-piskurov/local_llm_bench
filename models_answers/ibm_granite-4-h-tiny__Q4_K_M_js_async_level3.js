@@ -1,56 +1,72 @@
 async function pMap(items, mapper, options = {}) {
-  const { signal, settled = false } = options;
+  const { concurrency, retries = 0, backoffMs = 0, timeoutMs } = options;
+  if (items.length === 0) return [];
+
+  let signal = options.signal;
+  let settledMode = false;
+  
   if (signal && signal.aborted) {
-    return Promise.reject(signal.reason || new Error("Aborted"));
+    throw new Error(signal.reason);
   }
 
-  const results = [];
+  const results = new Array(items.length).fill(undefined);
   let index = 0;
-
-  async function processItem(itemIndex) {
-    while (true) {
-      await new Promise(resolve => setTimeout(resolve, 0));
-      try {
-        if (signal && signal.aborted) throw new Error("Aborted");
-        const startTime = Date.now();
-        const result = await Promise.race([
-          mapper(items[index], index),
-          new Promise((_, reject) =>
-            setTimeout(reject, options.timeoutMs || Infinity, Error("Timeout"))
-          ),
-        ]);
-        results.push({ status: "fulfilled", value: result });
-        index++;
-        return;
-      } catch (error) {
-        if (signal && signal.aborted) throw error;
-        if (options.retries <= 0) {
-          results.push({ status: "rejected", reason: error.message || error });
-          index++;
-          return;
-        }
-        const delay = options.backoffMs * Math.pow(2, options.retries - 1);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        options.retries--;
-      }
-    }
-  }
-
+  const queue = [...items];
   const promises = [];
-  while (index < items.length) {
-    for (let i = 0; i < concurrency && index < items.length; i++) {
-      promises.push(processItem(index));
+
+  while (index < items.length || promises.length > 0) {
+    while (promises.length < concurrency && index < items.length) {
+      const item = queue.shift();
+      if (!item) break;
+
+      let attempt = 0;
+      const timeoutId = setTimeout(() => {
+        throw new Error("Timeout");
+      }, timeoutMs);
+
+      const retry = async () => {
+        try {
+          return await mapper(item, index);
+        } catch (error) {
+          if (++attempt <= retries) {
+            await new Promise(resolve => setTimeout(resolve, backoffMs * Math.pow(2, attempt - 1)));
+            return retry();
+          }
+          throw error;
+        }
+      };
+
+      const promise = retry()
+        .then(result => {
+          clearTimeout(timeoutId);
+          results[index] = { status: "fulfilled", value: result };
+        })
+        .catch(error => {
+          clearTimeout(timeoutId);
+          if (signal && signal.aborted) {
+            promises.forEach(p => p.catch(() => {}));
+            throw new Error("Aborted");
+          }
+          results[index] = { status: "rejected", reason: error.message || error };
+        });
+      
+      promises.push(promise);
+      index++;
     }
-    await Promise.race(promises);
-    promises.splice(0, promises.length);
+
+    await Promise.race(promises).catch(() => {});
   }
 
-  if (!settled) return results;
-  const settledResults = [];
-  while (results.length > 0) {
-    const result = results.shift();
-    settledResults.push(result.status === "fulfilled" ? { status: "fulfilled", value: result.value } : { status: "rejected", reason: result.reason });
-    if (!settled && signal && signal.aborted) break;
+  if (settledMode) {
+    return results;
+  } else {
+    const settledResults = [];
+    for (const result of results) {
+      if (result === undefined) {
+        break; // incomplete or cancelled tasks
+      }
+      settledResults.push(result);
+    }
+    return Promise.allSettled(settledResults.map(r => ({ status: r.status, value: r.value || r.reason })));
   }
-  return settled ? settledResults : results;
 }

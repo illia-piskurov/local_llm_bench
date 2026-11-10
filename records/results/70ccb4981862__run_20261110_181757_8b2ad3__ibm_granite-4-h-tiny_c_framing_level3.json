@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_181757_8b2ad3",
+  "host_id": "70ccb4981862",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "c_framing",
+  "level": "level3",
+  "tested_at": "2026-11-10 18:27:06",
+  "passed": 0,
+  "total": 10,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/ibm_granite-4-h-tiny__Q4_K_M_c_framing_level3.c:15:9: error: call to undeclared function 'ringbuf_available'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   15 |     if (ringbuf_available() + len > BUFFER_SIZE) {\n      |         ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/ibm_granite-4-h-tiny__Q4_K_M_c_framing_level3.c:28:14: error: call to undeclared function 'ringbuf_available'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   28 |     if (n >= ringbuf_available()) {\n      |              ^\n2 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,144 @@
+#include <stdint.h>
+#include <string.h>
+
+#define BUFFER_SIZE 512
+
+static uint8_t buffer[BUFFER_SIZE];
+static size_t head;
+static size_t count;
+
+void ringbuf_init(void)
+{
+    head = 0;
+    count = 0;
+}
+
+int ringbuf_push(uint8_t byte)
+{
+    if (count == BUFFER_SIZE) {
+        return -1;
+    }
+
+    buffer[head] = byte;
+    head = (head + 1) % BUFFER_SIZE;
+    count++;
+
+    return 0;
+}
+
+int ringbuf_pop(void)
+{
+    if (count == 0) {
+        return -1;
+    }
+
+    int byte = buffer[head];
+    head = (head + 1) % BUFFER_SIZE;
+    count--;
+
+    return byte;
+}
+
+int ringbuf_available(void)
+{
+    return (int)count;
+}
+
+int ringbuf_free_space(void)
+{
+    return BUFFER_SIZE - ringbuf_available();
+}
+
+int decode_packet(const uint8_t *stream, int stream_len,
+                  uint8_t *out_payload, int *out_type)
+{
+    if (stream == NULL || out_type == NULL || stream_len < 4) {
+        return -1;
+    }
+
+    for (int i = 0; i + 4 <= stream_len; i++) {
+        if (stream[i] != 0xAA) {
+            continue;
+        }
+
+        uint8_t type = stream[i + 1];
+        uint8_t len = stream[i + 2];
+
+        if (i + 3 + len >= stream_len) {
+            continue;
+        }
+
+        uint8_t checksum = 0;
+        for (uint8_t j = 0; j < len; j++) {
+            checksum ^= stream[i + 3 + j];
+        }
+
+        if (stream[i + 3 + len] != checksum) {
+            continue;
+        }
+
+        if (out_payload != NULL && len > 0) {
+            memcpy(out_payload, stream + i + 3, len);
+        }
+
+        *out_type = type;
+        return (int)len;
+    }
+
+    return -1;
+}
+
+void feed_bytes(const uint8_t *data, int len)
+{
+    if (data == NULL || len <= 0) {
+        return;
+    }
+
+    for (int i = 0; i < len; i++) {
+        ringbuf_push(data[i]);
+    }
+}
+
+int get_next_packet(uint8_t *out_payload, int *out_type)
+{
+    if (out_payload == NULL || out_type == NULL || ringbuf_available() == 0) {
+        return -1;
+    }
+
+    size_t start = head;
+    size_t remaining = count;
+
+    while (remaining >= 4) {
+        uint8_t magic = buffer[start];
+        uint8_t type = buffer[start + 1];
+        uint8_t len = buffer[start + 2];
+
+        if (magic != 0xAA || len > remaining - 3) {
+            start++;
+            remaining--;
+            continue;
+        }
+
+        uint8_t checksum = 0;
+        for (uint8_t j = 0; j < len; j++) {
+            checksum ^= buffer[(start + 3 + j) % BUFFER_SIZE];
+        }
+
+        if (buffer[(start + 3 + len) % BUFFER_SIZE] != checksum) {
+            start++;
+            remaining--;
+            continue;
+        }
+
+        if (out_payload != NULL && len > 0) {
+            memcpy(out_payload, buffer + (start + 3) % BUFFER_SIZE, len);
+        }
+
+        *out_type = type;
+        head = (start + 4) % BUFFER_SIZE;
+        count -= 4;
+        return (int)len;
+    }
+
+    return -1;
+}

@@ -98,12 +98,21 @@ def _generate_with_retry(
     gen_config: GenerationConfig | None,
     console: Console,
 ) -> lmstudio.ModelResponse:
-    """Queries the model, retrying with a doubled token budget while the output is truncated."""
-    cfg = replace(gen_config) if gen_config else GenerationConfig()
+    """Queries the model, retrying with a doubled token budget while the output is truncated.
+
+    Without an explicit budget (LM Studio, where length is governed by the model's own preset) a retry could not
+    change anything, so a truncated reply is reported right away instead of being generated again.
+    """
+    cfg = lmstudio.resolve_for_backend(replace(gen_config) if gen_config else GenerationConfig())
     while True:
         response = lmstudio.ask_model(model_key, messages, config=cfg)
         if not response.truncated:
             return response
+        if cfg.max_tokens is None:
+            raise GenerationTruncatedError(
+                f"{response.truncated_reason}; raise the context length / max tokens in the server's model settings",
+                response,
+            )
         next_budget = cfg.max_tokens * 2
         if next_budget > MAX_TOKENS_RETRY_CAP:
             raise GenerationTruncatedError(
@@ -403,7 +412,7 @@ def run_queue(
         console.print("\n[green]✨ No tests to execute — all have already passed![/green]")
         return
 
-    cfg = gen_config or GenerationConfig()
+    cfg = lmstudio.resolve_for_backend(gen_config or GenerationConfig())
     art_info = get_model_artifact_info(model.key)
     quant = art_info.quantization or detect_quantization(model.key)
     backend = detect_backend(lmstudio.get_base_url())
@@ -440,7 +449,10 @@ def run_queue(
         details.append(f"Backend: [bold]{backend}[/bold]")
     if suite_ver:
         details.append(f"Suite: [dim]{suite_ver}[/dim]")
-    params_text = f"temp={cfg.temperature}, seed={cfg.seed}, max_tok={cfg.max_tokens}"
+    params_text = ", ".join(
+        f"{label}={'server preset' if value is None else value}"
+        for label, value in (("temp", cfg.temperature), ("max_tok", cfg.max_tokens))
+    )
     if "think" in gen_params:
         params_text += f", think={gen_params['think']}, think_budget={gen_params['think_budget'] or 'unlimited'}"
     details.append(f"Params: [dim]{params_text}[/dim]")

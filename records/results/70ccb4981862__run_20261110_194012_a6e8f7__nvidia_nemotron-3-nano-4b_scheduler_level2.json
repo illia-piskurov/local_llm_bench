@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261110_194012_a6e8f7",
+  "host_id": "70ccb4981862",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-10 19:46:06",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+    "simple_chain: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+    "diamond_pick_longer_branch: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+    "independent_tasks: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+    "wide_graph: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

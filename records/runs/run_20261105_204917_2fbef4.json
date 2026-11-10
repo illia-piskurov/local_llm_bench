@@ -29,8 +29,8 @@
   },
   "suite_version": "fbb233f (051cb8695784)",
   "started_at": "2026-11-05 20:49:17",
-  "completed_at": null,
-  "status": "in_progress",
+  "completed_at": "2026-11-05 20:49:17",
+  "status": "failed",
   "results": [
     {
       "benchmark": "scheduler",

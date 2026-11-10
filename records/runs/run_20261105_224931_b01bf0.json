@@ -1,0 +1,36 @@
+{
+  "id": "run_20261105_224931_b01bf0",
+  "host_id": "70ccb4981862",
+  "model_key": "minicpm-v4.5:8b",
+  "model_name": "minicpm-v4.5:8b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.14",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "minicpm-v4.5:8b",
+      "display_name": "minicpm-v4.5:8b",
+      "architecture": "qwen3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 6121827879,
+      "params_string": "8.2B",
+      "max_context_length": 40960,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "low",
+    "think_budget": 4096,
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "fbb233f (051cb8695784)",
+  "started_at": "2026-11-05 22:49:31",
+  "completed_at": "2026-11-05 23:05:37",
+  "status": "interrupted",
+  "results": [],
+  "speeds": []
+}

@@ -1,0 +1,129 @@
+{
+  "id": "run_20261110_145650_3752ac",
+  "host_id": "70ccb4981862",
+  "model_key": "lfm3-1.7b",
+  "model_name": "LFM3 1.7B",
+  "quantization": "Q8_0",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "lfm3-1.7b",
+      "display_name": "LFM3 1.7B",
+      "architecture": "lfm3",
+      "quantization": "Q8_0",
+      "quantization_bits": 8,
+      "size_bytes": 1846238496,
+      "params_string": "1.7B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": "LiquidAI"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 14:56:50",
+  "completed_at": "2026-11-10 15:03:29",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 14:58:32",
+      "passed": 17,
+      "total": 18,
+      "failures": [
+        "dup: unexpected exception/timeout: ValueError: Line 3: ADD needs two operands, got 1 on stack"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-10 15:00:45",
+      "passed": 19,
+      "total": 27,
+      "failures": [
+        "dup: unexpected exception/timeout: ValueError: Line 3: ADD needs two operands, got 1 on stack",
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: Label 'skip' not defined",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+        "countdown_loop: unexpected exception/timeout: IndexError: Line 3: DUP on empty stack",
+        "count_up_loop: unexpected exception/timeout: ValueError: Line 4: ADD needs two operands, got 1 on stack"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-10 15:03:29",
+      "passed": 22,
+      "total": 37,
+      "failures": [
+        "dup: unexpected exception/timeout: ValueError: Line 3: ADD needs two operands, got 1 on stack",
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Line 2: Label 'skip' not defined",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Line 5: Label 'end' not defined",
+        "countdown_loop: unexpected exception/timeout: IndexError: Line 3: DUP on empty stack",
+        "count_up_loop: unexpected exception/timeout: ValueError: Line 4: ADD needs two operands, got 1 on stack",
+        "call_ret_basic: unexpected exception/timeout: ValueError: Line None: Label 'double' not defined",
+        "call_ret_nested: unexpected exception/timeout: ValueError: Line None: Label 'func_a' not defined",
+        "comparison_eq_gt_lt: unexpected exception/timeout: ValueError: Line 3: EQ requires an argument (e.g., EQ)",
+        "store_and_load: unexpected exception/timeout: ValueError: Line 2: Variable 'x' has not been stored yet",
+        "store_overwrite: unexpected exception/timeout: ValueError: Line 2: Variable 'val' has not been stored yet",
+        "recursive_factorial: unexpected exception/timeout: ValueError: Line None: Label 'fact' not defined",
+        "recursive_fibonacci: unexpected exception/timeout: ValueError: Line None: Label 'fib' not defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 14:58:30",
+      "stats": {
+        "input_tokens": 285,
+        "total_output_tokens": 4679,
+        "reasoning_output_tokens": 3992,
+        "tokens_per_second": 46.85107636241713,
+        "time_to_first_token_seconds": 0.363013,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-10 15:00:43",
+      "stats": {
+        "input_tokens": 1104,
+        "total_output_tokens": 5169,
+        "reasoning_output_tokens": 3972,
+        "tokens_per_second": 40.05422945846589,
+        "time_to_first_token_seconds": 1.4446459999999999,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-10 15:03:25",
+      "stats": {
+        "input_tokens": 1603,
+        "total_output_tokens": 5816,
+        "reasoning_output_tokens": 3990,
+        "tokens_per_second": 36.88341990122525,
+        "time_to_first_token_seconds": 2.249895,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+```c
+#include <stdint.h>
+
+#define BUFFER_SIZE 512
+
+static uint8_t buffer[BUFFER_SIZE];
+static unsigned int front = 0;
+static unsigned int rear = 0;
+static unsigned int count = 0;
+
+void ringbuf_init(void) {
+    // Initial state: empty
+    front = 0;
+    rear = 0;
+    count = 0;
+}
+
+int ringbuf_push(uint8_t byte) {
+    if (count == BUFFER_SIZE) {
+        return -1; // buffer is full
+    }
+    buffer[rear] = byte;
+    rear = (rear + 1) % BUFFER_SIZE;
+    ++count;
+    return 0;
+}
+
+int ringbuf_pop(void) {
+    if (count == 0) {
+        return -1; // buffer empty
+    }
+    int val = buffer[front];
+    front = (front + 1) % BUFFER_SIZE;
+    --count;
+    return (int)val;
+}
+
+int ringbuf_available(void) {
+    return count;
+}
+
+int ringbuf_free_space(void) {
+    return BUFFER_SIZE - count;
+}
+
+/* 
+ * Decode a binary packet starting at the current scan position.
+ *
+ * Packet format:
+ *   [0xAA, type, len, payload..., checksum]
+ *   length field (len) = number of payload bytes
+ *   checksum = XOR of all payload bytes (if len == 0 -> checksum = 0)
+ *
+ * Parameters:
+ *   stream:       pointer to the first byte of the data to scan
+ *   stream_len:   total number of bytes in 'stream' (used for bounds checking)
+ *   out_payload: destination pointer; on success this will contain the payload bytes copied from 'stream'
+ *                 starting at position (scan_start + 3) and ending just before the checksum byte.
+ *   out_type:     output parameter for message type, set to the parsed 'type' byte.
+ *
+ * Returns:
+ *   Number of payload bytes extracted (>=0). Returns -1 if no valid packet is found or data insufficient.
+ */
+int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {
+    for (int i = 0; i < stream_len; ) {
+        // Look for start marker 0xAA
+        if (stream[i] != 0xAA) {
+            ++i;
+            continue;
+        }
+
+        /* Ensure we have at least two more bytes: type and length */
+        if (i + 1 >= stream_len || i + 2 >= stream_len) {
+            // Not enough fields left → invalid marker, skip
+            ++i;
+            continue;
+        }
+
+        uint8_t magic = stream[i];               // should be 0xAA
+        uint8_t type  = stream[i + 1];
+        uint8_t len   = stream[i + 2];          // length of payload bytes
+
+        /* Check that the rest of the packet has enough bytes for payload and checksum */
+        if (i + 3 + len >= stream_len) {        // need at least 1 extra byte for checksum
+            ++i; // skip this invalid packet, move on
+            continue;
+        }
+
+        /* Compute XOR of the payload bytes (len bytes starting after the length field) */
+        uint8_t checksum = 0;
+        if (len > 0) {
+            uint8_t xor_val = 0;
+            for (uint8_t k = 0; k < len; ++k) {
+                int idx = i + 3 + k; // payload starts at i+3
+                xor_val ^= stream[idx];
+            }
+            checksum = xor_val;
+        }
+
+        /* Verify the checksum matches */
+        if (stream[i + 3 + len] != checksum) {
+            ++i; // corrupted packet, skip
+            continue;
+        }
+
+        /* Valid packet found: copy payload into out_payload and store type in *out_type */
+        size_t payload_len = len; // number of bytes to copy
+        if (payload_len > 0) {
+            // Copy the payload bytes from stream
+            for (uint8_t k = 0; k < payload_len; ++k) {
+                out_payload[--(size_t)k] = stream[i + 3 + k]; // careful with indexing: better use a local pointer
+            }
+        }
+
+        /* Simpler approach: just fill the buffer region directly */
+        uint8_t *payload_start = &stream[i + 3];
+        for (uint8_t k = 0; k < payload_len; ++k) {
+            out_payload[k] = stream[payload_start + k];
+        }
+        // Note: if out_payload is supposed to be the whole buffer or we need to write into it,
+        /* this assumes out_payload points to a writable array with at least payload_len bytes.
+         * For simplicity, we treat out_payload as a pointer to where the payload will be stored */
+        // The caller can ensure sufficient space.
+
+        *out_type = type;
+        return (int)payload_len;
+    }
+    /* No valid packet */
+    return -1;
+}
+```

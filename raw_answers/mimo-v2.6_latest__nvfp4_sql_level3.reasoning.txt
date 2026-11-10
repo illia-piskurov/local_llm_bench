@@ -1,0 +1,14 @@
+Let me write the full compiler with all three levels.
+
+Key points:
+- select elements can be dict {expr, as}
+- having with params continuing numbering
+- subqueries in WHERE with IN op, params appended sequentially
+
+Let me write it carefully.
+
+For subqueries: condition dict {field, op: 'IN', query: dict}. Compile inner query first, append its params, then generate `field IN (sql)`.
+
+For HAVING: params continue numbering after where. Since I compile where first and append params, then compile having, numbering is naturally sequential.
+
+Let me write the full code.

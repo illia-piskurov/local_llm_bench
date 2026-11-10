@@ -1,0 +1,479 @@
+We need to produce final answer as a single python code block with `def run(program: str) -> list[str]:` and implement the described features. The user message is actually about extending previous implementation (which was about labels and conditionals). But then there's another paragraph about "subroutines, comparison operations, named variables" which seems unrelated or maybe part of a different problem? Let me re-read original prompt:
+
+User: 
+```
+### User:
+Extend your implementation with support for labels and conditional jumps:
+
+LABEL <name>   — define a label at the current position (does nothing during execution)
+JMP <name>     — unconditional jump to label
+JZ <name>      — pop value from stack, jump to label if value == 0
+JNZ <name>     — pop value from stack, jump to label if value != 0
+
+Do not change the behavior of previously implemented instructions and preserve the run(program: str) -> list[str] signature.
+
+Return only the code in a single ```python ... ``` block, without any explanations outside the block.
+```
+
+Then there's assistant's partial code. The user also pasted an earlier version of `run` with many operations (ADD, SUB, MUL, DIV, DUP, SWAP, PRINT). The assistant attempted but had errors in JZ/JNZ handling.
+
+Now later in the message: "Wait - I messed up the handling of `JZ`, `JNZ`. Actually these instructions have two arguments? The specification: `JZ <name>` — pop value from stack, jump to label if value == 0. So they need exactly two tokens: "JZ", then target label name.
+
+But my earlier parsing only took first token for operation. I need to handle them as separate branches before LABEL/JMP etc., and parse correctly.
+
+Then the assistant wrote a rewrite but still incomplete; now user gave extra requirements about subroutines, comparison operators, named variables? Actually that's new content: "Subroutines (call stack): CALL <name> — push return address onto call stack and jump to label <name>. RET — pop return address from call stack and jump to it. Comparison ops: EQ, GT, LT. Named vars: STORE, LOAD."
+
+But the current request is about extending with labels and conditional jumps (JZ/JNZ). The assistant's code needs to include these new features? Let me parse timeline:
+
+- Original problem statement: "Extend your implementation with support for labels and conditional jumps: LABEL ... JMP ... JZ ... JNZ". That is what we need.
+
+- The user gave a partially implemented `run` function that has many operations like PUSH, POP, ADD etc., but appears incomplete in handling JZ/JNZ. They also mention "Do not change the behavior of previously implemented instructions and preserve run(program: str) -> list[str] signature."
+
+- Then they wrote an assistant code with some modifications for LABEL, JMP, JZ (incorrect), JNZ missing.
+
+Thus I need to produce a correct implementation that supports all operations as before plus new ones? The user also later mentions "subroutines and comparisons" - but those maybe extra features not needed; perhaps they want me to incorporate them too. Let's check: At the bottom of the assistant message, there is:
+
+```
+### User:
+Extend your implementation with support for labels and conditional jumps:
+
+...
+```
+
+Then after that some more paragraphs about subroutines etc. But it's confusing.
+
+Given the entire context seems like a multi-part request but I need to decide what exactly is expected: The user just asked "Extend your implementation... Return only the code in a single ```python ... ``` block." So we must return a complete, working `run` function implementing everything described (including labels and conditional jumps) plus presumably the previously implemented instructions? Let's read the original assistant message: It contains full description of operations. The user gave that as context.
+
+Probably they expect me to rewrite or extend the assistant's partial code with proper handling for JZ/JNZ, also incorporate subroutine semantics maybe, but not required explicitly in this prompt. However I should aim to keep the same overall structure (stack, outputs). Also preserve `run(program: str) -> list[str]`. No mention of CALL/RET or comparison operators now; they might be beyond scope.
+
+Let me design a new implementation from scratch that covers all mentioned features:
+
+- Basic stack operations: PUSH n, POP, ADD/SUB/MUL/DIV, DUP, SWAP, PRINT
+- LABEL <name>: store mapping label -> line number (line index + 1). No side effect.
+- JMP <target>: unconditional jump to label's line. The target is a defined label in the map; we need to set i = labels[target] and continue (skip current instruction).
+- JZ <target>: pop value; if zero, jump to that label.
+  - JZ syntax: `JZ foo`? Actually "JZ foo" jumps to label named foo. It pops stack top and checks if it's zero; if zero then set i = labels[foo] and continue (jump). If non-zero just increment i by 1.
+- JNZ <target>: pop value; if nonzero, jump to that label. Similar but opposite.
+
+We also need CALL/RET? The user didn't ask in this prompt explicitly about subroutines or comparison operators; maybe those were part of an earlier extended version not yet implemented and are out of scope now. I will focus on labels, jumps (including JZ/JNZ). Keep the existing behavior for other ops.
+
+Let me implement clean code with while loop as previously but fix increments carefully.
+
+Implementation plan:
+
+- Use `while i < len(lines):`
+- Parse line at index i: strip, if empty or comment -> skip (i+=1; continue)
+- Split into parts. op = parts[0].upper()
+- line_no = i + 1
+
+- Handle each op:
+
+  - LABEL:
+    - Check that there are >=2 tokens.
+    - Set labels[label_name] = line_no
+    - increment i by 1 (move past definition)
+    
+  - JMP:
+    - If parts length <2 -> error
+    - target_label = parts[1].strip().upper()
+    - if target_label in labels: 
+          # jump over current instruction and go to the label's line
+          i = labels[target_label]   # set i to that line number (which is 1-indexed); but note lines list is 0-indexed. Since we just computed line_no for this iteration, which equals i+1 before change, setting i = target_line means next loop processes at index target_line-1? Actually we need careful mapping.
+          Let me test with example:
+
+Suppose:
+index 0: "PUSH 5"
+index 1: "LABEL foo" (define foo at line_no=2)
+index 2: "PRINT"
+
+Now if some other line contains "JMP foo", it's index maybe i = 3? I think we can ignore this nuance; but to make simple, set i = labels[target_label]   # which is the label's line number (1-indexed). The loop will increment after processing that iteration? If we don't have a final `i+=1`, then next iteration will process index+1. Actually in while loop, each loop processes one line at position i. So if we set i to some higher index and skip the current line, on next iteration it'll be processed (since i is now new). But Python's `while` condition checks again; we need a final increment of 1 after using continue? Let me design: If I assign `i = labels[target_label]` then `continue`, we will go back to loop start and process line at that index. At the same time, the current iteration hasn't incremented i by one yet (we set it to something else). So next iteration processes that line again? Actually after setting i to target_line (say 2) and continuing, on the next loop we'll have `while i < n:` with new value of i = 2. Then we process line at index 2 which is a statement not a label definition; but maybe it's the instruction code that follows the label. That might be okay: jump over definition (which does nothing). But they said "JMP jumps to label", meaning go to label, not its definition? I think they define label as a name for a label location; there is no actual instruction on that line except maybe none; but in our simple case it's just a marker. So jumping to the label line (definition) results in processing nothing and then continue? That seems odd. But given time constraints, let me keep this logic.
+
+  - JZ:
+    - Check stack emptiness: if empty -> error
+    - value = stack.pop()
+    - If val == 0:
+          # Jump to target label
+          if len(parts) >= 2 and parts[1].strip().upper() in labels:
+               i = labels[target_label]   # set to the line number of that label definition (or maybe instruction?) then continue
+               continue
+          else: raise ValueError unknown.
+    - Else (val != 0): fall through → `i += 1`
+    - Actually we must handle both cases. Let me implement:
+
+```
+        elif op == 'JZ':
+            if not stack:
+                raise ValueError(f"line {line_no}: JZ needs at least one item on the stack")
+            val = stack.pop()
+            if val == 0:
+                # Jump to label
+                if len(parts) >= 2 and parts[1].strip().upper() in labels:
+                    target_label = parts[1].strip().upper()
+                    i = labels[target_label]   # jump forward (to the label line)
+                    continue
+                else:
+                    raise ValueError(f"line {line_no}: JZ has no matching label")
+            else:
+                i += 1   # normal execution: move to next line
+```
+
+But note we need target_label variable. Need to get it before checking condition? Let's restructure:
+
+```
+        elif op == 'JZ':
+            if not stack:
+                raise ValueError(...)
+            val = stack.pop()
+            if val == 0 and len(parts) >= 2 and parts[1].strip().upper() in labels:
+                i = labels[parts[1].strip().upper()]   # jump
+                continue
+            elif val == 0 and not ... :
+                # fall through to next line? Actually need else case.
+```
+
+Better:
+
+```
+        elif op == 'JZ':
+            if not stack:
+                raise ValueError(f"line {line_no}: JZ needs at least one item on the stack (pop value)")
+            val = stack.pop()
+            target_label = None
+            if len(parts) >= 2 and parts[1].strip().upper() in labels:
+                target_label = parts[1].strip().upper()
+                i = labels[target_label]
+                continue
+            elif val == 0:
+                # no label or invalid → fall through (no jump)
+                pass   # already moved to next line? Actually we need to increment.
+            else:
+                i += 1
+```
+
+This is messy. Maybe I'll write separate branches: after popping value, if zero and a target exists -> set i = labels[target] and continue; elif val == 0 without label -> fall through (i+=1); if val != 0 and target exists -> jump similarly.
+
+Actually simpler: implement as:
+
+```
+        elif op == 'JZ':
+            if not stack:
+                raise ValueError(...)
+            val = stack.pop()
+            jumped = False
+            if len(parts) >= 2 and parts[1].strip().upper() in labels:
+                # has a target label → jump to it
+                i = labels[parts[1].strip().upper()]   # go to that line
+                jumped = True
+            if val == 0:
+                if jumped:  # already set i above; no need extra increment
+                    continue
+                else:
+                    pass  # fall through (i will be incremented at end)
+            else:
+                i += 1  # normal execution
+```
+
+That's still messy.
+
+Given time, maybe simpler to handle JZ/JNZ like:
+
+```
+        elif op == 'JZ':
+            if not stack: raise...
+            val = stack.pop()
+            target_label = None
+            if len(parts) >= 2:
+                try:
+                    target_label = parts[1].strip().upper()
+                except:
+                    pass
+            if target_label and target_label in labels:
+                i = labels[target_label]
+                continue
+            elif val == 0:   # should have been caught above? No, we need to jump only if zero. So check both.
+                # Actually if there is a target but value != 0 (non-zero), maybe we shouldn't jump?
+                pass
+            else:
+                i += 1
+```
+
+This is messy.
+
+Maybe better: Write JZ/JNZ as separate branches with logic similar:
+
+```
+elif op == 'JZ':
+    if not stack:
+        raise ...
+    val = stack.pop()
+    target_label = parts[1].strip().upper() if len(parts) >= 2 else None
+    jumped = False
+    if target_label and target_label in labels:
+        i = labels[target_label]
+        jumped = True
+    elif val == 0:
+        # no jump? fall through to next line (i+=1)
+        pass
+    else:
+        i += 1   # normal execution only on non-zero
+else: ...
+```
+
+Given the complexity, but maybe this is enough for a basic version.
+
+The key thing: The code must be syntactically correct and run without errors. Also need to handle division by zero correctly.
+
+Also we have "PRINT" that appends stack[-1] as string.
+
+Note: `stack` holds integers; PRINT on empty stack raises error. Should we also handle case where stack contains non-integer? It's fine.
+
+Now I will rewrite the entire function from scratch with these corrections, aiming for clarity and correct semantics.
+
+Let me write final code:
+
+```python
+def run(program: str) -> list[str]:
+    """
+    Executes the given program string.
+    Returns a list of output lines (each line is a string).
+    """
+
+    stack = []
+    outputs = []
+    labels = {}   # name -> 1-based line number where label is defined
+
+    lines = program.splitlines()
+    i = 0
+    n = len(lines)
+
+    while i < n:
+        raw_line = lines[i].strip()
+
+        # Skip empty lines and comments
+        if not raw_line or raw_line.lstrip().startswith('#'):
+            i += 1
+            continue
+
+        parts = raw_line.split()
+        op = parts[0].upper() if parts else ''
+        line_no = i + 1   # 1‑based line number for error messages
+
+        # ------------------------------------------------------------------
+        # LABEL: define a label (no effect on execution)
+        # ------------------------------------------------------------------
+        if op == 'LABEL':
+            if len(parts) < 2:
+                raise ValueError(f"line {line_no}: missing argument for LABEL")
+            label_name = parts[1].strip().upper()
+            labels[label_name] = line_no
+            i += 1   # move past the definition line
+
+        # ------------------------------------------------------------------
+        # JMP: unconditional jump to a labelled line
+        # ------------------------------------------------------------------
+        elif op == 'JMP':
+            if len(parts) < 2:
+                raise ValueError(f"line {line_no}: missing argument for JMP")
+            target_label = parts[1].strip().upper()
+            if target_label in labels:
+                # jump to the label's line and continue without advancing this iteration
+                i = labels[target_label]
+                continue
+            else:
+                raise ValueError(f"line {line_no}: unknown jump target '{target_label}'")
+
+        # ------------------------------------------------------------------
+        # JZ: pop, jump if top of stack == 0
+        # ------------------------------------------------------------------
+        elif op == 'JZ':
+            if not stack:
+                raise ValueError(f"line {line_no}: JZ needs at least one item on the stack (pop value)")
+            val = stack.pop()
+            target_label = parts[1].strip().upper() if len(parts) >= 2 else None
+            jumped = False
+            if target_label and target_label in labels:
+                i = labels[target_label]
+                jumped = True   # jump forward instead of falling through
+
+            if val == 0 and not jumped:
+                # No valid target label → fall through to next line (i += 1 is done below)
+                pass
+            elif val != 0 and jumped:
+                # We already set i, so just fall through; no extra increment needed here
+                pass
+            else:
+                # Normal flow – move forward one line
+                i += 1
+
+        # ------------------------------------------------------------------
+        # JNZ: pop, jump if top of stack != 0
+        # ------------------------------------------------------------------
+        elif op == 'JNZ':
+            if not stack:
+                raise ValueError(f"line {line_no}: JNZ needs at least one item on the stack (pop value)")
+            val = stack.pop()
+            target_label = parts[1].strip().upper() if len(parts) >= 2 else None
+            jumped = False
+            if target_label and target_label in labels:
+                i = labels[target_label]
+                jumped = True
+
+            if val != 0 and jumped:
+                # Jump forward without extra increment (jumped is set)
+                pass
+            elif val == 0 or not jumped:
+                i += 1   # normal execution – move to next line
+
+        # ------------------------------------------------------------------
+        # PUSH
+        # ------------------------------------------------------------------
+        elif op == 'PUSH':
+            if len(parts) < 2:
+                raise ValueError(f"line {line_no}: missing argument for PUSH (need a number)")
+            try:
+                n = int(parts[1])
+            except ValueError:
+                raise ValueError(f"line {line_no}: invalid number '{parts[1]}' for PUSH")
+            stack.append(n)
+
+        # ------------------------------------------------------------------
+        # POP
+        # ------------------------------------------------------------------
+        elif op == 'POP':
+            if not stack:
+                raise RuntimeError(f"line {line_no}: POP requires at least one item on the stack")
+            stack.pop()
+
+        # ------------------------------------------------------------------
+        # ADD, SUB, MUL, DIV, DUP, SWAP, CALL (if we add later)
+        # ------------------------------------------------------------------
+        elif op == 'ADD':
+            if len(stack) < 2:
+                raise ValueError(f"line {line_no}: ADD needs two operands")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a + b)
+
+        elif op == 'SUB':
+            if len(stack) < 2:
+                raise ValueError(f"line {line_no}: SUB needs two operands")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+
+        elif op == 'MUL':
+            if len(stack) < 2:
+                raise ValueError(f"line {line_no}: MUL needs two operands")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a * b)
+
+        elif op == 'DIV':
+            if len(stack) < 2:
+                raise ValueError(f"line {line_no}: DIV needs two operands")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise ZeroDivisionError(f"line {line_no}: DIV by zero (divisor = {b})")
+            stack.append(a // b)
+
+        elif op == 'DUP':
+            if not stack:
+                raise ValueError(f"line {line_no}: DUP requires at least one item to duplicate")
+            stack.append(stack[-1])
+
+        elif op == 'SWAP':
+            if len(stack) < 2:
+                raise ValueError(f"line {line_no}: SWAP needs two items, got only {len(stack)} on stack")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a)
+            stack.append(b)
+
+        elif op == 'PRINT':
+            if not stack:
+                raise ValueError(f"line {line_no}: PRINT on empty stack")
+            outputs.append(str(stack[-1]))
+
+        else:
+            # Unknown operation
+            raise ValueError(f"line {line_no}: unknown instruction '{op}'")
+
+    return outputs
+```
+
+But I notice some errors: In the JZ and JNZ handling, the logic for normal flow increments is off. Let's restructure those blocks clearly:
+
+Better to write a single code path with try/except but it's fine.
+
+Let me rewrite cleanly with simpler structure: Use separate branches each returning after processing; no ambiguous increment at end of loop because we can just not add i += 1 in all cases, only when needed. Actually easier: always `i += 1` after handling each instruction (including jumps) before continuing to the next iteration, except for jumps where you set i = ... and then continue without incrementing.
+
+Let's redesign:
+
+```
+while i < n:
+    raw_line = lines[i].strip()
+    if not raw_line or raw_line.lstrip().startswith('#'):
+        i += 1
+        continue
+
+    parts = raw_line.split()
+    op = parts[0].upper() if parts else ''
+    line_no = i + 1
+
+    # LABEL ...
+    elif ...:
+        ...
+
+    # For JZ/JNZ: after popping stack and checking zero, decide to jump.
+    # Let's write a helper:
+
+```
+
+But given the limited time I'll go with this version (but need to ensure the code is syntactically correct and runnable). I realize that my previous code has several logical issues especially in JZ/JNZ. Also missing CALL/RET etc., but perhaps out of scope.
+
+Let me rewrite from scratch more carefully, line by line:
+
+```
+def run(program: str) -> list[str]:
+    stack = []
+    outputs = []
+    labels = {}
+    lines = program.splitlines()
+    i = 0
+    n = len(lines)
+
+    while i < n:
+        raw_line = lines[i].strip()
+
+        # skip empty lines and comments
+        if not raw_line or raw_line.lstrip().startswith('#'):
+            i += 1
+            continue
+
+        parts = raw_line.split()
+        op = parts[0].upper() if parts else ''
+        line_no = i + 1
+
+        if op == 'LABEL':
+            if len(parts) < 2:
+                raise ValueError(f"line {line_no}: missing argument for LABEL")
+            label_name = parts[1].strip().upper()
+            labels[label_name] = line_no
+            i += 1   # definition does not execute; go to next line
+
+        elif op == 'JMP':
+            if len(parts) < 2:
+                raise ValueError(f"line {line_no}: missing argument for JMP")
+            target_label = parts[1].strip().upper()
+            if target_label in labels:
+                i = labels[target_label]   # jump to that label line
+                continue                  # skip increment below
+            else:
+                raise ValueError(f"line {line_no}: unknown jump target '{target_label}'")
+
+        elif op == 'JZ':
+            if not stack:
+                raise ValueError(f"line {line_no}: JZ needs at least one item on the stack (pop value)")
+            val = stack.pop()
+            if val == 0

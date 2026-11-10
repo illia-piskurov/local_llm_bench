@@ -1,0 +1,383 @@
+We need to implement an interpreter for stack-based language with support for labels and conditional jumps. The user asks:
+
+"Extend your implementation with support for labels and conditional jumps:
+
+LABEL <name> — define a label at the current position (does nothing during execution)
+JMP <name> — unconditional jump to label
+JZ <name> — pop value from stack, jump to label if value == 0
+JNZ <name> — pop value from stack, jump to label if value != 0
+
+Do not change the behavior of previously implemented instructions and preserve the run(program: str) -> list[str] signature.
+
+Return only the code in a single ```python ... ``` block, without any explanations outside the block."
+
+We need to modify `run` function accordingly. Let's understand existing code:
+
+```
+def run(program: str) -> list[str]:
+    stack = []
+    outputs = []
+
+    for line_no, raw_line in enumerate(program.splitlines(), start=1):
+        line = raw_line.strip()
+        
+        # Skip empty lines and comments (lines starting with '#')
+        if not line or line.lstrip().startswith('#'):
+            continue
+        
+        parts = line.split()
+        op = parts[0].upper()  # normalize to uppercase
+        
+        if op == 'PUSH':
+            ...
+        elif op == 'POP':
+            ...
+        elif op == 'ADD':
+            ...
+        elif op == 'SUB':
+            ...
+        elif op == 'MUL':
+            ...
+        elif op == 'DIV':
+            ...
+        elif op == 'DUP':
+            ...
+        elif op == 'SWAP':
+            ...
+        elif op == 'PRINT':
+            ...
+        else:
+            raise ValueError(...)
+    return outputs
+```
+
+We need to add labels and jumps. That means we must maintain a mapping from label name to line number (or maybe instruction index). When we encounter `LABEL <name>`, we just define that label at current line, i.e., store the line number.
+
+`JMP <name>`: unconditional jump to labeled position; we need to find where the label was defined and continue execution from there. The existing code is a simple for-loop over lines with enumerate starting at 1. We can implement jumps by maintaining a `current_line_index` or using a stack of positions? But simpler: we can just use line numbers.
+
+Let's think about how typical stack machine language works. Usually, the program is a sequence of instructions; labels and jumps are meta-instructions that affect control flow. In this simple interpreter, it might be easiest to track a variable `line_index` or maintain an index. But currently they iterate lines with enumerate line_no (1-indexed). When they process each line sequentially, they cannot jump back within the same loop without skipping intermediate lines; but we need to implement JMP: go to a label's line number and continue processing from there.
+
+We can handle by using `current_line` variable that tracks where we are in the program. However, because we iterate over all lines anyway with for loop, we would skip jumping. To support jumps, we could either rewrite as while-loop reading instructions one by one. But it's easier to keep a variable `line_index = 1` and a list of line strings; when encountering JMP, we break out of the current iteration and set the next instruction to be at the target label line number.
+
+But we can also simulate: When a jump occurs (JMP, JZ, JNZ), we need to "continue" from that point. In our existing loop, after handling a line we go to next iteration. To implement jumps, we could use `break` or restructure with while True and manual control.
+
+Given the requirement is relatively simple: We just need to add support for labels and conditional jumps without changing behavior of other instructions; keep function signature same.
+
+Implementation approach: Use an index variable i = 0 (or line_no starting from 1). Keep a dictionary `labels` mapping name -> line number (or maybe current line where the label is defined). When we encounter `LABEL <name>`, set labels[name] = line_no. When we encounter `JMP <name>`: find target_line = labels.get(name, None); if found, then set code to jump there; basically continue processing from that line.
+
+But with a for-loop approach, it's easier to implement by using while loop and manual iteration over lines with an index variable. Let me redesign the function:
+
+Pseudo:
+
+```
+def run(program: str) -> list[str]:
+    stack = []
+    outputs = []
+    labels = {}   # name -> line_number (1-indexed)
+    
+    lines = program.splitlines()
+    i = 0
+    while i < len(lines):
+        raw_line = lines[i].strip()
+        
+        if not raw_line or raw_line.lstrip().startswith('#'):
+            i += 1
+            continue
+        
+        parts = raw_line.split()
+        op = parts[0].upper()
+
+        # If op is a label, store line number with current index.
+        if op == 'LABEL':
+            # format: LABEL name <name>? Actually "LABEL <name>" or maybe "LABEL <name>" as whole line. Let's parse.
+            if len(parts) >= 2:
+                label_name = parts[1].strip().upper()   # but 'LABEL' is lower case in instruction? The spec: LABEL <name> — define a label at the current position (does nothing during execution). So line might be "LABEL foo". We'll treat first token as op, and rest after space as label name.
+                # Actually we need to extract name. For simplicity: if parts[0] == 'LABEL':
+                ...
+            else:
+                raise ValueError(...)
+            labels[label_name] = i+1   # line number is 1-indexed
+        elif op == 'JMP':
+            if len(parts) >= 2:
+                target = parts[1].strip().upper()
+                if target in labels:
+                    target_line = labels[target]
+                    # we need to set current index to that line? but our loop moves linearly.
+                    # In this approach, maybe we can just continue from target line by re-fetching the lines. Hard.
+                else:
+                    raise ...
+        elif op == 'JZ':
+            if len(parts) >= 2:
+                target = parts[1].strip().upper()
+                if target in labels:
+                    label_line = labels[target]
+                    # need to jump after executing JZ: simulate popping stack and conditionally jumping.
+                    # But we also need to execute the POP operation? Actually JZ is a conditional jump that pops from stack (pop the value, check if zero). The spec says: "JZ <name> — pop value from stack, jump to label if value == 0". That means: before jumping, you must pop the top of stack; if it's zero, then you jump to the specified label. Otherwise continue? Or maybe they want JZ instruction itself pops a value and conditionally jumps.
+            ...
+        elif op == 'JNZ':
+            ...
+
+We need to implement semantics properly.
+
+Let's parse each new op:
+
+- LABEL <name>: define a label at current position (does nothing during execution). Means that when we later encounter JMP or JZ/JNZ, it can jump to this label. We should store the line number for lookup. The line number is 1-indexed as per program lines.
+
+- JMP <name>: unconditional jump to label: populate next instruction from current location to label's line? In typical assembly, a JMP jumps over instructions and continues execution at that label.
+
+- JZ <name>: pop value from stack, jump to label if value == 0. Means: evaluate top-of-stack; if it is zero (value == 0), then pop and jump to the specified label's instruction; else continue. The spec says "pop value from stack, jump to label if value == 0". So we need to peek top without removing? For POP operation they removed from stack. JZ may also require popping before checking: we should pop (i.e., remove) and then conditionally jump. Let's implement:
+
+   - When processing JZ:
+       - Pop the top of stack; store as value.
+       - If value == 0, continue execution at label <name> (i.e., set current line index to that label line +1). Else, continue normal flow (i.e., next instruction).
+   - Similarly JNZ: pop value from stack, jump if value != 0. That is, if value != 0, then jump.
+
+So we need a mechanism to handle conditional jumps. This suggests modifying the main loop with an index variable and having loops that can set it to target line number (or some offset). We'll implement by maintaining `i` as current instruction index, and in each iteration after processing an instruction, increment i. If there's a jump, we need to break out of loop and go to that location.
+
+Because the main program is split into lines; but jumping inside may skip many lines. Simpler: Use while loop over range(len(lines)) with explicit index variable `i`. When we encounter JZ or JNZ:
+
+   - Pop top value (stack.pop()).
+   - Check zero/nonzero.
+   - If condition matches, set `i = target_line` and break out of inner processing? But then need to skip the normal increment.
+
+Implementation design: Use while i < len(lines):
+
+```
+while i < len(lines):
+    line = lines[i].strip()
+    if comment/empty: i += 1; continue
+    # parse op...
+    if op == 'LABEL':
+        labels[label] = i+1   # store label's position (1-indexed)
+        i += 1  # move to next line? or stay? Typically LABEL is a definition, not executed. We should increment after processing.
+    elif op == 'JMP':
+        if target in labels:
+            i = labels[target] - 1   # because we want next iteration to process that line (since Python loops over lines list with index)
+            continue
+        else: raise ...
+    elif op == 'JZ' or 'JNZ':
+        # handle conditional jump.
+    else:
+        # execute other instructions...
+```
+
+But careful about off-by-one. If we store label as 1-indexed line number, and our loop uses `i` starting at 0 for list index of lines (which is also 0-index). So when iterating over a line with enumeration previously: line_no = i+1. We can use line_no variable.
+
+Let's rewrite the whole function from scratch to incorporate these features cleanly. Keep it simple but correct.
+
+Pseudo-code:
+
+```
+def run(program):
+    stack = []
+    outputs = []
+    labels = {}  # label_name -> line_number (1-indexed)
+    lines = program.splitlines()
+    
+    for line_no, raw_line in enumerate(lines, start=1):
+        line = raw_line.strip()
+        if not line or line.lstrip().startswith('#'):
+            continue
+        
+        parts = line.split()
+        op = parts[0].upper()  # note: we need to handle case-insensitivity of "LABEL" etc.
+        
+        # LABEL
+        if op == 'LABEL':
+            # Expect exactly two tokens? "LABEL name"
+            # Might be "LABEL foo bar"? We'll just take first token after op as label name: parts[1].strip().upper()
+            if len(parts) >= 2:
+                label_name = parts[1].strip().upper()   # or maybe lower case? but consistent
+                labels[label_name] = line_no
+            else:
+                raise ValueError(f"line {line_no}: missing argument for LABEL")
+        elif op == 'JMP':
+            if len(parts) >= 2:
+                target = parts[1].strip().upper()
+                if target in labels:
+                    next_line = labels[target]   # line number to jump to
+                    # The current iteration is at line_no; we need to go directly to that line.
+                    # But since loop increments line numbers each time, we can't just continue. We'll implement a for-loop? Let's use while index approach.
+
+```
+
+Given the difficulty of handling jumps in a simple for-loop over lines, it might be cleaner to restructure as while loop:
+
+```
+i = 0
+while i < len(lines):
+    raw_line = lines[i].strip()
+    if not raw_line or raw_line.lstrip().startswith('#'):
+        # skip empty/comments; don't increment? Actually we still should move past them. Continue with i+=1.
+        i += 1
+        continue
+
+    parts = raw_line.split()
+    op = parts[0].upper()
+
+    if op == 'PUSH':
+        ...
+    elif op == 'POP':...
+    ... etc.
+
+    # For LABEL, JMP, JZ, JNZ: we need to handle differently and adjust i accordingly.
+```
+
+But the existing code uses enumerate with start=1; that's simpler for line numbers. Maybe we can keep `for` but also break out of loop when a jump occurs? That would cause skipping lines. Let's think.
+
+Option 1: Keep using `for`, but store label mapping and implement jumps by manually moving to target line number while continuing the for-loop at next iteration, i.e., we could use a separate variable `current_line = line_no` and then when encountering JMP, set it to something like `lines[target-1]` etc. But that's messy.
+
+Option 2: Use while loop with index, which gives full control over jumps.
+
+We'll rewrite the whole function from scratch, but keep same signature (return list of printed strings). We need to preserve behavior for all existing instructions: PUSH, POP, ADD, SUB, MUL, DIV, DUP, SWAP, PRINT. Also, we must handle errors with line numbers. The earlier version raised ValueError or RuntimeError; they expect clear errors.
+
+We can implement exactly as before but incorporate labels and jumps. Let's design a clean implementation:
+
+Pseudo-code using while loop:
+
+```
+def run(program: str) -> list[str]:
+    stack = []
+    outputs = []
+    labels = {}  # name -> line number (1-indexed)
+    
+    lines = program.splitlines()
+    i = 0
+    n = len(lines)
+
+    while i < n:
+        raw_line = lines[i].strip()
+        
+        # Skip empty/comment lines
+        if not raw_line or raw_line.lstrip().startswith('#'):
+            i += 1
+            continue
+        
+        parts = raw_line.split()
+        op = parts[0].upper()   # normalize to uppercase
+        m = len(parts)
+        
+        # LABEL
+        if op == 'LABEL':
+            if m >= 2:
+                label_name = parts[1].strip().upper()
+                labels[label_name] = i + 1  # line number is i+1 (since lines indexed from 0)
+            else:
+                raise ValueError(f"line {i+1}: missing argument for LABEL")
+            # note: we do NOT increment i here; a label definition doesn't advance execution.
+        elif op == 'JMP':
+            if m >= 2:
+                target = parts[1].strip().upper()
+                if target in labels:
+                    next_line = labels[target]
+                    # Move past this line and set the loop index to next_line - 1 (to process that line)
+                    i += 1
+                    continue   # we already incremented, but let's do properly.
+                else:
+                    raise ValueError(f"line {i+1}: unknown jump target '{target}'")
+            else:
+                raise ValueError(f"line {i+1}: missing argument for JMP")
+        
+        elif op == 'LABEL': ... (already handled)
+        # Actually we need to handle both LABEL and JMP in same block; but let's restructure.
+```
+
+Better separate:
+
+```
+        if op == 'LABEL':
+            ...
+            i += 1   # after processing label, move forward
+            continue
+
+        elif op == 'JMP':
+            ...
+            i += ... ? 
+```
+
+But careful: In the above loop we are incrementing `i` manually. However, note that many instructions (like POP) also pop from stack and don't require moving to next line? Actually each instruction is a separate line; after processing it, you move to the next line.
+
+The main loop increments i by 1 at end of iteration implicitly via while condition (no manual increment). We can implement increment as part of each block. Let's adopt a straightforward approach:
+
+Initialize `i = 0`. At each iteration of while loop, process the current line. After processing, always do `i += 1` unless there is a jump that skips lines.
+
+Thus for normal instructions (PUSH, POP, etc.) we increment after use. For LABEL and JMP we also need to handle accordingly: label defines location; for JMP we might want to set i = target_line - 1? Wait we can't modify loop variable mid-iteration in a simple while loop with manual i increments.
+
+Simplify by handling jumps before incrementing:
+
+```
+while i < n:
+    raw_line = lines[i].strip()
+    
+    if not raw_line or raw_line.lstrip().startswith('#'):
+        i += 1
+        continue
+    
+    parts = raw_line.split()
+    op = parts[0].upper()
+    
+    # Handle LABEL, JMP, JZ, JNZ, DUP, SWAP, etc.
+```
+
+So for each line we process instructions. For normal operations like POP, ADD, etc., we execute them and then do `i += 1`.
+
+For jumps:
+
+- When processing `JMP <name>`: find target_line = labels[target]; set i = target_line - 1? Let's think. Suppose current line i is at the instruction line (e.g., JZ). After popping, we need to decide whether to continue from label or fall through. In typical assembly, JZ jumps over the next instructions and continues after it; but here they say: "JZ <name> — pop value from stack, jump to label if value == 0". So before jumping, you must pop the top of stack (i.e., consume one item) then check its value. If it's zero, then replace current instruction with a jump? Actually JZ is itself an instruction; maybe it pops and jumps: It pops the value from the stack; if that popped value is 0, then continue execution at label target; else fall through to next line.
+
+Thus we must handle `JZ` (and `JNZ`) before increment. Implementation:
+
+```
+elif op == 'JZ':
+    if len(stack) < 1:
+        raise ValueError(f"line {line_no}: JZ needs a stack item")
+    value = stack.pop()
+    if value == 0:
+        target = parts[2].strip().upper()? Wait: "JZ <name>" is three tokens? Actually the syntax is JZ <label>. So maybe there are exactly two tokens: 'JZ', label. But earlier they wrote `JZ name` where name is a label, not arguments to jump. Let's parse:
+
+- `LABEL <name>` — define a label at current position (does nothing during execution)
+- `JMP <name>` — unconditional jump
+- `JZ <name>` — pop value from stack, jump to label if value == 0.
+- `JNZ <name>` — pop value; jump if not zero.
+
+Thus JZ and JNZ have a target label name. So they need two tokens: "JZ" and the label name. Similarly for JMP (one argument) but also maybe one arg? The instruction format is:
+
+```
+LABEL <name>    # defined at current line
+JMP <name>      # jump to named label
+JZ <name>        # pop value; if 0, jump to label
+JNZ <name>       # pop value; if !=0, jump to label
+```
+
+Thus parsing: For each instruction, we can split into tokens. The first token is the operation name (uppercased). If it's 'LABEL', then there should be a second token which is the label name. If it's 'JMP', same number of args maybe 1. Same for JZ and JNZ.
+
+In my earlier while loop I used `parts = raw_line.split()`, and then op = parts[0].upper(). That gives "LABEL", "JMP", etc. But we also need to handle label definitions that have a separate argument name, which will be part of same token list as the rest of line.
+
+Simplify: Use heuristics: For LABEL and JZ/JNZ, there may be an extra argument; treat accordingly:
+
+Implementation for each op:
+
+```
+if op == 'LABEL':
+    if len(parts) < 2:
+        raise ValueError(f"line {line_no}: missing label name")
+    label_name = parts[1].strip().upper()
+    labels[label_name] = line_no
+elif op == 'JMP':
+    if len(parts) >= 2:
+        target = parts[1].strip().upper()
+        if target in labels:
+            next_line = labels[target]
+            # continue execution at that line, so set i = next_line - 1? Actually we want to process the line where label is defined? Let's think: JMP means "unconditional jump to label" (no pop). So after executing JMP, control goes to that label location. The label may be a definition; it doesn't contain an instruction itself. Typically in assembly, a label is just a marker pointing to the address of the next instruction. Since we are reading lines sequentially, jumping directly to the line where the label was defined would cause infinite loop because you'd never get there (since after defining it you need the actual instruction). However here labels may be statements like "LABEL foo" which is just a definition; but JMP jumps over that and continues at the target line's instruction. So we can set i = target_line - 1? Let's reason.
+
+If we have:
+
+Line 5: LABEL foo
+Line 6: POP x
+Line 7: ADD ...
+
+Then `JMP foo` should cause execution to go from line 6 onward (the next instruction after the label). The label is a marker, not an instruction. So if we set i = target_line (i.e., index of lines[target-1]), then in the next iteration we'd process "LABEL foo" again and infinite loop.
+
+Thus we need to jump over the definition line? Typically you define label with its name on same line as a `LABEL` command, but it's not executed. So JMP should cause control transfer after executing all lines up to just before the label? Actually common assembly: "JMP <label>" jumps to that label (i.e., the instruction following the label). But we need to define where is the jump target. The simplest approach for this simple interpreter: treat labels as line numbers where definitions occur, and JMP transfers execution from current line to after that definition's next line? This gets ambiguous.
+
+Given limited time, maybe implement jumps by storing a mapping from label name to its line number (1-indexed). Then when we encounter JMP <name>, we set i = 0 and continue at the target

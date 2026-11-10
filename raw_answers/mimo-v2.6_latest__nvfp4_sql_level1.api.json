@@ -1,0 +1,27 @@
+{
+  "model": "mimo-v2.6:latest",
+  "created_at": "2026-11-09T16:34:40.536025Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef compile_query(query: dict) -> dict:\n    sql = []\n    params = []\n\n    sql.append(\"SELECT\")\n    columns = query.get(\"select\", [\"*\"])\n    sql.append(\", \".join(columns))\n\n    where = query.get(\"where\")\n    if where:\n        sql.append(\"WHERE\")\n        cond_sql, params = _compile_condition(where, params)\n        sql.append(cond_sql)\n\n    if query.get(\"orderBy\"):\n        sql.append(\"ORDER BY\")\n        for item in query[\"orderBy\"]:\n            field = item[\"field\"]\n            direction = item.get(\"dir\", \"ASC\")\n            sql.append(f\"{field} {direction}\")\n\n    if query.get(\"limit\") is not None:\n        sql.append(f\"LIMIT {query['limit']}\")\n\n    if query.get(\"offset\") is not None:\n        sql.append(f\"OFFSET {query['offset']}\")\n\n    return {\"sql\": \" \".join(sql), \"params\": params}\n\n\ndef _compile_condition(cond, params):\n    if isinstance(cond, list):\n        parts = [_compile_condition(c, params) for c in cond]\n        return \" AND \".join(parts), params\n\n    if isinstance(cond, dict):\n        if \"AND\" in cond:\n            conds = cond[\"AND\"]\n            if len(conds) > 1:\n                parts = [_compile_condition(c, params) for c in conds]\n                return f\"({ ' AND '.join(p[0] for p in parts) })\", params\n            return parts[0][0], params\n\n        if \"OR\" in cond:\n            conds = cond[\"OR\"]\n            if len(conds) > 1:\n                parts = [_compile_condition(c, params) for c in conds]\n                return f\"({ ' OR '.join(p[0] for p in parts) })\", params\n            return parts[0][0], params\n\n        return _compile_leaf(cond, params)\n\n    return _compile_leaf(cond, params)\n\n\ndef _compile_leaf(cond, params):\n    field = cond[\"field\"]\n    op = cond[\"op\"]\n    value = cond[\"value\"]\n\n    placeholder = f\"${len(params) + 1}\"\n    params.append(value)\n    return f\"{field} {op} {placeholder}\"\n```",
+    "thinking": "Let me write a compiler from AST to parameterized SQL.\n\nKey details:\n- Traversal order for params: left-to-right. For AND/OR, traverse in order.\n- Values from where conditions replaced with $1, $2, ...\n- Need to handle nested conditions.\n\nLet me write it.\n\n```python\ndef compile_query(query: dict) -> dict:\n    sql = _compile_select(query)\n    params = []\n    return {\"sql\": sql, \"params\": params}\n```\n\nI'll build a recursive function that returns (sql_fragment, params).\n\nFor a leaf condition: `field op value` -> `field op $n` and append value.\n\nFor AND/OR: join with AND/OR, wrap in parens if >1.\n\nSQL string building: I'll build the whole query string.\n\nLet me write:\n\n```python\ndef _compile_condition(cond, params):\n    if cond is None:\n        return None, params\n    if isinstance(cond, dict):\n        if 'AND' in cond:\n            conds = cond['AND']\n            if len(conds) > 1:\n                parts = [_compile_condition(c, params) for c in conds]\n                sql = ' AND '.join(p[0] for p in parts)\n                return f\"({sql})\", params\n            return parts[0][0], params\n        elif 'OR' in cond:\n            ...\n        else:\n            return _compile_leaf(cond, params)\n    else:\n        return _compile_leaf(cond, params)\n```\n\nWait, but AND/OR keys — the leaf dict has 'field', 'op', 'value'. So checking 'AND' in cond works.\n\nFor leaf:\n```python\ndef _compile_leaf(cond, params):\n    field = cond['field']\n    op = cond['op']\n    value = cond['value']\n    placeholder = f\"${len(params)+1}\"\n    params.append(value)\n    return f\"{field} {op} {placeholder}\"\n```\n\nThen build full SQL:\n\n```python\ndef compile_query(query):\n    sql = []\n    params = []\n    sql.append(f\"SELECT {', '.join(query.get('select', ['*']))}\")\n    if query.get('where'):\n        sql.append(\"WHERE\")\n        cond_sql, params = _compile_condition(query['where'], params)\n        sql.append(cond_sql)\n    if query.get('orderBy'):\n        sql.append(\"ORDER BY\")\n        for item in query['orderBy']:\n            field = item['field']\n            dir = item.get('dir', 'ASC')\n            sql.append(f\"{field} {dir}\")\n    if query.get('limit') is not None:\n        sql.append(f\"LIMIT {query['limit']}\")\n    if query.get('offset') is not None:\n        sql.append(f\"OFFSET {query['offset']}\")\n    return {\"sql\": ' '.join(sql), \"params\": params}\n```\n\nHmm, but the AND/OR wrapping: \"if conditions > 1, wrap in parentheses\". So for exactly 1, no parens.\n\nLet me write it cleanly.\n\nAlso need to handle the case where a condition is a list? No, spec says dict.\n\nLet me write the final code."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 78380764250,
+  "load_duration": 2369625,
+  "prompt_eval_count": 365,
+  "prompt_eval_cached_count": 4,
+  "prompt_eval_duration": 2152647917,
+  "eval_count": 1222,
+  "eval_duration": 76177327625,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 365,
+    "total_output_tokens": 1222,
+    "tokens_per_second": 16.041518363778383,
+    "time_to_first_token_seconds": 2.152647917,
+    "model_load_time_seconds": 0.002369625,
+    "reasoning_output_tokens": 711
+  }
+}

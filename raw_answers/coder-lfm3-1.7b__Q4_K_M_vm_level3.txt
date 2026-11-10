@@ -1,0 +1,94 @@
+```python
+def run(program: str) -> list[str]:
+    """
+    Executes the given program string.
+
+    Arithmetic operations:
+      ADD   = top2 + top1   (top2 is popped first)
+      SUB   = top1 - top2
+      MUL   = top1 * top2
+      DIV   = top1 // top2  (integer division, raises if divisor == 0)
+
+    PUSH n : push integer n onto the stack.
+    POP    : pop from the stack; requires at least one element.
+    ADD/SUB/MUL/DIV: need two operands on the stack.
+    DUP    : duplicate the top of the stack.
+    SWAP   : swap the top two elements.
+    PRINT  : output string of the value on top without removing it.
+
+    Labels
+        LABEL <name>   — define a label at this line (1‑based line number).
+        JMP <name>     — unconditional jump to the defined label.
+        JZ <name>      — pop; if popped value == 0, jump to that label.
+        JNZ <name>     — pop; if popped value != 0, jump to that label.
+
+    Returns:
+        A list of strings: each call to PRINT appends a single line to this list.
+    """
+    stack = []           # holds integers
+    outputs = []         # collected printed lines
+    labels = {}          # name -> line number (1‑based)
+
+    lines = program.splitlines()
+    i = 0                # current line index (0‑based)
+    n = len(lines)
+
+    while i < n:
+        raw_line = lines[i].strip()
+
+        # Skip empty lines and comment lines
+        if not raw_line or raw_line.lstrip().startswith('#'):
+            i += 1
+            continue
+
+        parts = raw_line.split()
+        op = parts[0].upper() if parts else ''
+        line_no = i + 1   # 1‑based line number for error messages
+
+        # --------------------------------------------------
+        # LABEL
+        # --------------------------------------------------
+        if op == 'LABEL':
+            if len(parts) < 2:
+                raise ValueError(f"line {line_no}: missing argument for LABEL")
+            label_name = parts[1].strip().upper()
+            labels[label_name] = line_no
+            i += 1   # definition is not executed; move to next instruction
+
+        # --------------------------------------------------
+        # JMP  (unconditional jump)
+        # --------------------------------------------------
+        elif op == 'JMP':
+            if len(parts) < 2:
+                raise ValueError(f"line {line_no}: missing argument for JMP")
+            target_label = parts[1].strip().upper()
+            if target_label in labels:
+                i = labels[target_label]   # jump to that label line
+                continue                  # skip the normal increment below
+            else:
+                raise ValueError(f"line {line_no}: unknown jump target '{target_label}'")
+
+        # --------------------------------------------------
+        # JZ  (pop and conditional jump)
+        # --------------------------------------------------
+        elif op == 'JZ':
+            if not stack:
+                raise ValueError(f"line {line_no}: JZ needs at least one item on the stack (pop value)")
+            val = stack.pop()
+            target_label = parts[1].strip().upper() if len(parts) >= 2 else None
+            jumped = False
+            if target_label and target_label in labels:
+                i = labels[target_label]   # jump forward to the label line
+                continue                  # skip normal increment below
+            elif val == 0:
+                # no valid target → fall through (do not jump)
+                pass
+            else:
+                i += 1                   # normal execution: move to next line
+
+        # --------------------------------------------------
+        # JNZ  (pop and conditional jump)
+        # --------------------------------------------------
+        elif op == 'JNZ':
+            if not stack:
+                raise

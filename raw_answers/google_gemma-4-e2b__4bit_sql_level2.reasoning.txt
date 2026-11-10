@@ -1,0 +1,40 @@
+
+Thinking Process:
+
+1.  **Analyze the Request & Existing Structure:** The goal is to extend the existing SQL compiler functionality (`compile_query`) to handle JOINs, GROUP BY, and new WHERE operators (IN, IS NULL, IS NOT NULL, LIKE). The output format must remain `{"sql": str, "params": list}`.
+
+2.  **Refactor/Extend Compilation Logic:** The core logic resides in `_compile_condition` and `_compile_where`. I need to modify these functions to handle the new operators and manage parameters correctly, especially for 'IS NULL'/'IS NOT NULL' which don't use placeholders.
+
+3.  **Implement New Operators in `_compile_condition`:**
+    *   `'IN'`, value: list of values. Generates `field IN ($1, $2, ...)`. Need to handle multiple parameters within one condition structure.
+    *   `'IS NULL'` / `'IS NOT NULL'`: No parameters generated, just the field name.
+    *   `'LIKE'`, value: string. Generates `field LIKE $N`.
+
+4.  **Implement JOIN Handling:**
+    *   The current structure assumes a simple `FROM table`. I need to integrate the `joins` list into the main SQL construction phase (after the base query selection).
+
+5.  **Implement GROUP BY Handling:**
+    *   This needs to be appended after the `WHERE` clause (if applicable) and before `ORDER BY`/`LIMIT`.
+
+6.  **Review Parameterization Flow:** Parameters must be collected sequentially (left-to-right) across all conditions and joins.
+
+7.  **Step-by-Step Implementation Plan (Focusing on `_compile_where` and helpers):**
+
+    *   *Helper Function Check:* If a condition is atomic, determine if it requires parameters.
+    *   *Recursion Check:* Ensure nested logical operators (AND/OR) correctly concatenate the resulting SQL strings while maintaining parentheses.
+    *   *Main Function Flow (`compile_query`):*
+        a. Handle `SELECT`, `FROM`, and initial setup.
+        b. Process `WHERE` clause (calls `_compile_where`, populates `params`).
+        c. Process `JOIN` clauses (builds the JOIN string).
+        d. Process `GROUP BY` clauses.
+        e. Process `ORDER BY`.
+        f. Process `LIMIT`/`OFFSET`.
+        g. Assemble the final query string.
+
+8.  **Drafting Code (Self-Correction during drafting):**
+    *   The current parameter tracking relies on a shared list (`params`). I must ensure the index management for placeholders ($1, $2, ...) is robust across all conditions and joins.
+    *   JOIN syntax needs to be flexible (e.g., `table JOIN type table ON condition`).
+
+**(Self-Correction on complexity):** Handling complex nesting with varying number of arguments (like `IN` lists) requires careful recursion management.
+
+Let's focus on building the required components robustly within the existing framework.

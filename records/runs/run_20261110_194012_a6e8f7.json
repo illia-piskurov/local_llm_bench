@@ -1,0 +1,236 @@
+{
+  "id": "run_20261110_194012_a6e8f7",
+  "host_id": "70ccb4981862",
+  "model_key": "nvidia/nemotron-3-nano-4b",
+  "model_name": "Nemotron 3 Nano 4B",
+  "quantization": "Q4_K_M",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "nvidia/nemotron-3-nano-4b",
+      "display_name": "Nemotron 3 Nano 4B",
+      "architecture": "nemotron_h",
+      "quantization": "Q4_K_M",
+      "quantization_bits": 4,
+      "size_bytes": 2837173509,
+      "params_string": "4.0B",
+      "max_context_length": 1048576,
+      "format": "gguf",
+      "publisher": "nvidia"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 19:40:12",
+  "completed_at": "2026-11-10 19:52:28",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 19:40:49",
+      "passed": 4,
+      "total": 18,
+      "failures": [
+        "push_print: expected ['5'], got ['5', '5']",
+        "add: expected ['5'], got ['5', '5']",
+        "sub_order: expected ['7'], got ['7', '7']",
+        "mul: expected ['24'], got ['24', '24']",
+        "div_order: expected ['5'], got ['5', '5']",
+        "div_truncate: expected ['3'], got ['3', '3']",
+        "dup: expected ['18'], got ['18', '18']",
+        "swap: expected ['1'], got ['1', '1']",
+        "pop: expected ['1'], got ['1', '1']",
+        "comments_and_blank_lines: expected ['7'], got ['7', '7']",
+        "multiple_prints: unexpected exception/timeout: TypeError: unsupported types for __add__: 'int', 'str'",
+        "print_does_not_pop: expected ['5', '5'], got ['5', '5', '5']",
+        "negative_numbers: expected ['2'], got ['2', '2']",
+        "complex_chain: expected ['10'], got ['10', '10']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-10 19:42:17",
+      "passed": 0,
+      "total": 27,
+      "failures": [
+        "failed to load solution: Syntax error in solution: invalid syntax (<unknown>, line 73)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-10 19:44:12",
+      "passed": 0,
+      "total": 37,
+      "failures": [
+        "failed to load solution: Syntax error in solution: invalid syntax (<unknown>, line 88)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-10 19:44:45",
+      "passed": 6,
+      "total": 10,
+      "failures": [
+        "simple_chain: invalid topological order: None",
+        "diamond: invalid topological order: None",
+        "multiple_roots: invalid topological order: None",
+        "wide_graph: invalid topological order: None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-10 19:46:06",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "simple_chain: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "diamond_pick_longer_branch: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "independent_tasks: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "wide_graph: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-10 19:48:49",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: unexpected exception: TypeError: 'set' object isn't subscriptable",
+        "dependency_unlocks_later: unexpected exception: TypeError: 'set' object isn't subscriptable",
+        "single_worker_duration_tiebreak: unexpected exception: TypeError: 'set' object isn't subscriptable",
+        "resource_limit_and_priority: unexpected exception: TypeError: 'set' object isn't subscriptable",
+        "simultaneous_unlocks: unexpected exception: TypeError: 'set' object isn't subscriptable"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-10 19:52:20",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception: TypeError: 'set' object isn't subscriptable",
+        "parallel_tasks_reduce_makespan: unexpected exception: TypeError: 'set' object isn't subscriptable",
+        "dependencies_and_workers: unexpected exception: TypeError: 'set' object isn't subscriptable",
+        "critical_path_longer_than_worker_parallelism: unexpected exception: TypeError: 'set' object isn't subscriptable",
+        "wide_graph_with_unlocks: unexpected exception: TypeError: 'set' object isn't subscriptable"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 19:40:48",
+      "stats": {
+        "input_tokens": 291,
+        "total_output_tokens": 895,
+        "reasoning_output_tokens": 411,
+        "tokens_per_second": 25.67878006147856,
+        "time_to_first_token_seconds": 1.249164,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-10 19:42:17",
+      "stats": {
+        "input_tokens": 914,
+        "total_output_tokens": 2040,
+        "reasoning_output_tokens": 1386,
+        "tokens_per_second": 24.102402989482865,
+        "time_to_first_token_seconds": 3.469751,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-10 19:44:12",
+      "stats": {
+        "input_tokens": 1067,
+        "total_output_tokens": 2159,
+        "reasoning_output_tokens": 1164,
+        "tokens_per_second": 19.557274420660153,
+        "time_to_first_token_seconds": 4.707895000000001,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-10 19:44:44",
+      "stats": {
+        "input_tokens": 182,
+        "total_output_tokens": 604,
+        "reasoning_output_tokens": 396,
+        "tokens_per_second": 19.38599132259881,
+        "time_to_first_token_seconds": 1.034662,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-10 19:46:06",
+      "stats": {
+        "input_tokens": 516,
+        "total_output_tokens": 1451,
+        "reasoning_output_tokens": 965,
+        "tokens_per_second": 18.657282473907276,
+        "time_to_first_token_seconds": 2.6373189999999997,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-10 19:48:49",
+      "stats": {
+        "input_tokens": 230,
+        "total_output_tokens": 2928,
+        "reasoning_output_tokens": 2356,
+        "tokens_per_second": 18.174411926914672,
+        "time_to_first_token_seconds": 1.441889,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-10 19:52:19",
+      "stats": {
+        "input_tokens": 967,
+        "total_output_tokens": 1724,
+        "reasoning_output_tokens": 454,
+        "tokens_per_second": 8.426101342916626,
+        "time_to_first_token_seconds": 5.092014,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

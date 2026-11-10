@@ -1,0 +1,96 @@
+```javascript
+async function pMap(items, mapper, options) {
+  // Default concurrency is 1 if not provided or options is undefined.
+  let concurrency = 1;
+
+  if (options !== undefined) {
+    if (typeof options === 'number') {
+      concurrency = options;
+    } else if (options !== null && typeof options === 'object' && 'concurrency' in options) {
+      const convOpt = options.concurrency;
+      if (typeof convOpt === 'number') {
+        concurrency = convOpt;
+      }
+    }
+  }
+
+  // New optional fields for per‑task handling
+  let retries = 0;           // number of additional attempts after the first one
+  let backoffMs = 0;         // base delay between retries (ms)
+  let timeoutMs = 0;        // max time a single mapper call may take (ms)
+
+  if (options !== undefined) {
+    if (typeof options === 'object' && options !== null) {
+      retries = options.retries || 0;
+      backoffMs = options.backoffMs || 0;
+      timeoutMs = options.timeoutMs || 0;
+    }
+  }
+
+  // Handle empty input
+  if (!Array.isArray(items) || items.length === 0) {
+    return [];
+  }
+
+  const results = new Array(items.length);
+  let idx = 0; // current index in the original array being processed
+
+  while (idx < items.length) {
+    // Size of this batch: at most `concurrency` items.
+    const batchSize = Math.min(concurrency, items.length - idx);
+
+    // Launch a mapper task for each item in the batch.
+    const promises = [];
+    for (let i = 0; i < batchSize; ++i) {
+      const currentItem = items[idx + i];
+      // The original index for this item stays unchanged.
+      promises.push(mapper(currentItem, idx + i));
+    }
+
+    // Run all mapper calls in the batch concurrently (up to `concurrency` at a time).
+    const batchResults = await Promise.all(promises);
+
+    // Write results back into the original positions.
+    for (let j = 0; j < batchSize; ++j) {
+      results[idx + j] = batchResults[j];
+    }
+
+    idx += batchSize;
+  }
+
+  return results;
+}
+
+/* 
+   Helper function that runs `mapper(item, index)` with retry logic,
+   exponential backoff and a per‑attempt timeout.
+
+   Parameters:
+     item: the value to map
+     index: original array index (0‑based)
+     options: closure variables for retries, backoffMs, timeoutMs
+
+   Returns: resolved value or throws an error after all attempts exhausted.
+*/
+async function runMapper(item, index, opts) {
+  let attempt = 0;
+  while (true) {
+    try {
+      // If a per‑task timeout is configured, race the mapper promise with a
+      // timeout promise that rejects with "Timeout".
+      const mapperPromise = mapper(item, index);
+      const timeoutPromise = options.timeoutMs !== undefined && options.timeoutMs > 0
+        ? new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), options.timeoutMs))
+        : undefined;
+
+      // Await whichever finishes first (either the mapper or its own timeout).
+      const result = await Promise.race([mapperPromise, timeoutPromise]);
+
+      return result;
+    } catch (err) {
+      attempt++;
+      // If we have exceeded allowed attempts, abort.
+      if (attempt > opts.retries + 1) {
+        throw new Error(`Mapper failed after ${opts.retries} retries: ${err.message}`);
+      }
+      // Schedule next backoff before the next attempt.

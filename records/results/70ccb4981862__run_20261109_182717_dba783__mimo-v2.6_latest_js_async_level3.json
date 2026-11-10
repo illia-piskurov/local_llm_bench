@@ -1,0 +1,29 @@
+{
+  "run_id": "run_20261109_182717_dba783",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "js_async",
+  "level": "level3",
+  "tested_at": "2026-11-09 19:21:50",
+  "passed": 2,
+  "total": 17,
+  "failures": [
+    "order_preservation: assertion returned False",
+    "concurrency_limit: assertion returned False",
+    "concurrency_as_number: assertion returned False",
+    "concurrency_default_one: assertion returned False",
+    "index_passed: assertion returned False",
+    "mapper_rejection: assertion returned False",
+    "retry_transient_failure: assertion returned False",
+    "retry_exhausted: assertion returned False",
+    "exponential_backoff: assertion returned False",
+    "task_timeout: assertion returned False",
+    "timeout_triggers_retry: assertion returned False",
+    "mid_flight_abort: assertion returned False",
+    "settled_all_success: assertion returned False",
+    "settled_mixed_failures: assertion returned False",
+    "settled_with_retries: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

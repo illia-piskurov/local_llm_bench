@@ -1,91 +1,167 @@
-def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+import heapq
+from typing import Dict, List, Tuple
+
+def plan_order(tasks: Dict[str, Tuple[int, List[str], int]], workers: int) -> List[str] | None:
     all_tasks = set(tasks.keys())
-    started = []
-    time = 0
+    dur = {t: tasks[t][0] for t in all_tasks}
+    preds = {t: tasks[t][1] for t in all_tasks}
+    prio = {t: tasks[t][2] for t in all_tasks}
 
-    while True:
-        ready = [
-            t for t in all_tasks
-            if t not in started
-            and all(d == '' or d in started for d in tasks[t][1])
-        ]
-        if not ready:
-            break
+    indeg = {t: 0 for t in all_tasks}
+    graph = {}
+    for child, deps in preds.items():
+        indeg[child] += len(deps)
+        for dep in deps:
+            graph.setdefault(dep, []).append(child)
 
-        ready.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))
-        selected = ready[:workers]
-        started.extend(selected)
+    indeg_copy = indeg.copy()
+    q = [t for t in all_tasks if indeg_copy[t] == 0]
+    order = []
+    while q:
+        curr = q.pop(0)
+        order.append(curr)
+        nxts = graph.get(curr, [])
+        for child in nxts:
+            indeg_copy[child] -= 1
+            if indeg_copy[child] == 0:
+                q.append(child)
 
-        if selected:
-            min_dur = min(tasks[t][0] for t in selected)
-            time += min_dur
-
-    return None if len(started) != len(all_tasks) else started
-
-
-def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
-    visited = set()
-    path = set()
-
-    def dfs(node):
-        if node in path:
-            raise ValueError("cycle")
-        if node in visited:
-            return 0
-        visited.add(node)
-        path.add(node)
-
-        max_len = tasks[node][0]
-        for dep in tasks[node][1]:
-            if dep == '':
-                continue
-            child_len, _ = dfs(dep)
-            if child_len is None:
-                raise ValueError("cycle")
-            max_len += child_len
-
-        path.remove(node)
-        return max_len
-
-    try:
-        result = 0
-        for node in tasks:
-            if node not in visited:
-                result = max(result, dfs(node))
-        return result
-    except ValueError:
+    if len(order) != len(all_tasks):
         return None
 
-
-def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
-    all_tasks = set(tasks.keys())
+    completed = set()
     started = set()
-    start_time = {}
-    finish_time = {}
-    time = 0
-    max_finish = 0
+    result: List[str] = []
+    events: List[Tuple[int, str, str]] = []  # (time, 'finish', task)
+    current_time = 0
 
     while True:
         ready = [
             t for t in all_tasks
-            if t not in started
-            and all(d == '' or d in started for d in tasks[t][1])
+            if not started[t]
+            and (not preds[t] or all(d in completed for d in preds[t]))
         ]
         if not ready:
             break
 
-        ready.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))
+        ready.sort(key=lambda x: (-prio[x], dur[x], x))
         selected = ready[:workers]
 
         for t in selected:
-            start_time[t] = time
-            finish_time[t] = time + tasks[t][0]
-            max_finish = max(max_finish, finish_time[t])
+            result.append(t)
+            started.add(t)
 
-        started.update(selected)
-        min_dur = min(tasks[t][0] for t in selected)
-        time += min_dur
+        for t in selected:
+            heapq.heappush(events, (current_time + dur[t], 'finish', t))
 
-    if len(started) != len(all_tasks):
+        while events and events[0][0] == current_time:
+            _, _, task = heapq.heappop(events)
+            completed.add(task)
+
+        if not events:
+            break
+
+        next_time = events[0][0]
+        current_time = next_time
+
+    return result
+
+
+def critical_path(tasks: Dict[str, Tuple[int, List[str], int]]) -> int | None:
+    all_tasks = set(tasks.keys())
+    dur = {t: tasks[t][0] for t in all_tasks}
+    preds = {t: tasks[t][1] for t in all_tasks}
+
+    indeg = {t: 0 for t in all_tasks}
+    graph = {}
+    for child, deps in preds.items():
+        indeg[child] += len(deps)
+        for dep in deps:
+            graph.setdefault(dep, []).append(child)
+
+    indeg_copy = indeg.copy()
+    q = [t for t in all_tasks if indeg_copy[t] == 0]
+    order = []
+    while q:
+        curr = q.pop(0)
+        order.append(curr)
+        nxts = graph.get(curr, [])
+        for child in nxts:
+            indeg_copy[child] -= 1
+            if indeg_copy[child] == 0:
+                q.append(child)
+
+    if len(order) != len(all_tasks):
         return None
-    return max_finish
+
+    # longest path sum of durations using DP on topological order
+    dist = {}
+    for t in all_tasks:
+        deps_dur = [dur[p] for p in preds[t]]
+        if not dep_s:
+            dist[t] = dur[t]
+        else:
+            dist[t] = max(dist[p] + dur[p] for p in preds[t])
+
+    return max(dist.values()) if dist else None
+
+
+def makespan(tasks: Dict[str, Tuple[int, List[str], int]], workers: int) -> int | None:
+    all_tasks = set(tasks.keys())
+    dur = {t: tasks[t][0] for t in all_tasks}
+    preds = {t: tasks[t][1] for t in all_tasks}
+
+    indeg = {t: 0 for t in all_tasks}
+    graph = {}
+    for child, deps in preds.items():
+        indeg[child] += len(deps)
+        for dep in deps:
+            graph.setdefault(dep, []).append(child)
+
+    indeg_copy = indeg.copy()
+    q = [t for t in all_tasks if indeg_copy[t] == 0]
+    while q:
+        curr = q.pop(0)
+        nxts = graph.get(curr, [])
+        for child in nxts:
+            indeg_copy[child] -= 1
+            if indeg_copy[child] == 0:
+                q.append(child)
+
+    if len(q) != len(all_tasks):
+        return None
+
+    completed = set()
+    started = set()
+    events: List[Tuple[int, str, str]] = []
+    current_time = 0
+
+    while True:
+        ready = [
+            t for t in all_tasks
+            if not started[t]
+            and (not preds[t] or all(d in completed for d in preds[t]))
+        ]
+        if not ready:
+            break
+
+        ready.sort(key=lambda x: (-tasks[x][2], tasks[x][0], x))
+        selected = ready[:workers]
+
+        for t in selected:
+            started.add(t)
+
+        for t in selected:
+            heapq.heappush(events, (current_time + dur[t], 'finish', t))
+
+        while events and events[0][0] == current_time:
+            _, _, task = heapq.heappop(events)
+            completed.add(task)
+
+        if not events:
+            break
+
+        next_time = events[0][0]
+        current_time = next_time
+
+    return current_time

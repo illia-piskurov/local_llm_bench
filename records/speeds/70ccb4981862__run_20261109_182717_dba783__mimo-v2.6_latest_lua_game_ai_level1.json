@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261109_182717_dba783",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "lua_game_ai",
+  "level": "level1",
+  "tested_at": "2026-11-09 19:23:20",
+  "stats": {
+    "input_tokens": 513,
+    "total_output_tokens": 1365,
+    "reasoning_output_tokens": 786,
+    "tokens_per_second": 15.83192053739871,
+    "time_to_first_token_seconds": 3.0278455,
+    "model_load_time_seconds": 0.000662333
+  }
+}

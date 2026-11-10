@@ -1,145 +1,160 @@
-import sys
-
 def run(program: str) -> list[str]:
     """
-    Реализует интерпретатор простого стекового языка.
+    Interprets a stack-based program and returns a list of printed output strings.
+
+    Supported instructions: PUSH, POP, ADD, SUB, MUL, DIV, DUP, SWAP, PRINT.
     """
+    lines = program.strip().split('\n')
     stack = []
     output = []
-    lines = program.split('\n')
-    
-    # Map line number to instruction index for error reporting
-    line_number = 0
 
-    def handle_error(message):
-        # In a real scenario, we might raise an exception or halt execution.
-        # For this implementation, we print the error and stop execution gracefully.
-        sys.stderr.write(f"Runtime Error at line {line_number}: {message}\n")
-        # Stop execution upon critical error
-        raise RuntimeError("Execution halted due to error.")
+    for line_num, raw_line in enumerate(lines, 1):
+        # Clean the line: remove leading/trailing whitespace and ignore comments/empty lines
+        line = raw_line.strip()
 
-    for line in lines:
-        line_number += 1
-        # Ignore empty lines and comments
-        if not line.strip() or line.strip().startswith('#'):
+        if not line or line.startswith("#"):
             continue
 
         parts = line.split()
         if not parts:
             continue
-        
-        command = parts[0]
-        args = parts[1:]
+
+        instruction = parts[0].upper()
 
         try:
-            if command == "PUSH":
-                if len(args) != 1:
-                    handle_error("PUSH requires one argument.")
-                n = int(args[0])
-                stack.append(n)
-            
-            elif command == "POP":
-                if not stack:
-                    handle_error("POP failed: Stack is empty.")
-                stack.pop()
-
-            elif command == "PRINT":
-                if not stack:
-                    handle_error("PRINT failed: Stack is empty.")
-                print(stack[-1])
-                output.append(str(stack[-1])) # Capture printed output
-
-            elif command == "DUP":
-                if not stack:
-                    handle_error("DUP failed: Stack is empty.")
-                value = stack[-1]
+            if instruction == "PUSH":
+                if len(parts) != 2:
+                    raise ValueError("PUSH requires one argument (number).")
+                value = int(parts[1])
                 stack.append(value)
 
-            elif command == "SWAP":
-                if len(stack) < 2:
-                    handle_error("SWAP failed: Need at least two elements on the stack.")
-                a = stack.pop()
-                b = stack.pop()
-                stack.append(a)
-                stack.append(b)
+            elif instruction == "POP":
+                if not stack:
+                    raise IndexError(f"POP failed: Stack is empty at line {line_num}.")
+                stack.pop()
 
-            elif command in ("ADD", "SUB", "MUL", "DIV"):
+            elif instruction == "ADD":
                 if len(stack) < 2:
-                    handle_error(f"{command} failed: Not enough operands on the stack.")
+                    raise IndexError(f"ADD failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+
+            elif instruction == "SUB":
+                if len(stack) < 2:
+                    raise IndexError(f"SUB failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()  # b is the subtrahend
+                a = stack.pop()  # a is the minuend
+                stack.append(a - b)
+
+            elif instruction == "MUL":
+                if len(stack) < 2:
+                    raise IndexError(f"MUL failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+
+            elif instruction == "DIV":
+                if len(stack) < 2:
+                    raise IndexError(f"DIV failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()  # Divisor
+                a = stack.pop()  # Dividend
+
+                if b == 0:
+                    raise ZeroDivisionError(f"DIV failed: Division by zero at line {line_num}.")
                 
-                # Operands are popped in reverse order (b then a)
+                # Integer division
+                result = int(a / b) 
+                stack.append(result)
+
+            elif instruction == "DUP":
+                if not stack:
+                    raise IndexError(f"DUP failed: Stack is empty at line {line_num}.")
+                top = stack[-1]
+                stack.append(top)
+                stack.append(top)
+
+            elif instruction == "SWAP":
+                if len(stack) < 2:
+                    raise IndexError(f"SWAP failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
                 b = stack.pop()
                 a = stack.pop()
+                stack.append(b)
+                stack.append(a)
 
-                if command == "ADD":
-                    stack.append(a + b)
-                elif command == "SUB":
-                    # a - b
-                    stack.append(a - b)
-                elif command == "MUL":
-                    stack.append(a * b)
-                elif command == "DIV":
-                    if b == 0:
-                        handle_error("DIV failed: Division by zero.")
-                    else:
-                        # Integer division
-                        stack.append(a // b)
-            
+            elif instruction == "PRINT":
+                if not stack:
+                    raise IndexError(f"PRINT failed: Stack is empty at line {line_num}.")
+                value = stack.pop()
+                output.append(str(value))
+
             else:
-                handle_error(f"Unknown command: {command}")
+                raise ValueError(f"Unknown instruction '{instruction}' at line {line_num}.")
 
-        except ValueError as e:
-            handle_error(f"Invalid argument format for {command}: {e}")
-        except RuntimeError:
-            # Re-raise the error if it was a critical runtime error (like stack underflow or div by zero)
-            pass 
-        except Exception as e:
-            handle_error(f"An unexpected error occurred during execution: {e}")
+        except (IndexError, ValueError, ZeroDivisionError) as e:
+            # Capture errors and return them immediately or handle based on strict requirements.
+            # Since the requirement is to raise a clear error, we structure it here 
+            # and assume the calling environment will handle failure propagation.
+            # For this implementation, we will halt execution and raise the error 
+            # encapsulated in the loop logic.
+            raise e
 
 
     return output
 
 if __name__ == '__main__':
-    # Example usage demonstration (not part of the required function, but useful for testing)
-    
-    program1 = """
+    # Example Usage (demonstration, not part of the required function implementation itself)
+
+    # Example 1: Simple calculation (5 + 3) * 2
+    program_good = """
 PUSH 5
 PUSH 3
 ADD
+DUP      # Stack: [8, 3]
+MUL      # Stack: [24]
 PRINT
 """
-    print("--- Program 1 ---")
-    try:
-        results1 = run(program1)
-        print("Output:", results1) # Expected output: 8
-    except RuntimeError as e:
-        print(f"Execution failed: {e}")
 
-    print("\n" + "="*20 + "\n")
-
-    program2 = """
+    # Example 2: Division by zero error check
+    program_div_zero = """
 PUSH 10
 PUSH 0
 DIV
-PRINT
 """
-    print("--- Program 2 (Division by Zero) ---")
-    try:
-        results2 = run(program2)
-        print("Output:", results2)
-    except RuntimeError as e:
-        print(f"Execution failed: {e}")
 
-    print("\n" + "="*20 + "\n")
-    
-    program3 = """
-PUSH 10
-DUP
-PRINT
+    # Example 3: Underflow error check (POP on empty stack)
+    program_underflow = """
+POP
 """
-    print("--- Program 3 (DUP) ---")
+
+    print("--- Running Example 1 ---")
     try:
-        results3 = run(program3)
-        print("Output:", results3) # Expected output: 10, 10
-    except RuntimeError as e:
-        print(f"Execution failed: {e}")
+        results = run(program_good)
+        print("Output:", results) # Expected: ['24']
+    except Exception as e:
+        print(f"Error during execution: {e}")
+
+    print("\n--- Running Example 2 (Division by Zero) ---")
+    try:
+        run(program_div_zero)
+    except ZeroDivisionError as e:
+        print(f"Caught expected error: {e}")
+
+    print("\n--- Running Example 3 (Underflow) ---")
+    try:
+        run(program_underflow)
+    except IndexError as e:
+        print(f"Caught expected error: {e}")
+
+    # Example 4: Subtraction test (10 - 4)
+    program_sub = """
+PUSH 10
+PUSH 4
+SUB      # Should result in 10 - 4 = 6
+"""
+    print("\n--- Running Example 4 (Subtraction) ---")
+    try:
+        results = run(program_sub)
+        print("Output:", results) # Should fail because nothing was printed, but stack should contain [6]
+    except Exception as e:
+        print(f"Error during execution: {e}")

@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261109_182717_dba783",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "js_async",
+  "level": "level2",
+  "tested_at": "2026-11-09 19:19:57",
+  "passed": 8,
+  "total": 12,
+  "failures": [
+    "retry_transient_failure: assertion returned False",
+    "retry_exhausted: assertion returned False",
+    "exponential_backoff: assertion returned False",
+    "timeout_triggers_retry: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

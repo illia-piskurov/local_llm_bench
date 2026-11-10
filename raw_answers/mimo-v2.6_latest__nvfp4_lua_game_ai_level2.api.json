@@ -1,0 +1,26 @@
+{
+  "model": "mimo-v2.6:latest",
+  "created_at": "2026-11-09T17:24:31.745399Z",
+  "message": {
+    "role": "assistant",
+    "content": "```lua\nBT = {}\n\nBT.SUCCESS = \"SUCCESS\"\nBT.FAILURE = \"FAILURE\"\nBT.RUNNING = \"RUNNING\"\n\nBT.Action = function(fn)\n    local node = {\n        type = \"action\",\n        fn = fn,\n        status = BT.SUCCESS,\n    }\n\n    function node:tick(ctx)\n        local result = self.fn(ctx)\n        if result == true or result == BT.SUCCESS then\n            return BT.SUCCESS\n        elseif result == false or result == BT.FAILURE then\n            return BT.FAILURE\n        else\n            return BT.RUNNING\n        end\n    end\n\n    function node:reset()\n        self.status = BT.SUCCESS\n    end\n\n    return node\nend\n\nBT.Condition = function(predicate)\n    local node = {\n        type = \"condition\",\n        predicate = predicate,\n        status = BT.SUCCESS,\n    }\n\n    function node:tick(ctx)\n        if predicate(ctx) then\n            return BT.SUCCESS\n        else\n            return BT.FAILURE\n        end\n    end\n\n    function node:reset()\n        self.status = BT.SUCCESS\n    end\n\n    return node\nend\n\nBT.Sequence = function(children)\n    local node = {\n        type = \"sequence\",\n        children = children,\n        index = 1,\n        status = BT.SUCCESS,\n    }\n\n    function node:tick(ctx)\n        local child = children[self.index]\n        if not child then\n            return BT.SUCCESS\n        end\n\n        local result = child:tick(ctx)\n        if result == BT.SUCCESS then\n            self.index = self.index + 1\n            return BT.SUCCESS\n        elseif result == BT.RUNNING then\n            return BT.RUNNING\n        else\n            return BT.FAILURE\n        end\n    end\n\n    function node:reset()\n        self.index = 1\n    end\n\n    return node\nend\n\nBT.Selector = function(children)\n    local node = {\n        type = \"selector\",\n        children = children,\n        index = 1,\n        status = BT.SUCCESS,\n    }\n\n    function node:tick(ctx)\n        local child = children[self.index]\n        if not child then\n            return BT.SUCCESS\n        end\n\n        local result = child:tick(ctx)\n        if result == BT.SUCCESS then\n            return BT.SUCCESS\n        elseif result == BT.RUNNING then\n            return BT.RUNNING\n        else\n            self.index = self.index + 1\n            return BT.FAILURE\n        end\n    end\n\n    function node:reset()\n        self.index = 1\n    end\n\n    return node\nend\n\nBT.Blackboard = {}\n\nBT.Blackboard.new = function()\n    local blackboard = {\n        data = {},\n        watchers = {},\n    }\n\n    function blackboard:get(key, default)\n        return (self.data[key] == nil) and default or self.data[key]\n    end\n\n    function blackboard:set(key, value)\n        local old = self.data[key]\n        self.data[key] = value\n        if old == nil or old ~= value then\n            local callbacks = self.watchers[key]\n            if callbacks then\n                for _, callback in ipairs(callbacks) do\n                    callback(key, value, old)\n                end\n            end\n        end\n    end\n\n    function blackboard:watch(key, callback)\n        if self.watchers[key] == nil then\n            self.watchers[key] = {}\n        end\n        table.insert(self.watchers[key], callback)\n    end\n\n    return blackboard\nend\n\nBT.Inverter = function(child)\n    local node = {\n        type = \"inverter\",\n        child = child,\n        status = BT.SUCCESS,\n    }\n\n    function node:tick()\n        local result = self.child:tick()\n        if result == BT.SUCCESS then\n            return BT.FAILURE\n        elseif result == BT.FAILURE then\n            return BT.SUCCESS\n        else\n            return BT.RUNNING\n        end\n    end\n\n    function node:reset()\n        self.child:reset()\n    end\n\n    return node\nend\n\nBT.Cooldown = function(child, ticks)\n    local node = {\n        type = \"cooldown\",\n        child = child,\n        cooldown = 0,\n        status = BT.SUCCESS,\n    }\n\n    function node:tick()\n        if self.cooldown > 0 then\n            self.cooldown = self.cooldown - 1\n            return BT.FAILURE\n        end\n\n        local result = self.child:tick()\n        if result == BT.SUCCESS then\n            self.cooldown = ticks\n        end\n\n        return result\n    end\n\n    function node:reset()\n        self.cooldown = 0\n        self.child:reset()\n    end\n\n    return node\nend\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 71587864709,
+  "load_duration": 2965042,
+  "prompt_eval_count": 1402,
+  "prompt_eval_cached_count": 509,
+  "prompt_eval_duration": 5016469625,
+  "eval_count": 1051,
+  "eval_duration": 66503503000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1402,
+    "total_output_tokens": 1051,
+    "tokens_per_second": 15.80367879267954,
+    "time_to_first_token_seconds": 5.016469625,
+    "model_load_time_seconds": 0.002965042
+  }
+}

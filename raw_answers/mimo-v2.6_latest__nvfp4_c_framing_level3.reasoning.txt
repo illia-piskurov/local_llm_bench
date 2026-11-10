@@ -1,0 +1,7 @@
+Need to preserve ring buffer functions from Level 1 and decode_packet from Level 2, add feed_bytes and get_next_packet.
+
+Note: feed_bytes discards bytes that don't fit — but if buffer is full, we can't even check for a valid packet. Hmm, requirement says "If buffer overflows, discard bytes that do not fit." So just push.
+
+get_next_packet: scan ring buffer for valid packet, skipping noise. Need to handle wraparound.
+
+Let me write it.

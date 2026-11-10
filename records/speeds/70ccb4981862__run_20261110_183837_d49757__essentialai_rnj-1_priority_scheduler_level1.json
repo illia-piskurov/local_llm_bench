@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261110_183837_d49757",
+  "host_id": "70ccb4981862",
+  "model": "essentialai/rnj-1",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-10 18:42:38",
+  "stats": {
+    "input_tokens": 238,
+    "total_output_tokens": 526,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 16.469640617383774,
+    "time_to_first_token_seconds": 1.6744210000000002,
+    "model_load_time_seconds": null
+  }
+}

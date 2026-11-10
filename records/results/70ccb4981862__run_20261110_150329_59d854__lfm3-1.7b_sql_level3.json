@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_150329_59d854",
+  "host_id": "70ccb4981862",
+  "model": "lfm3-1.7b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-11-10 15:36:35",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "failed to load solution: Syntax error in solution: expected an indented block after 'if' statement on line 275 (<unknown>, line 281)"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

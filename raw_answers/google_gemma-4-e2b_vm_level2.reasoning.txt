@@ -1,0 +1,56 @@
+
+Thinking Process:
+
+1.  **Analyze the Request:** The user wants to extend the existing stack interpreter implementation to support labels and conditional jumps (JMP, JZ, JNZ). The core structure (`run` function) must remain, and it should handle these new instructions while maintaining existing functionality.
+
+2.  **Review Existing Code Structure:**
+    *   The implementation iterates through lines, parses instructions, and manipulates a stack.
+    *   Error handling uses `try/except` blocks for `IndexError`, `ValueError`, and `ZeroDivisionError`.
+    *   Instructions handle PUSH, POP, ADD, SUB, MUL, DIV, DUP, SWAP, PRINT.
+    *   The flow is generally: read line -> check instruction -> execute logic/check stack -> handle errors.
+
+3.  **Implement New Instructions:**
+
+    *   **LABEL `<name>`:**
+        *   This instruction defines a bookmark. It needs to store the label name somewhere, perhaps in a dictionary/map, or just acknowledge its presence (if it's purely for flow control). Since the current interpreter is simple, simply recording the label definition might suffice, but for jump targets, we need a way to know where to go.
+
+    *   **JMP `<name>`:**
+        *   Unconditional jump. Requires storing labels and creating a jump mechanism in the main loop (e.g., using a `while` loop and an instruction pointer, or handling jumps by manipulating the iteration index).
+
+    *   **JZ `<name>` (Jump if Zero):**
+        *   Pop value. If 0, jump to `<name>`. Otherwise, continue execution.
+
+    *   **JNZ `<name>` (Jump if Not Zero):**
+        *   Pop value. If non-zero, jump to `<name>`. Otherwise, continue execution.
+
+4.  **Determine Execution Flow Strategy (Handling Jumps):**
+    *   Since we are iterating line by line, implementing jumps requires breaking the linear iteration. A `while` loop controlling an instruction pointer (`ip`) or managing a jump target dictionary seems necessary if we want the interpreter to behave like a CPU.
+
+5.  **Refactoring for Flow Control (The Hard Part):**
+    *   Current implementation uses a simple `for` loop over lines. Jumps (JMP) require skipping lines or jumping to a specific line number in the input list.
+    *   We need an explicit execution loop structure (e.g., `while i < len(lines)`).
+
+6.  **Step-by-Step Implementation of Jumps (Focusing on the core logic):**
+
+    *   We need to track line numbers.
+    *   When a jump occurs, the main loop should adjust its current position based on the target label.
+
+    *   *Self-Correction/Simplification:* Implementing a full instruction pointer machine might be overkill if we can just handle the jumps by setting a flag or resetting the iterator, but using indices is cleaner.
+
+7.  **Drafting the New Instruction Logic within the loop:** (Assuming we switch to an explicit index loop)
+
+    *   Need a dictionary `labels = {}` to store labels.
+    *   The loop needs to jump the index (`i`).
+
+8.  **Final Code Assembly and Polish:** (Integrating the new logic into the existing framework, ensuring robust error checking for jumps too).
+
+*(Self-Correction during draft: Since the prompt expects me to *extend* the function, I must ensure that when a jump is executed, it correctly skips or redirects the processing for the current iteration.)*
+
+*(Focusing on JMP/JZ/JNZ implementation details):*
+1. Parse the instruction and label name.
+2. If JMP, set a flag/jump condition for the next iteration.
+3. If JZ/JNZ, pop, check value, modify current index (or break out of the loop control structure and rely on subsequent iterations if implemented as a pseudo-assembly).
+
+*Since I am modifying a sequential interpreter into a conditional/jump interpreter, the cleanest way is to use an index and explicitly manage flow.*
+
+Let's implement the required changes within the provided function structure. I will assume jumps change where the loop continues to look for instructions.

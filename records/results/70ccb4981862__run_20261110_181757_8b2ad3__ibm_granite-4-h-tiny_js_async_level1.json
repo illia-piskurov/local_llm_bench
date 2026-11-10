@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261110_181757_8b2ad3",
+  "host_id": "70ccb4981862",
+  "model": "ibm/granite-4-h-tiny",
+  "benchmark": "js_async",
+  "level": "level1",
+  "tested_at": "2026-11-10 18:27:11",
+  "passed": 1,
+  "total": 7,
+  "failures": [
+    "order_preservation: assertion returned False",
+    "concurrency_limit: assertion returned False",
+    "concurrency_as_number: assertion returned False",
+    "concurrency_default_one: assertion returned False",
+    "index_passed: assertion returned False",
+    "mapper_rejection: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

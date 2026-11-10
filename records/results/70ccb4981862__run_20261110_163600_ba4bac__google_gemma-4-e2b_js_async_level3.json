@@ -1,0 +1,26 @@
+{
+  "run_id": "run_20261110_163600_ba4bac",
+  "host_id": "70ccb4981862",
+  "model": "google/gemma-4-e2b",
+  "benchmark": "js_async",
+  "level": "level3",
+  "tested_at": "2026-11-10 17:01:47",
+  "passed": 5,
+  "total": 17,
+  "failures": [
+    "order_preservation: assertion returned False",
+    "concurrency_limit: assertion returned False",
+    "concurrency_as_number: assertion returned False",
+    "index_passed: assertion returned False",
+    "retry_transient_failure: assertion returned False",
+    "exponential_backoff: assertion returned False",
+    "timeout_triggers_retry: assertion returned False",
+    "already_aborted_signal: assertion returned False",
+    "mid_flight_abort: assertion returned False",
+    "settled_all_success: assertion returned False",
+    "settled_mixed_failures: exception object of type 'NoneType' has no len()",
+    "settled_with_retries: exception object of type 'NoneType' has no len()"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

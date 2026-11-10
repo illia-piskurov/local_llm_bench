@@ -27,12 +27,13 @@ def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
     return None if len(result) != len(tasks) else result
 
 def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
-    # Check for cycles using topological sort
+    # Check for cycles first (same as topo_sort)
     adj = {task: [] for task in tasks}
     in_degree = {task: 0 for task in tasks}
 
-    for task, (_, deps) in tasks.items():
-        for dep in deps:
+    for task, deps in tasks.items():
+        duration, _ = deps
+        for dep in deps[1]:
             if dep not in adj:
                 return None
             adj[dep].append(task)
@@ -52,16 +53,16 @@ def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
     if len(topo_order) != len(tasks):
         return None
 
-    # Calculate earliest start and finish times
-    earliest_start = {task: 0 for task in tasks}
-    earliest_finish = {task: 0 for task in tasks}
+    # Calculate durations along the critical path
+    duration = {task: tasks[task][0] for task in tasks}
+    max_duration = 0
+    current_max = 0
 
     for task in reversed(topo_order):
-        duration, deps = tasks[task]
-        earliest_start[task] = max(earliest_finish[d] for d in deps) if deps else 0
-        earliest_finish[task] = earliest_start[task] + duration
+        current_max = max(current_max, duration.get(task, 0))
+        if task in tasks:
+            current_max += duration[task]
+        max_duration = max(max_duration, current_max)
 
-    # Find the longest path (critical path)
-    critical_length = max(earliest_finish.values())
-    return critical_length
+    return max_duration
 ```

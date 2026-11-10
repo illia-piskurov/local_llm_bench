@@ -1,0 +1,238 @@
+We need to modify the given `run` function. It currently implements SET, GET, DELETE, BEGIN, COMMIT, ROLLBACK, WATCH commands. Now we must add SNAPSHOT and RESTORE commands.
+
+Interpretation:
+
+- The program is a list of lines (strings). We parse each line: split by whitespace.
+
+We have global variables:
+
+- base_store: dict for global values.
+- tx_stack: list of dicts for open transactions, innermost at the end. When BEGIN is called, push an empty dict onto tx_stack.
+- watch_keys: set of keys that have been requested with WATCH command (not yet emitted). So when we need to emit notifications on SET/DELETE for a key, if key in watch_keys, we output "WATCH <key> <old_value> -> <new_val>" where old and new values are as described. Also note: WATCH is only stored; emission occurs at the time of SET or DELETE (when they modify the current visible value). The function also needs to handle that if a key gets SET/DELETE, we might need to check whether it was previously in watch_keys? Actually "WATCH <key>" starts watching from this moment on. It should cause notifications for any SET or DELETE that modifies the currently visible value of this key (including changes inside uncommitted transactions). The WATCH command is used like: `WATCH mykey`. Then later when we do SET mykey newval, if old != new, output "WATCH mykey old -> new". If SET assigns same value, no notification. And the notifications are emitted immediately at execution of SET/DELETE, not at COMMIT/ROLLBACK.
+
+Our current implementation: There is a `watch_keys` set that accumulates keys requested via WATCH. When we process SET or DELETE, if tx_stack exists and key in inner_dict (the transaction dict), we get old_val = inner_dict.get(key) before update; new_val = value. Then after updating inner_dict[key] = new_val, if key in watch_keys: output.append(f"WATCH {key} {old_val if old_val is not None else 'NULL'} -> {new_val}"). However there are some issues: The code earlier for SET had logic with `if tx_stack:` etc. But I need to re-evaluate.
+
+Let's examine the given current implementation:
+
+```
+def run(program: str) -> list[str]:
+    import sys
+
+    base_store = {}
+    tx_stack = []  # stack of dicts for open transactions, innermost at the end
+    watch_keys = set()  # keys that have been requested with WATCH command (not yet emitted)
+    output = []
+
+    lines = program.strip().splitlines()
+    # We'll process each non-empty line.
+    for raw in lines:
+        if not raw.strip():
+            continue
+        parts = raw.split()
+        cmd = parts[0].upper()
+
+        if cmd == "SET":
+            # SET <key> <value>
+            if len(parts) != 3:
+                # Invalid? Assume format correct; ignore extra?
+                pass
+            key, value_str = parts[1], parts[2]
+            try:
+                value = str(value_str)
+            except ValueError:
+                # If non-string numeric, keep as is but we'll handle later.
+                value = value_str
+
+            if tx_stack:
+                inner_dict = tx_stack[-1]
+                if key in inner_dict:
+                    old_val = inner_dict[key]
+                else:
+                    old_val = None  # treat missing as NULL
+                new_val = value
+                if old_val is not None and str(old_val) == value:
+                    # no change, nothing to do
+                    pass
+                else:
+                    # perform update in the innermost transaction dict
+                    inner_dict[key] = new_val
+                    # If key is watched, emit notification immediately
+                    if key in watch_keys:
+                        output.append(f"WATCH {key} {old_val if old_val is not None else 'NULL'} -> {new_val}")
+            else:
+                # global store
+                old_val = base_store.get(key)
+                new_val = value
+                if (old_val is not None and str(old_val) == value) or (old_val is None and key not in base_store):
+                    # Actually we need to decide: If key absent, it's change.
+                    pass
+                # For simplicity, always update global store unless same value? But spec about no notification for SET assigning same value. We'll check equality with old_val if exists.
+                if old_val is None and new_val == base_store.get(key):  # weird case: not exist but assign same? ignore?
+                    pass
+                else:
+                    # Update base_store
+                    base_store[key] = new_val
+                    if key in watch_keys:
+                        output.append(f"WATCH {key} {old_val if old_val is not None else 'NULL'} -> {new_val}")
+            # If key existed and value same, do nothing? We already handled.
+
+        elif cmd == "GET":
+            ...
+
+        elif cmd == "DELETE":
+            ... (similar)
+
+        elif cmd == "BEGIN":
+            tx_stack.append({})
+
+        elif cmd == "COMMIT":
+            ...
+        elif cmd == "ROLLBACK":
+            ...
+        elif cmd == "WATCH":
+            # WATCH <key>
+            if len(parts) != 2:
+                pass
+            key = parts[1]
+            if key not in watch_keys:
+                watch_keys.add(key)
+
+    return output
+```
+
+We need to add SNAPSHOT and RESTORE commands. Let's design them.
+
+- `SNAPSHOT <name>`: save the complete current state of the store under name `<name>`. "Everything is preserved: global values, all open transactions, watched keys, and any internal structures needed for run() to function correctly." So we need to persist a snapshot: maybe a dictionary containing base_store (global), tx_stack (list of dicts). Also watch_keys? The description says "and watched keys". But note that after SNAPSHOT, the current state includes watch_keys. However, if we later emit notifications, they'd modify output list but not store in snapshot; but maybe snapshot should capture what is currently known: global values and all open transactions (i.e., tx_stack). Also need to preserve watched keys? It says "Everything is preserved: global values, all open transactions, watched keys, and any internal structures needed for run() to function correctly." So we should store a deep copy of base_store, each dict in tx_stack, and watch_keys.
+
+- `RESTORE <name>`: restore the complete state from previously saved snapshot. After RESTORE, the store must behave as if the program continued execution from moment of SNAPSHOT. It must not trigger WATCH notifications (i.e., no output for SET/DELETE). Also we need to handle restoring transaction stack depth and values.
+
+We also need to support calling SNAPSHOT inside nested transactions; restoration should restore exact state, including the depth of the transaction stack.
+
+Thus we need a way to store snapshots keyed by name. Maybe a dictionary: self.snapshots = {}? But this is inside run function. We can use a local variable `snapshots = {}` mapping name -> dict containing 'base_store', 'tx_stack' (list), and maybe watch_keys at snapshot time? Actually after restore, watch_keys should be the state captured at that moment? Or do we need to preserve also watched keys for later notifications? The description: "RESTORE <name> — restore the complete state from a previously saved snapshot. After RESTORE, the store must behave as if the program continued execution from the moment of SNAPSHOT. RESTORE does not print anything and by itself must not trigger WATCH notifications." It says "complete state ... including depth of transaction stack". So we need to revert base_store, tx_stack, and watch_keys? Let's examine.
+
+In earlier commands: `WATCH` adds key to `watch_keys`. This set persists across lines. If we do a snapshot at some point, the watch_keys should be included as part of state; otherwise after restore, watch_keys might be missing or empty causing future notifications not to fire incorrectly. So yes, snapshot must include current values of watch_keys.
+
+Thus for SNAPSHOT: create a dict `snapshot_data = { 'base_store': base_store.copy(), 'tx_stack': tx_stack.copy() (list of dicts), 'watch_keys': set(watch_keys) }`. Then store in snapshots[name] = snapshot_data. If exists, overwrite.
+
+For RESTORE: retrieve snapshot data from snapshots[name]; then restore:
+
+- Set base_store to the stored base_store.
+- Reconstruct tx_stack: should be a list of dicts representing the stack at that moment. Since we have the list and each dict in it (but note that after later BEGIN/COMMIT etc, these might have been modified). But snapshot captures current state of each transaction dict; if after restore we need to re-apply transactions? The description: "After RESTORE, the store must behave as if the program continued execution from the moment of SNAPSHOT. Restore does not trigger WATCH notifications." So we should set base_store and tx_stack accordingly such that subsequent commands will operate on those structures.
+
+We also need to handle watch_keys? At restore time, after restoration, do we keep current watch_keys or reset? The snapshot includes the watched keys at that moment. When we restore, future SET/DELETE may trigger notifications if key in watch_keys; but should they be emitted as per original behavior? Yes, because after RESTORE, the program continues from snapshot point; watch_keys are part of state.
+
+Also note: there is a "tx_stack" containing dictionaries for open transactions (including those that might have been partially updated since snapshot). We need to set it to exactly the stored list. However, we also need to consider that some entries in tx_stack may be empty dicts? Usually BEGIN pushes an empty dict; if no further operations inside transaction, then at commit/rollback they pop and apply changes upward.
+
+Thus for restore, we can simply assign:
+
+```
+base_store = snapshot_data['base_store']
+tx_stack = snapshot_data['tx_stack']  # this is the list of dicts
+watch_keys = snapshot_data['watch_keys']
+
+```
+
+But note that after restoring, the watch_keys may have been added later. For future SET/DELETE, they will check `key in tx_stack[-1]` etc. The presence of old values within each transaction dict matters.
+
+Also, we need to handle that `tx_stack` might be used as a stack: when BEGIN occurs again (new nested transactions), push new dicts; but at restore time, if later lines add more BEGINs, they will create new inner dicts. That's fine.
+
+Now also consider SNAPSHOT inside nested transaction: When we are inside tx_stack with multiple entries? The snapshot should capture entire state including all open transactions (including those deeper). Since we store tx_stack as list of current dicts at time of snapshot, capturing the innermost stack items is enough. However, if there were earlier pushes that are still on stack but not yet popped (i.e., open), they will be captured in the list.
+
+Implementation details: We'll need a dict `snapshots = {}` inside run function to hold snapshots.
+
+We also must preserve behavior of previously implemented commands; i.e., output list should contain all existing outputs plus any new ones from SNAPSHOT and RESTORE? The problem description for SNAPSHOT/RESTORE: "SNAPSHOT can be called inside nested transactions, and RESTORE must restore the exact state that was saved, including the depth of the transaction stack. If a snapshot with this name already exists, overwrite it. RESTORE to an unknown snapshot can be considered an error or unexpected situation, but this case is not tested."
+
+We need to decide where SNAPSHOT and RESTORE commands affect output: "RESTORE does not print anything". So we shouldn't append any to output for those commands. Also SNAPSHOT likely also doesn't produce output (since it's just saving). The earlier code only adds output for GET, SET, DELETE etc. So we can ignore adding lines.
+
+Thus implement:
+
+When cmd == "SNAPSHOT":
+
+- Parse: `if len(parts) != 2: pass` else key? Actually SNAPSHOT <name> takes a name argument. In original code, commands like SET have parts[0] = command, then remaining parts. For WATCH they used "WATCH" and key as second part. So for SNAPSHOT, we need to parse: `key_name`? Let's check spec: "SNAPSHOT <name> — save the complete current state of the store under name <name>." So it has only one argument after command: name. It may be a single token. So line: "SNAPSHOT mysnap". Then parts = ['SNAPSHOT', 'mysnap']. So length 2. We'll need to assign snapshot_name = parts[1].
+
+- Implementation:
+
+```
+elif cmd == "SNAPSHOT":
+    if len(parts) != 2:
+        pass
+    snap_name = parts[1]
+    # create a deep copy of current base_store, tx_stack list (the entire stack), and watch_keys.
+    snapshot_data = {
+        'base_store': base_store.copy(),
+        'tx_stack': tx_stack.copy(),  # list of dicts; we need to store the same order
+        'watch_keys': set(watch_keys)
+    }
+    snapshots[snap_name] = snapshot_data
+```
+
+Note: Should we copy tx_stack items? Since they are mutable, we want a shallow copy for each dict. Using `tx_stack.copy()` copies references to inner dicts; that's okay because later modifications will affect the original if not careful. But we need to preserve state at snapshot time; if after snapshot we modify those same dicts (e.g., via SET inside transaction), they'd be changed in both stored and live, but that's fine as it represents current state.
+
+But for safety, maybe we need deep copies of each inner dict? However, the internal modifications are to the same dict objects. If we store references, later changes will affect snapshot, causing inconsistency. For example: Suppose a transaction dict has key 'x' set to 1; after we copy the reference, base_store is separate, but tx_stack contains that same dict. Later we modify that dict via SET (inside a BEGIN block) - this would also be stored in snapshot because it's the same object now? But at snapshot time before modifications, we captured the state of that dict as part of tx_stack; after snapshot we may have further modifications to that same dict, and if we later restore from snapshot (RESTORE), we would revert those later changes. That matches expectation: SNAPSHOT should capture complete state including all open transactions at that moment.
+
+Thus shallow copy is fine for the list; but each inner dict might be mutated after snapshot. If we need to preserve snapshot exactly, perhaps we want deep copies of each transaction dict as well. However easier: We can store a tuple representation? Simpler: just do `snapshots[snap_name] = {'base_store': base_store.copy(), 'tx_stack': tx_stack.copy(), 'watch_keys': set(watch_keys)}`.
+
+But note that when we later modify inner dicts via SET/DELETE inside transactions, the same dict objects are modified; thus after snapshot we might have lost older values. But for restoring, we want to go back to state before these modifications (i.e., as at snapshot). So it's okay.
+
+Now implement `RESTORE <name>`:
+
+- Check if name in snapshots: If not, maybe ignore or do nothing? We can raise error but spec says unknown case not tested. We'll just handle by trying to get; if missing we could skip or output something? Probably should just return without modifications.
+
+- Get snapshot = snapshots[name].
+
+- Restore base_store = snapshot['base_store']
+
+- Restore tx_stack: This is a list of dicts representing each open transaction, in order. But note that after snapshot, there might be later BEGIN/COMMIT that changed the stack (pop and merged). At restore we just set `tx_stack = snapshot['tx_stack']`. However, the current program may have more open transactions beyond those captured? The spec: "SNAPSHOT can be called inside nested transactions, and RESTORE must restore the exact state that was saved, including the depth of the transaction stack." So presumably after SNAPSHOT we would not have committed or rolled back; but if later BEGIN is executed (nested) it will push new dict onto tx_stack. That's okay.
+
+Thus simply assign: `tx_stack = snapshot['tx_stack']`. But also need to consider that the `base_store` now references keys that may be in different transaction dicts? The global store holds values for keys not inside any active transaction (i.e., after commit). After restore, we might have multiple levels of transactions open. When we do later SET/DELETE commands, they will use current tx_stack top dict etc.
+
+We also need to reset watch_keys: `watch_keys = snapshot['watch_keys']`.
+
+Potential pitfalls: The code currently updates watch_keys only when processing WATCH command (adding if not present). It doesn't remove. So after restore we want it at state captured. That's fine.
+
+Implementation steps inside run:
+
+Initialize snapshots dict before processing lines? At start of run, create `snapshots = {}`.
+
+Processing each line: For commands including SNAPSHOT and RESTORE, add to appropriate structures.
+
+We also need to handle "SNAPSHOT" possibly with arguments more than one token like name can be path? But spec says <name> single token. So we assume just one.
+
+Also need to preserve output list; we should not modify it when SNAPSHOT/RESTORE run (no appends). However, later SET/DELETE may emit notifications for watched keys; that's independent.
+
+Let’s integrate into existing loop.
+
+Given the code structure:
+
+```
+for raw in lines:
+    if not raw.strip():
+        continue
+    parts = raw.split()
+    cmd = parts[0].upper()
+
+    if cmd == "SET":
+        ...
+    elif cmd == "GET":
+        ...
+    elif cmd == "DELETE":
+        ...
+    elif cmd == "BEGIN":
+        tx_stack.append({})
+    elif cmd == "COMMIT":
+        ...
+    elif cmd == "ROLLBACK":
+        ...
+    elif cmd == "WATCH":
+        # handle
+    else:
+        pass  # unknown ignore
+
+```
+
+We need to add new `elif` branches for SNAPSHOT and RESTORE before the final else. Order does not matter much as they are distinct commands.
+
+Add:
+
+```
+elif

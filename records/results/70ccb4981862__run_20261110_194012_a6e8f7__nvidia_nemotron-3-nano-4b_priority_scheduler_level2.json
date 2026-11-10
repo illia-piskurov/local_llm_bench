@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261110_194012_a6e8f7",
+  "host_id": "70ccb4981862",
+  "model": "nvidia/nemotron-3-nano-4b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-10 19:52:20",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception: TypeError: 'set' object isn't subscriptable",
+    "parallel_tasks_reduce_makespan: unexpected exception: TypeError: 'set' object isn't subscriptable",
+    "dependencies_and_workers: unexpected exception: TypeError: 'set' object isn't subscriptable",
+    "critical_path_longer_than_worker_parallelism: unexpected exception: TypeError: 'set' object isn't subscriptable",
+    "wide_graph_with_unlocks: unexpected exception: TypeError: 'set' object isn't subscriptable"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

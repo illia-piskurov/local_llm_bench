@@ -1,37 +1,43 @@
-We need to output just the function implementation. Provide code that does topological sort using Kahn's algorithm or DFS with visited set and recursion stack detection for cycles. Return None if cycle.
+We need to output just Python code in a code block. Implement topological sort using Kahn's algorithm or DFS with visited set and recursion stack to detect cycles. Return list or None.
 
-Implementation: Use collections? No external dependencies allowed; but we can use built-in dict, list, set. That's fine.
+Implementation: tasks dict mapping str -> list[str]. Use indegree counter. Build adjacency and indegree, then queue of zero indegree nodes. Append to result. If at end len(result) != total tasks => cycle => return None else result.
 
-Pseudo:
+Edge cases: tasks may have empty list dependencies fine.
 
-def topo_sort(tasks):
-    # Build adjacency list and indegree
-    indeg = {t:0 for t in tasks}
-    graph = {}
-    for task, deps in tasks.items():
-        graph[task] = []
-        for d in deps:
-            if d not in tasks: maybe ignore? but assume valid.
-            indeg[task] += 1
-            # also add edge from dep to task
-            graph.setdefault(d, []).append(task)
-    # Kahn's algorithm
-    queue = [t for t in tasks if indeg[t]==0]
-    order=[]
-    while queue:
-        u=queue.pop(0) # arbitrary order
-        order.append(u)
-        for v in graph.get(u,[]):
-            indeg[v]-=1
-            if indeg[v]==0:
-                queue.append(v)
-    if len(order)==len(tasks):
-        return order
-    else:
-        return None
+Return type: list[str] | None.
 
-Edge cases: tasks dict may have keys with no deps.
+Provide code with function definition only? Probably include helper classes not needed.
 
-Return list of strings.
+Single file: just the function. We'll output:
 
-Provide code block only.
+```python
+from collections import deque
+
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    # Build indegree map and adjacency (not needed) but we need indegree.
+    indegree = {}
+    for task in tasks:
+        indegree[task] = 0
+    for prereq in tasks.values():
+        for p in prereq:
+            indegree[p] = indegree.get(p, 0) + 1
+
+    zero_indeg = deque([t for t, d in indegree.items() if d == 0])
+    order = []
+    while zero_indeg:
+        node = zero_indeg.popleft()
+        order.append(node)
+        for succ, deps in tasks.items():
+            if node in deps:
+                indegree[succ] -= 1
+                if indegree[succ] == 0:
+                    zero_indeg.append(succ)
+
+    return None if len(order) != len(tasks) else order
+```
+
+But we need to ensure that tasks dict may have tasks not referenced elsewhere as keys? Our indegree initialization loops over tasks.keys() plus any prereq that might be not a key. That's okay.
+
+Return type annotation works.
+
+We'll output only code block.

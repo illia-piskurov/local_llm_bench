@@ -1,0 +1,24 @@
+{
+  "run_id": "run_20261110_183837_d49757",
+  "host_id": "70ccb4981862",
+  "model": "essentialai/rnj-1",
+  "benchmark": "js_async",
+  "level": "level3",
+  "tested_at": "2026-11-10 19:05:07",
+  "passed": 7,
+  "total": 17,
+  "failures": [
+    "order_preservation: assertion returned False",
+    "concurrency_limit: assertion returned False",
+    "concurrency_as_number: assertion returned False",
+    "concurrency_default_one: assertion returned False",
+    "mapper_rejection: assertion returned False",
+    "retry_exhausted: assertion returned False",
+    "task_timeout: assertion returned False",
+    "mid_flight_abort: assertion returned False",
+    "settled_all_success: exception 'NoneType' object has no attribute 'get'",
+    "settled_mixed_failures: exception 'NoneType' object has no attribute 'get'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

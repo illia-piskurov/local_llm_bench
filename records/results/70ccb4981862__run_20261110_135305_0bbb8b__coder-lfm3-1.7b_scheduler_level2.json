@@ -1,0 +1,17 @@
+{
+  "run_id": "run_20261110_135305_0bbb8b",
+  "host_id": "70ccb4981862",
+  "model": "coder-lfm3-1.7b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-10 14:08:25",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "simple_chain: expected 9, got 4",
+    "diamond_pick_longer_branch: expected 12, got 10",
+    "wide_graph: expected 19, got 10"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

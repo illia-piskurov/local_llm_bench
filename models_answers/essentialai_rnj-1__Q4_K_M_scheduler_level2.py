@@ -1,0 +1,51 @@
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    def dfs(task):
+        if task in visiting:
+            return False  # Cycle detected
+        if task not in visited:
+            visiting.add(task)
+            for dep in tasks.get(task, []):
+                if not dfs(dep):
+                    return False
+            visiting.remove(task)
+            visited.add(task)
+            result.append(task)
+        return True
+
+    visited = set()
+    visiting = set()
+    result = []
+    for task in tasks:
+        if task not in visited and not dfs(task):
+            return None  # Cycle detected
+    return result[::-1]
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    topo_order = topo_sort({task: deps for task, (dur, deps) in tasks.items()})
+    if topo_order is None:
+        return None
+
+    durations = {task: dur for task, (dur, _) in tasks.items()}
+    earliest_start_times = {task: 0 for task in topo_order}
+    latest_finish_times = {task: 0 for task in topo_order}
+
+    # Calculate the earliest start times
+    for task in topo_order:
+        if not tasks[task][1]:
+            continue
+        max_earliest_end_time = max(earliest_start_times[dep] + durations[dep] for dep in tasks[task][1])
+        earliest_start_times[task] = max_earliest_end_time
+
+    # Calculate the latest finish times (reverse topo order)
+    reverse_topo_order = topo_order[::-1]
+    total_duration = 0
+    for task in reverse_topo_order:
+        if not tasks[task][1]:
+            total_duration = max(total_duration, earliest_start_times[task] + durations[task])
+            continue
+        min_latest_finish_time = min(
+            latest_finish_times[dep] - durations[dep]
+            for dep in tasks[task][1]
+        )
+        latest_finish_times[task] = min(min_latest_finish_time, total_duration)
+    return max(latest_finish_times.values())

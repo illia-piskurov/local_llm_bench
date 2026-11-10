@@ -1,0 +1,63 @@
+{
+  "id": "run_20261110_143752_cd00bf",
+  "host_id": "70ccb4981862",
+  "model_key": "deepseek/deepseek-r1-0528-qwen3-8b",
+  "model_name": "Deepseek R1 0528 Qwen3 8B",
+  "quantization": "4bit",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "deepseek/deepseek-r1-0528-qwen3-8b",
+      "display_name": "Deepseek R1 0528 Qwen3 8B",
+      "architecture": "qwen3",
+      "quantization": "4bit",
+      "quantization_bits": 4,
+      "size_bytes": 4619394542,
+      "params_string": "8B",
+      "max_context_length": 131072,
+      "format": "mlx",
+      "publisher": "deepseek"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 14:37:52",
+  "completed_at": "2026-11-10 14:39:28",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 14:39:28",
+      "passed": 12,
+      "total": 18,
+      "failures": [
+        "dup: expected ['18'], got ['9']",
+        "swap: expected ['1'], got ['-1']",
+        "multiple_prints: expected ['1', '2', '3'], got ['1', '2']",
+        "print_does_not_pop: expected ['5', '5'], got ['5']",
+        "stack_underflow_add: expected error, but execution succeeded (['1'])",
+        "stack_underflow_pop: expected error, but execution succeeded ([])"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 14:39:26",
+      "stats": {
+        "input_tokens": 268,
+        "total_output_tokens": 1820,
+        "reasoning_output_tokens": 205,
+        "tokens_per_second": 19.92000157466518,
+        "time_to_first_token_seconds": 1.977,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

@@ -1,48 +1,68 @@
-We need to produce combined code? The user wants extend implementation with critical_path function. Probably provide both functions in same file. Must return only code block. So output:
+We need to produce combined code? The prompt: "Extend your implementation with a critical path calculation function". Likely we should output both functions in same file. So final answer: a single python code block containing topo_sort and critical_path definitions, using only builtins.
 
-```python
-def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
-    ...
+Need to implement critical_path using DP: topological order then compute earliest start = sum of durations of predecessors? Actually duration per task; critical path length is max over tasks of cumulative time from start (0) plus its duration. Dependencies must be completed before. So we need longest path weight where nodes have edge weight = predecessor's finish time? Simpler: For each node, compute latest start? Classic CPM: earliest start times, then latest start via reverse pass. But given only forward dependencies and durations, longest path from sources to nodes gives critical path length (sum of durations along that path). So we can compute DP forward using indegree zero tasks.
 
-def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
-    ...
-```
+Implementation: compute topological order; maintain dist dict (earliest finish time) for each node. Initialize with 0 if no preds else sum prereqs' durations? Actually if a task has dependencies, its earliest start is max of predecessors' finish times = max(prev_finish). So we need to track finish times of preds. Use indegree zero queue: when processing node, compute its duration + max prev_finish (if any) and set dist[node] = that value. Then propagate.
 
-Need to implement both.
+But need longest path, not earliest. However topological order ensures all preds processed before node? Not necessarily; if graph DAG, yes each node appears after all preds in some topological ordering, but we may process a node only when indegree zero (all preds removed). That's fine: we can compute earliest finish = duration + max(prev_finish). This is also longest path from sources because all paths considered. Since no negative weights.
 
-Critical path: compute longest path in DAG. Use DP with indegree Kahn's algorithm but track max cumulative time. For each node, its earliest start = sum of durations of predecessors? Actually critical path length is maximum total duration from start (no dependencies) to end (no outgoing). We can compute using topological order and dynamic programming: for each task, its completion time = max over preds of (pred_completion + pred_duration?) Wait tasks have duration. Usually each task has a duration; the critical path sum includes durations of tasks on longest path. So we need to compute longest path weight where edge weight is task duration? Actually typical CPM: each activity has duration, and total time = max over paths of sum of durations along path. Dependencies are predecessor activities. So we can compute for each node its earliest finish time (EF) = max(EF(pred)+duration(pred))? No, EF includes its own duration. Usually EF_i = max_{j in pred(i)} (EF_j + D_j). Then total critical path length = max_i EF_i.
+Thus algorithm:
 
-Implementation: Build indegree map, graph adjacency list of successors. Also store durations dict.
+- Build indegree map.
+- queue nodes with indegree 0, dist[node] = duration.
+- While queue:
+   node = popleft
+   order.append(node)
+   for succ, deps in tasks.items():
+        if node in deps:
+            indegree[succ] -= 1
+            # update max prev_finish? Not needed now; later when succ indegree zero we compute its duration + max of all preds' dist.
+But to compute dist[succ] at time of processing, need max of dist[pred]. But preds may not all have been processed yet because indegree still >0. So cannot compute until indegree 0.
 
-Initialize queue with tasks indegree 0. For each node, compute its earliest finish time as its duration initially? Actually if no preds, EF = duration. Then when processing a successor v, we update its max predecessor finish + duration of predecessor? Wait need to propagate: When we process u (pop from queue), for each v in graph[u], we consider candidate = u_finish (which includes u's duration). If candidate > current best for v, set v_best = candidate. Also indegree[v]--; when indegree becomes 0, we can compute its own finish: v_finish = max(v_best, v_duration)? Actually v_best is sum of durations up to predecessor plus maybe not include v's own duration yet. The critical path length for v includes its own duration as well? In typical CPM, EF_i = max_{j in pred(i)} (EF_j + D_j). That already includes u's duration but not v's. Then after processing all preds, we set v_finish = max(v_best, v_duration)? Actually if no preds, v_finish = D_v. So algorithm: maintain best_pred_sum for each node (max sum of durations up to predecessor). When indegree becomes 0, compute its finish = max(best_pred_sum, duration) ??? But if there are preds, best_pred_sum already includes their durations but not current task's own duration. The critical path length is max over all nodes of (best_pred_sum + duration(node)). So we can compute that at the end.
+Thus better: after topological order is computed (list), we can compute critical path via DP over order: for each node, pred_finish = max(dist[p] for p in tasks[node][1]) if any else 0; dist[node]=duration + pred_finish. This uses only forward dependencies and works because all preds appear earlier in topological order.
 
-Simpler: Use DP after topological order: for each node in order, its finish = max(its duration, best_pred_sum + its duration?) Actually if there are preds, best_pred_sum already includes their durations; adding current duration gives total up to this node. If no preds, best_pred_sum is 0? Let's set best_pred_sum initially 0 for indegree 0 nodes. Then finish = best_pred_sum + duration.
+But topological order we already have from topo_sort but that function returns None on cycle. However critical_path expects to handle cycles itself? Should detect cycle similarly. Could reuse indegree+queue method.
 
-Implementation steps:
+Simplify: Use Kahn's algorithm to get topological order; also compute dist as described using only predecessors (since they are earlier). So after building indegree map, we can compute topological list via Kahn's, but not need separate function.
 
-- Build indeg dict.
-- graph adjacency list of successors.
-- durations dict mapping task->duration.
-- best_pred_sum dict default 0.
-- queue tasks with indeg 0.
-- order list.
-- while queue:
-   u = pop(0)
-   order.append(u)
-   for v in graph.get(u, []):
-       if best_pred_sum[u] + duration[u] > best_pred_sum[v]:
-           best_pred_sum[v] = best_pred_sum[u] + duration[u]
-       indeg[v] -= 1
-       if indeg[v]==0:
-           queue.append(v)
-- After processing all nodes, compute max_finish = max(best_pred_sum[t] + duration[t] for t in tasks) if order length == len(tasks) else None.
+Implementation:
 
-Edge case: task with no preds and duration >0 => best_pred_sum 0, finish = duration.
+def critical_path(tasks):
+    if not tasks: return 0
+    # Build indegree and adjacency
+    indeg = {}
+    for task in tasks:
+        indeg[task]=0
+    for deps in tasks.values():
+        for d in deps:
+            indeg[d] = indeg.get(d,0)+1
 
-Return int or None.
+    zero_indeg = deque([t for t,d in indeg.items() if d==0])
+    order=[]
+    while zero_indeg:
+        node=zero_indeg.popleft()
+        order.append(node)
+        for succ,deps in tasks.items():
+            if node in deps:
+                indeg[succ] -=1
+                if indeg[succ]==0:
+                    zero_indeg.append(succ)
 
-Now produce code.
+    # If cycle:
+    if len(order)!=len(tasks):
+        return None
 
-Need to import typing? Already using dict[str,...]. Use from typing import List, Tuple, Dict. But single file no external dependencies; fine.
+    # compute critical path length
+    finish = {}
+    for node in order:
+        pred_finish= max(finish[p] for p in tasks[node][1]) if tasks[node][1] else 0
+        finish[node]=tasks[node][0]+pred_finish
+    return max(finish.values()) if finish else 0
 
-Let's write final code.
+But need to handle case where task has no preds and duration zero? fine.
+
+Edge: tasks dict values tuple (duration, list). Good.
+
+Now combine with topo_sort unchanged.
+
+Return code block only.

@@ -75,28 +75,32 @@ class ModelResponse:
 
 
 # Reasoning models spend a large share of the budget on thoughts, so the defaults are generous.
+# They only apply to Ollama, which has no sampling presets: LM Studio gets no sampling or length parameters
+# unless they are set explicitly, so the model's own LM Studio preset (temperature, max tokens, context) governs.
 DEFAULT_MAX_TOKENS = 16384
+DEFAULT_TEMPERATURE = 0.0
+DEFAULT_TOP_P = 1.0
 DEFAULT_TIMEOUT_SECONDS = 600.0
 
 
 @dataclass
 class GenerationConfig:
-    temperature: float = 0.0
+    temperature: float | None = None
     seed: int = 42
-    top_p: float = 1.0
-    max_tokens: int = DEFAULT_MAX_TOKENS
+    top_p: float | None = None
+    max_tokens: int | None = None
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS
     context_length: int | None = None
     repeat_penalty: float | None = None
 
     def to_dict(self) -> dict:
-        d: dict = {
-            "temperature": self.temperature,
-            "seed": self.seed,
-            "top_p": self.top_p,
-            "max_tokens": self.max_tokens,
-            "timeout_seconds": self.timeout_seconds,
-        }
+        d: dict = {"seed": self.seed, "timeout_seconds": self.timeout_seconds}
+        if self.temperature is not None:
+            d["temperature"] = self.temperature
+        if self.top_p is not None:
+            d["top_p"] = self.top_p
+        if self.max_tokens is not None:
+            d["max_tokens"] = self.max_tokens
         if self.context_length is not None:
             d["context_length"] = self.context_length
         if self.repeat_penalty is not None:
@@ -108,14 +112,26 @@ class GenerationConfig:
         if not data:
             return cls()
         return cls(
-            temperature=float(data.get("temperature", 0.0)),
+            temperature=float(data["temperature"]) if data.get("temperature") is not None else None,
             seed=int(data.get("seed", 42)),
-            top_p=float(data.get("top_p", 1.0)),
-            max_tokens=int(data.get("max_tokens", DEFAULT_MAX_TOKENS)),
+            top_p=float(data["top_p"]) if data.get("top_p") is not None else None,
+            max_tokens=int(data["max_tokens"]) if data.get("max_tokens") is not None else None,
             timeout_seconds=float(data.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)),
             context_length=data.get("context_length"),
             repeat_penalty=data.get("repeat_penalty"),
         )
+
+
+def resolve_for_backend(cfg: GenerationConfig) -> GenerationConfig:
+    """Fills the defaults a backend cannot do without; LM Studio keeps every unset parameter unset."""
+    if not is_ollama():
+        return cfg
+    return replace(
+        cfg,
+        temperature=DEFAULT_TEMPERATURE if cfg.temperature is None else cfg.temperature,
+        top_p=DEFAULT_TOP_P if cfg.top_p is None else cfg.top_p,
+        max_tokens=DEFAULT_MAX_TOKENS if cfg.max_tokens is None else cfg.max_tokens,
+    )
 
 
 @dataclass
@@ -273,12 +289,15 @@ _OPEN_THINK_RE = re.compile(r"<(think|thought|reasoning|reflection)>", re.IGNORE
 _CLOSE_THINK_RE = re.compile(r"</(think|thought|reasoning|reflection)>", re.IGNORECASE)
 
 
-def detect_truncation(payload: dict, raw_content: str, max_tokens: int) -> str | None:
+def detect_truncation(
+    payload: dict, raw_content: str, max_tokens: int | None, has_reasoning: bool = False
+) -> str | None:
     """Returns a human-readable reason if the generation was cut off, otherwise None.
 
     LM Studio's native API does not always report a finish reason, so several signals are combined:
-    an explicit server-side status, the output token count reaching the budget, and structural
-    damage in the text (unclosed reasoning tag or unclosed code fence).
+    an explicit server-side status, the output token count reaching the budget, a reply made of reasoning only
+    (the context window or token limit ran out before the final answer), and structural damage in the text
+    (unclosed reasoning tag or unclosed code fence).
     """
     finish = payload.get("finish_reason") or payload.get("stop_reason")
     if isinstance(finish, str) and finish.lower() in {"length", "max_tokens", "max_output_tokens"}:
@@ -288,8 +307,13 @@ def detect_truncation(payload: dict, raw_content: str, max_tokens: int) -> str |
 
     stats = payload.get("stats") or {}
     total = stats.get("total_output_tokens")
-    if isinstance(total, int) and max_tokens > 0 and total >= max_tokens:
+    if isinstance(total, int) and max_tokens and total >= max_tokens:
         return f"output reached the token limit ({total}/{max_tokens})"
+
+    if has_reasoning and not raw_content.strip():
+        return (
+            f"no final answer: the output is reasoning only ({total} tokens), the context window or token limit ran out"
+        )
 
     if len(_OPEN_THINK_RE.findall(raw_content)) > len(_CLOSE_THINK_RE.findall(raw_content)):
         return "unclosed reasoning tag in the response"
@@ -388,6 +412,7 @@ def _stream_chat(body: dict, idle_timeout: float, think_budget: int) -> tuple[di
 
 def _ask_ollama(model_key: str, messages: list[dict], cfg: GenerationConfig) -> ModelResponse:
     """Runs a chat completion through Ollama's native /api/chat and maps its stats to the LM Studio shape."""
+    cfg = resolve_for_backend(cfg)
     num_ctx, num_predict = _ollama_context_plan(messages, cfg)
     options: dict = {
         "temperature": cfg.temperature,
@@ -458,7 +483,7 @@ def _ask_ollama(model_key: str, messages: list[dict], cfg: GenerationConfig) -> 
         stats=stats,
         raw=payload,
         reasoning=reasoning_text,
-        truncated_reason=detect_truncation(payload, raw_content, cfg.max_tokens),
+        truncated_reason=detect_truncation(payload, raw_content, cfg.max_tokens, bool(reasoning_text)),
     )
 
 
@@ -482,10 +507,13 @@ def ask_model(
         "model": model_key,
         "input": input_text,
         "store": False,
-        "temperature": cfg.temperature,
-        "max_output_tokens": cfg.max_tokens,
-        "top_p": cfg.top_p,
     }
+    if cfg.temperature is not None:
+        payload["temperature"] = cfg.temperature
+    if cfg.top_p is not None:
+        payload["top_p"] = cfg.top_p
+    if cfg.max_tokens is not None:
+        payload["max_output_tokens"] = cfg.max_tokens
     if cfg.context_length:
         payload["context_length"] = cfg.context_length
     if cfg.repeat_penalty is not None:
@@ -542,7 +570,7 @@ def ask_model(
         stats=stats,
         raw=payload,
         reasoning=reasoning_text,
-        truncated_reason=detect_truncation(payload, raw_content, cfg.max_tokens),
+        truncated_reason=detect_truncation(payload, raw_content, cfg.max_tokens, bool(reasoning_text)),
     )
 
 

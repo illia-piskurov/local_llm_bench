@@ -1,0 +1,51 @@
+
+Thinking Process:
+
+1.  **Analyze the Request & Required Changes:**
+    *   Extend `pMap` with:
+        *   AbortSignal cancellation (`options.signal`).
+        *   Settled mode (`options.settled`).
+    *   Handle AbortSignal rules:
+        *   Immediate rejection if signal is already aborted upon invocation.
+        *   Immediate rejection/cancellation if cancellation happens mid-flight (stop queueing new tasks).
+    *   Handle Settled mode behavior:
+        *   Individual task failures should not abort the entire operation.
+        *   Return an array of structured result objects (`{ status: 'fulfilled', value: ... }` or `{ status: 'rejected', reason: ... }`).
+    *   Preserve existing retry/backoff/timeout logic (Level 1) and concurrency control (Level 2).
+
+2.  **Review Existing Code Structure (Mental Checklist):**
+    *   Initialization checks (`items`, `concurrency`).
+    *   Options extraction (`retries`, `backoffMs`, `timeoutMs`).
+    *   `withTimeout` helper.
+    *   `attemptMapping` (handles retries and backoff).
+    *   Main loop for concurrency control (`promiseQueue`, `runningPromises`).
+    *   Final aggregation logic.
+
+3.  **Implementing AbortSignal Logic:**
+    *   Need to check `options.signal` immediately at the start.
+    *   If a signal is provided, the entire process should be wrapped in an abort handler or checked periodically. Since we are using promises (`await`), the standard way is to use `signal.addEventListener('abort', ...)`.
+
+4.  **Implementing Settled Mode Logic:**
+    *   The core logic within the concurrency loop needs modification. Instead of letting an error propagate and throw, we need to catch the final failure in `attemptMapping` (when retries are exhausted) and handle it gracefully, collecting the rejection reason instead of stopping the whole `Promise.all`.
+    *   We need to ensure that failed tasks still remove themselves from the `runningPromises` set correctly, but they don't stop the flow for others.
+
+5.  **Drafting Implementation Steps (Focus on Key Functions):**
+
+    *   **Initialization:** Check for `options.signal`.
+    *   **`attemptMapping`:** Keep retry/backoff logic, but ensure it consistently throws on final failure.
+    *   **Task Execution:** This is where the main transformation happens. The promise returned by `task()` must resolve/reject to carry the necessary information for the final structure.
+
+6.  **Refining Task Execution (Settled Mode integration):**
+    *   We should wrap the execution of `attemptMapping` inside a promise that *always resolves*, even on failure, so `Promise.allSettled`-like behavior can be achieved by catching errors within the execution wrapper.
+
+7.  **Handling Cancellation (Crucial):**
+    *   If `signal` is present, we need to create a mechanism (like using the signal in setup promises) that propagates aborts globally.
+
+8.  **Finalizing Output Structure:**
+    *   The `pMap` function must return the final array of structured result objects.
+
+*(Self-Correction during drafting): The original implementation used `Promise.all(promiseQueue)` at the end, which implicitly fails if any task fails. For settled mode, we need to switch to collecting results from individual tasks and ensuring the main promise only rejects if there's a structural failure (like an abort).*
+
+*Since `pMap` is an async function, it should return a promise that resolves to the settled results array.*
+
+Let's structure the code cleanly, focusing on making the execution robust against retries/timeouts and external cancellation signals.

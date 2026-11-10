@@ -7,15 +7,16 @@ async function pMap(items, mapper, options = { concurrency: 1 }) {
     async function processNext() {
         if (nextIndex >= items.length) return Promise.resolve();
 
-        const item = items[nextIndex];
         try {
+            const item = items[nextIndex];
             const result = await mapper(item, nextIndex);
             results[nextIndex] = result;
             nextIndex++;
-            processNext();
         } catch (error) {
-            throw error;
+            return Promise.reject(error);
         }
+
+        processNext();
     }
 
     await processNext();

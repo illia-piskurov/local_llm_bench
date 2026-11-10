@@ -1,0 +1,7 @@
+Need to implement decoder. Note: out_payload may be NULL when len==0? Copy payload bytes — if len==0, nothing to copy. Should handle out_payload possibly NULL. Also stream_len could be negative? Return -1.
+
+Also need to preserve ring buffer functions.
+
+Edge: stream_len < 4 → -1.
+
+Let me write it.

@@ -1,0 +1,75 @@
+We need to implement two functions:
+
+- `plan_order(tasks, workers)` (already partially defined) returns list[str] | None. Must handle dependencies, priorities, limited worker pool.
+- `critical_path(tasks)` returns int | None: length of longest dependency path sum of durations, ignoring priority.
+- `makespan(tasks, workers)` returns int | None.
+
+We must return only Python code in a single ```python ... ``` block with no explanation outside. So need to write complete implementation for these three functions (or just two? The prompt says "Extend your implementation with two functions: def critical_path and def makespan". Also says "Do not alter the signature or behavior of plan_order." Means we already have `plan_order` partially defined; we can keep that. So we must implement them fully.
+
+Also note earlier code snippet from assistant is incomplete, containing many notes but we need to produce final clean implementation.
+
+We need to handle cycles: return None if any cycle in dependency graph. For both plan_order and makespan/critical_path, detect cycles using topological sort or Kahn's algorithm.
+
+Let me design the core functions:
+
+- Parse tasks dict: keys are task names (strings). Each value is a tuple `(duration, deps_list, priority)`.
+
+- Build adjacency / indegree graph: For each node t:
+    - its dependencies = list of prerequisites; edges from dep -> t meaning dep must finish before t.
+    - So for each dep in deps:
+        - add edge from dep to t (dep precedes t). Thus outdegree: dep -> t. Indegree of t increases by 1.
+
+- Build indegree count and adjacency list: `in_degree` initially zero; for each dependency, increment target's indegree. Actually we can use outgoing edges: For each task, iterate over its deps (predecessors). For each d in deps:
+        - add edge d -> t
+        - indegree[t] += 1
+
+But easier: just compute indegree from the number of dependencies per node; that's fine for cycle detection. However we also need adjacency list for topological ordering and processing ready tasks after they become available.
+
+Let me define:
+
+```
+def build_graph(tasks):
+    n = len(tasks)
+    adj = defaultdict(list)  # u -> list of v (u is prerequisite, v depends on it)
+    indegree = {t: 0 for t in tasks}
+    # But we need to know all task names. We can get keys from tasks items.
+    for node, val in tasks.items():
+        _, deps_list, _ = val
+        if deps_list:
+            for dep in deps_list:
+                indegree[node] += 1   # because this node depends on each of these dependencies.
+                adj[dep].append(node)   # edge from dep to node (dependency precedes dependent)
+    return indegree, adj
+```
+
+But careful: The above increments indegree of node based on its own deps count. Actually we want indegree for target nodes; but we can compute as number of incoming edges = number of dependencies. So when iterating over each dependency d in deps_list of a task t, we should increment indegree[t] by 1 and add edge from d to t. Let's implement:
+
+```
+indegree = {t: 0 for t in tasks}
+adj = defaultdict(list)   # adjacency out
+for name, val in tasks.items():
+    _, deps, _ = val
+    if deps:
+        for d in deps:
+            adj[d].append(name)
+            indegree[name] += 1
+```
+
+But careful: `val` is (duration, deps_list, priority). So we can do:
+
+```
+for name, val in tasks.items():
+    _, deps, _ = val
+    if deps:
+        for d in deps:
+            adj[d].append(name)
+            indegree[name] += 1
+```
+
+But `indegree` is not defined yet; need to init dictionary first.
+
+Simplify: Use a loop:
+
+```
+all_tasks = list(tasks.keys())
+indeg = {t: len(val[1]) for t, val in tasks.items()}   # This counts number of deps per node (out-degree? No. Actually indegree is count of prerequisites). But careful: For each node t, indeg[t] should be number of dependencies it has (i.e., incoming edges from its deps). That's exactly len(deps_list). So we can compute indeg = {t: len(val[1]) for t in all_tasks}. However this only counts direct prerequisites; but there could be indirect? Actually cycle detection using Kahn works with indegree equal to number of incoming edges from dependencies. For each dependency, it's an edge into the dependent node. So if a node has 

@@ -1,0 +1,102 @@
+We need to implement a task scheduler. Let's think about the algorithm.
+
+Tasks: dict name -> (duration, deps, priority). Workers: int.
+
+Rules:
+- Non-preemptive.
+- At most workers tasks run simultaneously.
+- Ready tasks selection: highest priority, then shortest duration, then alphabetical name.
+- When multiple tasks start at same timestamp, append to returned list following same tie-breaking rule.
+- Cyclic dependency -> None.
+
+So essentially a priority queue based scheduler with a worker pool. At each time step, we pick up to `workers` ready tasks in priority order and start them. Since non-preemptive, once started they run for duration.
+
+Implementation: use a min-heap with key (-priority, duration, name). Maintain a ready set of tasks whose deps are all finished. At each tick, pop up to workers tasks, record start time, add to running dict. Advance time by min duration among running. When a task finishes, add to ready.
+
+But careful: "When multiple tasks start at the exact same timestamp, append them to the returned list following the same priority tie-breaking rule" — that's naturally handled since we pop in order.
+
+Edge cases: workers <= 0? Probably return None or handle. If workers <= 0, nothing runs — return None? Let's return None if workers <= 0.
+
+Cycles: detect with topological sort (Kahn's) before scheduling.
+
+Also tasks with no deps are ready initially.
+
+Let's write the code.
+
+```python
+from typing import Optional
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    if workers <= 0:
+        return None
+    if not tasks:
+        return []
+    # validate deps exist
+    ...
+    # Kahn's cycle detection
+    ...
+```
+
+Should we validate that dep names exist? Probably reasonable to return None if a dep references unknown task. I'll do that.
+
+Let's write it.
+
+```python
+def plan_order(tasks, workers):
+    if workers <= 0:
+        return None
+    if not tasks:
+        return []
+
+    # Build graph and detect cycles
+    graph = {}
+    for name, (dur, deps, pri) in tasks.items():
+        graph[name] = list(deps)
+    in_degree = {n: 0 for n in tasks}
+    for n, deps in graph.items():
+        for d in deps:
+            if d not in tasks:
+                return None
+            in_degree[n] += 1
+    queue = [n for n in tasks if in_degree[n] == 0]
+    order = []
+    while queue:
+        n = queue.pop(0)
+        order.append(n)
+        for d in graph[n]:
+            in_degree[d] -= 1
+            if in_degree[d] == 0:
+                queue.append(d)
+    if len(order) != len(tasks):
+        return None
+
+    ready = [n for n in tasks if not graph[n]]
+    running = {}
+    result = []
+    time = 0
+    while running:
+        # pick up to workers tasks
+        picked = []
+        for _ in range(workers):
+            if not ready:
+                break
+            name, dur, pri = heappop(heap, ready)
+            picked.append((name, dur, pri))
+        ...
+```
+
+Wait, ready as a list with heappop works.
+
+Then for each picked: running[name] = (time, dur); result.append(name). time += min(dur for dur in running.values()).
+
+Then finish tasks: for name, (start, dur) in running.items(): if start + dur <= time: ready.append(name); heappush(heap, (-pri, dur, name)).
+
+Hmm, but there's a subtlety: tasks finishing at exactly `time` become ready at time. Good.
+
+Also, tasks that finish before time (shouldn't happen since time advances by min duration).
+
+Let me write final code.
+
+Also handle workers > len(tasks) — fine, we just pick all ready.
+
+Let me produce the code.

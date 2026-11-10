@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261109_182717_dba783",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "c_framing",
+  "level": "level2",
+  "tested_at": "2026-11-09 18:38:05",
+  "passed": 0,
+  "total": 8,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/mimo-v2.6_latest__nvfp4_c_framing_level2.c:54:19: error: use of undeclared identifier 'NULL'\n   54 |     if (stream == NULL || out_type == NULL || stream_len < 4) {\n      |                   ^~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/mimo-v2.6_latest__nvfp4_c_framing_level2.c:54:39: error: use of undeclared identifier 'NULL'\n   54 |     if (stream == NULL || out_type == NULL || stream_len < 4) {\n      |                                       ^~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/mimo-v2.6_latest__nvfp4_c_framing_level2.c:79:28: error: use of undeclared identifier 'NULL'\n   79 |         if (out_payload != NULL && len > 0) {\n      |                            ^~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/mimo-v2.6_latest__nvfp4_c_framing_level2.c:80:13: error: call to undeclared library function 'memcpy' with type 'void *(void *, const void *, unsigned long)'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   80 |             memcpy(out_payload, stream + i + 3, len);\n      |             ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/mimo-v2.6_latest__nvfp4_c_framing_level2.c:80:13: note: include the header <string.h> or explicitly provide a declaration for 'memcpy'\n4 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

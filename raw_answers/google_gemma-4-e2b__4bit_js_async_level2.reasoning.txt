@@ -1,0 +1,62 @@
+
+Thinking Process:
+
+1.  **Understand the Goal:** Extend the existing `pMap` function to include retry logic, exponential backoff, and per-task timeouts for the asynchronous `mapper` function.
+
+2.  **Analyze Existing Structure (Mental Check):**
+    *   The core function iterates through items and sets up promises.
+    *   It uses a concurrency limit (`concurrency`).
+    *   It tries to manage running promises using `runningPromises` and a queue (`promiseQueue`).
+    *   The mapping logic is encapsulated in `processItem`.
+
+3.  **Determine Necessary Changes (Focus on `processItem` and task execution):**
+    *   Need a function that handles the actual mapping, timeout, and retry loop.
+
+4.  **Implement Retry/Timeout Logic:**
+    *   We need a recursive or iterative structure inside the task runner that calls `mapper` until success or max retries/timeout is hit.
+    *   A timeout mechanism (using `Promise.race` and `setTimeout`) is required for *each* call to `mapper`.
+
+5.  **Handling Options:**
+    *   `retries`: Controls the number of failure attempts allowed (total calls = 1 + retries).
+    *   `backoffMs`: Base delay for exponential backoff.
+    *   `timeoutMs`: Maximum time for a single `mapper` call.
+
+6.  **Refining the Task Execution Flow:**
+    *   Instead of `processItem` directly calling `mapper`, it needs to be wrapped in a robust function (`attemptMapping`).
+
+    *   *Retry/Timeout Logic Sketch:*
+        ```javascript
+        async function attemptMapping(item, index, mapper, options) {
+            let attempts = 0;
+            while (attempts <= options.retries) {
+                try {
+                    // Apply timeout wrapper here
+                    const result = await withTimeout(mapper, item, index, options.timeoutMs);
+                    return { index, value: result }; // Success!
+                } catch (error) {
+                    attempts++;
+                    if (attempts > options.retries) {
+                        throw error; // Final failure
+                    }
+
+                    // Calculate delay (exponential backoff)
+                    const delay = options.backoffMs * Math.pow(2, attempts - 1);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+        ```
+
+7.  **Integrating Retry Logic into `pMap`:**
+    *   The loop setup needs to call this new robust function.
+
+8.  **Reviewing Concurrency Management:**
+    *   The original concurrency logic was complex, relying on `promiseQueue` and `runningPromises`. This needs to be preserved while handling the new, slower (due to retries/timeouts) tasks.
+
+9.  **Final Code Structure Assembly:** (Focus on clarity and adherence to the requirements.)
+    *   Ensure default values are handled correctly.
+    *   Handle the promise rejection propagation correctly across all layers (timeout, retry loop, and final function call).
+
+**(Self-Correction during implementation):** The original implementation used `promiseQueue.push(task())` immediately, and then checked the size of `runningPromises`. The goal is to ensure that when a slot opens up, the next item from the queue is processed. The complex way of using `while (runningPromises.size >= concurrency) { await Promise.race(...) }` is acceptable but often leads to deadlock if not handled carefully with promise resolution. A cleaner way might be to use a fixed-size pool or handle the flow more explicitly using `Promise.all` on batches, but sticking to the provided structure while adding robustness is safer for this task.
+
+Let's focus on making `processItem` (renamed or replaced) the core implementation of the retry logic.

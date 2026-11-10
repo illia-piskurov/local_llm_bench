@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261110_192333_c1c62c",
+  "host_id": "70ccb4981862",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "sql",
+  "level": "level2",
+  "tested_at": "2026-11-10 19:28:42",
+  "passed": 0,
+  "total": 5,
+  "failures": [
+    "left_join_with_group_by: exception/timeout: NameError: name 'query' isn't defined",
+    "multiple_joins_inner_and_left: exception/timeout: NameError: name 'query' isn't defined",
+    "where_in_operator: exception/timeout: KeyError: select",
+    "where_is_null_and_like: exception/timeout: KeyError: select",
+    "where_is_not_null: exception/timeout: KeyError: select"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

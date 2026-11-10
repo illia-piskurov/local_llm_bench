@@ -1,0 +1,9 @@
+Need to extend the implementation. Add critical_path and makespan. Keep plan_order unchanged.
+
+Let me write a clean single file.
+
+critical_path: longest path in DAG by sum of durations. Use DP over topological order.
+
+makespan: same scheduling rules as plan_order but return total completion time.
+
+Let me write it.

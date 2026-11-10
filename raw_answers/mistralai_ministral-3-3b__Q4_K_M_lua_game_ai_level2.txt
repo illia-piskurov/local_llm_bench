@@ -10,35 +10,35 @@ BT.RUNNING = "RUNNING"
 BT.Blackboard = {}
 function BT.Blackboard.new()
     local self = setmetatable({}, { __index = BT.Blackboard })
-    local data = {}
-    local watchers = {}
+    self._data = {}
+    self._watchers = {}
+    return self
+end
 
-    function self:get(key, default)
-        return data[key] or default
-    end
+function BT.Blackboard:get(self, key, default)
+    return self._data[key] or default
+end
 
-    function self:set(key, value)
-        local old_value = data[key]
-        data[key] = value
-        if old_value ~= value then
-            for _, callback in ipairs(watchers[key]) do
-                callback(key, value, old_value)
-            end
+function BT.Blackboard:set(self, key, value)
+    local old_value = self._data[key]
+    if old_value ~= value then
+        self._data[key] = value
+        for _, callback in ipairs(self._watchers[key]) do
+            callback(key, value, old_value)
         end
     end
+end
 
-    function self:watch(key, callback)
-        if not watchers[key] then watchers[key] = {} end
-        table.insert(watchers[key], callback)
+function BT.Blackboard:watch(self, key, callback)
+    if not self._watchers[key] then
+        self._watchers[key] = {}
     end
-
-    return setmetatable({}, { __index = self })
+    table.insert(self._watchers[key], callback)
 end
 
 -- Decorators
 function BT.Inverter(child)
     local node = new_node()
-
     function node:tick(ctx)
         local result = child:tick(ctx)
         if result == BT.SUCCESS then return BT.FAILURE end
@@ -50,25 +50,22 @@ function BT.Inverter(child)
         child:reset()
     end
 
-    return node
+    return setmetatable(node, { __index = BT })
 end
 
 function BT.Cooldown(child, ticks)
     local node = new_node()
-    local cooldown_ticks = 0
-    local last_success_time = 0
+    local cooldown = 0
 
     function node:tick(ctx)
-        if cooldown_ticks > 0 then
-            cooldown_ticks = max(0, cooldown_ticks - 1)
+        if cooldown > 0 then
+            cooldown = max(0, cooldown - 1)
             return BT.FAILURE
         end
 
         local result = child:tick(ctx)
-
         if result == BT.SUCCESS then
-            last_success_time = tick()
-            cooldown_ticks = ticks
+            cooldown = ticks
             return BT.RUNNING
         else
             return result
@@ -76,11 +73,11 @@ function BT.Cooldown(child, ticks)
     end
 
     function node:reset()
+        cooldown = 0
         child:reset()
-        cooldown_ticks = 0
     end
 
-    return node
+    return setmetatable(node, { __index = BT })
 end
 
 -- Base Node class (unchanged)
@@ -96,7 +93,7 @@ end
 function BT.Action(fn)
     local node = new_node()
 
-    local function tick(ctx)
+    function node:tick(ctx)
         local result = fn(ctx)
         if result == true then return BT.SUCCESS end
         if result == false then return BT.FAILURE end
@@ -105,99 +102,89 @@ function BT.Action(fn)
         return BT.RUNNING
     end
 
-    function node:tick(ctx)
-        return tick(ctx)
-    end
-
     function node:reset()
         -- No state to reset for Action nodes
     end
 
-    return node
+    return setmetatable(node, { __index = BT })
 end
 
 -- Condition Node (unchanged)
 function BT.Condition(predicate)
     local node = new_node()
 
-    local function tick(ctx)
-        if predicate(ctx) then return BT.SUCCESS else return BT.FAILURE end
-    end
-
     function node:tick(ctx)
-        return tick(ctx)
+        if predicate(ctx) then return BT.SUCCESS else return BT.FAILURE end
     end
 
     function node:reset()
         -- No state to reset for Condition nodes
     end
 
-    return node
+    return setmetatable(node, { __index = BT })
 end
 
--- Sequence Node (AND, unchanged)
+-- Sequence Node (AND) - unchanged
 function BT.Sequence(children)
     local node = new_node()
+    local children = children or {}
+    local current_index = 1
 
-    local current_child_index = 1
-    local function tick(ctx)
-        if current_child_index > #children then return BT.FAILURE end
+    function node:tick(ctx)
+        if current_index > #children then
+            return BT.SUCCESS
+        end
 
-        local child = children[current_child_index]
+        local child = children[current_index]
         local result = child:tick(ctx)
 
-        if result == BT.RUNNING then
-            current_child_index = current_child_index + 1
-            return BT.RUNNING
-        elseif result == BT.SUCCESS then
-            current_child_index = current_child_index + 1
-            return BT.SUCCESS
-        else -- FAILURE
+        if result == BT.FAILURE then
             return BT.FAILURE
+        elseif result == BT.RUNNING then
+            current_index = current_index + 1
+            return BT.RUNNING
+        else
+            current_index = current_index + 1
+            return BT.SUCCESS
         end
     end
 
-    function node:tick(ctx)
-        return tick(ctx)
-    end
-
     function node:reset()
-        current_child_index = 1
+        current_index = 1
     end
 
-    return node
+    return setmetatable(node, { __index = BT })
 end
 
--- Selector Node (OR / Fallback, unchanged)
+-- Selector Node (OR) - unchanged
 function BT.Selector(children)
     local node = new_node()
+    local children = children or {}
+    local current_index = 1
 
-    local current_child_index = 1
-    local function tick(ctx)
-        if current_child_index > #children then return BT.FAILURE end
+    function node:tick(ctx)
+        if current_index > #children then
+            return BT.FAILURE
+        end
 
-        local child = children[current_child_index]
+        local child = children[current_index]
         local result = child:tick(ctx)
 
-        if result == BT.RUNNING then
-            current_child_index = current_child_index + 1
-            return BT.RUNNING
-        elseif result == BT.SUCCESS then
+        if result == BT.SUCCESS then
             return BT.SUCCESS
-        else -- FAILURE
-            current_child_index = current_child_index + 1
+        elseif result == BT.RUNNING then
+            current_index = current_index + 1
+            return BT.RUNNING
+        else
+            current_index = current_index + 1
             return BT.FAILURE
         end
     end
 
-    function node:tick(ctx)
-        return tick(ctx)
-    end
-
     function node:reset()
-        current_child_index = 1
+        current_index = 1
     end
 
-    return node
+    return setmetatable(node, { __index = BT })
 end
 ```

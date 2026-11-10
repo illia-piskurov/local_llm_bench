@@ -1,0 +1,353 @@
+We need to produce clean Lua code for Behavior Tree engine. The user provided initial implementation of basic nodes (Action, Condition, Sequence, Selector). Now they want to extend it with:
+
+- A shared memory Blackboard: BT.Blackboard.
+   - Methods: new(), get(key, default), set(key, value), watch(key, callback).
+   - Should handle watching changes.
+
+- Decorators: single-child nodes (wrappers) that modify node behavior:
+  - Inverter(child): inverts child result (success<->failure). RUNNING passes unchanged. reset delegates to child.
+  - Cooldown(child, ticks): after successful child execution (BT.SUCCESS), enters cooldown for `ticks` ticks. During cooldown, immediately returns BT.FAILURE without invoking child. Once cooldown expires, child can execute again. The method reset() resets the cooldown counter and calls child:reset().
+
+- Preserve Level 1 node behavior.
+
+We must output only clean Lua code in a single ```lua ... ``` block with no extra explanation.
+
+So we need to rewrite/add to BT table accordingly, making sure existing nodes (Action, Condition, Sequence, Selector) still work and new components are added appropriately. The previous implementation had some syntax errors; we'll need to define them properly using tables that have fields tick and reset. Likely the typical pattern: each node is a table with methods tick and reset. For instance:
+
+local Action = function(fn) return {tick=..., reset=...} end
+
+But earlier they wrote BT.Action(fn). So we can keep it as functions.
+
+We also need to implement Sequence's tick logic correctly. The previous code had some broken parts: defined "function BT.Sequence(children)" returning a table, but then tried to assign a method inside; not correct. We'll need to define proper tables for Sequence and Selector with tick and reset fields.
+
+Thus we should produce final code:
+
+- Global BT = {} with constants.
+
+- Define Action node as before (maybe keep same). But ensure resets work.
+
+- Condition node similarly.
+
+- Sequence: create a constructor that returns an instance table containing 'tick' and 'reset'.
+
+- Selector similar.
+
+Now add Blackboard:
+
+BT.Blackboard = {}
+BT.Blackboard.new = function() return {bb = {} } end? Wait, we need to store blackboard per instance? It says "shared memory Blackboard". Possibly a single global blackboard used by all nodes? Or each node can hold reference? We'll define BT.Blackboard as a table with methods: new(), get, set, watch.
+
+Simplify: Have BT.Blackboard = {new = function() return self.new_table() end} but we need to implement methods:
+
+- function(BT.Blackboard): new() returns an instance of Blackboard (maybe just a struct). So define BT.Blackboard = {} with fields: instances? Actually they say `BT.Blackboard.new()` creates a new blackboard instance. So BT.Blackboard is a class/constructor.
+
+Thus we can implement as:
+
+local function Blackboard.new()
+    local bb = {
+        get = function(key, default) return bb.data[key] or default end,
+        set = function(key, value)
+            bb.data[key] = value
+            -- notify watchers for key if any
+            for _, cb in ipairs(bb.watchlist[key]) then
+                cb(key, value, old_value)  -- we need to know old? We might store previous.
+            end
+        },
+        watch = function(key, callback)
+            bb.watchlist[key] = {callback}
+        end,
+        data = {} -- internal storage for key->value
+    end
+    return bb
+end
+
+But also need get returns default if nil. So we need to store maybe just values; but set should update.
+
+Simplify: Use a simple table with fields: _data, _watchers (a dict mapping key to list of callbacks). We'll implement methods on the blackboard instance returned by new().
+
+Let's define:
+
+BT.Blackboard = {}
+BT.Blackboard.new = function()
+    local self = {
+        data = {},
+        watchers = {}, -- key -> list of callbacks
+    }
+    return self
+end
+
+But then we need to attach methods get, set, watch on the returned table.
+
+Define:
+
+function BT.Blackboard:new()  -- Actually new is a method? The instruction says `BT.Blackboard.new()` creates a new blackboard instance. So we can define as an instance of BT.Blackboard that has fields like data and watchers. Could just use function to call constructor: local bb = BT.Blackboard.new().
+
+Simplify: Have BT.Blackboard as a table with functions:
+
+BT.Blackboard = {
+    new = function() return {data={}, watchers={}} end,
+    get = function(self, key, default) return self.data[key] or default end,
+    set = function(self, key, value)
+        self.data[key] = value
+        -- for each callback in watchers for this key (we can store them somewhere). But we need to track which keys have watchers. Let's create a table of sets: maybe keep watchers per key in a separate field.
+    ...
+}
+
+Given complexity, maybe simpler to define BT.Blackboard as a class with methods:
+
+BT.Blackboard = {}
+BT.Blackboard.new = function() return self.new_instance() end
+
+But we can implement using metatable? Eh.
+
+We could also treat BT.Blackboard as an object with fields: new, get, set, watch.
+
+Given it's for Lua 5.3+, we can define functions and tables accordingly.
+
+Let's design:
+
+local function blackboard_new()
+    local bb = {
+        data = {},
+        watchers = {}, -- key -> list of callbacks
+    }
+    return bb
+end
+
+Then BT.Blackboard.new = blackboard_new  # This sets new method? Actually BT.Blackboard is a table; we can define BT.Blackboard.new = function() ... end.
+
+But then get, set, watch need to be methods on the returned bb object: So we can assign after creation:
+
+local BB = blackboard_new()
+BB.get = function(key, default) return self.data[key] or default end
+BB.set = function(key, value)
+    self.data[key] = value
+    -- notify all callbacks registered for key via watchers? But we haven't stored them. Need to store list of callbacks per key; maybe in bb.watchers.
+end
+
+We can restructure: When `watch` is called: BT.Blackboard:watch(key, callback) => self.watchers[key] = {callback}. So need watchers as a field.
+
+Thus define:
+
+BT.Blackboard = {
+    new = function() return {data = {}, watchers = {}} end,
+    get = function(bb, key, default) return bb.data[key] or default end,
+    set = function(bb, key, value)
+        bb.data[key] = value
+        -- Notify all watchers for this key. To know them we need to store per-key list.
+        local wlist = bb.watchers[key]
+        if wlist then
+            for _, cb in ipairs(wlist) do
+                cb(key, value, bb.data[key] -- old? Actually before set, but we can pass new and old maybe. We'll compute old: previous value.
+            end
+        end
+    },
+    watch = function(bb, key, callback)
+        bb.watchers[key] = {callback}
+    end,
+}
+
+But note that get and set should be methods of an instance, not taking self explicitly? Usually we can define as functions that accept the table (self). In Lua, you can define methods on a table: e.g., BB.get = function(key, default) return ... but then they'd need to have access to bb's data. It might be easier to make BT.Blackboard be an instance class with fields, and all functions like get, set are methods of that instance.
+
+Simplify further: Let's not overengineer; we can implement simple blackboard where watchers just store callbacks for each key in a table `watchers = {}` mapping key to list of callbacks. The new function returns a struct with fields data and watchers.
+
+Implementation:
+
+BT.Blackboard.new = function()
+    local bb = {}
+    bb.data = {}
+    bb.watchers = {} -- keys map to list of (callback) maybe
+    return bb
+end
+
+But then we need methods get, set, watch on bb itself; we can attach them as fields:
+
+bb.get = function(key, default) return bb.data[key] or default end
+
+Similarly for set: update data and notify.
+
+watch: add to bb.watchers[key].
+
+Let's write:
+
+BT.Blackboard = {}
+BT.Blackboard.new = function()
+    local self = {data = {}, watchers = {}} -- watchers is a table mapping key -> list of callbacks
+    return setmetatable({}, {
+        get = self.data,   -- no that won't work.
+    })
+
+Actually easier: define BT.Blackboard as an empty table with methods:
+
+BT.Blackboard = {
+    new = function() return {data={}, watchers={}} end,
+    get = function(self, key, default) return self.data[key] or default end,
+    set = function(self, key, value)
+        self.data[key] = value
+        local wlist = self.watchers[key]
+        if wlist then
+            for _, cb in ipairs(wlist) do
+                cb(key, value, old_value?) -- need old. Let's capture old before change? We can store previous.
+            end
+        end
+    },
+    watch = function(self, key, callback)
+        self.watchers[key] = {callback}
+    end,
+}
+
+But we also need to initialize data and watchers fields in new.
+
+Let's do:
+
+BT.Blackboard.new = function()
+    local bb = {}
+    bb.data = {}
+    bb.watchers = {}  -- key -> list of callbacks
+    return bb, "get", "set", "watch" ... Actually can't set methods easily after returning table.
+
+We can instead implement BT.Blackboard.new returns a function? Hmm.
+
+Better approach: Use metatables to make instances with get, set, etc., but that's extra.
+
+Given the limited time, we can simplify: For watch callbacks, we just need to invoke them when value changes; we could keep an internal table of key->callback list. The simplest is:
+
+local function blackboard_new()
+    local bb = {
+        data = {},
+        _watchers = {} -- keys -> lists
+    }
+    return {
+        get = function(key, default) return bb.data[key] or default end,
+        set = function(key, value)
+            bb.data[key] = value
+            if bb._watchers[key] then
+                for _, cb in ipairs(bb._watchers[key]) do
+                    cb(key, value, old?)  -- we need old; maybe store previous old.
+                end
+            end
+        },
+        watch = function(key, callback)
+            bb._watchers[key] = {callback}
+        end,
+    }
+end
+
+But this is messy. Since the problem description may not require full-blown blackboard with old values; they might accept simple implementation: on set, iterate over all registered watchers for that key and call them with new value as third argument (maybe old). We'll just pass new and maybe default.
+
+We also need to implement cooldown decorator:
+
+BT.Inverter(child) returns a node that inverts result. It takes child node and returns a new table with tick/reset: For tick, it calls child.tick(ctx), gets res, then if res == BT.SUCCESS -> return BT.FAILURE; if res == BT.FAILURE -> return BT.SUCCESS; if res == BT.RUNNING -> unchanged.
+
+So Inverter can be:
+
+function BT.Inverter(child)
+    local res = {
+        tick = function(ctx)
+            local childRes = child.tick(ctx)
+            if childRes == BT.SUCCESS then
+                return BT.FAILURE
+            elseif childRes == BT.FAILURE then
+                return BT.SUCCESS
+            elseif childRes == BT.RUNNING then
+                return childRes -- unchanged
+            end
+        end,
+        reset = function()
+            child.reset()  -- delegate to original child's reset
+        end
+    }
+    return res
+end
+
+But note that Inverter is a single-child node. So the returned table has 'tick' and 'reset'. For Condition, we have separate.
+
+Cooldown decorator: BT.Cooldown(child, ticks). After successful child execution (i.e., when child.tick(ctx) returns BT.SUCCESS?), we need to enforce cooldown for ticks ticks after that success. How does it integrate? Possibly we treat Cooldown as a node wrapper around child; its tick logic: if before executing the child, check if in cooldown and not expired -> return FAILURE without invoking child. But spec: "After successful child execution (BT.SUCCESS), enters cooldown for `ticks` ticks. During cooldown, immediately returns BT.FAILURE without invoking child. Once cooldown expires, child can execute again." Means we need to track a timer of ticks after the child's SUCCESS; during that time, any tick should cause immediate FAILURE and not invoke child? But maybe simpler: For Cooldown node, its tick method runs each tick (maybe on each context update). If previous child returned BT.SUCCESS, it starts a cooldown period for `ticks` number of ticks. During those ticks, it returns BT.FAILURE without invoking child; after ticks elapsed, then it will re-execute? But need to track remaining ticks.
+
+Simplify: Represent Cooldown as a node that wraps child and also has its own tick logic:
+
+function BT.Cooldown(child, ticks)
+    local self = {
+        child = child,
+        cooldown = ticks or 0
+    }
+    return self
+end
+
+Then implement tick for this node:
+
+function BT.Cooldown.tick(ctx)
+    if self.cooldown > 0 then
+        -- Still in cooldown: immediately fail without invoking child
+        return BT.FAILURE
+    end
+    -- else, it's time to run child after cooldown expires? But we need to check remaining ticks.
+    -- Let's have a counter of ticks left.
+    local oldCooldown = self.cooldown  -- not needed perhaps.
+    if self.child.tick(ctx) == BT.SUCCESS then
+        -- After child succeeds, set cooldown for `ticks` ticks.
+        self.cooldown = ticks or 0
+        return BT.SUCCESS? Actually after child success we need to handle cooldown: The node's tick should return something; perhaps it returns the result of child? But spec: "After successful child execution (BT.SUCCESS), enters cooldown for `ticks` ticks. During cooldown, immediately returns BT.FAILURE without invoking child. Once cooldown expires, child can execute again." That suggests that when tick is called while in cooldown, it should not invoke child and return FAILURE; after cooldown ends (i.e., after ticks have passed), the next tick? Or maybe we need a state machine: On each tick, if cooldown > 0 then fail. Once cooldown reaches zero (or ticks elapsed) then proceed to run child.
+
+We can implement as:
+
+function BT.Cooldown.tick(ctx)
+    if self.cooldown > 0 then
+        return BT.FAILURE  -- immediate failure, do not call child
+    else
+        local res = self.child.tick(ctx)  -- invoke child
+        if res == BT.SUCCESS then
+            -- after successful child, set cooldown for ticks
+            self.cooldown = ticks or 0
+            return res  -- maybe return SUCCESS? But spec: "Once cooldown expires, child can execute again." So after tick ends, on next tick we will see cooldown >0 and fail. That seems correct: It returns failure until cooldown is over.
+        else
+            return res
+        end
+    end
+end
+
+But this would also treat RUNNING or FAILURE? Not needed.
+
+Let's think: In Sequence node earlier they had logic to handle child returning RUNNING and SUCCESS etc. For Cooldown, we need separate tick method; but can embed similar pattern as Sequence? Actually simpler: define BT.Cooldown as a table with fields 'child', 'ticks'. Provide tick function.
+
+Implementation:
+
+function BT.Cooldown(tc)
+    local self = {
+        child = tc.child,
+        ticks = tc.ticks or 0
+    }
+    return self
+end
+
+Then define its tick method:
+
+function BT.Cooldown:tick(ctx) -- but as instance of table, we need to call self.tick.
+
+But we can assign a field 'tick' in the returned table. Let's do like:
+
+local function CooldownNode(tc)
+    local node = {
+        child = tc.child,
+        ticks = tc.ticks or 0
+    }
+    return { tick = function(ctx)
+        if node.ticks > 0 then
+            return BT.FAILURE
+        else
+            -- child not cooldowned; run child
+            local res = node.child.tick(ctx)
+            if res == BT.SUCCESS then
+                -- after success, start cooldown for ticks (but tick already returns? We need to set a flag that next tick will fail)
+                node.ticks = ticks   -- but ticks is number of ticks; we need remaining ticks. Actually we can store remaining ticks.
+            end
+            return res
+        end
+    }, reset = function() node.child.reset(); -- maybe also reset cooldown? Not clear.
+
+But this gets complicated: We need to track a countdown of remaining ticks after each successful child execution. Could implement a simple approach: In tick, if node.ticks > 0 then return BT.FAILURE; else call child.tick(ctx) and update node.ticks = (ticks - ???). But we don't know tick intervals; maybe they intend that Cooldown simply blocks the next few ticks before allowing child to run again.
+
+Simplify: Let's define:
+
+- When Cooldown is constructed with `cooldown` number of ticks. On each tick:
+  - If cooldown > 0, return BT

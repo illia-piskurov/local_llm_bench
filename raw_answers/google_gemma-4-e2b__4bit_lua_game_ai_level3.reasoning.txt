@@ -1,0 +1,46 @@
+
+Thinking Process:
+
+1.  **Analyze the Request:** The user wants to extend the Behavior Tree implementation with two main features:
+    *   Asynchronous actions (`BT.AsyncAction`) using Lua coroutines (yielding for waiting).
+    *   Cascading tree reset when composite nodes are reset.
+
+2.  **Implement `BT.AsyncAction`:**
+    *   This needs a wrapper/mechanism to handle the coroutine lifecycle within the `tick` method.
+    *   Since Behavior Trees operate on a tick/frame basis, the asynchronous logic must manage waiting (yielding) and resuming.
+    *   Need to track if a coroutine is active, how many ticks are left to wait, and the coroutine itself.
+    *   The goal is for the `tick` method to handle the iteration/waiting cycle.
+
+3.  **Modify Composite Nodes (`Sequence`, `Selector`):**
+    *   The request specifies that `node:reset()` on composite nodes must recursively call `reset()` on all children.
+
+4.  **Review Existing Structure and Integration:** Ensure the new functionality integrates seamlessly with the existing `tick` methods and node structure.
+
+---
+
+*Self-Correction/Detailed Implementation Plan for Async Action:*
+
+*   The `BT.AsyncAction` implementation needs to handle starting the coroutine, resuming it on subsequent ticks, and detecting when the coroutine finishes.
+*   Since BT nodes typically return a status immediately (`SUCCESS`, `FAILURE`, `RUNNING`), the asynchronous node must handle yielding control back to the main loop while waiting.
+
+*Implementation details for `BT.AsyncAction` within the node structure:*
+    *   The core functionality will be wrapped inside the `tick` method.
+    *   We need a way to store the coroutine instance and its current state (if it's waiting).
+
+*(Drafting the code structure, focusing on the new requirements.)*
+
+---
+
+**(Implementation Walkthrough - Step 1: Setup and Async Action)**
+
+I will focus on modifying the core logic to introduce coroutine handling, primarily within a placeholder structure that simulates how an asynchronous node would operate.
+
+---
+
+**(Implementation Walkthrough - Step 2: Cascading Reset)**
+
+I need to ensure `Sequence` and `Selector` correctly iterate through their children when `reset()` is called.
+
+---
+
+*Final Code Assembly:* Ensure all existing nodes, decorators, and the new async structure are present and correctly defined. (Need to ensure `BT` table scope is handled correctly.)

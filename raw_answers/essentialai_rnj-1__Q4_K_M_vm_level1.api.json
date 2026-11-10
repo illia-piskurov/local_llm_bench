@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef run(program: str) -> list[str]:\n    lines = program.splitlines()\n    stack = []\n    output = []\n\n    for i, line in enumerate(lines):\n        if not line.strip() or line.strip().startswith(\"#\"):\n            continue\n\n        parts = line.split()\n        cmd = parts[0]\n        args = parts[1:]\n\n        try:\n            if cmd == \"PUSH\":\n                n = int(args[0])\n                stack.append(n)\n            elif cmd == \"POP\":\n                if not stack:\n                    raise IndexError(f\"Stack underflow at line {i + 1}\")\n                stack.pop()\n            elif cmd == \"ADD\":\n                if len(stack) < 2:\n                    raise IndexError(f\"Stack underflow at line {i + 1}\")\n                b = stack.pop()\n                a = stack.pop()\n                stack.append(a + b)\n            elif cmd == \"SUB\":\n                if len(stack) < 2:\n                    raise IndexError(f\"Stack underflow at line {i + 1}\")\n                b = stack.pop()\n                a = stack.pop()\n                stack.append(a - b)\n            elif cmd == \"MUL\":\n                if len(stack) < 2:\n                    raise IndexError(f\"Stack underflow at line {i + 1}\")\n                b = stack.pop()\n                a = stack.pop()\n                stack.append(a * b)\n            elif cmd == \"DIV\":\n                if len(stack) < 2:\n                    raise IndexError(f\"Stack underflow at line {i + 1}\")\n                b = stack.pop()\n                a = stack.pop()\n                if b == 0:\n                    raise ZeroDivisionError(f\"Division by zero at line {i + 1}\")\n                stack.append(a // b)\n            elif cmd == \"DUP\":\n                if not stack:\n                    raise IndexError(f\"Stack underflow at line {i + 1}\")\n                top = stack[-1]\n                stack.append(top)\n            elif cmd == \"SWAP\":\n                if len(stack) < 2:\n                    raise IndexError(f\"Stack underflow at line {i + 1}\")\n                a, b = stack.pop(), stack.pop()\n                stack.extend([b, a])\n            elif cmd == \"PRINT\":\n                if not stack:\n                    raise IndexError(f\"Stack underflow at line {i + 1}\")\n                output.append(str(stack[-1]))\n            else:\n                raise ValueError(f\"Unknown command '{cmd}' at line {i + 1}\")\n        except Exception as e:\n            print(e)\n            break\n\n    return output\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 295,
+    "total_output_tokens": 528,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 15.337874158999911,
+    "time_to_first_token_seconds": 1.768711
+  }
+}

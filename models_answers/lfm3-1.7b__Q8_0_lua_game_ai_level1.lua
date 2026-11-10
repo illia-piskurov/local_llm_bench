@@ -1,0 +1,133 @@
+-- Global table defining behavior tree nodes and constants
+local BT = {}
+
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+--- Action node -----------------------------------------------------------
+function BT.Action(fn)
+    return {
+        tick = function(ctx)
+            local res = fn(ctx)
+            if res == true or res == BT.SUCCESS then
+                return BT.SUCCESS
+            elseif res == false or res == BT.FAILURE then
+                return BT.FAILURE
+            elseif res == BT.RUNNING then
+                return BT.RUNNING
+            end
+        end,
+        reset = function()
+            -- No internal state to reset for Action
+        end
+    }
+end
+
+--- Condition node ---------------------------------------------------------
+function BT.Condition(predicate)
+    return {
+        tick = function(ctx)
+            if predicate(ctx) then
+                return BT.SUCCESS
+            else
+                return BT.FAILURE
+            end
+        end,
+        reset = function()
+            -- No internal state to reset for Condition
+        end
+    }
+end
+
+--- Sequence node (logical AND, with RUNNING handling) --------------------
+function BT.Sequence(children)
+    local self = {
+        children = children or {},  -- table of child nodes
+        runningIndex = 1           -- remembers index where a child returned RUNNING
+    }
+    return self
+end
+
+-- Implements tick for Sequence
+function BT.Sequence:tick(ctx)   -- note: we treat self as method? Actually we can assign function.
+    -- The above is not correct syntax. We'll define a method inside the table using setmetatable or just implement as function of node type?
+    -- Instead, we can create sequence nodes as tables with fields 'tick' and 'reset'.
+    local fn = function(ctx)
+        if self.runningIndex ~= 1 then
+            local idx = self.runningIndex
+            self.runningIndex = 1  -- reset after using for next tick? We'll keep it until end.
+            local currentIdx = idx
+            while true do
+                local child = self.children[currentIdx]
+                local res = child.tick(ctx)
+                if res == BT.FAILURE then
+                    return BT.FAILURE
+                elseif res == BT.RUNNING then
+                    -- another RUNNING encountered, update index?
+                    self.runningIndex = currentIdx
+                    return BT.RUNNING
+                elseif res == BT.SUCCESS then
+                    -- move to next child; if none left -> success
+                    if currentIdx < #self.children then
+                        currentIdx = currentIdx + 1
+                    else
+                        return BT.SUCCESS
+                    end
+                else
+                    return res -- fallback (should not happen)
+                end
+            end
+        end
+
+        -- Execute children in order, stop at first failure or RUNNING.
+        for i = 1, #self.children do
+            local child = self.children[i]
+            local res = child.tick(ctx)   -- each child has its own tick method; we assume it's a table with tick/reset.
+            if res == BT.FAILURE then
+                return BT.FAILURE
+            elseif res == BT.RUNNING then
+                self.runningIndex = i
+                return BT.RUNNING
+            elseif res == BT.SUCCESS then
+                -- continue to next child (no break)
+                continue
+            end
+        end
+
+        -- If loop completes without returning, all children succeeded
+        return BT.SUCCESS
+    end
+end
+
+--- Selector node (logical OR / fallback) --------------------------------
+function BT.Selector(children)
+    local self = {
+        children = children or {},
+        runningIndex = 1   -- remembers index where a child returned RUNNING on next tick
+    }
+    return self
+end
+
+-- Implements tick for Selector
+function BT.Selector:tick(ctx)   -- note: we treat it as method of the node; but our constructor returns table.
+    local fn = function(ctx)
+        for i = 1, #self.children do
+            local child = self.children[i]
+            local res = child.tick(ctx)
+            if res == BT.SUCCESS then
+                return BT.SUCCESS
+            elseif res == BT.RUNNING then
+                self.runningIndex = i
+                return BT.RUNNING
+            end
+        end
+
+        -- If none succeeded and no RUNNING found, all failed
+        if #self.children == 0 then
+            return BT.FAILURE
+        else
+            return BT.FAILURE   -- after checking all children and finding only FAILURE or missing success?
+        end
+    end
+end

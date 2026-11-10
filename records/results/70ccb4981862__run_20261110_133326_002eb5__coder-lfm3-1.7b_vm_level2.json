@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_133326_002eb5",
+  "host_id": "70ccb4981862",
+  "model": "coder-lfm3-1.7b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-11-10 13:35:54",
+  "passed": 0,
+  "total": 0,
+  "failures": [
+    "[GENERATION FAILED] Model generation failed or timed out"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

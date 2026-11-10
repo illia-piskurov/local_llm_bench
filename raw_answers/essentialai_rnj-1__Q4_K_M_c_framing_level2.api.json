@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```c\n#include <stdint.h>\n\n#define BUFFER_SIZE 512\n\nstatic uint8_t buffer[BUFFER_SIZE];\nstatic volatile int head = 0;\nstatic volatile int tail = 0;\n\nvoid ringbuf_init(void) {\n    head = 0;\n    tail = 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if ((tail + 1) % BUFFER_SIZE == head) {\n        return -1; // Buffer is full\n    }\n    buffer[tail] = byte;\n    tail = (tail + 1) % BUFFER_SIZE;\n    return 0;\n}\n\nint ringbuf_pop(void) {\n    if (head == tail) {\n        return -1; // Buffer is empty\n    }\n    uint8_t byte = buffer[head];\n    head = (head + 1) % BUFFER_SIZE;\n    return byte;\n}\n\nint ringbuf_available(void) {\n    return (tail - head + BUFFER_SIZE) % BUFFER_SIZE;\n}\n\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - ringbuf_available();\n}\n\nint decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {\n    if (!stream || !out_payload || !out_type || stream_len < 4)\n        return -1;\n\n    const uint8_t *ptr = stream;\n    while (ptr <= stream + stream_len - 4) {\n        if (*ptr != 0xAA) {\n            ptr++;\n            continue;\n        }\n\n        int type = *(ptr + 1);\n        int len = *(ptr + 2);\n\n        if (len > stream_len - (ptr - stream) - 3)\n            return -1;\n\n        uint8_t checksum = 0;\n        for (int i = 0; i < len; ++i)\n            checksum ^= *(ptr + 3 + i);\n        \n        if (*(ptr + 3 + len) != checksum)\n            ptr++;\n        else {\n            *out_type = type;\n            memcpy(out_payload, ptr + 3, len);\n            return len;\n        }\n    }\n\n    return -1;\n}\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 781,
+    "total_output_tokens": 444,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 14.574440964088412,
+    "time_to_first_token_seconds": 6.420759
+  }
+}

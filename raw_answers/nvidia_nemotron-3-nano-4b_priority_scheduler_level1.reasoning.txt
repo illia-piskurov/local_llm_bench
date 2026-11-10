@@ -1,81 +1,227 @@
-We need to implement plan_order function. Input: dict mapping task name -> (duration, deps list of strings, priority). workers int. Output list of task names in order they start? Actually "return only the Python code". The function returns list[str] | None.
+We need to implement plan_order. Must detect cycles. Input dict mapping task name -> (duration, deps list of strings, priority). Workers limit concurrency. We output order list of tasks names in sequence they start? "Return only the Python code ...". So we just provide function implementation.
 
-Implementation details:
+Need to produce sorted schedule: tasks are executed sequentially with possible parallelism limited by workers. When ready tasks exist, select based on priority>duration<alphabetical; if multiple tasks can start at same timestamp (i.e., more than one chosen?), they append to list. The rule "If there is a cyclic dependency in tasks, return None."
 
-- Need topological sort with dependencies; detect cycle => return None.
-- Also need to schedule tasks respecting priorities and durations, limited concurrency.
+Implementation approach: topological sort with dynamic availability due to durations and workers? Since non-preemptive, once a task starts it runs for its duration; during that time other tasks cannot start (if same worker busy) but can be started on other workers if ready.
 
-We must produce a single python file with function definition. Probably also helper functions inside same file.
+We need schedule simulation. Simpler: Use priority queue of ready tasks keyed by (-priority, duration, name). While any worker idle and ready tasks exist, pick first task, assign to a worker, run for its duration; during that time other tasks cannot start? Actually rule "When multiple tasks are ready to run, select first..." suggests only one chosen at a time? But "If there is a cyclic dependency in tasks, return None." Might be sequential picking.
 
-Algorithm: Simulate time steps? Since non-preemptive, each task runs for its duration continuously. We can simulate events: at any moment, ready tasks are those whose deps finished and not yet started. Choose up to workers highest priority etc.
+But concurrency: at most workers tasks can run simultaneously. So we could run up to workers tasks concurrently as long as they are ready and selected based on order? However tie-breaking would be ambiguous if multiple tasks start same timestamp.
 
-We need output list of tasks in order they start (including ties). So we produce sequence of starts.
+Probably simpler: Simulate discrete time steps where each second, we check which tasks are ready (all dependencies completed) and select min number of them up to workers using priority rule; all selected start at same timestamp; they will append to output list in that order? If more than one starts same timestamp, they get appended following tie-breaking. So schedule could be multiple tasks per timestamp.
 
-Implementation approach:
+Let's implement: maintain time variable, a list result = [] where each entry is task name (maybe repeated). While tasks left:
 
-- Use a queue of tasks with their start time? Simpler: simulate by maintaining current time, ready set.
+- Determine ready tasks: those whose duration>0 and all deps already completed.
+
+But if we start tasks simultaneously, their durations reduce? Actually they run concurrently; after their duration passes, they finish. So need to simulate time steps up to max duration maybe.
+
+Simpler: Use event-driven simulation: maintain a priority queue of tasks that are ready, not started yet (duration left). While there exists any task with remaining duration>0:
+
+- If number of active workers < limit and ready tasks exist: select one task (highest priority etc) to start, mark worker busy until its original duration passes.
+
+But concurrency may allow multiple tasks per timestamp? The rule about "If there is a cyclic dependency..." suggests output list order is sequential across time steps, each task added when it starts. If multiple start same time, they are appended in order of selection (highest priority first). So we can process events by smallest finish time: at any moment, select up to workers tasks with earliest finish? But durations fixed; if started simultaneously, they will all end at same time (duration). That seems okay.
+
+Implementation: Use a while loop over time steps. At each step, check ready tasks (not yet scheduled) whose dependencies satisfied and not yet finished? Actually scheduling based on priority irrespective of finishing time.
+
+Simpler algorithm:
+
+1. Topological order detection with indegree.
+
+2. If any cycle -> return None.
+
+3. Determine start times: we need to compute earliest possible start for each task given workers limit and priority ordering among ready tasks.
+
+We can simulate timeline:
+
+- Keep a queue of tasks that are currently running (each has finish_time = start_time + duration). At time t, find all tasks whose start_time == t? Actually they run non-preemptively; if multiple tasks started at same timestamp, they finish together.
+
+Implementation steps:
+
+Initialize completed set empty. Let time = 0.
+
+While not all tasks completed:
+
+- Determine ready tasks: tasks whose deps are subset of completed, and not yet started (i.e., duration>0). Wait, start_time is when they become ready? They can be scheduled at earliest time >= max(finish_of_dep) but also subject to worker limit priority.
+
+But rule "When multiple tasks are ready to run, select first by highest priority..." suggests as soon as they become ready (i.e., all deps completed), we schedule them according to order. So start_time = current_time.
+
+So algorithm:
+
+current_time = 0
+
+completed = set()
+
+start_times = dict task->time
+
+remaining_tasks = tasks list
+
+While remaining_tasks not empty:
+
+- Find set of tasks whose dependencies are subset of completed and duration>0 (i.e., not yet started). But some may still be in progress? Actually once a task is scheduled, it's considered "in progress" until its finish time; but its dependencies already completed.
+
+We need to schedule up to workers tasks at current_time. So we sort ready tasks by (-priority, duration, name). Take first min(workers, len) tasks to start now.
+
+For each selected task: set start_time = current_time; mark it as started (added to result list). Also track its finish time = current_time + duration.
+
+We also need to know when tasks finish to add them to completed and enable further scheduling. So maintain a heap of events: (finish_time, task) for tasks that are running.
+
+Simulation:
+
+Initialize event_heap empty.
+
+remaining_tasks set of all task names not yet started? Actually we can loop while there is any task not completed.
+
+Better simulation using priority queue of ready tasks with earliest finish times? Let's do simple O(N^2).
 
 Pseudo:
 
-time = 0
-started = []
-while there are tasks not started:
-    # compute ready tasks: those whose deps all finished (i.e., task not in started and all its dependencies are in started)
-    ready = [t for t in tasks if not started[t] and all(d in started or d == ''? Actually deps list of strings; need to check each dep is either already started or not present? If dep not defined, treat as no dependency.
-        ]
-    # sort ready by priority descending, then duration ascending, then name asc
-    ready.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))
-    # select up to workers
-    selected = ready[:workers]
-    # start them at current time
-    for t in selected:
-        started.append(t)
-        # record start order? We'll output later.
-    # advance time by min duration among selected tasks (since they run concurrently)
-    if selected:
-        min_dur = min(tasks[t][0] for t in selected)
-        time += min_dur
-    else:
-        break
+completed = set()
+started = set()
+result = []
+events = [] # (time, 'finish', task)
 
-But this may not respect that a task's start is at exact timestamp; we need to output list of starts in order. The above adds tasks as they are started (multiple at same time). That matches requirement: if multiple tasks start at same timestamp, append them to returned list following tie-breaking rule.
+current_time = 0
 
-Thus final result = started list.
+# compute topological order to detect cycles:
+graph adjacency: for each dep -> child. indegree.
 
-But need to detect cycles: after topological sort? Our simulation may get stuck if cycle prevents any task ready. At end, if len(started) != total tasks => cycle => return None.
+if cycle: return None
 
-Edge Cases: tasks dict keys are names; dependencies may reference other tasks not in dict? Probably only valid.
+Now while there are tasks not completed:
+
+- Determine ready_tasks = [t for t in all_tasks if not started[t] and all deps[t] in completed]
+
+If no ready_tasks: maybe deadlock? Could be due to remaining tasks depend on each other (cycle) but we already checked.
+
+Select up to workers from ready_tasks sorted by key (-priority, duration, name).
+
+For i, task in enumerate(selected):
+    result.append(task)
+    started.add(task)
+    finish = current_time + duration[task]
+    heapq.heappush(events, (finish, 'finish', task))
+
+Now advance time to next event: if events empty break? But we may have tasks still not completed.
+
+While events and events[0][0] == current_time:
+    pop all finishing tasks; add to completed; for each, maybe their children become ready but already processed.
+
+But need to ensure that after a finish, there might be more ready tasks at same time (current_time). So we can continue processing events at same timestamp before moving forward.
+
+After handling finishes at current_time, check again if any new ready tasks (they may have been ready earlier). But they were ready earlier? Actually they became ready when all deps completed; we already processed them. However some tasks become ready only after a finish that happened later, causing later time step.
+
+Thus after finishing events, set current_time = next event time (if any) else break.
+
+Loop continues until all tasks started and completed.
+
+Finally return result list of tasks in order they were scheduled (including those starting at same timestamp). If there was no schedule possible? Should not happen if acyclic.
+
+Edge Cases: workers limit may cause some ready tasks to wait because workers busy? But rule says "When multiple tasks are ready, select first..." implying we can start up to workers simultaneously. So our selection respects workers.
 
 Implementation details:
 
-def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
-    # compute total tasks
+- Need duration dict from input mapping task -> (duration,...). Provide function inside plan_order.
+
+- Use heapq for events.
+
+Pseudo code:
+
+import heapq
+
+def plan_order(tasks, workers):
+    # tasks: dict name->(duration, deps list, priority)
     all_tasks = set(tasks.keys())
-    started = []
-    time = 0
+    # create duration dict
+    dur = {t: tasks[t][0] for t in all_tasks}
+    preds = {t: tasks[t][1] for t in all_tasks}
+    prio = {t: tasks[t][2] for t in all_tasks}
 
-    while True:
-        ready = [t for t in all_tasks if t not in started and all(d == '' or d in started for d in tasks[t][1])]
-        if not ready:
-            break
-        # sort
-        ready.sort(key=lambda t: (-tasks[t][2], tasks[t][0], t))
-        selected = ready[:workers]
-        # start them
-        started.extend(selected)
-        # advance time by min duration
-        if selected:
-            min_dur = min(tasks[t][0] for t in selected)
-            time += min_dur
+    # detect cycles using Kahn's algorithm indegree
+    indeg = {t: 0 for t in all_tasks}
+    graph = {}
+    for t, deps in preds.items():
+        for d in deps:
+            indeg[d] += 1
 
-    if len(started) != len(all_tasks):
-        return None
-    return started
+    q = [t for t in all_tasks if indeg[t]==0]
+    order = []
+    while q:
+        # but we need to respect priority? Actually cycle detection independent.
+        curr = q.pop() # any
+        order.append(curr)
+        for child, pred in preds.items():
+            if curr == pred:  # not correct direction
+                pass
 
-But need to ensure that tasks with no dependencies are considered ready.
+Better simpler: build graph where parent -> children.
 
-Potential issue: a task may have dependency on itself? That's cycle; our check will not include it because its dep is itself, which is not in started => not ready. So loop ends early and len(started) < total -> return None.
+for t, deps in preds.items():
+    for dep in deps:
+        indeg[t] +=1   # number of prereq that must be completed before t can be scheduled (i.e., dependencies)
+        graph[dep].append(t)  # when dep completes, may allow t ready
 
-Works.
+Now Kahn:
 
-Now produce single python file with function definition only (no extra code). Provide as code block.
+indeg_copy = indeg.copy()
+q = [t for t in all_tasks if indeg_copy[t]==0]
+order=[]
+while q:
+    curr = q.pop() # FIFO
+    order.append(curr)
+    for child in graph[curr]:
+        indeg_copy[child] -=1
+        if indeg_copy[child]==0:
+            q.append(child)
+
+If len(order)!=len(all_tasks): cycle -> return None.
+
+Now simulation:
+
+completed=set()
+started=set()
+result=[]
+events=[]
+
+current_time = 0
+
+while True:
+    # find ready tasks: all tasks not started where all deps completed
+    ready = [t for t in all_tasks if not started[t] and (not preds[t] or all(d in completed for d in preds[t]) )]
+    # wait, preds[t] is list of dependencies. So condition fine.
+    if not ready:
+        break
+
+    # sort ready by key
+    ready.sort(key=lambda x: (-prio[x], dur[x], x))
+    selected = ready[:workers]
+
+    for t in selected:
+        result.append(t)
+        started.add(t)
+
+    # schedule events
+    for t in selected:
+        finish = current_time + dur[t]
+        heapq.heappush(events, (finish, 'finish', t))
+
+    # process all finishing at current_time if any
+    while events and events[0][0] == current_time:
+        _,_,task = heapq.heappop(events)
+        completed.add(task)
+
+    # advance to next event time
+    if not events:
+        break
+    next_time = events[0][0]
+    current_time = next_time
+
+# return result list
+
+Edge: what if tasks become ready after some finish but before we advanced? Our loop will detect in next iteration because ready includes those.
+
+Complexities fine.
+
+Now produce final Python function with import heapq inside code block.
+
+Return only code block.

@@ -1,0 +1,9 @@
+Need to implement both functions in a single file. Critical path: longest path in DAG. Use memoized DFS over topologically sorted order.
+
+Note: topo_sort's cycle detection — the current implementation has a bug: when a task is in path, it discards and returns without adding to result, which is fine for cycle detection (returns None). But the path.discard inside cycle branch is odd; it just returns. Fine.
+
+Also note: tasks may have dependencies not present as keys — visit handles that.
+
+Critical path: longest path = max over tasks of (duration + longest path of dependencies). Use memo. Return None if cycle.
+
+Write both functions.

@@ -1,19 +1,24 @@
 def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
-    visited = {}
-    result = []
+    visited = set()
+    rec_stack = set()
 
     def dfs(task):
-        if task in visited:
-            return visited[task]
-        visited[task] = "visiting"
-        for dep in tasks.get(task, []):
-            if dfs(dep) == "cycle":
-                return "cycle"
-        visited[task] = "visited"
-        result.append(task)
+        if task in rec_stack:
+            return False  # Cycle detected
+        if task not in visited:
+            visited.add(task)
+            rec_stack.add(task)
+            for dep in tasks.get(task, []):
+                if not dfs(dep):
+                    return False
+            rec_stack.remove(task)
         return True
 
-    for task in tasks:
-        if dfs(task) == "cycle":
-            return None
-    return result
+    order = []
+    for task in tasks.keys():
+        if task not in visited:
+            if not dfs(task):
+                return None  # Cycle found
+            order.append(task)
+
+    return order

@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261110_161310_e6db3c",
+  "host_id": "70ccb4981862",
+  "model": "lfm-3-coder-claude-distill",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-10 16:14:38",
+  "stats": {
+    "input_tokens": 285,
+    "total_output_tokens": 3669,
+    "reasoning_output_tokens": 2960,
+    "tokens_per_second": 41.6861999698832,
+    "time_to_first_token_seconds": 0.362037,
+    "model_load_time_seconds": null
+  }
+}

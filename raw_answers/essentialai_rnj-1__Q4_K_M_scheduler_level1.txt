@@ -1,0 +1,23 @@
+```python
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    def dfs(task):
+        if task in visiting:
+            return False  # Cycle detected
+        if task not in visited:
+            visiting.add(task)
+            for dep in tasks.get(task, []):
+                if not dfs(dep):
+                    return False
+            visiting.remove(task)
+            visited.add(task)
+            result.append(task)
+        return True
+
+    visited = set()
+    visiting = set()
+    result = []
+    for task in tasks:
+        if task not in visited and not dfs(task):
+            return None  # Cycle detected
+    return result[::-1]
+```

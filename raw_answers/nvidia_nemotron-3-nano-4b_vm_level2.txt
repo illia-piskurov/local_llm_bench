@@ -1,114 +1,98 @@
 ```python
-def run(program: str) -> list[str]:
+from typing import List
+
+def run(program: str) -> List[str]:
+    stack: List[int] = []
     lines = program.splitlines()
-    stack = []
-    output = []
-    label_map = {}
+    labels: dict[str, int] = {}
+    i = 0
+    output: List[str] = []
 
-    for idx, line in enumerate(lines):
-        line = line.strip()
-        if not line or line.startswith('#'):
+    while i < len(lines):
+        raw = lines[i].strip()
+        if not raw or raw.startswith('#'):
+            i += 1
             continue
 
-        tokens = line.split()
-        op = tokens[0]
+        parts = raw.split()
+        op = parts[0].upper()
+        name = None
+        arg = ''
 
-        # LABEL
+        # LABEL definition
         if op == 'LABEL':
-            name = tokens[1]
-            label_map[name] = idx + 1
+            name = parts[1]
+            labels[name] = i
+            i += 1
             continue
 
-        # JMP, JZ, JNZ
-        elif op == 'JMP':
-            target = tokens[1]
-            if target not in label_map:
-                raise ValueError(f"Line {idx+1}: undefined label '{target}'")
-            idx = label_map[target]  # jump to this line (loop will continue after it)
-            continue
-        elif op == 'JZ':
-            if len(tokens) != 2:
-                raise ValueError(f"Line {idx+1}: JZ expects one value, got {len(stack)}")
-            v = stack.pop()
-            if v != 0:                     # not zero → no jump
-                continue
-            target = tokens[1]
-            if target not in label_map:
-                raise ValueError(f"Line {idx+1}: undefined label '{target}'")
-            idx = label_map[target]        # jump to this line
-            continue
-        elif op == 'JNZ':
-            if len(tokens) != 2:
-                raise ValueError(f"Line {idx+1}: JNZ expects one value, got {len(stack)}")
-            v = stack.pop()
-            if v == 0:                     # zero → no jump
-                continue
-            target = tokens[1]
-            if target not in label_map:
-                raise ValueError(f"Line {idx+1}: undefined label '{target}'")
-            idx = label_map[target]        # jump to this line
+        # JMP, JZ, JNZ (conditional jump)
+        elif op in ('JMP', 'JZ', 'JNZ'):
+            if name not in labels:
+                raise ValueError(f"Line {i}: Label '{name}' is undefined")
+            target_line = labels[name]
+            i = target_line
             continue
 
-        # Existing instructions (unchanged)
+        # PUSH
         elif op == 'PUSH':
-            n = int(tokens[1])
-            stack.append(n)
+            stack.append(int(parts[1]))
+            i += 1
 
+        # POP
         elif op == 'POP':
             if not stack:
-                raise ValueError(f"Line {idx+1}: POP on empty stack")
+                raise ValueError(f"Line {i}: Stack underflow (cannot POP)")
             stack.pop()
+            i += 1
 
-        elif op == 'ADD':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx+1}: ADD requires two values, got {len(stack)}")
+        # BINARY arithmetic: ADD, SUB, MUL, DIV
+        else:
+            if len(parts) < 3:
+                raise ValueError(f"Line {i}: Not enough operands for '{op}'")
             b = stack.pop()
             a = stack.pop()
-            stack.append(a + b)
 
-        elif op == 'SUB':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx+1}: SUB requires two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a - b)
+            try:
+                if op == 'ADD':
+                    result = a + b
+                elif op == 'SUB':
+                    result = a - b
+                elif op == 'MUL':
+                    result = a * b
+                elif op == 'DIV':
+                    if b == 0:
+                        raise ZeroDivisionError(f"Line {i}: Division by zero")
+                    result = a // b
+            except Exception as exc:
+                raise
 
-        elif op == 'MUL':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx+1}: MUL requires two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a * b)
+            stack.append(result)
+            i += 1
 
-        elif op == 'DIV':
-            if len(stack) < 2:
-                raise ValueError(f"Line {idx+1}: DIV requires two values, got {len(stack)}")
-            b = stack.pop()
-            a = stack.pop()
-            if b == 0:
-                raise ValueError(f"Line {idx+1}: division by zero")
-            stack.append(a // b)
-
+        # DUP
         elif op == 'DUP':
             if not stack:
-                raise ValueError(f"Line {idx+1}: DUP on empty stack")
+                raise ValueError(f"Line {i}: Stack underflow (cannot DUP)")
             stack.append(stack[-1])
+            i += 1
 
+        # SWAP
         elif op == 'SWAP':
             if len(stack) < 2:
-                raise ValueError(f"Line {idx+1}: SWAP requires two values, got {len(stack)}")
-            a = stack.pop()
-            b = stack.pop()
+                raise ValueError(f"Line {i}: Not enough values to SWAP")
+            a, b = stack.pop(), stack.pop()
             stack.append(a)
             stack.append(b)
+            i += 1
 
+        # PRINT (captures output without popping)
         elif op == 'PRINT':
-            if not stack:
-                raise ValueError(f"Line {idx+1}: PRINT on empty stack")
             output.append(str(stack[-1]))
+            i += 1
 
         else:
-            raise ValueError(f"Line {idx+1}: unknown instruction '{op}'")
+            raise ValueError(f"Line {i}: Unknown instruction '{op}'")
 
     return output
 ```

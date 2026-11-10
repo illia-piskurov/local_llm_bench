@@ -1,0 +1,68 @@
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    stack = []
+    output = []
+
+    for i, line in enumerate(lines):
+        if not line.strip() or line.strip().startswith("#"):
+            continue
+
+        parts = line.split()
+        cmd = parts[0]
+        args = parts[1:]
+
+        try:
+            if cmd == "PUSH":
+                n = int(args[0])
+                stack.append(n)
+            elif cmd == "POP":
+                if not stack:
+                    raise IndexError(f"Stack underflow at line {i + 1}")
+                stack.pop()
+            elif cmd == "ADD":
+                if len(stack) < 2:
+                    raise IndexError(f"Stack underflow at line {i + 1}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a + b)
+            elif cmd == "SUB":
+                if len(stack) < 2:
+                    raise IndexError(f"Stack underflow at line {i + 1}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a - b)
+            elif cmd == "MUL":
+                if len(stack) < 2:
+                    raise IndexError(f"Stack underflow at line {i + 1}")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
+            elif cmd == "DIV":
+                if len(stack) < 2:
+                    raise IndexError(f"Stack underflow at line {i + 1}")
+                b = stack.pop()
+                a = stack.pop()
+                if b == 0:
+                    raise ZeroDivisionError(f"Division by zero at line {i + 1}")
+                stack.append(a // b)
+            elif cmd == "DUP":
+                if not stack:
+                    raise IndexError(f"Stack underflow at line {i + 1}")
+                top = stack[-1]
+                stack.append(top)
+            elif cmd == "SWAP":
+                if len(stack) < 2:
+                    raise IndexError(f"Stack underflow at line {i + 1}")
+                a, b = stack.pop(), stack.pop()
+                stack.extend([b, a])
+            elif cmd == "PRINT":
+                if not stack:
+                    raise IndexError(f"Stack underflow at line {i + 1}")
+                output.append(str(stack[-1]))
+            else:
+                raise ValueError(f"Unknown command '{cmd}' at line {i + 1}")
+        except Exception as e:
+            print(e)
+            break
+
+    return output

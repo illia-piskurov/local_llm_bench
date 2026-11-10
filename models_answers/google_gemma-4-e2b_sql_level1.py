@@ -1,156 +1,165 @@
 import re
-from typing import Dict, List, Any
 
-def compile_query(query: Dict[str, Any]) -> Dict[str, Any]:
+def _compile_condition(cond, params):
+    """Recursively compiles a single condition into an SQL segment and collects parameters."""
+    if 'field' not in cond:
+        raise ValueError("Invalid condition structure.")
+
+    field = cond['field']
+    op = cond['op']
+    value = cond['value']
+
+    # Ensure value is handled correctly for SQL insertion (simple conversion for demonstration)
+    sql_value = str(value)
+
+    # Generate placeholder and store value
+    placeholder = f"${len(params) + 1}"
+    params.append(value)
+
+    # Build the comparison segment
+    return f"{field} {op} {placeholder}"
+
+def _compile_where(condition, params):
+    """Recursively compiles a WHERE clause tree."""
+    if 'AND' in condition:
+        parts = [_compile_where(c, params) for c in condition['AND']]
+        return f"({ ' AND '.join(parts) })"
+
+    elif 'OR' in condition:
+        parts = [_compile_where(c, params) for c in condition['OR']]
+        return f"({ ' OR '.join(parts) })"
+
+    else:
+        # Atomic condition
+        return _compile_condition(condition, params)
+
+def compile_query(query: dict) -> dict:
     """
-    Компилирует AST-дерево запроса в параметризованный SQL и список параметров.
+    Compiles a structured query AST into a parameterized SQL string and parameters.
 
     Args:
-        query: Словарь с компонентами запроса (table, select, where, orderBy, limit, offset).
+        query: Dictionary representing the query AST.
 
     Returns:
-        Словарь с результатом {"sql": str, "params": list}.
+        A dictionary containing "sql" (string) and "params" (list of values).
     """
     
-    # 1. SELECT Clause
-    select_fields = query.get('select', ['*'])
-    select_str = ", ".join(select_fields)
+    # --- 1. Build SELECT clause ---
+    select_cols = query.get('select', ['*'])
+    select_str = ", ".join(select_cols)
 
-    # 2. FROM Clause
-    table_name = query.get('table', '')
-    if not table_name:
-        raise ValueError("Table name is required.")
-    sql_parts = [f"SELECT {select_str} FROM {table_name}"]
-
-    # 3. WHERE Clause Processing (Recursive)
+    # --- 2. Build WHERE clause and collect parameters ---
+    where_sql = ""
     params = []
 
-    def process_conditions(conditions: List[Dict[str, Any]], param_index: int):
-        """Рекурсивно обрабатывает список условий и собирает параметры."""
-        nonlocal params
-        
-        if not conditions:
-            return
+    if 'where' in query:
+        try:
+            where_sql = _compile_where(query['where'], params)
+        except Exception as e:
+            raise ValueError(f"Error compiling WHERE clause: {e}")
 
-        # Handle AND/OR grouping
-        if 'AND' in conditions or 'OR' in conditions:
-            operator = 'AND' if 'AND' in conditions else 'OR'
-            sub_conditions = conditions[operator]
-            
-            # Recursively process sub-conditions
-            for cond in sub_conditions:
-                process_conditions(cond, param_index)
-            return
-
-        # Handle simple conditions (Base case)
-        for cond in conditions:
-            if 'field' not in cond or 'op' not in cond or 'value' not in cond:
-                continue
-
-            field = cond['field']
-            op = cond['op']
-            value = cond['value']
-            
-            # Determine the correct SQL operator and parameter index
-            sql_op = ''
-            if op == '=': sql_op = '='
-            elif op == '!=': sql_op = '!='
-            elif op == '>': sql_op = '>'
-            elif op == '<': sql_op = '<'
-            elif op == '>=': sql_op = '>='
-            elif op == '<=': sql_op = '<='
-            else:
-                raise ValueError(f"Unsupported operator: {op}")
-
-            # Append condition to SQL
-            sql_parts.append(f"{field} {sql_op} ${param_index + 1}")
-            
-            # Collect parameter value
-            params.append(value)
-            param_index += 1
-
-
-    where_conditions = query.get('where')
-    if where_conditions:
-        # If 'where' is a single condition, treat it as a list of one condition
-        if isinstance(where_conditions, dict):
-            process_conditions([where_conditions], 0)
-        # If 'where' is already a list of conditions (less likely based on prompt structure, but safe check)
-        elif isinstance(where_conditions, list):
-             for i, cond in enumerate(where_conditions):
-                 if 'field' in cond and 'op' in cond and 'value' in cond:
-                     sql_parts.append(f"{cond['field']} {cond['op']} ${i + 1}")
-                     params.append(cond['value'])
-
-
-    # 4. ORDER BY Clause
-    order_by_fields = []
-    if query.get('orderBy'):
+    # --- 3. Build ORDER BY clause ---
+    order_by_parts = []
+    if 'orderBy' in query:
         for item in query['orderBy']:
-            field = item.get('field')
+            field = item['field']
             direction = item.get('dir', 'ASC').upper()
-            if field:
-                order_by_fields.append(f"{field} {direction}")
+            order_by_parts.append(f"{field} {direction}")
 
-    if order_by_fields:
-        sql_parts.append("ORDER BY " + ", ".join(order_by_fields))
+    orderBy_str = ""
+    if order_by_parts:
+        orderBy_str = ", ".join(order_by_parts)
 
-    # 5. LIMIT and OFFSET Clause
-    limit = query.get('limit')
-    offset = query.get('offset')
+    # --- 4. Build LIMIT/OFFSET clause ---
+    limit_str = ""
+    offset_str = ""
+    if 'limit' in query and isinstance(query['limit'], int):
+        limit_str = f"LIMIT {query['limit']}"
+    if 'offset' in query and isinstance(query['offset'], int):
+        offset_str = f"OFFSET {query['offset']}"
 
-    if limit is not None:
-        sql_parts.append(f"LIMIT {limit}")
+    # --- 5. Assemble Final SQL Query ---
+    base_query = f"SELECT {select_str} FROM {query['table']}"
     
-    if offset is not None:
-        sql_parts.append(f"OFFSET {offset}")
+    where_clause = ""
+    if where_sql:
+        where_clause = f"WHERE {where_sql}"
 
-    # Final Assembly
-    final_sql = " ".join(sql_parts) + ";" # Ensure termination, though LIMIT/OFFSET often stand alone
+    query_parts = [
+        base_query,
+        where_clause,
+        orderBy_str,
+        limit_str,
+        offset_str
+    ]
 
-    return {"sql": final_sql, "params": params}
-
-if __name__ == '__main__':
-    # Пример 1: Простой запрос
-    query1 = {
-        'table': 'users',
-        'select': ['id', 'name'],
-        'where': {
-            'field': 'status',
-            'op': '=',
-            'value': 'active'
-        },
-        'orderBy': [{'field': 'name', 'dir': 'ASC'}],
-        'limit': 10
+    compiled_sql = " ".join([part for part in query_parts if part])
+    
+    return {
+        "sql": compiled_sql.strip(),
+        "params": params
     }
 
-    result1 = compile_query(query1)
-    print("--- Пример 1 ---")
-    print(f"SQL: {result1['sql']}")
-    print(f"Params: {result1['params']}\n")
-    # Ожидаемый результат: SQL: SELECT id, name FROM users WHERE status = $1 ORDER BY name ASC LIMIT 10, Params: ['active']
-
-    # Пример 2: Сложный запрос с вложенными условиями (AND/OR)
-    query2 = {
+if __name__ == '__main__':
+    # Example 1: Simple AND condition
+    query1 = {
         'table': 'products',
         'select': ['name', 'price'],
         'where': {
             'AND': [
-                {'field': 'category', 'op': '=', 'value': 'electronics'},
-                {
-                    'OR': [
-                        {'field': 'price', 'op': '>', 'value': 100},
-                        {'field': 'stock', 'op': '<', 'value': 5}
-                    ]
-                }
+                {'field': 'category', 'op': '=', 'value': 'Electronics'},
+                {'field': 'price', 'op': '>', 'value': 100}
             ]
         },
-        'orderBy': [{'field': 'price', 'dir': 'DESC'}],
-        'offset': 20
+        'orderBy': [
+            {'field': 'price', 'dir': 'DESC'}
+        ],
+        'limit': 10
+    }
+
+    result1 = compile_query(query1)
+    print("--- Example 1 ---")
+    print(f"SQL: {result1['sql']}")
+    print(f"Params: {result1['params']}\n")
+    # Expected SQL structure (approximation): SELECT name, price FROM products WHERE (category = $1 AND price > $2) ORDER BY price DESC LIMIT 10
+
+    # Example 2: OR condition with nesting
+    query2 = {
+        'table': 'users',
+        'select': ['id'],
+        'where': {
+            'OR': [
+                {'field': 'status', 'op': '=', 'value': 0},
+                {'AND': [
+                    {'field': 'role', 'op': '=', 'value': 'ADMIN'},
+                    {'field': 'is_active', 'op': '=', 'value': True}
+                ]}
+            ]
+        }
     }
 
     result2 = compile_query(query2)
-    print("--- Пример 2 ---")
+    print("--- Example 2 ---")
     print(f"SQL: {result2['sql']}")
     print(f"Params: {result2['params']}\n")
-    # Ожидаемый результат (примерно): SQL: SELECT name, price FROM products WHERE category = $1 AND (price > $2 OR stock < $3) ORDER BY price DESC OFFSET 20, Params: ['electronics', '100', '5']
+    # Expected SQL structure (approximation): SELECT id FROM users WHERE (status = $1 OR (role = $2 AND is_active = $3))
+
+    # Example 3: Complex nested structure
+    query3 = {
+        'table': 'logs',
+        'select': ['message'],
+        'where': {
+            'AND': [
+                {'field': 'level', 'op': '!=', 'value': 'ERROR'},
+                {'OR': [
+                    {'field': 'timestamp', 'op': '<', 'value': 1678886400},
+                    {'field': 'code', 'op': '=', 'value': 5}
+                ]}
+            ]
+        },
+    }
+
+    result3 = compile_query(query3)
+    print("--- Example 3 ---")
+    print(f"SQL: {result3['sql']}")
+    print(f"Params: {result3['params']}\n")

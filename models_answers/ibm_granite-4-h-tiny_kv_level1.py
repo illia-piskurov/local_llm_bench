@@ -1,47 +1,54 @@
 class InMemoryKVStore:
     def __init__(self):
-        self.store = {}
+        self.data = {}
         self.transactions = []
 
-    def execute(self, line):
+    def set(self, key, value):
+        self.data[key] = value
+
+    def get(self, key):
+        return self.data.get(key, "NULL")
+
+    def delete(self, key):
+        if key in self.data:
+            del self.data[key]
+
+    def begin_transaction(self):
+        self.transactions.append({})
+
+    def commit(self):
+        if not self.transactions:
+            return "NO TRANSACTION"
+        transaction = self.transactions.pop()
+        parent = self.transactions[-1] if self.transactions else None
+        for k, v in transaction.items():
+            parent[k] = v
+
+    def rollback(self):
+        if not self.transactions:
+            return "NO TRANSACTION"
+        self.transactions.pop()
+
+def run(program: str) -> list[str]:
+    store = InMemoryKVStore()
+    output = []
+    lines = (line.strip() for line in program.splitlines() if line.strip())
+    for line in lines:
         parts = line.split()
         cmd = parts[0]
         if cmd == "SET":
-            key, value = parts[1], parts[2]
-            self.store[key] = value
+            key, value = parts[1], " ".join(parts[2:])
+            store.set(key, value)
         elif cmd == "GET":
             key = parts[1]
-            return [self.store.get(key, "NULL")]
+            output.append(store.get(key))
         elif cmd == "DELETE":
             key = parts[1]
-            if key in self.store:
-                del self.store[key]
+            store.delete(key)
         elif cmd == "BEGIN":
-            self.transactions.append({})
+            store.begin_transaction()
         elif cmd == "COMMIT":
-            if not self.transactions:
-                return ["NO TRANSACTION"]
-            txn = self.transactions.pop()
-            if self.transactions:
-                parent_txn = self.transactions[-1]
-                parent_txn.update(txn)
-            else:
-                self.store.update(txn)
+            output.append(store.commit())
         elif cmd == "ROLLBACK":
-            if not self.transactions:
-                return ["NO TRANSACTION"]
-            self.transactions.pop()
-
-    def run(self, program):
-        output = []
-        for line in program.strip().splitlines():
-            if not line:
-                continue
-            result = self.execute(line)
-            if isinstance(result, list):
-                output.extend(result)
-        return output
-
-def run(program: str) -> list[str]:
-    kv_store = InMemoryKVStore()
-    return kv_store.run(program)
+            output.append(store.rollback())
+    return output

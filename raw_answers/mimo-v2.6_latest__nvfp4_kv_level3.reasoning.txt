@@ -1,0 +1,7 @@
+I need to add snapshot/restore. The tricky part: snapshot must capture the transaction stack depth and the pending transaction contents. On RESTORE, the store should behave as if execution continued from the moment of SNAPSHOT — meaning the transaction stack should be reset to the depth it had at snapshot time, and the pending transaction contents should be restored.
+
+So I need to store the tx_stack itself (list of dicts) in the snapshot, plus storage, watches, and the current depth. On RESTORE, set self.tx_stack = snapshot["tx_stack"].
+
+Also, the snapshot must be taken at the current depth — if inside a transaction, the pending tx contents are included.
+
+Let me write it.

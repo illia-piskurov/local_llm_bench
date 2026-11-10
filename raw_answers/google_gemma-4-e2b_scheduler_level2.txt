@@ -1,124 +1,101 @@
 ```python
 def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
     """
-    Рассчитывает длину критического пути проекта с использованием метода CPM.
+    Calculates the length of the critical path (longest dependent sequence) 
+    in a project network.
 
     Args:
-        tasks: Словарь, где ключ — имя задачи, а значение — кортеж 
-               (длительность_задачи, список_зависимостей).
+        tasks: A dictionary where the key is the task name and the value is 
+               a tuple (duration, dependencies_list).
 
     Returns:
-        Длина критического пути (максимальная общая длительность проекта), 
-        или None, если в графе зависимостей есть цикл.
+        The length of the critical path, or None if a cycle is detected.
     """
-    if not tasks:
-        return 0
+    # 1. Build the graph and initialize necessary structures.
+    graph = {}
+    all_tasks = set()
 
-    # --- Шаг 1: Построение графа и проверка на циклы (с помощью топологической сортировки) ---
-    adj = {}       # Граф смежности (предшественник -> зависимая задача)
-    in_degree = {} # Входящая степень
-    all_tasks = set(tasks.keys())
+    # Initialize graph structure and gather all unique tasks
+    for task, (duration, dependencies) in tasks.items():
+        all_tasks.add(task)
+        graph[task] = []  # Initialize the task node in the adjacency list
 
-    for task, (duration, prerequisites) in tasks.items():
-        if task not in adj:
-            adj[task] = []
-            in_degree[task] = 0
+        for dependency in dependencies:
+            all_tasks.add(dependency)
+            # Edge definition: Dependency -> Task (Dependency must precede Task)
+            if dependency in graph:
+                graph[dependency].append(task)
+            # Handle case where a dependency might exist but is not explicitly defined as a task endpoint
+            else:
+                 graph[dependency] = [task]
+
+
+    # State tracking for DFS (Topological Sort and Cycle Detection)
+    visited = set()
+    recursion_stack = set()
+    topological_order = []
+
+    def dfs(task: str) -> bool:
+        """DFS helper for topological sort and cycle detection."""
+        if task in recursion_stack:
+            return False  # Cycle detected (back edge)
+        if task in visited:
+            return True   # Already processed
+
+        recursion_stack.add(task)
+
+        for neighbor in graph.get(task, []):
+            if not dfs(neighbor):
+                return False
+
+        recursion_stack.remove(task)
+        visited.add(task)
+        topological_order.append(task)
+        return True
+
+    # 2. Perform DFS to get the topological order and check for cycles.
+    for task in list(all_tasks):
+        if task not in visited:
+            if not dfs(task):
+                return None  # Cycle found
+
+    # If we reach here, the graph is a DAG (Directed Acyclic Graph).
+    if not topological_order:
+        return 0 # Empty graph
+
+    # 3. Calculate the longest path duration using Dynamic Programming (DP).
+    # longest_path_duration[T] stores the maximum duration of any path 
+    # leading up to and including task T.
+    longest_path_duration = {}
+
+    def calculate_longest_path(task: str) -> int:
+        """Calculates the longest path duration ending at 'task'."""
+        if task in longest_path_duration:
+            return longest_path_duration[task]
+
+        duration, dependencies = tasks.get(task, (0, []))
+
+        if not dependencies:
+            # Base case: Start node
+            longest_path_duration[task] = duration
+            return duration
+
+        # Recursive step: Find the maximum path length among all dependencies
+        max_dependency_path = 0
+        for dep in dependencies:
+            # Note: Since we processed in topological order, dependency paths must be calculated
+            max_dependency_path = max(max_dependency_path, calculate_longest_path(dep))
         
-        # Инициализация всех задач в графе
-        for prereq in prerequisites:
-            all_tasks.add(prereq)
+        # Total path length is current task duration + max incoming path
+        current_path = duration + max_dependency_path
+        longest_path_duration[task] = current_path
+        return current_path
 
-    # Добавляем все задачи, которые могут быть только предшественниками (если они не указаны как ключи)
-    for task in all_tasks:
-        if task not in adj:
-            adj[task] = []
-            in_degree[task] = 0
+    # 4. Calculate the overall critical path length.
+    max_duration = 0
+    for task in topological_order:
+        path_duration = calculate_longest_path(task)
+        max_duration = max(max_duration, path_duration)
 
-
-    # Построение графа и расчет входящих степеней
-    for dependent_task, (_, prerequisites) in tasks.items():
-        for prereq in prerequisites:
-            # Ребро: prereq -> dependent_task
-            if prereq not in adj:
-                adj[prereq] = []
-                in_degree[prereq] = 0
-            
-            adj[prereq].append(dependent_task)
-            in_degree[dependent_task] += 1
-
-    # Топологическая сортировка (Kahn's Algorithm) для обнаружения циклов
-    queue = []
-    for task in all_tasks:
-        if in_degree.get(task, 0) == 0:
-            queue.append(task)
-
-    sorted_count = 0
-    temp_in_degree = in_degree.copy() # Используем копию для сортировки
-
-    while queue:
-        u = queue.pop(0)
-        sorted_count += 1
-
-        for v in adj[u]:
-            temp_in_degree[v] -= 1
-            if temp_in_degree[v] == 0:
-                queue.append(v)
-
-    # Если количество отсортированных задач меньше общего количества уникальных задач, цикл существует.
-    if sorted_count != len(all_tasks):
-        return None  # Цикл обнаружен
-    
-    # --- Шаг 2: Прямой проход (Forward Pass) для расчета EF ---
-    
-    earliest_finish_time = {}
-
-    # Инициализация начальных задач (те, у которых нет зависимостей)
-    for task in all_tasks:
-        if task in tasks:
-            duration, _ = tasks[task]
-            earliest_finish_time[task] = duration
-        else:
-             # Задачи, которые существуют только как зависимости и не имеют длительности (если таковые есть)
-             # В данном случае, мы предполагаем, что все задачи из 'tasks' являются конечными узлами.
-             pass
-
-
-    # Сортировка по топологическому порядку для корректного расчета EF
-    # Мы используем результат сортировки, чтобы гарантировать порядок
-    topo_order = []
-    q = [task for task in all_tasks if in_degree.get(task, 0) == 0]
-    while q:
-        u = q.pop(0)
-        topo_order.append(u)
-        for v in adj[u]:
-            in_degree[v] -= 1
-            if in_degree[v] == 0:
-                q.append(v)
-
-    # Пересчет EF, используя гарантированный порядок
-    final_ef = {}
-    for task in topo_order:
-        duration, _ = tasks[task]
-        
-        # Находим максимальное время завершения всех предшественников
-        max_prereq_finish = 0
-        prerequisites = tasks[task][1]
-        
-        if prerequisites:
-            for prereq in prerequisites:
-                # Предполагаем, что все предшественники уже рассчитаны (что гарантируется топологией)
-                max_prereq_finish = max(max_prereq_finish, final_ef.get(prereq, 0))
-        
-        earliest_start_time = max_prereq_finish
-        final_ef[task] = earliest_start_time + duration
-
-    # --- Шаг 3: Определение длины критического пути ---
-    
-    if not final_ef:
-        return 0
-
-    # Критический путь - это максимальное время завершения среди всех задач
-    critical_path_length = max(final_ef.values())
-
-    return critical_path_length
+    return max_duration
 ```

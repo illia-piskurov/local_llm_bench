@@ -1,0 +1,112 @@
+def compile_query(query: dict) -> dict:
+    sql = []
+    params = []
+
+    sql.append("SELECT")
+    columns = query.get("select", ["*"])
+    sql.append(", ".join(_compile_select_column(c) for c in columns))
+
+    joins = query.get("joins", [])
+    if joins:
+        sql.append("FROM")
+        sql.append(query["table"])
+        for join in joins:
+            join_type = join.get("type", "INNER")
+            sql.append(f"{join_type} JOIN {join['table']}")
+            on = join.get("on", {})
+            left_col = next(iter(on))
+            right_col = on[left_col]
+            sql.append(f"ON {left_col} = {right_col}")
+
+    where = query.get("where")
+    if where:
+        sql.append("WHERE")
+        cond_sql, params = _compile_condition(where, params)
+        sql.append(cond_sql)
+
+    having = query.get("having")
+    if having:
+        sql.append("HAVING")
+        cond_sql, params = _compile_condition(having, params)
+        sql.append(cond_sql)
+
+    if query.get("groupBy"):
+        sql.append("GROUP BY")
+        sql.append(", ".join(query["groupBy"]))
+
+    if query.get("orderBy"):
+        sql.append("ORDER BY")
+        for item in query["orderBy"]:
+            field = item["field"]
+            direction = item.get("dir", "ASC")
+            sql.append(f"{field} {direction}")
+
+    if query.get("limit") is not None:
+        sql.append(f"LIMIT {query['limit']}")
+
+    if query.get("offset") is not None:
+        sql.append(f"OFFSET {query['offset']}")
+
+    return {"sql": " ".join(sql), "params": params}
+
+
+def _compile_select_column(column):
+    if isinstance(column, dict):
+        return f"{column['expr']} AS {column['as']}"
+    return column
+
+
+def _compile_condition(cond, params):
+    if isinstance(cond, list):
+        parts = [_compile_condition(c, params) for c in cond]
+        return " AND ".join(parts), params
+
+    if isinstance(cond, dict):
+        if "AND" in cond:
+            conds = cond["AND"]
+            if len(conds) > 1:
+                parts = [_compile_condition(c, params) for c in conds]
+                return f"({ ' AND '.join(p[0] for p in parts) })", params
+            return parts[0][0], params
+
+        if "OR" in cond:
+            conds = cond["OR"]
+            if len(conds) > 1:
+                parts = [_compile_condition(c, params) for c in conds]
+                return f"({ ' OR '.join(p[0] for p in parts) })", params
+            return parts[0][0], params
+
+        return _compile_leaf(cond, params)
+
+    return _compile_leaf(cond, params)
+
+
+def _compile_leaf(cond, params):
+    field = cond["field"]
+    op = cond["op"]
+    value = cond["value"]
+
+    if op == "IS NULL":
+        return f"{field} IS NULL"
+
+    if op == "IS NOT NULL":
+        return f"{field} IS NOT NULL"
+
+    if op == "IN":
+        if isinstance(value, dict) and "query" in value:
+            sub_sql, sub_params = compile_query(value["query"])
+            params.extend(sub_params)
+            return f"{field} IN ({sub_sql})"
+
+        placeholders = ", ".join(f"${i + 1}" for i in range(len(value)))
+        params.extend(value)
+        return f"{field} IN ({placeholders})"
+
+    if op == "LIKE":
+        placeholder = f"${len(params) + 1}"
+        params.append(value)
+        return f"{field} LIKE {placeholder}"
+
+    placeholder = f"${len(params) + 1}"
+    params.append(value)
+    return f"{field} {op} {placeholder}"

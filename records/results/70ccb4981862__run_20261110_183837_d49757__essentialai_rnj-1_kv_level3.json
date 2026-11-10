@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_183837_d49757",
+  "host_id": "70ccb4981862",
+  "model": "essentialai/rnj-1",
+  "benchmark": "kv",
+  "level": "level3",
+  "tested_at": "2026-11-10 18:46:51",
+  "passed": 0,
+  "total": 0,
+  "failures": [
+    "[TRUNCATED] kv/level3: unclosed code fence in the response; raise the context length / max tokens in the server's model settings"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

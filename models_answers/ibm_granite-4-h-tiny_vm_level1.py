@@ -2,62 +2,61 @@ def run(program: str) -> list[str]:
     lines = [line.strip() for line in program.splitlines() if line.strip() and not line.strip().startswith("#")]
     stack = []
     output = []
+    line_number = 0
 
     def error(msg):
-        raise ValueError(f"Error at line {len(output)+1}: {msg}")
+        raise ValueError(f"Error at line {line_number}: {msg}")
 
-    for i, line in enumerate(lines, start=1):
+    for line in lines:
+        line_number += 1
         parts = line.split()
         cmd = parts[0]
-        if cmd == "PUSH":
-            try:
+
+        try:
+            if cmd == "PUSH":
                 value = int(parts[1])
-            except (IndexError, ValueError):
-                error("Missing number after PUSH")
-            stack.append(value)
-        elif cmd == "POP":
-            if not stack:
-                error("POP from empty stack")
-            stack.pop()
-        elif cmd == "ADD":
-            if len(stack) < 2:
-                error("ADD requires two values on the stack")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a + b)
-        elif cmd == "SUB":
-            if len(stack) < 2:
-                error("SUB requires two values on the stack")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a - b)
-        elif cmd == "MUL":
-            if len(stack) < 2:
-                error("MUL requires two values on the stack")
-            b = stack.pop()
-            a = stack.pop()
-            stack.append(a * b)
-        elif cmd == "DIV":
-            if len(stack) < 2:
-                error("DIV requires two values on the stack")
-            b = stack.pop()
-            a = stack.pop()
-            if b == 0:
-                error("Division by zero")
-            stack.append(a // b)
-        elif cmd == "DUP":
-            if not stack:
-                error("DUP from empty stack")
-            stack.append(stack[-1])
-        elif cmd == "SWAP":
-            if len(stack) < 2:
-                error("SWAP requires two values on the stack")
-            stack[-1], stack[-2] = stack[-2], stack[-1]
-        elif cmd == "PRINT":
-            if not stack:
-                error("PRINT from empty stack")
-            output.append(str(stack[-1]))
-        else:
-            raise ValueError(f"Unknown command: {cmd}")
+                stack.append(value)
+            elif cmd == "POP":
+                if not stack:
+                    error("stack underflow")
+                stack.pop()
+            elif cmd == "ADD":
+                if len(stack) < 2:
+                    error("not enough values on the stack for ADD")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a + b)
+            elif cmd == "SUB":
+                if len(stack) < 2:
+                    error("not enough values on the stack for SUB")
+                a, b = stack.pop(), stack.pop()
+                stack.append(b - a)  # ensure correct order
+            elif cmd == "MUL":
+                if len(stack) < 2:
+                    error("not enough values on the stack for MUL")
+                a, b = stack.pop(), stack.pop()
+                stack.append(a * b)
+            elif cmd == "DIV":
+                if len(stack) < 2:
+                    error("not enough values on the stack for DIV")
+                a, b = stack.pop(), stack.pop()
+                if b == 0:
+                    error("division by zero")
+                stack.append(b // a)
+            elif cmd == "DUP":
+                if not stack:
+                    error("stack underflow")
+                stack.append(stack[-1])
+            elif cmd == "SWAP":
+                if len(stack) < 2:
+                    error("not enough values on the stack for SWAP")
+                stack[-1], stack[-2] = stack[-2], stack[-1]
+            elif cmd == "PRINT":
+                if not stack:
+                    error("stack underflow")
+                output.append(str(stack[-1]))
+            else:
+                error(f"unknown command: {cmd}")
+        except (IndexError, ValueError) as e:
+            raise ValueError(f"Syntax or value error at line {line_number}: {e}")
 
     return output

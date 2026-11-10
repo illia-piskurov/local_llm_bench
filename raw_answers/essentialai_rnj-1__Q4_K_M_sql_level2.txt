@@ -1,0 +1,74 @@
+```python
+def compile_query(query: dict) -> dict:
+    def traverse_where(cond):
+        nonlocal param_counter
+        if isinstance(cond, dict):
+            if 'AND' in cond or 'OR' in cond:
+                op = 'AND' if 'AND' in cond else 'OR'
+                conditions = cond[op]
+                sql_parts = [traverse_where(c) for c in conditions]
+                if len(conditions) > 1:
+                    return f"({') {op} ('.join(sql_parts)})".replace(')', ')')
+                return ' '.join(sql_parts)
+            elif 'IN' in cond:
+                field, values = cond['field'], cond['value']
+                placeholders = ', '.join(f"${i + param_counter}" for i in range(len(values)))
+                param_counter += len(values)
+                params.extend(values)
+                return f"{field} IN ({placeholders})"
+            elif 'IS NULL' in cond or 'IS NOT NULL' in cond:
+                field, op = cond['field'], cond['op']
+                return f"{field} {op}"
+            else:
+                field, op, value = cond['field'], cond['op'], cond['value']
+                param_counter += 1
+                placeholder = f"${param_counter}"
+                params.append(value)
+                return f"{field} {op} {placeholder}"
+        raise ValueError("Invalid condition format")
+
+    table = query.get('table')
+    select = query.get('select', ['*'])
+    where = query.get('where')
+    order_by = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+    joins = query.get('joins', [])
+    group_by = query.get('groupBy', [])
+
+    sql_parts = []
+    params = []
+
+    param_counter = 0
+
+    if not table:
+        raise ValueError("Table name is required")
+
+    for join in joins:
+        join_type = join.get('type', 'INNER')
+        join_table = join['table']
+        on_clause = join['on']
+        left_col, right_col = next(iter(on_clause.items()))
+        sql_parts.append(f"{join_type} JOIN {join_table} ON {left_col} = {right_col}")
+
+    sql_parts.append(f"SELECT {', '.join(select)} FROM {table}")
+
+    if where:
+        sql_parts.append(f"WHERE {traverse_where(where)}")
+
+    if group_by:
+        sql_parts.append(f"GROUP BY {', '.join(group_by)}")
+
+    if order_by:
+        order_clauses = [f"{clause['field']} {'ASC' if clause.get('dir') == 'ASC' else 'DESC'}"
+                         for clause in order_by]
+        sql_parts.append(f"ORDER BY {', '.join(order_clauses)}")
+
+    if limit is not None:
+        sql_parts.append(f"LIMIT {limit}")
+
+    if offset is not None:
+        sql_parts.append(f"OFFSET {offset}")
+
+    return {"sql": ' '.join(sql_parts), "params": params}
+```

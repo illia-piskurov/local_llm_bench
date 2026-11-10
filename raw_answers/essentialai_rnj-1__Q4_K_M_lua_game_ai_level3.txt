@@ -1,0 +1,136 @@
+```lua
+local BT = {}
+
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+function BT.Action(fn)
+    local node = {}
+    function node:tick(ctx)
+        local result = fn(ctx)
+        if result == true or result == BT.SUCCESS then
+            return BT.SUCCESS
+        elseif result == false or result == BT.FAILURE then
+            return BT.FAILURE
+        else
+            return BT.RUNNING
+        end
+    end
+    function node:reset()
+    end
+    return node
+end
+
+function BT.Condition(predicate)
+    local node = {}
+    function node:tick(ctx)
+        if predicate(ctx) then
+            return BT.SUCCESS
+        else
+            return BT.FAILURE
+        end
+    end
+    function node:reset()
+    end
+    return node
+end
+
+function BT.Sequence(children)
+    local node = { children = children, index = 1 }
+    function node:tick(ctx)
+        for i = node.index, #node.children do
+            local result = node.children[i]:tick(ctx)
+            if result == BT.FAILURE then
+                node.index = 1
+                return BT.FAILURE
+            elseif result == BT.RUNNING then
+                node.index = i + 1
+                return BT.RUNNING
+            end
+        end
+        node.index = 1
+        return BT.SUCCESS
+    end
+    function node:reset()
+        for _, child in ipairs(node.children) do
+            child:reset()
+        end
+        node.index = 1
+    end
+    return node
+end
+
+function BT.Selector(children)
+    local node = { children = children, index = 1 }
+    function node:tick(ctx)
+        for i = node.index, #node.children do
+            local result = node.children[i]:tick(ctx)
+            if result == BT.SUCCESS then
+                node.index = 1
+                return BT.SUCCESS
+            elseif result == BT.RUNNING then
+                node.index = i + 1
+                return BT.RUNNING
+            end
+        end
+        node.index = 1
+        return BT.FAILURE
+    end
+    function node:reset()
+        for _, child in ipairs(node.children) do
+            child:reset()
+        end
+        node.index = 1
+    end
+    return node
+end
+
+function BT.Blackboard.new()
+    local bb = { data = {}, watchers = {} }
+    function bb:get(key, default)
+        return self.data[key] or default
+    end
+    function bb:set(key, value)
+        if self.data[key] ~= value then
+            for _, callback in ipairs(self.watchers[key] or {}) do
+                callback(key, value, self.data[key])
+            end
+            self.data[key] = value
+        end
+    end
+    function bb:watch(key, callback)
+        self.watchers[key] = self.watchers[key] or {}
+        table.insert(self.watchers[key], callback)
+    end
+    return bb
+end
+
+function BT.Inverter(child)
+    local node = { child = child }
+    function node:tick(ctx)
+        local result = node.child:tick(ctx)
+        if result == BT.SUCCESS then
+            return BT.FAILURE
+        elseif result == BT.FAILURE then
+            return BT.SUCCESS
+        else
+            return BT.RUNNING
+        end
+    end
+    function node:reset()
+        node.child:reset()
+    end
+    return node
+end
+
+function BT.Cooldown(child, ticks)
+    local node = { child = child, cooldown = 0 }
+    function node:tick(ctx)
+        if node.cooldown > 0 then
+            node.cooldown = node.cooldown - 1
+            return BT.FAILURE
+        end
+        local result = node.child:tick(ctx)
+        if result == BT.SUCCESS then
+            node.co

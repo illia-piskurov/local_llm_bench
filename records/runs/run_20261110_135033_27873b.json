@@ -1,0 +1,58 @@
+{
+  "id": "run_20261110_135033_27873b",
+  "host_id": "70ccb4981862",
+  "model_key": "coder-lfm3-1.7b",
+  "model_name": "Coder Lfm3 1.7B",
+  "quantization": "Q4_K_M",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "coder-lfm3-1.7b",
+      "display_name": "Coder Lfm3 1.7B",
+      "architecture": "lfm3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": 4,
+      "size_bytes": 1099629841,
+      "params_string": "1.7B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": "AJ-Gonzalez"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 13:50:33",
+  "completed_at": "2026-11-10 13:52:59",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 13:52:59",
+      "passed": 17,
+      "total": 18,
+      "failures": [
+        "swap: expected ['1'], got ['-1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-10 13:52:56",
+      "stats": {
+        "input_tokens": 285,
+        "total_output_tokens": 5863,
+        "reasoning_output_tokens": 4982,
+        "tokens_per_second": 40.890263201039915,
+        "time_to_first_token_seconds": 0.418655,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

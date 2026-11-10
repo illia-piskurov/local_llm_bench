@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261110_163600_ba4bac",
+  "host_id": "70ccb4981862",
+  "model": "google/gemma-4-e2b",
+  "benchmark": "c_framing",
+  "level": "level3",
+  "tested_at": "2026-11-10 16:59:01",
+  "passed": 4,
+  "total": 10,
+  "failures": [
+    "full_overflow_check: assertion returned False",
+    "clean_packet: exception too many parameters provided: given 4, expected 2",
+    "with_junk_prefix: exception too many parameters provided: given 4, expected 2",
+    "reject_bad_checksum: exception too many parameters provided: given 4, expected 2",
+    "recover_after_false_magic: exception too many parameters provided: given 4, expected 2",
+    "sequential_packets: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261109_173733_bdc9b8",
+  "host_id": "70ccb4981862",
+  "model": "mimo-v2.6:latest",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-09 17:38:39",
+  "passed": 5,
+  "total": 6,
+  "failures": [
+    "cycle_returns_none: expected None, got 2"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

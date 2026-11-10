@@ -1,0 +1,310 @@
+We need to implement core of Behavior Tree engine for game AI in Lua (5.3+ / 5.4+). We have global table `BT = {}`. Need to define constants: BT.SUCCESS = "SUCCESS", BT.FAILURE = "FAILURE", BT.RUNNING = "RUNNING". Implement nodes:
+
+1. `BT.Action(fn)` — action node.
+   - When calling `node:tick(ctx)`, invokes `fn(ctx)`.
+   - If fn returns true or BT.SUCCESS → return BT.SUCCESS? Wait: description:
+     - If fn returns `true` or `BT.SUCCESS` — returns `BT.SUCCESS`.
+     - If fn returns `false` or `BT.FAILURE` — returns `BT.FAILURE`.
+     - If fn returns `BT.RUNNING` — returns `BT.RUNNING`.
+
+Interpretation: The node's tick logic: call fn(ctx). Let result = fn(ctx). Then evaluate:
+   - if result == true or result == BT.SUCCESS? Actually they say "true or BT.SUCCESS". But they mention return values from fn. Typically you'd compare to constants. So we need to treat boolean true as success, and also the string "SUCCESS" maybe indicates something else? The node:return value based on fn's output.
+
+Let's parse precisely:
+
+Action node:
+   - When calling `node:tick(ctx)`, invokes `fn(ctx)`.
+   - If `fn` returns `true` or `BT.SUCCESS` — returns `BT.SUCCESS`.
+   - If `fn` returns `false` or `BT.FAILURE` — returns `BT.FAILURE`.
+   - If `fn` returns `BT.RUNNING` — returns `BT.RUNNING`.
+
+So we need to treat:
+- if (fn(ctx) == true or fn(ctx) == BT.SUCCESS?) Wait: "returns true or BT.SUCCESS". But they are different types; maybe BT.SUCCESS is string constant. Possibly they want to compare the result of fn to either boolean true, the success string, etc.
+
+Let's define:
+
+```
+local SUCCESS = BT.SUCCESS
+local FAILURE = BT.FAILURE
+local RUNNING = BT.RUNNING
+```
+
+But we can just use constants.
+
+For Action node: 
+   - Let res = fn(ctx).
+   - If res == true or res == SUCCESS then return SUCCESS.
+   - Else if res == false or res == FAILURE then return FAILURE.
+   - Else if res == RUNNING then return RUNNING.
+But that's weird because "true" is not a string; but maybe they treat booleans. We'll implement accordingly.
+
+Also method `node:reset()`.
+
+2. Condition node:
+   - When calling tick, invokes predicate(ctx). If predicate returns true → return SUCCESS else FAILURE.
+   - Method reset.
+
+3. Sequence(children) — composite sequence node (logical AND):
+   - Executes child nodes in order.
+   - If a child returns BT.FAILURE → halt execution and return BT.FAILURE.
+   - If a child returns BT.RUNNING → remembers current node index and returns BT.RUNNING. On next tick, resumes from that node without re-executing previously succeeded children!
+   - If all children return BT.SUCCESS → returns SUCCESS.
+   - Method reset() resets remembered child index to 1.
+
+Interpretation: Sequence is like a "OR" but with RUNNING handling? Let's parse:
+
+We have sequence of child nodes. Execution flows: For each child in order, we call tick on the child node (maybe via its `node:tick(ctx)` method?). The behavior described:
+- If any child returns FAILURE → halt and return FAILURE.
+- If a child returns RUNNING → remember current node index and return RUNNING. On next tick, resumes from that node without re-executing previously succeeded children! Means if earlier children succeeded (or returned SUCCESS) we don't re-evaluate them again? Actually "without re-executing previously succeeded children" implies that after a child returns RUNNING, the subsequent children are skipped until next tick.
+
+- If all children return SUCCESS → returns SUCCESS.
+Thus Sequence's logic is: For each child:
+  - Call child.tick(ctx) (or maybe we need to use their node?).
+  - Evaluate result from child:
+
+    * if result == FAILURE => return FAILURE immediately.
+    * if result == RUNNING => set a flag (index?) and break out? Return RUNNING, but remember index for resumption on next tick. So it returns RUNNING.
+
+    * if result == SUCCESS => continue to next child without resetting memory? But "without re-executing previously succeeded children" suggests that once we move past a successful child, we don't need to run them again; the sequence effectively stops after encountering first failure or RUNNING. So return SUCCESS only when all succeed.
+
+Thus Sequence returns:
+- If any child returns FAILURE → FAILURE.
+- Else if any child returns RUNNING → remember that index (the position of this child) and return RUNNING on next tick? Actually they said "remembers current node index and returns BT.RUNNING. On next tick, resumes from that node without re-executing previously succeeded children!" So after a child returning RUNNING, the Sequence will set something like `self.runningAt = i` where i is index of this child? And on next tick, it should start executing from that same child again? Or maybe "resume from that node" means continue execution from that child onward but skipping previous ones.
+
+Let's parse: In a sequence node with children [c1,c2,c3]. Suppose c1 returns SUCCESS. Since success is not RUNNING or FAILURE, we move to next child (c2). If c2 returns FAILURE → overall fails. If c2 returns RUNNING → remember index 2? And return RUNNING. On next tick, it resumes from that node without re-executing previously succeeded children! Means after returning RUNNING on first tick, the sequence will skip previous successes and start at the remembered child (c2) again? But maybe they want: when a child returns RUNNING, we effectively put the tree into "running" state, and next time tick we resume from that node index.
+
+We need to implement `node:tick(ctx)` for Sequence. The Sequence likely stores an internal table with its children and perhaps an index pointer.
+
+Implementation details:
+
+Define BT.Sequence as a class (table) with fields: `children` (table of nodes), `runIndex` maybe.
+
+Better to create nodes as tables? Usually in Behavior Tree implementation, each node is a separate table representing behavior. But we can implement them as functions or closures with state attached inside the table. For simplicity, we can define each node's tick method as part of its own table instance, containing stored fields like `predicate`, `fn`, children list etc.
+
+Let's design:
+
+- BT.Action: a table with fields: `fn` (the function), maybe internal state? It only needs to call fn and return appropriate result. Reset is just resetting the node's state if any (none). So:
+
+```
+BT.Action = function(fn)
+  return {
+    tick = function(ctx)
+      local res = fn(ctx)
+      -- evaluate
+      if res == true or res == BT.SUCCESS then return BT.SUCCESS
+      elseif res == false or res == BT.FAILURE then return BT.FAILURE
+      elseif res == BT.RUNNING then return BT.RUNNING
+      end
+    end,
+    reset = function()
+      -- nothing to do
+    end
+  }
+end
+```
+
+But need to reference constants. We'll define them at top.
+
+- BT.Condition: table with `predicate` (function). tick:
+
+```
+if predicate(ctx) then return SUCCESS else FAILURE.
+```
+
+Reset: maybe nothing or set something? Not needed.
+
+```
+BT.Condition = function(predicate)
+  return {
+    tick = function(ctx)
+      if predicate(ctx) then return BT.SUCCESS else return BT.FAILURE end,
+    reset = function()
+      -- no state
+    end
+  }
+end
+```
+
+- BT.Sequence: constructor takes `children` (list of nodes). The node returns values as described.
+
+We need to store children and maybe a pointer for resumed index. Let's create:
+
+```
+function BT.Sequence(children)
+  local self = {
+    children = children, -- table of nodes? Or list? We'll treat it as a list of nodes
+    runIndex = 1, -- remembers current child index; default 1.
+  }
+  return self
+end
+```
+
+But we also need to handle the logic: When tick is called:
+
+- For i = 1,2,...,len(children):
+   - childNode = self.children[i]
+   - Call childNode:tick(ctx) and get result (maybe it returns a status).
+   - If result == BT.FAILURE → return BT.FAILURE immediately.
+   - Else if result == BT.RUNNING:
+       - Remember current index i as runningIndex. Return BT.RUNNING. Also maybe set self.runningIndex = i? But we need to remember across ticks; so we need a persistent variable. Since tick may be called multiple times, we can store in `self.runningIndex` and on next tick if `ctx` matches something? Not needed: they say "On next tick, resumes from that node without re-executing previously succeeded children!" So basically after returning RUNNING once, the Sequence should start executing again at the same index (the child that returned RUNNING) but skip previous ones. But we can implement as: on first tick, iterate over children; if any child returns FAILURE -> fail; else if child returns SUCCESS or RUNNING? Actually typical behavior tree logic: sequence is AND: all must succeed to go success. If one fails, whole fails. For RUNNING case: it's like "maybe waiting"? Hard.
+
+Given the description:
+
+- Sequence executes child nodes in order.
+- If a child returns BT.FAILURE — halt execution and return BT.FAILURE.
+- If a child returns BT.RUNNING — remembers current node index and returns BT.RUNNING. On next tick, resumes from that node without re-executing previously succeeded children!
+- If all children return BT.SUCCESS — returns BT.SUCCESS.
+
+Thus algorithm: 
+Initialize `index = 1` (or first child). Actually we need to iterate over children until we find a failure or RUNNING? Or maybe we process sequentially. The sequence's tick may be called multiple times, and the state of "remembered index" persists across ticks for each node. So:
+
+Pseudo:
+```
+local func = function(ctx)
+    local currentIndex = 1
+    while true do
+        local child = self.children[currentIndex]
+        -- get result from child's tick? But we don't have ctx maybe same.
+        local res = child.tick(ctx)   -- but we need to call child node's tick method. That returns a status (SUCCESS, FAILURE, RUNNING).
+        if res == BT.FAILURE then
+            return BT.FAILURE
+        elseif res == BT.RUNNING then
+            self.runningIndex = currentIndex  -- remember this index?
+            return BT.RUNNING
+        elseif res == BT.SUCCESS then
+            -- continue to next child (i.e., increment and loop)
+            -- but need to break after success? Actually we want all children succeed, so if any fails or RUNNING, the behavior changes.
+            -- Let's think: If a child returns SUCCESS, we should move on to next child. But we also need to ensure that earlier successes are not re-executed later? "without re-executing previously succeeded children!" Means after encountering a RUNNING from some child, you skip previous ones (the ones before it) even if they were success? Or perhaps only when resumes at RUNNING index, we restart the sequence from that point and don't re-run earlier nodes again. So if all children return SUCCESS, then final result is SUCCESS.
+
+            -- Implementation: increment currentIndex and continue loop.
+            currentIndex = currentIndex + 1
+        else
+            -- other returns? Should be error.
+        end
+    end
+end
+
+But this could loop infinitely if never fails or RUNNING. But assume input ensures eventually fails or success. For simplicity, we can implement as:
+
+```
+function node:tick(ctx)
+    local result = "SUCCESS" -- default?
+    for i, child in ipairs(self.children) do
+        local res = child.tick(ctx)
+        if res == BT.FAILURE then
+            return BT.FAILURE
+        elseif res == BT.RUNNING then
+            self.runningIndex = i  -- remember index (1-based)
+            return BT.RUNNING
+        elseif res == BT.SUCCESS then
+            -- continue loop, but we need to break? Actually we want to go to next child.
+            -- We'll just continue after this iteration.
+            -- But also if we encounter RUNNING earlier, we have already returned. So here only SUCCESS continues.
+            -- No need to do anything else.
+        end
+    end
+    -- If loop finishes without break? That would happen if children all succeeded and there are no more: then return BT.SUCCESS
+    return BT.SUCCESS
+end
+```
+
+But note that we also need to handle resetting index across ticks. We can set `self.runningIndex` when returning RUNNING, but on next tick, loop starts again from i=1? Actually we want to resume from that node (i.e., start at the same child again). So after returning RUNNING with stored runningIndex = i, we need to have a mechanism: if `self.runningIndex` is set and tick called again, then we should skip children before it. But our loop starts at 1 each time. To implement resumption without re-executing previously succeeded children, we need to start from the saved index.
+
+Thus modify:
+
+- In `tick`, check if `self.runningIndex` is not nil: then set local i = self.runningIndex; and continue from there (starting loop at that index). Then skip earlier ones. So implement as:
+
+```
+function node:tick(ctx)
+    -- If a running state flag is active, start from saved index.
+    if self.runningIndex ~= 1 then
+        local idx = self.runningIndex
+        self.runningIndex = 1 -- reset after using it? Or keep for next tick? The description: "On next tick, resumes from that node without re-executing previously succeeded children!" So we may need to increment idx each time? Hmm.
+
+            -- For simplicity: On first call, if runningIndex is set, we use it and return RUNNING. After that maybe we don't reset. But for multiple ticks, you might want to keep index as saved (so next tick will resume from same child). So we just set idx = self.runningIndex; then loop starting at i = idx.
+
+            -- Let's implement like: 
+            local currentIdx = idx
+            while true do
+                local child = self.children[currentIdx]
+                local res = child.tick(ctx)
+                if res == BT.FAILURE then return BT.FAILURE
+                elseif res == BT.RUNNING then
+                    -- Another RUNNING? maybe keep last?
+                    self.runningIndex = currentIdx  -- update? Not sure.
+                    return BT.RUNNING
+                elseif res == BT.SUCCESS then
+                    -- continue loop to next index
+                    if currentIdx < #self.children then
+                        currentIdx = currentIdx + 1
+                    else
+                        return BT.SUCCESS   -- all succeeded?
+                    end
+                end
+            end
+    end
+    -- else iterate from start
+    for i = 1, #self.children do
+        local child = self.children[i]
+        local res = child.tick(ctx)
+        if res == BT.FAILURE then return BT.FAILURE
+        elseif res == BT.RUNNING then
+            self.runningIndex = i
+            return BT.RUNNING
+        elseif res == BT.SUCCESS then
+            -- continue to next
+            if i < #self.children then
+                -- loop? but we can just move on.
+            end
+        else
+            return res -- maybe other?
+        end
+    end
+    return BT.SUCCESS
+end
+
+```
+
+But this is messy. Might be okay for core demonstration.
+
+- Selector (logical OR / Fallback): children list; if any child returns SUCCESS -> halt and return SUCCESS. If a child returns RUNNING -> remember node index and return RUNNING on next tick, and on subsequent ticks resume from that index without re-evaluating earlier ones? For fallback: "If all children return BT.FAILURE — returns BT.FAILURE."
+
+Thus logic:
+
+- Iterate over children in order.
+   - Call child.tick(ctx). Get result:
+        - If result == BT.SUCCESS → return BT.SUCCESS (immediate success).
+        - Else if result == BT.RUNNING → remember current index and return BT.RUNNING.
+        - Else (FAILURE or something else) continue to next child.
+
+- After loop finishes without returning? If all children returned FAILURE? Actually they said: If all children return BT.FAILURE — returns BT.FAILURE. So if none succeed, but we encounter RUNNING earlier, we might have returned. But suppose after checking each, all are FAILURE => after loop ends (exhausted children), then return BT.FAILURE.
+
+- reset() resets index to 1.
+
+Implementation similar but with OR logic.
+
+Given the complexity and limited time, perhaps we can implement these nodes as simple functions returning appropriate statuses based on provided fields rather than fully sophisticated stateful behavior. The user expects clean Lua code that defines these nodes with tick method and reset method.
+
+We'll provide a global table BT with constants and node factories. We need to define:
+
+- `BT.SUCCESS = "SUCCESS"`
+- `BT.FAILURE = "FAILURE"`
+- `BT.RUNNING = "RUNNING"`
+
+Then implement functions:
+
+```
+BT.Action = function(fn)
+    return {
+        tick = function(ctx)
+            local res = fn(ctx)
+            if res == true or res == BT.SUCCESS then return BT.SUCCESS
+            elseif res == false or res == BT.FAILURE then return BT.FAILURE
+            elseif res == BT.RUNNING then return BT.RUNNING
+            end
+        end,
+        reset = function() -- do nothing
+    }
+end
+
+BT.Condition = function

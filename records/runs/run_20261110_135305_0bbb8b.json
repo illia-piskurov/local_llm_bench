@@ -1,0 +1,154 @@
+{
+  "id": "run_20261110_135305_0bbb8b",
+  "host_id": "70ccb4981862",
+  "model_key": "coder-lfm3-1.7b",
+  "model_name": "Coder Lfm3 1.7B",
+  "quantization": "Q4_K_M",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "coder-lfm3-1.7b",
+      "display_name": "Coder Lfm3 1.7B",
+      "architecture": "lfm3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": 4,
+      "size_bytes": 1099629841,
+      "params_string": "1.7B",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": "AJ-Gonzalez"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 13:53:05",
+  "completed_at": "2026-11-10 14:24:15",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-10 14:01:35",
+      "passed": 3,
+      "total": 27,
+      "failures": [
+        "push_print: unexpected exception/timeout: IndexError: list index out of range",
+        "add: expected ['5'], got []",
+        "sub_order: expected ['7'], got []",
+        "mul: unexpected exception/timeout: IndexError: list index out of range",
+        "div_truncate: expected ['3'], got []",
+        "div_by_zero: expected error, but execution succeeded ([])",
+        "dup: unexpected exception/timeout: IndexError: list index out of range",
+        "swap: expected ['1'], got []",
+        "pop: expected ['1'], got []",
+        "comments_and_blank_lines: expected ['7'], got []",
+        "multiple_prints: expected ['1', '2', '3'], got []",
+        "print_does_not_pop: unexpected exception/timeout: IndexError: list index out of range",
+        "negative_numbers: expected ['2'], got []",
+        "stack_underflow_add: expected error, but execution succeeded ([])",
+        "complex_chain: expected ['10'], got []",
+        "unconditional_jump_skips_code: expected ['3'], got []",
+        "jz_taken_when_zero: expected ['0'], got []",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: line 4: PRINT on empty stack",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: line 2: JNZ has no matching label",
+        "jnz_not_taken_when_zero: expected ['0'], got []",
+        "countdown_loop: expected ['5', '4', '3', '2', '1'], got ['5']",
+        "count_up_loop: expected ['1', '2', '3', '4', '5'], got []",
+        "jump_to_undefined_label: expected error, but execution succeeded ([])",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: ValueError: line 3: PRINT on empty stack"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-10 14:04:28",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[TRUNCATED] vm/level3: unclosed code fence in the response; raise the context length / max tokens in the server's model settings"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-10 14:06:24",
+      "passed": 0,
+      "total": 10,
+      "failures": [
+        "no_dependencies: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+        "simple_chain: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+        "diamond: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+        "multiple_roots: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+        "single_task: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+        "self_cycle: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+        "two_node_cycle: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+        "long_cycle: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+        "cycle_with_extra_nodes: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+        "wide_graph: unexpected exception/timeout: NameError: name 'deque' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-10 14:08:25",
+      "passed": 3,
+      "total": 6,
+      "failures": [
+        "simple_chain: expected 9, got 4",
+        "diamond_pick_longer_branch: expected 12, got 10",
+        "wide_graph: expected 19, got 10"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-10 14:01:32",
+      "stats": {
+        "input_tokens": 1288,
+        "total_output_tokens": 20984,
+        "reasoning_output_tokens": 4970,
+        "tokens_per_second": 41.53180302418466,
+        "time_to_first_token_seconds": 1.760184,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-10 14:06:22",
+      "stats": {
+        "input_tokens": 175,
+        "total_output_tokens": 5258,
+        "reasoning_output_tokens": 4977,
+        "tokens_per_second": 46.32518201646036,
+        "time_to_first_token_seconds": 0.379286,
+        "model_load_time_seconds": null
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-10 14:08:24",
+      "stats": {
+        "input_tokens": 565,
+        "total_output_tokens": 5788,
+        "reasoning_output_tokens": 4962,
+        "tokens_per_second": 48.45166090736304,
+        "time_to_first_token_seconds": 1.046788,
+        "model_load_time_seconds": null
+      }
+    }
+  ]
+}

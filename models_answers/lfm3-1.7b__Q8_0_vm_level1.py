@@ -1,0 +1,79 @@
+def run(program: str) -> list[str]:
+    output = []
+    stack = []
+    lines = program.splitlines()
+    for idx, raw_line in enumerate(lines, start=1):
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith('#'):
+            continue
+        
+        parts = raw_line.split()
+        cmd = parts[0].upper()  # normalize to uppercase
+        
+        if cmd == 'PUSH':
+            if len(parts) < 2:
+                raise ValueError(f"Line {idx}: PUSH requires an argument (e.g., PUSH <n>)")
+            try:
+                n = int(parts[1])
+            except ValueError:
+                raise ValueError(f"Line {idx}: PUSH expects integer, got '{parts[1]}'")
+            stack.append(n)
+        
+        elif cmd == 'POP':
+            if len(stack) == 0:
+                raise IndexError(f"Line {idx}: POP from empty stack")
+            stack.pop()
+        
+        elif cmd == 'ADD':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: ADD needs two operands, got {len(stack)} on stack")
+            b = stack.pop()   # topmost
+            a = stack.pop()   # next
+            stack.append(a + b)
+        
+        elif cmd == 'SUB':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: SUB needs two operands, got {len(stack)} on stack")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+        
+        elif cmd == 'MUL':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: MUL needs two operands, got {len(stack)} on stack")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a * b)
+        
+        elif cmd == 'DIV':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: DIV needs two operands, got {len(stack)} on stack")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise ZeroDivisionError(f"Line {idx}: Division by zero (b = {b})")
+            stack.append(a // b)
+        
+        elif cmd == 'DUP':
+            if len(stack) == 0:
+                raise IndexError(f"Line {idx}: DUP on empty stack")
+            top = stack.pop()
+            stack.append(top)
+        
+        elif cmd == 'SWAP':
+            if len(stack) < 2:
+                raise ValueError(f"Line {idx}: SWAP needs two values, got {len(stack)} on stack")
+            b = stack.pop()   # top
+            a = stack.pop()   # next
+            stack.append(b)
+            stack.append(a)
+        
+        elif cmd == 'PRINT':
+            if len(stack) == 0:
+                raise IndexError(f"Line {idx}: PRINT from empty stack")
+            value = stack[-1]
+            output.append(str(value))
+        else:
+            raise ValueError(f"Unknown command '{cmd}' at line {idx}")
+    
+    return output

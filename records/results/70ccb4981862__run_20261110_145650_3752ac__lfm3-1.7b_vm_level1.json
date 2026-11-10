@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_145650_3752ac",
+  "host_id": "70ccb4981862",
+  "model": "lfm3-1.7b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-10 14:58:32",
+  "passed": 17,
+  "total": 18,
+  "failures": [
+    "dup: unexpected exception/timeout: ValueError: Line 3: ADD needs two operands, got 1 on stack"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

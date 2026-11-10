@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261110_163600_ba4bac",
+  "host_id": "70ccb4981862",
+  "model": "google/gemma-4-e2b",
+  "benchmark": "lua_game_ai",
+  "level": "level3",
+  "tested_at": "2026-11-10 17:06:27",
+  "stats": {
+    "input_tokens": 2125,
+    "total_output_tokens": 2547,
+    "reasoning_output_tokens": 527,
+    "tokens_per_second": 19.630516920484993,
+    "time_to_first_token_seconds": 2.742,
+    "model_load_time_seconds": null
+  }
+}

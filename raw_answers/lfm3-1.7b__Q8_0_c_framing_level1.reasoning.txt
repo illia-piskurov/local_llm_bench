@@ -1,0 +1,183 @@
+We need to implement a fixed-size ring buffer in C99. Requirements:
+- Buffer size: 512 bytes (#define BUFFER_SIZE 512 or static array of 512 elements).
+- No dynamic memory allocation (static only). Use static memory.
+- Pure C99, include <stdint.h>.
+- Functions:
+  - void ringbuf_init(void) — initializes or resets buffer to empty initial state.
+  - int ringbuf_push(uint8_t byte) — pushes one byte. Returns 0 on success, -1 if full (already contains 512 bytes).
+  - int ringbuf_pop(void) — pops one byte following FIFO. Returns byte value on success, or -1 if buffer empty.
+  - int ringbuf_available(void) — returns current number of bytes stored (0 to 512).
+  - int ringbuf_free_space(void) — returns remaining free space in buffer (512 - available).
+
+We need to think about the internal representation. A simple way: an array of uint8_t[BUFFER_SIZE] and two indices for head and tail? But it's a ring buffer, so we can just use a circular array with write pointer and read pointer.
+
+Let's define:
+  static uint8_t buf[BUFFER_SIZE];
+  // We'll maintain 'head' index (next to remove) and 'tail' index (next to write). 
+But typical FIFO: push adds at tail, pop removes from head? Need to decide order. Usually a ring buffer can be implemented as:
+   - buffer array of size N.
+   - read_index (or front) points to the next element to pop (oldest).
+   - write_index (or back) points to the next position to push.
+
+Alternatively we can use simple: just keep count of filled elements. For push, if count == BUFFER_SIZE -> return -1; else increment count and store byte at index = (some pointer). For pop, remove from front and decrement count.
+
+Simplify: Use a circular buffer with head and tail indices. Let's define:
+   - static uint8_t *buf;
+   - size_t write_idx = 0;
+   - size_t read_idx = 0;
+   - size_t count = 0; // or we can compute as (write_idx) if not wrapping? But better maintain count.
+
+However, when using ring buffer, we need to handle wrap-around. Typically:
+   - push: write at (read_idx) then advance read_idx (or write_idx?) Let's define typical "ring queue" where head is for pop and tail is for push.
+Let me design:
+
+We can have two indices: front (for pop, the next element to be removed), and rear (for push, the next empty slot). Initially both at 0.
+
+push(byte):
+   if (count == BUFFER_SIZE) return -1; // full
+   buf[rear] = byte;
+   rear = (rear + 1) % BUFFER_SIZE;
+   count++;
+   return 0;
+
+pop():
+   if (count == 0) return -1; // empty
+   int val = buf[front];
+   front = (front + 1) % BUFFER_SIZE;
+   count--;
+   return val;
+
+But careful: after push and pop, indices need to be consistent. We can maintain both front and rear as the next positions to write/pop respectively.
+
+Alternatively simpler: just use a single index for current position? But we need to support both push and pop in FIFO order. Could implement using an array of 512 and two pointers (head and tail) and count = distance from head to tail in circular manner? That might be more complicated but doable.
+
+Given that we only have functions: init, push, pop, available, free_space. For available() returns number of bytes stored. So we need to keep a count variable anyway.
+
+Let's implement:
+
+#define BUFFER_SIZE 512
+
+static uint8_t buffer[BUFFER_SIZE]; // static array
+static unsigned char *arr? Actually buffer is an array; we can treat as static uint8_t buffer[BUFFER_SIZE]; We'll also have:
+   unsigned int front = 0;
+   unsigned int rear = 0;
+   unsigned int count = 0;
+
+But careful: In C99, we need to declare these inside the .c file. They will be static variables.
+
+Define:
+
+static uint8_t buffer[BUFFER_SIZE];
+
+But we also need two indices; we can define them as static unsigned char? Let's do:
+
+static unsigned int front = 0;
+static unsigned int rear = 0;
+static unsigned int count = 0;
+
+Now push:
+int ringbuf_push(uint8_t byte) {
+   if (count == BUFFER_SIZE) return -1;
+   buffer[rear] = byte;
+   rear = (rear + 1) % BUFFER_SIZE;
+   count++;
+   return 0;
+}
+
+But wait: this will place the new element at current rear and then move rear. However, what about front? When we push after some pops? Actually we haven't defined front for pop. Let's see pop:
+
+int ringbuf_pop(void) {
+   if (count == 0) return -1;
+   int val = buffer[front];
+   front = (front + 1) % BUFFER_SIZE;
+   count--;
+   return val;
+}
+
+But note: In the above, after push we only updated rear. The "front" index remains unchanged until pop is called. But typical FIFO: elements that have been pushed but not yet popped should be at buffer[rear] and older ones at buffer[?]. However with this design, front always points to oldest element? Let's think.
+
+Suppose we start empty (count=0). Initially front=0, rear=0. push(1): count=0 !=512; buffer[rear]=buffer[0]=1; rear=(0+1)%512=1; count=1. Now buffer: [1,?,...]. pop(): count>0 => val = buffer[front]=buffer[0]=1; front=(0+1)%512=1; count-- => 0. So after one push and one pop, the element is removed from front (index0) and we set front to index1. That seems fine: The next push should go at rear which is now 1? But we have moved rear to 1 earlier, but after push we incremented rear, so after pop, front=1, count=0. Now if we do another push: count==0 !=512; buffer[rear]=buffer[1] = new byte; rear=(1+1)%512=2; count++ =>1. So now we have buffer[1]=newbyte.
+
+But note that the "front" index is 1, which points to the next element to be popped (the oldest remaining). At this moment after these two pushes and one pop? Actually let's step through entire sequence:
+
+Initialize: front=0, rear=0, count=0.
+push(5): buffer[0]=5; rear=1; count=1.
+pop(): val = buffer[front]=buffer[0]=5; front=(0+1)%512=1; count-- =>0. Return 5.
+
+Now state: front=1, rear=1 (since after push we set rear to 1 earlier? Wait after first push, rear=1. After pop, we didn't modify rear. So now rear=1 still. But buffer[rear]=buffer[1] is currently whatever was there before (maybe zero). That's okay.
+
+Now push(6): count==0? Actually count=0. Condition: count == BUFFER_SIZE? No. So do buffer[rear]=buffer[1]=6; rear=(1+1)%512=2; count++ =>1. Now front=1, rear=2, count=1.
+
+Now pop(): val = buffer[front]=buffer[1]=6; front=(1+1)=2; count--=>0. Return 6.
+
+So after three operations (push5, pop returns5; push6, pop returns6). At the end we have front=2, rear=2? Let's check: after second push (6) we had rear=2. After second pop we set front=2 and count=0. So now buffer[front] would be index 2 which hasn't been written yet; it might contain old leftover from previous pushes if any but in our sequence there were no pushes at that index before. That's okay.
+
+Thus this design works as a simple queue: push writes to rear, front points to the oldest element currently present (i.e., the next to be removed). The order of removal is front. After we pop, we advance front, leaving the new back to write position unchanged? But note that after pushing at rear and then later wrapping around, we need to ensure we don't overwrite data prematurely.
+
+Let's examine a scenario where buffer fills: Suppose we push 512 times. Each push increments count and writes to buffer[rear] and updates rear=(rear+1)%size. After 512 pushes, rear will have gone through all indices, but front also started at 0? Actually after many pushes without pops, front remains 0 because no pops occurred; but we need to be able to pop eventually: when count==512 (full), push returns -1.
+
+But our algorithm for push only checks if count == BUFFER_SIZE. Since initially count=0 and increments each push. After 512 pushes, count becomes 512, rear will have advanced around the circle 512 times. At that point, buffer[rear] is being written to? Let's simulate: On first push, we wrote at index0 (rear=0) -> after update rear=1; second push writes at index1 -> rear=2; ... After push of i-th byte, we write at index(i-1). So after 512 pushes, we have written bytes to indices 0..511. rear becomes (0+512)%512 = 0? Actually starting from rear=0: after first push rear=1; second push rear=2... after 511st push rear=512%512 = 0? Wait careful: Starting with rear=0, then each push increments rear by 1 mod size. After the k-th push (k from 1 to 512), rear becomes k % size? Let's compute:
+
+- Before any pushes: rear=0.
+- After 1st push: rear = (0+1)%512 = 1.
+- After 2nd: rear = (1+1)=2.
+...
+- After n-th push: rear = (n%512?) Actually after each increment, we add one. So after 511 pushes, rear=511? Wait:
+
+Let's compute exactly:
+Initialize rear=0.
+Loop for i in 0..BUFFER_SIZE-1:
+   buffer[rear] = ... ; 
+   rear = (rear + 1) % BUFFER_SIZE;
+
+After first iteration (i=0): write at index0; rear becomes 1.
+Second: write at index1; rear becomes 2.
+...
+Iteration 511: write at index510; rear becomes 0? Let's see after writing to index511, we would set rear = (511+1)%512 = 0. So after 512 pushes (i from 0..511), the last write is at buffer[511]; after that, rear= (511+1)%512 = 0.
+
+Thus after full buffer (count==BUFFER_SIZE) and after pushing all bytes, rear points to index0 again. front remains 0 as well because no pops. So both front and rear are 0. Then next push should return -1 because count == BUFFER_SIZE; we check before writing anyway. Good.
+
+Now pop when buffer is not full: Suppose we have some elements but less than size, we can pop from front index=0? Actually after pushing all bytes and not popping any, front stays at 0 while rear also points to 0 (wrapped). This seems weird: The front should be the earliest element. But if we never popped, then all pushes have been written at indices sequentially. In that case, buffer[front] = buffer[0] is still valid and holds first pushed byte? However after many pushes (overwrapping), the mapping of front to oldest may not hold: For example, after pushing 500 bytes without popping, rear=500%512 = 500. The buffer contains values at indices [0..499] and then also indices 501? Actually we only wrote up to index 499 because push writes at current rear before increment. Let's track:
+
+Start with front=0, rear=0.
+Push byte1: write buffer[0]=b1; rear becomes 1.
+Push byte2: write buffer[1]=b2; rear=2.
+...
+After i pushes (i from 1 to N):
+   buffer[i-1] = bi;
+   rear = i mod size.
+
+Thus after k pushes, we have written bytes in indices 0..k-1 (if k <= size). If k > size, it wraps: e.g., after 512 pushes, we wrote at indices 0..511. front remains 0 but now buffer[0] still holds the first pushed byte? But that's not correct for FIFO because after many pushes and no pops, the oldest element (first in) is at index0? Actually yes: push order writes sequentially; after wrapping around, we continue writing to indices 0 again. In a circular buffer, when you write beyond capacity without popping, earlier elements that are overwritten become lost. That's not good for queue semantics. But our push should only be called until it reaches full and then return -1. So we never exceed count = size before checking? We check count == BUFFER_SIZE before writing. So as long as we have count < size, we will write to a free slot that is currently unread (since front hasn't been advanced). But after many pushes without pops, the buffer may be full but still not returning -1? Wait: we only allow up to count = size-1 pushes before pushing fails. So if we push exactly size bytes and it succeeds for the last one? Actually condition is "if (count == BUFFER_SIZE) return -1". Since after 511 pushes, count=511 (<512). On the 512th push, count becomes 512 after increment? Let's check logic: In our earlier code we wrote:
+
+int ringbuf_push(uint8_t byte) {
+   if (count == BUFFER_SIZE) return -1;
+   buffer[rear] = byte;
+   rear = (rear + 1) % BUFFER_SIZE;
+   count++;
+   return 0;
+}
+
+So before writing, we check if count already equals size. At that point, count is number of elements currently stored. When count == 512, buffer is full; but after we push the 512th element? Actually you can't store 512 elements without exceeding capacity because max distinct positions are 512. So when count is 511 and we want to push the 512th element, condition (count == BUFFER_SIZE) would be false because count=511. Then we write buffer[rear] = byte; rear++; count++. After this increment, count becomes 512. But now after writing we have stored one more element making total elements equal to count? This seems like the count is increased after adding, so after pushing a full buffer of size N, count goes from N-1 to N, and we have N elements stored (since indices are filled). So at that point push returns 0 for success. But our earlier condition should perhaps check after writing? Let's analyze: We want ringbuf_push to return -1 when the buffer is full (already contains 512 bytes), i.e., when there are already 512 bytes before pushing a new one. That means count == BUFFER_SIZE before push, not after. So we need to check if count == BUFFER_SIZE at beginning of function. If yes -> full, return -1. But our code increments count after writing? Actually in the above, we wrote and then incremented count. That would cause count to become size+1 after a successful push when it was already full? Let's simulate: Suppose buffer currently holds 512 elements (count==512). At start of push, check count == size -> true, return -1 without writing. So we never allow pushing beyond capacity.
+
+Thus condition before write is correct: if count == BUFFER_SIZE => return -1; else perform write and increment.
+
+But in our earlier simulation for full buffer case, after 511 pushes, count=511 (<512). push next (the 512th) passes check -> writes to some rear position, then increments count to 512. So we will have stored exactly 512 elements: the ones from index0..index511? The positions are filled accordingly but note that front is still at 0 and rear after increment becomes (previous_rear+1). After many pushes without pops, the buffer may contain all indices up to some point; but because we never pop, count equals number of writes made. So after writing to index0 again on wrap? Let's see: Starting from rear=0. push #1 -> write at 0; rear=1; count=1.
+push #2 -> write at 1; rear=2; count=2.
+...
+After 512 pushes, the last write will be at buffer[511] (since after writing index511, we set rear to (511+1)%512 = 0). So final state: front=0 (not advanced), rear=0. The buffer contains values in indices [0..511]. However, note that there is a "hole"? Let's check: After 512 pushes, the array holds each byte at unique index? For i from 0 to 511, buffer[i] = push(i). So yes each slot filled. That's okay.
+
+Now count=512 (size). If we then call pop() when count == size? Our pop function will first check: if (count == 0) return -1; else get front and increment front and decrement count. But note that at this state, there are elements in the buffer but no "free" slot for new pushes because rear=0 (same as front). However we can still pop from front? The front index is 0 and holds first pushed byte. Popping removes it and increments front to 1. That's fine.
+
+Thus our push implementation works.
+
+Now pop: Implementation:
+
+int ringbuf_pop(void) {
+   if (count == 0) return -1;
+   int val = buffer[front];
+   front = (front + 1) % BUFFER_SIZE;
+   count--;
+   return val;
+}
+
+But we must be careful about using count variable after decrement; but we also need to update count before or after? In above, we wrote count--.

@@ -13,38 +13,29 @@ void ringbuf_init(void) {
 }
 
 int ringbuf_push(const uint8_t *data, int len) {
-    if ((head + len) % BUFFER_SIZE >= tail) {
-        // Buffer can hold all data
-        for (int i = 0; i < len; ++i) {
-            buffer[head] = data[i];
-            head = (head + 1) % BUFFER_SIZE;
-        }
-        return len;
-    } else {
-        // Buffer overflow, discard excess bytes
-        int to_copy = BUFFER_SIZE - tail;
-        for (int i = 0; i < to_copy && i < len; ++i) {
-            buffer[head] = data[i];
-            head = (head + 1) % BUFFER_SIZE;
-        }
-        return to_copy; // Return number of bytes actually copied
+    if (ringbuf_available() + len > BUFFER_SIZE) {
+        len = BUFFER_SIZE - ringbuf_available();
+        if (len <= 0) return -1; // buffer full
     }
+    
+    for (int i = 0; i < len; ++i) {
+        buffer[head] = data[i];
+        head = (head + 1) % BUFFER_SIZE;
+    }
+    return len;
 }
 
-int ringbuf_pop(uint8_t *data, int len) {
-    if (tail == head) {
-        return -1; // Buffer is empty
+void ringbuf_advance(size_t n) {
+    if (n >= ringbuf_available()) {
+        tail = head;
+    } else {
+        tail = (tail + n) % BUFFER_SIZE;
     }
-    int to_copy = len < (head - tail ? len : (head - tail));
-    for (int i = 0; i < to_copy; ++i) {
-        data[i] = buffer[tail];
-        tail = (tail + 1) % BUFFER_SIZE;
-    }
-    return to_copy;
 }
 
 int ringbuf_available(void) {
-    return (head - tail + BUFFER_SIZE) % BUFFER_SIZE;
+    size_t diff = (head >= tail) ? (head - tail) : (BUFFER_SIZE - (tail - head));
+    return diff;
 }
 
 int ringbuf_free_space(void) {
@@ -54,56 +45,45 @@ int ringbuf_free_space(void) {
 #include <stdint.h>
 
 #define MAGIC_BYTE 0xAA
-
-int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {
-    size_t i = 0;
-    while (i + 4 <= stream_len) {
-        if (stream[i] == MAGIC_BYTE && ringbuf_available() >= (size_t)(3 + stream[i+1] + 1)) {
-            uint8_t payload_length = stream[i+1];
-            uint8_t checksum = stream[i+2 + payload_length];
-
-            // Verify checksum
-            uint8_t calculated_checksum = 0;
-            for (int j = i + 2; j < i + 2 + payload_length; ++j) {
-                calculated_checksum ^= stream[j];
-            }
-            if (calculated_checksum != checksum) {
-                i += payload_length + 4;
-                continue;
-            }
-
-            // Valid packet found, copy payload
-            for (int j = 0; j < payload_length; ++j) {
-                out_payload[j] = stream[i+2+j];
-            }
-            *out_type = stream[i+1];
-            return payload_length;
-        } else {
-            i++;
-        }
-    }
-    return -1; // No valid packet found
-}
-
-void feed_bytes(const uint8_t *data, int len) {
-    int copied = ringbuf_push(data, len);
-    if (copied < len) {
-        // Discard remaining bytes that didn't fit into the buffer
-        for (int i = copied; i < len; ++i) {
-            ringbuf_pop();
-        }
-    }
-}
+#define PAYLOAD_START 3
 
 int get_next_packet(uint8_t *out_payload, int *out_type) {
-    uint8_t payload[BUFFER_SIZE];
-    int len = decode_packet(payload, BUFFER_SIZE, out_payload, out_type);
-    if (len >= 0) {
-        // Discard the packet from the buffer
-        for (int i = 0; i < len + 4; ++i) {
-            ringbuf_pop();
+    while (ringbuf_available() >= 4) { // need at least magic + type + len + checksum
+        if (buffer[tail] != MAGIC_BYTE) {
+            ringbuf_advance(1);
+            continue; // not magic byte, skip to next byte
         }
+        
+        uint8_t type = buffer[tail + 1];
+        uint8_t len = buffer[tail + 2];
+        size_t payload_start = tail + PAYLOAD_START;
+        
+        if (payload_start + len > ringbuf_available()) {
+            // incomplete packet, wait for more data
+            return -1;
+        }
+        
+        uint8_t checksum = buffer[ringbuf_available() == BUFFER_SIZE ? tail : tail + ringbuf_available() - 1];
+        
+        uint8_t calculated_checksum = 0;
+        for (size_t j = payload_start; j < payload_start + len; ++j) {
+            calculated_checksum ^= buffer[j];
+        }
+        
+        if (calculated_checksum != checksum) {
+            // invalid checksum, skip to next candidate
+            ringbuf_advance(1);
+            continue;
+        }
+        
+        // valid packet found, pop it from the ring buffer
+        for (size_t j = 0; j < len; ++j) {
+            out_payload[j] = buffer[payload_start + j];
+        }
+        *out_type = type;
+        ringbuf_advance(4 + len); // advance head past this packet
+        return len;
     }
-    return len;
+    return -1; // no complete packet found yet
 }
 ```

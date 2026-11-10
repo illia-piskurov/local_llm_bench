@@ -1,198 +1,178 @@
-import sys
-
 def run(program: str) -> list[str]:
     """
-    Интерпретирует программу стекового языка с поддержкой меток и условных переходов.
-
-    Args:
-        program: Многострочный текст программы.
-
-    Returns:
-        Список строк, которые были выведены функцией PRINT.
+    Interprets a stack-based program and returns a list of printed output strings,
+    supporting conditional jumps and labels.
     """
-    lines = program.split('\n')
+    lines = program.strip().split('\n')
     stack = []
     output = []
-
-    # 1. Предварительная обработка: Собираем все метки и их номера строк
     labels = {}
-    for i, line in enumerate(lines):
+    
+    i = 0
+    while i < len(lines):
         line_num = i + 1
-        parts = line.split()
-        if parts and parts[0] == "LABEL":
-            label_name = parts[1]
-            # Метки должны быть уникальными
-            labels[label_name] = line_num
+        raw_line = lines[i]
+        
+        # Clean the line: remove leading/trailing whitespace and ignore comments/empty lines
+        line = raw_line.strip()
 
-    # 2. Исполнение с учетом управления потоком (PC)
-    pc = 0  # Program Counter (индекс текущей строки)
-
-    while pc < len(lines):
-        line = lines[pc].strip()
-        line_num = pc + 1
-
-        # Игнорировать пустые строки и комментарии
-        if not line or line.startswith('#'):
-            pc += 1
+        if not line or line.startswith("#"):
+            i += 1
             continue
 
         parts = line.split()
         if not parts:
-            pc += 1
+            i += 1
             continue
 
-        command = parts[0]
-        args = parts[1:]
+        instruction = parts[0].upper()
 
         try:
-            # --- Стандартные стековые операции ---
-            if command == "PUSH":
-                if len(args) != 1:
-                    raise ValueError("Недостаточно аргументов для PUSH")
-                value = int(args[0])
+            if instruction == "PUSH":
+                if len(parts) != 2:
+                    raise ValueError("PUSH requires one argument (number).")
+                value = int(parts[1])
                 stack.append(value)
 
-            elif command == "POP":
+            elif instruction == "POP":
                 if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (POP)")
+                    raise IndexError(f"POP failed: Stack is empty at line {line_num}.")
                 stack.pop()
 
-            elif command == "PRINT":
-                if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (PRINT)")
-                print(stack[-1])
-                output.append(str(stack[-1]))
-
-            # --- Бинарные операции ---
-            elif command in ("ADD", "MUL"):
+            elif instruction == "ADD":
                 if len(stack) < 2:
-                    raise IndexError(f"Ошибка на строке {line_num}: Недостаточно элементов для {command}")
-                
+                    raise IndexError(f"ADD failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
                 b = stack.pop()
                 a = stack.pop()
-                
-                if command == "ADD":
-                    stack.append(a + b)
-                elif command == "MUL":
-                    stack.append(a * b)
+                stack.append(a + b)
 
-            elif command in ("SUB", "DIV"):
+            elif instruction == "SUB":
                 if len(stack) < 2:
-                    raise IndexError(f"Ошибка на строке {line_num}: Недостаточно элементов для {command}")
+                    raise IndexError(f"SUB failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()  # b is the subtrahend
+                a = stack.pop()  # a is the minuend
+                stack.append(a - b)
 
-                b = stack.pop()  # Операнд, который идет первым в аргументах
-                a = stack.pop()  # Операнд, который идет вторым в аргументах
+            elif instruction == "MUL":
+                if len(stack) < 2:
+                    raise IndexError(f"MUL failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()
+                a = stack.pop()
+                stack.append(a * b)
 
-                if command == "SUB":
-                    result = a - b
-                    stack.append(result)
-                elif command == "DIV":
-                    if b == 0:
-                        raise ZeroDivisionError(f"Ошибка на строке {line_num}: Деление на ноль")
-                    result = a // b
-                    stack.append(result)
+            elif instruction == "DIV":
+                if len(stack) < 2:
+                    raise IndexError(f"DIV failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
+                b = stack.pop()  # Divisor
+                a = stack.pop()  # Dividend
 
-            # --- Управление стеком и потоком ---
-            elif command == "DUP":
+                if b == 0:
+                    raise ZeroDivisionError(f"DIV failed: Division by zero at line {line_num}.")
+                
+                # Integer division
+                result = int(a / b) 
+                stack.append(result)
+
+            elif instruction == "DUP":
                 if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (DUP)")
+                    raise IndexError(f"DUP failed: Stack is empty at line {line_num}.")
                 top = stack[-1]
                 stack.append(top)
+                stack.append(top)
 
-            elif command == "SWAP":
+            elif instruction == "SWAP":
                 if len(stack) < 2:
-                    raise IndexError(f"Ошибка на строке {line_num}: Недостаточно элементов для SWAP")
-                
-                a = stack.pop()
+                    raise IndexError(f"SWAP failed: Not enough operands. Stack size is {len(stack)} at line {line_num}.")
                 b = stack.pop()
-                stack.append(a)
+                a = stack.pop()
                 stack.append(b)
+                stack.append(a)
 
-            # --- Условные переходы и метки ---
-            elif command == "LABEL":
-                # Метки не влияют на выполнение, просто обновляем PC
-                pass 
-
-            elif command == "JMP":
-                if len(args) != 1:
-                    raise ValueError("JMP требует одного аргумента (имя метки)")
-                target_label = args[0]
-                if target_label not in labels:
-                    raise NameError(f"Ошибка на строке {line_num}: Метка '{target_label}' не найдена")
-                pc = labels[target_label]
-
-            elif command == "JZ":
-                if len(args) != 1:
-                    raise ValueError("JZ требует одного аргумента (имя метки)")
-                target_label = args[0]
+            elif instruction == "PRINT":
                 if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (JZ)")
+                    raise IndexError(f"PRINT failed: Stack is empty at line {line_num}.")
+                value = stack.pop()
+                output.append(str(value))
+
+            # --- New Instructions Start Here ---
+
+            elif instruction == "LABEL":
+                if len(parts) != 2:
+                    raise ValueError("LABEL requires one argument (name).")
+                label_name = parts[1]
+                labels[line_num] = label_name
+
+            elif instruction == "JMP":
+                if len(parts) != 2:
+                    raise ValueError("JMP requires one argument (label name).")
+                target_label = parts[1]
                 
-                condition = stack.pop()
-                if condition == 0:
-                    pc = labels[target_label]
-                else:
-                    pc += 1
+                if target_label not in labels:
+                    raise NameError(f"JMP failed: Label '{target_label}' not defined.")
+                
+                # Jump implementation: find the target line and set i to it - 1 so the loop re-processes the target
+                target_index = -1
+                for k, v in labels.items():
+                    if v == target_label:
+                        target_index = k
+                        break
 
-            elif command == "JNZ":
-                if len(args) != 1:
-                    raise ValueError("JNZ требует одного аргумента (имя метки)")
-                target_label = args[0]
+                if target_index != -1:
+                    i = target_index
+                    continue # Skip increment (the new loop iteration will start processing from the jump target)
+                else:
+                     raise NameError(f"JMP failed: Label '{target_label}' not found.")
+
+
+            elif instruction == "JZ":
+                if len(parts) != 2:
+                    raise ValueError("JZ requires one argument (label name).")
+                target_label = parts[1]
+
                 if not stack:
-                    raise IndexError(f"Ошибка на строке {line_num}: Стек пуст (JNZ)")
+                    raise IndexError(f"JZ failed: Stack is empty at line {line_num}.")
 
-                condition = stack.pop()
-                if condition != 0:
-                    pc = labels[target_label]
-                else:
-                    pc += 1
+                value = stack.pop()
+                if value == 0:
+                    # Jump implementation
+                    target_index = -1
+                    for k, v in labels.items():
+                        if v == target_label:
+                            target_index = k
+                            break
+                    if target_index != -1:
+                        i = target_index
+                        continue # Skip increment
+                # If value != 0, execution continues normally (i += 1 happens below)
+
+            elif instruction == "JNZ":
+                if len(parts) != 2:
+                    raise ValueError("JNZ requires one argument (label name).")
+                target_label = parts[1]
+
+                if not stack:
+                    raise IndexError(f"JNZ failed: Stack is empty at line {line_num}.")
+                
+                value = stack.pop()
+                if value != 0:
+                    # Jump implementation
+                    target_index = -1
+                    for k, v in labels.items():
+                        if v == target_label:
+                            target_index = k
+                            break
+                    if target_index != -1:
+                        i = target_index
+                        continue # Skip increment
+                # If value == 0, execution continues normally (i += 1 happens below)
 
             else:
-                raise ValueError(f"Неизвестная команда '{command}' на строке {line_num}")
+                raise ValueError(f"Unknown instruction '{instruction}' at line {line_num}.")
 
-        except (IndexError, ZeroDivisionError, ValueError, NameError) as e:
-            print(f"RUNTIME ERROR: {e} на строке {line_num}", file=sys.stderr)
-            # При ошибке можно остановить выполнение или продолжить, в зависимости от требований.
-            # Здесь мы продолжаем, но ошибка будет выведена.
-            pass
-
-        # Если команда не была JMP/JZ/JNZ, PC увеличивается на 1
-        if command not in ("JMP", "JZ", "JNZ"):
-            pc += 1
-
+        except (IndexError, ValueError, ZeroDivisionError, NameError) as e:
+            # Re-raise relevant errors found during execution
+            raise e
+        
+        i += 1
 
     return output
-
-if __name__ == '__main__':
-    # Пример использования с метками и ветвлениями
-    program_example = """
-LABEL start
-PUSH 10
-PUSH 5
-ADD
-PRINT
-LABEL end
-PUSH 2
-MUL
-PRINT
-JMP end
-POP
-DIV 10, 0  # Проверка деления на ноль (вызовет ошибку)
-"""
-
-    print("--- Запуск программы с ветвлением ---")
-    results = run(program_example)
-    print("\n--- Результаты (выводы PRINT) ---")
-    for res in results:
-        print(res)
-
-    print("\n--- Тест с ошибкой JMP ---")
-    program_error_jump = """
-LABEL start
-PUSH 10
-JMP non_existent
-"""
-    results_error_jump = run(program_error_jump)
-    print("\n--- Результаты (выводы PRINT) ---")
-    for res in results_error_jump:
-        print(res)

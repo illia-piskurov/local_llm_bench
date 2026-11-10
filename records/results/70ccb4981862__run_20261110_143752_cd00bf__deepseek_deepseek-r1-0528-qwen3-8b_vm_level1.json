@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261110_143752_cd00bf",
+  "host_id": "70ccb4981862",
+  "model": "deepseek/deepseek-r1-0528-qwen3-8b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-10 14:39:28",
+  "passed": 12,
+  "total": 18,
+  "failures": [
+    "dup: expected ['18'], got ['9']",
+    "swap: expected ['1'], got ['-1']",
+    "multiple_prints: expected ['1', '2', '3'], got ['1', '2']",
+    "print_does_not_pop: expected ['5', '5'], got ['5']",
+    "stack_underflow_add: expected error, but execution succeeded (['1'])",
+    "stack_underflow_pop: expected error, but execution succeeded ([])"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

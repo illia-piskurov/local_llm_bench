@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    def dfs(task):\n        if task in visiting:\n            return False  # Cycle detected\n        if task not in visited:\n            visiting.add(task)\n            for dep in tasks.get(task, []):\n                if not dfs(dep):\n                    return False\n            visiting.remove(task)\n            visited.add(task)\n            result.append(task)\n        return True\n\n    visited = set()\n    visiting = set()\n    result = []\n    for task in tasks:\n        if task not in visited and not dfs(task):\n            return None  # Cycle detected\n    return result[::-1]\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    topo_order = topo_sort({task: deps for task, (dur, deps) in tasks.items()})\n    if topo_order is None:\n        return None\n\n    durations = {task: dur for task, (dur, _) in tasks.items()}\n    earliest_start_times = {task: 0 for task in topo_order}\n    latest_finish_times = {task: 0 for task in topo_order}\n\n    # Calculate the earliest start times\n    for task in topo_order:\n        if not tasks[task][1]:\n            continue\n        max_earliest_end_time = max(earliest_start_times[dep] + durations[dep] for dep in tasks[task][1])\n        earliest_start_times[task] = max_earliest_end_time\n\n    # Calculate the latest finish times (reverse topo order)\n    reverse_topo_order = topo_order[::-1]\n    total_duration = 0\n    for task in reverse_topo_order:\n        if not tasks[task][1]:\n            total_duration = max(total_duration, earliest_start_times[task] + durations[task])\n            continue\n        min_latest_finish_time = min(\n            latest_finish_times[dep] - durations[dep]\n            for dep in tasks[task][1]\n        )\n        latest_finish_times[task] = min(min_latest_finish_time, total_duration)\n    return max(latest_finish_times.values())\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 461,
+    "total_output_tokens": 442,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 16.154647968791124,
+    "time_to_first_token_seconds": 3.250661
+  }
+}

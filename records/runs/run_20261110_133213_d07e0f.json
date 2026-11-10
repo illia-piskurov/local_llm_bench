@@ -1,0 +1,34 @@
+{
+  "id": "run_20261110_133213_d07e0f",
+  "host_id": "70ccb4981862",
+  "model_key": "ornith-1.5-9b-mlx",
+  "model_name": "Ornith 1.5 9B",
+  "quantization": "4bit",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "temperature": 0.0,
+    "seed": 42,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "ornith-1.5-9b-mlx",
+      "display_name": "Ornith 1.5 9B",
+      "architecture": "qwen3_5",
+      "quantization": "4bit",
+      "quantization_bits": 4,
+      "size_bytes": 5059930227,
+      "params_string": "9B",
+      "max_context_length": 262144,
+      "format": "mlx",
+      "publisher": "ornith-ai"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 13:32:13",
+  "completed_at": "2026-11-10 13:32:54",
+  "status": "interrupted",
+  "results": [],
+  "speeds": []
+}

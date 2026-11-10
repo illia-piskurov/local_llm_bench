@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261110_135033_27873b",
+  "host_id": "70ccb4981862",
+  "model": "coder-lfm3-1.7b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-10 13:52:59",
+  "passed": 17,
+  "total": 18,
+  "failures": [
+    "swap: expected ['1'], got ['-1']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

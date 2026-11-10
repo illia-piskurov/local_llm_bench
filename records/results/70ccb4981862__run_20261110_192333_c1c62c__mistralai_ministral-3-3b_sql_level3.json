@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261110_192333_c1c62c",
+  "host_id": "70ccb4981862",
+  "model": "mistralai/ministral-3-3b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-11-10 19:30:39",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "select_expression_alias: exception/timeout: NameError: local variable referenced before assignment",
+    "having_clause: exception/timeout: ValueError: Unsupported operator: field",
+    "where_subquery_in: exception/timeout: ValueError: Unsupported operator: field",
+    "subquery_with_parent_params_order: exception/timeout: KeyError: select"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

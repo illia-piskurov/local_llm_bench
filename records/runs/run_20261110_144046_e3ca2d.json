@@ -1,0 +1,31 @@
+{
+  "id": "run_20261110_144046_e3ca2d",
+  "host_id": "70ccb4981862",
+  "model_key": "deepseek/deepseek-r1-0528-qwen3-8b",
+  "model_name": "Deepseek R1 0528 Qwen3 8B",
+  "quantization": "4bit",
+  "backend": "LM Studio (43d4b26)",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "artifact": {
+      "key": "deepseek/deepseek-r1-0528-qwen3-8b",
+      "display_name": "Deepseek R1 0528 Qwen3 8B",
+      "architecture": "qwen3",
+      "quantization": "4bit",
+      "quantization_bits": 4,
+      "size_bytes": 4619394542,
+      "params_string": "8B",
+      "max_context_length": 131072,
+      "format": "mlx",
+      "publisher": "deepseek"
+    },
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "dda863b (051cb8695784)",
+  "started_at": "2026-11-10 14:40:46",
+  "completed_at": "2026-11-10 14:40:50",
+  "status": "interrupted",
+  "results": [],
+  "speeds": []
+}

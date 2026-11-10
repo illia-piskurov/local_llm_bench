@@ -1,0 +1,16 @@
+{
+  "model_instance_id": "essentialai/rnj-1",
+  "output": [
+    {
+      "type": "message",
+      "content": "```python\nfrom collections import defaultdict, deque\nimport heapq\n\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    # Check for cyclic dependencies using Kahn's algorithm\n    in_degree = {task: 0 for task in tasks}\n    graph = defaultdict(list)\n    \n    for task, (duration, deps, priority) in tasks.items():\n        for dep in deps:\n            if dep not in tasks:\n                return None  # Dependency does not exist\n            graph[dep].append(task)\n            in_degree[task] += 1\n    \n    zero_in_degree = [task for task in in_degree if in_degree[task] == 0]\n    \n    if len(zero_in_degree) != len(tasks):\n        return None  # Cyclic dependency detected\n    \n    # Priority queue to manage tasks by priority, duration, and name\n    pq = []\n    for task in zero_in_degree:\n        _, deps, priority = tasks[task]\n        heapq.heappush(pq, (-priority, -tasks[task][0], task))\n    \n    order = []\n    current_time = 0\n    running_tasks = defaultdict(int)\n    \n    while pq or any(running_tasks.values()):\n        # Start new tasks if possible\n        while len(running_tasks) < workers and pq:\n            _, duration, task = heapq.heappop(pq)\n            running_tasks[task] += -duration\n        \n        # Find the next time a task will finish\n        min_finish_time = float('inf')\n        for task, remaining in running_tasks.items():\n            if remaining > 0:\n                min_finish_time = min(min_finish_time, current_time + tasks[task][0])\n        \n        # Advance time to the minimum finish time\n        current_time = min_finish_time\n        \n        # Complete tasks that finish at this time\n        for task in list(running_tasks.keys()):\n            if running_tasks[task] <= 0:\n                order.append(task)\n                del running_tasks[task]\n                for next_task in graph[task]:\n                    in_degree[next_task] -= 1\n                    if in_degree[next_task] == 0:\n                        _, deps, priority = tasks[next_task]\n                        heapq.heappush(pq, (-priority, -tasks[next_task][0], next_task))\n        \n        # Decrease remaining time for running tasks\n        for task in running_tasks:\n            running_tasks[task] -= 1\n    \n    return order if len(order) == len(tasks) else None\n```"
+    }
+  ],
+  "stats": {
+    "input_tokens": 238,
+    "total_output_tokens": 526,
+    "reasoning_output_tokens": 0,
+    "tokens_per_second": 16.469640617383774,
+    "time_to_first_token_seconds": 1.6744210000000002
+  }
+}

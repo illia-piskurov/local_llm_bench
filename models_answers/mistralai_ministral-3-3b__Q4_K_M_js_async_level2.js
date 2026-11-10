@@ -9,52 +9,50 @@ async function pMap(items, mapper, options = { concurrency: 1 }) {
     const results = new Array(items.length);
     let nextIndex = 0;
     const activeTasks = new Set();
-    const semaphore = new Promise((resolve) => setTimeout(resolve, 0));
 
     async function processNext() {
-        if (nextIndex >= items.length || activeTasks.size >= concurrency) return;
+        if (nextIndex >= items.length || activeTasks.size >= concurrency) return Promise.resolve();
 
-        const item = items[nextIndex];
         try {
-            const controller = new AbortController();
-            const timeoutId = timeoutMs > 0 ? setTimeout(() => controller.abort(), timeoutMs) : null;
-            const taskPromise = mapper(item, nextIndex)
-                .then(result => {
-                    clearTimeout(timeoutId);
-                    results[nextIndex] = result;
-                    return Promise.resolve();
-                })
-                .catch(error => {
-                    if (error.name === 'AbortError') throw new Error("Timeout");
-                    activeTasks.delete(taskPromise);
-                    throw error;
-                });
+            const item = items[nextIndex];
+            const attempt = async () => {
+                const startTime = Date.now();
+                let retryCount = 0;
 
-            const taskPromiseWithRetry = async () => {
-                let attempt = 0;
-                while (attempt <= retries) {
+                while (retryCount <= retries) {
+                    if (timeoutMs > 0 && Date.now() - startTime >= timeoutMs) {
+                        throw new Error("Timeout");
+                    }
+
                     try {
-                        await taskPromise;
+                        const result = await Promise.race([
+                            mapper(item, nextIndex),
+                            new Promise((_, reject) =>
+                                setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+                            )
+                        ]);
+                        results[nextIndex] = result;
                         return;
                     } catch (error) {
-                        if (attempt === retries) throw error;
+                        retryCount++;
+                        if (retryCount > retries) throw error;
 
-                        const delay = backoffMs * Math.pow(2, attempt);
+                        const delay = backoffMs * Math.pow(2, retryCount - 1);
                         await new Promise(resolve => setTimeout(resolve, delay));
-                        attempt++;
                     }
                 }
+
+                throw new Error("Max retries exceeded");
             };
 
-            activeTasks.add(taskPromiseWithRetry());
-            taskPromiseWithRetry().finally(() => {
-                clearTimeout(timeoutId);
-                activeTasks.delete(taskPromiseWithRetry());
-                nextIndex++;
-                processNext();
-            });
+            activeTasks.add(nextIndex);
+            await attempt();
         } catch (error) {
-            throw error;
+            return Promise.reject(error);
+        } finally {
+            activeTasks.delete(nextIndex);
+            nextIndex++;
+            processNext();
         }
     }
 

@@ -1,0 +1,24 @@
+{
+  "run_id": "run_20261110_135305_0bbb8b",
+  "host_id": "70ccb4981862",
+  "model": "coder-lfm3-1.7b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-10 14:06:24",
+  "passed": 0,
+  "total": 10,
+  "failures": [
+    "no_dependencies: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+    "simple_chain: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+    "diamond: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+    "multiple_roots: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+    "single_task: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+    "self_cycle: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+    "two_node_cycle: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+    "long_cycle: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+    "cycle_with_extra_nodes: unexpected exception/timeout: NameError: name 'deque' isn't defined",
+    "wide_graph: unexpected exception/timeout: NameError: name 'deque' isn't defined"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

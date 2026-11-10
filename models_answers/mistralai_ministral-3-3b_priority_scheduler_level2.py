@@ -1,102 +1,134 @@
-from collections import deque
+from collections import defaultdict, deque
 
-def has_cycle(task_name, tasks):
+def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
+    # Check for cyclic dependencies first
     visited = set()
     recursion_stack = set()
 
-    def _has_cycle(name):
-        if name in recursion_stack:
+    def has_cycle(task):
+        if task in recursion_stack:
             return True
-        if name in visited:
+        if task in visited:
             return False
 
-        visited.add(name)
-        recursion_stack.add(name)
+        visited.add(task)
+        recursion_stack.add(task)
 
-        duration, deps, _ = tasks[name]
-        for dep in deps:
-            if _has_cycle(dep):
+        for dep in tasks.get(task, (0, [], 0))[1]:
+            if has_cycle(dep):
                 return True
 
-        recursion_stack.remove(name)
+        recursion_stack.remove(task)
         return False
 
-    return any(_has_cycle(task) for task in tasks.keys())
+    for task in tasks:
+        if has_cycle(task):
+            return None
 
-def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
-    if has_cycle(tasks):
-        return None
+    # Compute longest path using topological sort
+    in_degree = {task: 0 for task in tasks}
+    duration_sum = defaultdict(int)
 
-    # Build dependency graph and reverse adjacency list
-    graph = {task: [] for task in tasks}
-    reverse_graph = {task: set() for task in tasks}
+    for task, (duration, _, _) in tasks.items():
+        duration_sum[task] += duration
+        for dep in tasks.get(task, (0, [], 0))[1]:
+            in_degree[dep] -= 1
 
-    for task, (_, deps, _) in tasks.items():
-        for dep in deps:
-            graph[dep].append(task)
-            reverse_graph[task].add(dep)
-
-    # Initialize distances
-    dist = {task: 0 for task in tasks}
-    queue = deque([task for task in tasks if not reverse_graph[task]])
+    queue = deque([task for task in tasks if in_degree[task] == 0])
+    max_path_length = 0
 
     while queue:
-        current = queue.popleft()
-        for neighbor in graph[current]:
-            dist[neighbor] = max(dist[neighbor], dist[current] + tasks[neighbor][0])
-            if not any(dep in reverse_graph[neighbor] for dep in tasks[neighbor][1]):
-                queue.append(neighbor)
+        current_task = queue.popleft()
+        for dependent in tasks.get(current_task, (0, [], 0))[1]:
+            duration_sum[dependent] += duration_sum[current_task]
+            in_degree[dependent] -= 1
+            if in_degree[dependent] == 0:
+                queue.append(dependent)
 
-    return max(dist.values()) if dist else None
+    return max_path_length if queue else None
 
 def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
-    if has_cycle(tasks):
-        return None
+    # Check for cyclic dependencies first
+    visited = set()
+    recursion_stack = set()
+
+    def has_cycle(task):
+        if task in recursion_stack:
+            return True
+        if task in visited:
+            return False
+
+        visited.add(task)
+        recursion_stack.add(task)
+
+        for dep in tasks.get(task, (0, [], 0))[1]:
+            if has_cycle(dep):
+                return True
+
+        recursion_stack.remove(task)
+        return False
+
+    for task in tasks:
+        if has_cycle(task):
+            return None
 
     # Initialize data structures
     ready_queue = deque()
     task_info = {task: (duration, deps, priority) for task, (duration, deps, priority) in tasks.items()}
     completed_tasks = set()
     current_time = 0
-    active_workers = 0
+    worker_count = 0
     output = []
 
     # Precompute dependencies and ready queue
+    dependency_graph = defaultdict(list)
+    in_degree = {task: 0 for task in tasks}
+    for task, (_, deps, _) in tasks.items():
+        for dep in deps:
+            dependency_graph[dep].append(task)
+            in_degree[task] += 1
+
+    # Initialize ready queue with tasks having no dependencies
     for task in tasks:
-        duration, deps, _ = task_info[task]
-        if not deps:
-            ready_queue.append(task)
+        if in_degree.get(task, 0) == 0:
+            ready_queue.append((-task_info[task][2], -task_info[task][0], task))
 
-    while ready_queue or active_workers < workers:
-        # Process completed tasks to update ready queue
-        while active_workers >= workers and ready_queue:
-            task = ready_queue.popleft()
-            duration, _, priority = task_info[task]
+    while ready_queue or worker_count < workers:
+        # Sort ready queue by priority (desc), duration (asc), then name
+        current_ready = sorted(ready_queue, key=lambda x: (-x[0], x[1], x[2]))
 
-            all_deps_met = True
-            for dep in task_info[task][1]:
-                if dep not in completed_tasks:
-                    all_deps_met = False
-                    break
+        if not current_ready and worker_count == 0:
+            break
 
-            if all_deps_met:
-                active_workers += 1
-                current_time += duration
-                output.append(task)
-                completed_tasks.add(task)
-
-        # Update ready queue based on completed tasks
-        for task in list(completed_tasks):
-            duration, deps, _ = task_info[task]
-            if not deps:
+        # Process tasks in order of priority, duration, name
+        for _, _, task in current_ready[:workers]:
+            if task in completed_tasks or in_degree.get(task, 0) > 0:
                 continue
 
-            for dep in deps:
-                if dep in completed_tasks:
-                    ready_queue.append(task)
-                    break  # Only add once per dependency completion
+            # Assign this task to a worker
+            worker_count += 1
+            start_time = current_time
+            end_time = start_time + task_info[task][0]
 
-        # Sort ready queue by priority, duration, and name
-        ready_queue.sort(key=lambda x: (-task_info[x][2], task_info[x][0], x))
+            # Update dependencies
+            for dep in task_info[task][1]:
+                in_degree[dep] -= 1
+                if in_degree.get(dep, 0) == 0:
+                    ready_queue.append((-task_info[dep][2], -task_info[dep][0], dep))
 
-    return current_time if output else None
+            # Update current time to end_time of this task
+            current_time = max(current_time, end_time)
+            output.append(task)
+
+        # Remove completed tasks from in_degree (they are no longer ready)
+        for task in list(completed_tasks):
+            if task_info[task][1]:  # If it has dependencies left
+                for dep in task_info[task][1]:
+                    in_degree[dep] -= 1
+                    if in_degree.get(dep, 0) == 0:
+                        ready_queue.append((-task_info[dep][2], -task_info[dep][0], dep))
+
+        # Remove completed tasks from output (if any)
+        completed_tasks.update(task for task in output[-workers:] if task not in completed_tasks)
+
+    return current_time
