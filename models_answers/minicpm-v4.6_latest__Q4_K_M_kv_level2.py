@@ -1,0 +1,44 @@
+def run(program: str):
+    store = {}
+    transactions = []
+    current_visible_value = None
+    output = []
+    
+    for line in program.splitlines():
+        command, args = line.split(' ', 1)
+        if command == 'SET':
+            key, value = args.split(' ', 1)
+            store[key] = value
+        elif command == 'GET':
+            output.append(store.get(key, 'NULL'))
+        elif command == 'DELETE':
+            if key in store:
+                del store[key]
+        elif command == 'BEGIN':
+            transactions.append({})
+        elif command == 'COMMIT':
+            if transactions:
+                transaction = transactions[-1]
+                store.update(transaction)
+                stack = []  # for nested, but for now just commit
+                output.append("NO TRANSACTION")
+        elif command == 'ROLLBACK':
+            if transactions:
+                transactions.pop()
+                output.append("NO TRANSACTION")
+        elif command == 'WATCH':
+            key = args.split(' ', 1)[0]
+            current_visible_value = store.get(key, 'NULL')
+            # Check if SET or DELETE modifies the value
+            if key in store:
+                old_value = store.get(key, 'NULL')
+                if store[key] != old_value:
+                    output.append(f"WATCH {key} {old_value} -> {store[key]}")
+        elif command == 'COUNT':
+            value = args.split(' ', 1)[1]
+            count = 0
+            for key in store:
+                if store[key] == value:
+                    count += 1
+            output.append(str(count))
+    return output

@@ -1,0 +1,26 @@
+{
+  "model": "phi4-mini:latest",
+  "created_at": "2026-11-11T13:14:51.38491Z",
+  "message": {
+    "role": "assistant",
+    "content": "```lua\nBT = {}\n\nBT.SUCCESS = \"SUCCESS\"\nBT.FAILURE = \"FAILURE\"\nBT.RUNNING = \"RUNNING\"\n\nfunction BT.Action(fn)\n    local function tick(ctx)\n        local result = fn(ctx)\n        if result == true or result == BT.SUCCESS then\n            return BT.SUCCESS\n        elseif result == false or result == BT.FAILURE then\n            return result\n        else\n            return BT.RUNNING\n        end\n    end\n    function tick.reset()\n    end\n    return tick\nend\n\nfunction BT.Condition(predicate)\n    local function tick(ctx)\n        local result = predicate(ctx)\n        if result then\n            return BT.SUCCESS\n        else\n            return BT.FAILURE\n        end\n    end\n    function tick.reset()\n    end\n    return tick\nend\n\nfunction BT.Sequence(children)\n    local childrenCount = #children\n    local index = 1\n    local function tick(ctx)\n        if index > childrenCount then\n            return BT.SUCCESS\n        end\n        local child = children[index]\n        local result = child(ctx)\n        if result == BT.FAILURE then\n            return result\n        elseif result == BT.RUNNING then\n            index = index + 1\n            return result\n        else\n            index = index + 1\n            return child(ctx, index)\n        end\n    end\n    function tick.reset()\n        index = 1\n    end\n    return tick\nend\n\nfunction BT.Selector(children)\n    local childrenCount = #children\n    local index = 1\n    local function tick(ctx)\n        if index > childrenCount then\n            return BT.SUCCESS\n        end\n        local child = children[index]\n        local result = child(ctx)\n        if result == BT.SUCCESS then\n            return result\n        elseif result == BT.RUNNING then\n            index = index + 1\n            return result\n        end\n    end\n    function tick.reset()\n        index = 1\n    end\n    return tick\nend\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 17124093125,
+  "load_duration": 889416,
+  "prompt_eval_count": 480,
+  "prompt_eval_cached_count": 1,
+  "prompt_eval_duration": 2001015000,
+  "eval_count": 418,
+  "eval_duration": 15071075000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 480,
+    "total_output_tokens": 418,
+    "tokens_per_second": 27.7352478174251,
+    "time_to_first_token_seconds": 2.001015,
+    "model_load_time_seconds": 0.000889416
+  }
+}

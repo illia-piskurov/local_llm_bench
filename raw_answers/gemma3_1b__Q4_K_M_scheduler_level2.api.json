@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:1b",
+  "created_at": "2026-11-11T11:19:32.213933Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    \"\"\"\n    Implements a task dependency scheduler in a single Python file.\n\n    Args:\n        tasks: A dictionary where each value is a tuple of (duration, dependencies_list).\n\n    Returns:\n        The length of the critical path — the total duration of the longest dependent sequence\n        of tasks (classic critical path method). If the dependency graph contains a cycle, return None.\n    \"\"\"\n    in_degree = {}\n    graph = {}\n    for task in tasks:\n        in_degree[task] = 0\n        graph[task] = []\n\n    for task in tasks:\n        for dependency in tasks[task][1]:\n            graph[dependency].append(task)\n            in_degree[task] += 1\n\n    queue = []\n    for task in in_degree:\n        if in_degree[task] == 0:\n            queue.append(task)\n\n    result = 0\n    while queue:\n        task = queue.pop(0)\n        result += 1\n        for dependent in graph[task]:\n            in_degree[dependent] -= 1\n            if in_degree[dependent] == 0:\n                queue.append(dependent)\n\n    if len(result) != len(tasks):\n        return None\n\n    return result\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 3355842291,
+  "load_duration": 973750,
+  "prompt_eval_count": 653,
+  "prompt_eval_cached_count": 512,
+  "prompt_eval_duration": 138974000,
+  "eval_count": 317,
+  "eval_duration": 3201912000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 653,
+    "total_output_tokens": 317,
+    "tokens_per_second": 99.00334550106311,
+    "time_to_first_token_seconds": 0.138974,
+    "model_load_time_seconds": 0.00097375
+  }
+}

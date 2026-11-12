@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "kv",
+  "level": "level3",
+  "tested_at": "2026-11-11 14:31:59",
+  "stats": {
+    "input_tokens": 974,
+    "total_output_tokens": 671,
+    "reasoning_output_tokens": null,
+    "tokens_per_second": 25.434683864505686,
+    "time_to_first_token_seconds": 3.767229,
+    "model_load_time_seconds": 0.000931166
+  }
+}

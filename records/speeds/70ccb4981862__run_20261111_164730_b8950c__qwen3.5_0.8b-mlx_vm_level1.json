@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261111_164730_b8950c",
+  "host_id": "70ccb4981862",
+  "model": "qwen3.5:0.8b-mlx",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-11 16:47:48",
+  "stats": {
+    "input_tokens": 285,
+    "total_output_tokens": 1335,
+    "reasoning_output_tokens": 735,
+    "tokens_per_second": 81.45935191687087,
+    "time_to_first_token_seconds": 0.437763792,
+    "model_load_time_seconds": 0.70729725
+  }
+}

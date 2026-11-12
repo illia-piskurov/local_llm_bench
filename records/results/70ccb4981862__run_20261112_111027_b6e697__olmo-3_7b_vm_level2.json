@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261112_111027_b6e697",
+  "host_id": "70ccb4981862",
+  "model": "olmo-3:7b",
+  "benchmark": "vm",
+  "level": "level2",
+  "tested_at": "2026-11-12 12:05:52",
+  "passed": 0,
+  "total": 0,
+  "failures": [
+    "[TRUNCATED] vm/level2: server reported finish_reason=length"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

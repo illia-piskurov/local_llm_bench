@@ -25,6 +25,69 @@ def js(source: str, expr: str):
     return json.loads(ctx.eval(f"JSON.stringify({expr})"))
 
 
+def test_runaway_promise_chain_times_out_instead_of_hanging():
+    ctx = create_js_context("function spin() { Promise.resolve().then(spin); } spin();")
+    with pytest.raises(TimeoutError, match="did not settle"):
+        drain_js_jobs(ctx, max_seconds=0.3)
+
+
+def test_guest_code_that_defeats_the_quickjs_time_limit_is_killed(tmp_path, monkeypatch):
+    """A Promise executor swallows the interrupt, so only killing the worker process stops this loop."""
+    from benchmarks import js_async
+    from sandboxes import case_worker
+
+    monkeypatch.setattr(case_worker, "CASE_TIMEOUT_SECONDS", 2.0)
+    solution = tmp_path / "solution.js"
+    solution.write_text(
+        "async function pMap(items) {\n"
+        "  if (items.length === 0) return [];\n"
+        "  async function f() {}\n"
+        "  return new Promise(() => { while (true) { f(); } });\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    cases = [js_async.LEVEL1_CASES[0], js_async.LEVEL1_CASES[2]]  # empty_array, concurrency_limit
+    passed, total, failures = js_async.run_js_suite(cases, solution)
+    assert (passed, total) == (1, 2)
+    assert len(failures) == 1 and "concurrency_limit: timed out after 2s" in failures[0]
+
+
+def test_lua_native_call_that_defeats_the_instruction_hook_is_killed(tmp_path, monkeypatch):
+    """The instruction hook cannot interrupt a single long native call, only killing the worker does."""
+    from benchmarks import lua_game_ai
+    from sandboxes import case_worker
+
+    monkeypatch.setattr(case_worker, "CASE_TIMEOUT_SECONDS", 3.0)
+    solution = tmp_path / "solution.lua"
+    solution.write_text(
+        'local s = string.rep("a", 40) .. "b"; local _ = s:find(string.rep("a?", 40) .. "c")\n', encoding="utf-8"
+    )
+    passed, total, failures = lua_game_ai.run_lua_suite(lua_game_ai.LEVEL1_CASES[:1], solution)
+    # the solution itself hangs at load time, so the load check is what times out
+    assert (passed, total) == (0, 1)
+    assert "timed out" in failures[0]
+
+
+def test_lua_syntax_error_is_reported(tmp_path):
+    from benchmarks import lua_game_ai
+
+    solution = tmp_path / "solution.lua"
+    solution.write_text("function (", encoding="utf-8")
+    passed, total, failures = lua_game_ai.run_lua_suite(lua_game_ai.LEVEL1_CASES[:2], solution)
+    assert (passed, total) == (0, 2)
+    assert failures[0].startswith("Lua syntax error")
+
+
+def test_js_syntax_error_is_reported(tmp_path):
+    from benchmarks import js_async
+
+    solution = tmp_path / "solution.js"
+    solution.write_text("function (", encoding="utf-8")
+    passed, total, failures = js_async.run_js_suite(js_async.LEVEL1_CASES[:2], solution)
+    assert (passed, total) == (0, 2)
+    assert failures[0].startswith("JavaScript syntax error")
+
+
 def test_date_now_and_performance_follow_virtual_time():
     src = "const t = [Date.now()]; const p = []; setTimeout(() => { t.push(Date.now()); p.push(performance.now()); }, 250);"
     assert js(src, "[t[1] - t[0], p[0]]") == [250, 250]

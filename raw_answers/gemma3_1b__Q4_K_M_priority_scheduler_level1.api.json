@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:1b",
+  "created_at": "2026-11-11T11:19:36.571536Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    \"\"\"\n    Implements a task scheduler with dependencies, priorities, and a limited worker pool.\n\n    Args:\n        tasks: A dictionary where keys are task names and values are tuples\n               (duration, deps, priority).\n        workers: The maximum number of tasks that can run simultaneously.\n\n    Returns:\n        A list of task names sorted by priority and duration, or None if a cyclic dependency exists.\n    \"\"\"\n\n    in_degree = {}\n    graph = {}\n    for task, (duration, deps, priority) in tasks.items():\n        in_degree[task] = 0\n        graph[task] = []\n\n    for task, (duration, deps, priority) in tasks.items():\n        for dep in deps:\n            graph[task].append(dep)\n            in_degree[dep] = in_degree.get(dep, 0) + 1\n\n    queue = []\n    for task, (duration, deps, priority) in tasks.items():\n        if in_degree[task] == 0:\n            queue.append(task)\n\n    result = []\n    while queue:\n        task = queue.pop(0)\n        result.append(task)\n\n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    if len(result) != len(tasks):\n        return None\n\n    return result\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 3976163125,
+  "load_duration": 2223750,
+  "prompt_eval_count": 240,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 170464000,
+  "eval_count": 367,
+  "eval_duration": 3782010000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 240,
+    "total_output_tokens": 367,
+    "tokens_per_second": 97.03834733382513,
+    "time_to_first_token_seconds": 0.170464,
+    "model_load_time_seconds": 0.00222375
+  }
+}

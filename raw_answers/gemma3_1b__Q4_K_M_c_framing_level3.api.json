@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:1b",
+  "created_at": "2026-11-11T11:20:34.756219Z",
+  "message": {
+    "role": "assistant",
+    "content": "```c\n#include <stdint.h>\n\n#define BUFFER_SIZE 512\n\nint ringbuf_init(void) {\n    uint8_t buffer[BUFFER_SIZE];\n    if (buffer[0] != 0) {\n        return 0;\n    }\n    return 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if (ringbuf_available() < BUFFER_SIZE) {\n        return -1;\n    }\n    ringbuf_fill(buffer, 0, BUFFER_SIZE);\n    return 0;\n}\n\nint ringbuf_pop(void) {\n    ringbuf_available() - 1;\n    return 0;\n}\n\nint ringbuf_available(void) {\n    return 0;\n}\n\nint ringbuf_free_space(void) {\n    return 512 - ringbuf_available();\n}\n\nint decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {\n    int packet_index = 0;\n    int byte_index = 0;\n\n    while (stream_len > 0 && stream[stream_len] != 0xAA && stream[stream_len] != 0) {\n        if (stream_len == 0) {\n            break;\n        }\n        if (stream[stream_len] == 0) {\n            break;\n        }\n        stream_len--;\n        byte_index++;\n    }\n\n    if (stream_len == 0) {\n        return -1;\n    }\n\n    if (byte_index < 4) {\n        // Payload data\n        uint8_t payload[1];\n        payload[0] = 0xAA;\n        out_payload[0] = payload;\n        *out_type = 1;\n        return 0;\n    } else {\n        // Magic byte\n        out_type = 0;\n        return 0;\n    }\n}\n\nvoid feed_bytes(const uint8_t *data, int len) {\n    for (int i = 0; i < len; ++i) {\n        data[i] = 0;\n    }\n}\n\nint get_next_packet(uint8_t *out_payload, int *out_type) {\n    if (*out_type == 0) {\n        return -1;\n    }\n\n    // Check for full valid packet\n    if (*out_payload == 0) {\n        return -1;\n    }\n\n    // Check for noise or false 0xAA headers\n    if (*out_payload == 0xAA) {\n        return -1;\n    }\n\n    // Advance buffer\n    out_payload[0] = 0xAA;\n    *out_type = 1;\n    return 0;\n}\n\nvoid ringbuf_process_data(uint8_t *data, int len) {\n    int packet_index = 0;\n    int byte_index = 0;\n\n    while (stream_len > 0 && stream[stream_len] != 0xAA && stream[stream_len] != 0) {\n        if (stream_len == 0) {\n            break;\n        }\n        if (stream[stream_len] == 0) {\n            break;\n        }\n        stream_len--;\n        byte_index++;\n    }\n\n    if (stream_len == 0) {\n        return;\n    }\n\n    if (byte_index < 4) {\n        // Payload data\n        uint8_t payload[1];\n        payload[0] = 0xAA;\n        out_payload[0] = payload;\n        *out_type = 1;\n        return 0;\n    } else {\n        // Magic byte\n        out_type = 0;\n        return 0;\n    }\n}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 10096458500,
+  "load_duration": 433250,
+  "prompt_eval_count": 1081,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 693018000,
+  "eval_count": 916,
+  "eval_duration": 9390572000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1081,
+    "total_output_tokens": 916,
+    "tokens_per_second": 97.54464371286434,
+    "time_to_first_token_seconds": 0.693018,
+    "model_load_time_seconds": 0.00043325
+  }
+}

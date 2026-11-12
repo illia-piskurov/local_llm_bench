@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T11:32:15.027985Z",
+  "message": {
+    "role": "assistant",
+    "content": "```javascript\nasync function pMap(items, mapper, options) {\n  if (!items || items.length === 0) {\n    return [];\n  }\n\n  const concurrency = options?.concurrency ?? 1;\n  const running = new Set();\n  const results = new Array(items.length);\n  let currentIndex = 0;\n\n  return new Promise((resolve, reject) => {\n    const executeTask = async () => {\n      while (currentIndex < items.length) {\n        const index = currentIndex++;\n        const item = items[index];\n\n        if (running.size < concurrency) {\n          running.add(index);\n          try {\n            const result = await mapper(item, index);\n            results[index] = result;\n          } catch (error) {\n            reject(error);\n            return;\n          } finally {\n            running.delete(index);\n            if (currentIndex < items.length) {\n              executeTask();\n            }\n          }\n        } else {\n          // Wait for a task to complete\n          await new Promise((resolve) => setTimeout(resolve, 0));\n        }\n      }\n\n      resolve(results);\n    };\n\n    executeTask();\n  });\n}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 11000822750,
+  "load_duration": 1351166,
+  "prompt_eval_count": 234,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 1016559000,
+  "eval_count": 281,
+  "eval_duration": 9877228000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 234,
+    "total_output_tokens": 281,
+    "tokens_per_second": 28.44927746934666,
+    "time_to_first_token_seconds": 1.016559,
+    "model_load_time_seconds": 0.001351166
+  }
+}

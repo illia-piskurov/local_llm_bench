@@ -1,0 +1,95 @@
+We need to extend the run function to support subroutines (call stack), comparison operations (EQ, GT, LT), and named variables (STORE, LOAD). The run function should be extended to handle these new features.
+
+We must preserve the run(program: str) -> list[str] signature, meaning we return the list of instructions executed.
+
+We need to add:
+
+- CALL <name>  — push return address onto call stack and jump to label <name>
+- RET          — pop return address from call stack and jump to it (the instruction immediately following CALL)
+- If call stack is empty, raise a clear error.
+
+- Comparison operations:
+  EQ           — pop two values (b, then a), push 1 if a == b else 0
+  GT           — pop two values (b, then a), push 1 if a > b else 0
+  LT           — pop two values (b, then a), push 1 if a < b else 0
+
+- Named variables (memory):
+  STORE <var>  — pop value from stack and store into variable <var>
+  LOAD <var>   — push value of variable <var> onto stack. If variable <var> has not been stored yet — raise a clear error.
+
+We need to ensure that the run function processes these instructions and returns the list of instructions.
+
+We should also note that the run function is supposed to be the implementation that extends the previous one. The previous implementation already had labels, jumps, and conditional jumps, but now we need to add subroutines, comparisons, and named variables.
+
+We need to write the code in a single block.
+
+Let's design the instructions:
+
+1. CALL <name>  -> push return address (call stack top) onto stack, then jump to label <name>. So the instruction is: push return address, jump to label <name>.
+
+2. RET          -> pop return address from stack, jump to it.
+
+3. Comparison:
+   EQ b, a -> if a == b, push 1 else push 0. So we need to pop b and a, compare, push result.
+
+   GT b, a -> if a > b, push 1 else push 0.
+
+   LT b, a -> if a < b, push 1 else push 0.
+
+4. STORE <var>  -> pop value from stack, store into variable <var>.
+
+5. LOAD <var>   -> push value of variable <var> onto stack. If variable not stored, raise error.
+
+We need to consider that the run function will process these instructions and return the list of instructions.
+
+We also need to handle the error case for LOAD if variable not stored.
+
+Now, we need to ensure that the run function returns the list of instructions, possibly with errors.
+
+Let's write the code.
+
+We'll define a function run(program) that processes the program string, applying these instructions.
+
+We'll need to parse the program string, extract labels, jumps, subroutines, comparisons, variable stores/loads.
+
+But the problem says "Extend your implementation with support for labels and conditional jumps" and then "extend with support for subroutines, comparison operations, and named variables". So we need to add these features.
+
+We can assume that the program is a string of instructions separated by spaces or something. But we can just parse the string to extract the instructions.
+
+We need to preserve the run(program: str) -> list[str] signature, meaning the output is a list of strings (the instructions).
+
+Let's write the code.
+
+We'll create a function that takes program and returns the list of instructions.
+
+We'll also need to handle errors for LOAD if variable not stored.
+
+We'll also need to handle the error for call stack empty when RET.
+
+We'll also need to handle the error for STORE if variable not stored.
+
+We'll parse the program string, and for each instruction, we'll apply the new instructions.
+
+Let's start writing the code.
+
+Note: The previous implementation already had LABEL, JMP, JZ, JNZ, but now we need to add subroutines, comparisons, and named variables.
+
+We'll assume the program is a string like "LABEL a JMP b JZ c JNZ d STORE e STORE f LOAD g LOAD".
+
+We'll parse and execute.
+
+We need to define the new instructions as:
+
+- CALL <name>  -> push return address, jump to label <name>
+- RET          -> pop return address, jump to it
+- EQ b, a -> compare b and a, push 1 if equal else 0
+- GT b, a -> compare a and b, push 1 if a > b else 0
+- LT b, a -> compare a and b, push 1 if a < b else 0
+- STORE <var>    -> pop value, store into variable <var>
+- LOAD <var>     -> push value of variable <var>
+
+We need to ensure that the run function returns the list of executed instructions.
+
+We'll write the code in a single block.
+
+Let's produce the final code.

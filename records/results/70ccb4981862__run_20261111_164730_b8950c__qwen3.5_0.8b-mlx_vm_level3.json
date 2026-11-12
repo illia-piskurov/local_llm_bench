@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_164730_b8950c",
+  "host_id": "70ccb4981862",
+  "model": "qwen3.5:0.8b-mlx",
+  "benchmark": "vm",
+  "level": "level3",
+  "tested_at": "2026-11-11 16:52:08",
+  "passed": 0,
+  "total": 0,
+  "failures": [
+    "[TRUNCATED] vm/level3: server reported finish_reason=length"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

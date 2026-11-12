@@ -1,0 +1,154 @@
+"""
+Simple stack-based interpreter with labels and conditional jumps.
+Supported instructions:
+  PUSH <n>      : push integer n onto the stack
+  POP           : pop top value from stack
+  ADD           : pop two values, push their sum (a + b)
+  SUB           : pop two values (b, then a), push a - b
+  MUL           : pop two values (b, then a), push a * b
+  DIV           : pop two values (b, then a), floor(a // b)
+  DUP           : duplicate top value on stack
+  SWAP          : swap top two values on stack
+  PRINT         : print top value of the stack
+  LABEL <name>  : define a label at current position
+  JMP <name>    : jump to label without changing stack
+  JZ <name>     : jump if top of stack == 0
+  JNZ <name>    : jump if top of stack != 0
+
+Usage:
+    python interpreter.py "PUSH 1\nJMP LOOP\nADD\nPRINT"
+
+Returns list of printed strings (from PRINT instructions). Raises ValueError with line number for errors.
+"""
+
+import re
+from typing import List, Tuple
+
+
+class StackInterpreterError(ValueError):
+    """Raised when an operation cannot be performed due to stack underflow or division by zero."""
+    pass
+
+
+def parse_input(lines: List[str]) -> Tuple[List[Tuple[int, str]], list]:
+    """Parse input into instruction names with line numbers and labels."""
+    instructions = []  # Each element is (line_num: int, instruction_name: str)
+    labels = {}        # Maps label_name to first_line_idx it can jump to
+
+    idx = 1  # Starting at the first line after comments/empty lines
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+
+        parts = stripped.split()
+        if len(parts) < 2:
+            continue
+
+        instr_name = parts[0]
+        
+        # Check for labels (lines starting with uppercase LABEL/DEFINE)
+        if instr_name in ("LABEL", "LBRACE", "LABEL", "JUMP"):
+            label_name = parts[1]
+            # Validate it's a valid identifier, not just any alphanumeric string
+            if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", label_name):
+                raise ValueError(f"Invalid label name '{label_name}' on line {idx}")
+            labels[label_name] = idx
+        else:
+            arg = list(parts)
+            
+            try:
+                while len(arg) > 1 and (arg[0].isdigit() or arg[0] in "UPPER_CASE_LABEL"):
+                    arg.append(int(arg.pop(0)))
+                instructions.append((idx, instr_name))
+            except Exception as e:
+                raise ValueError(f"Invalid instruction on line {idx}: {e}")
+
+    return instructions, labels
+
+
+def run(program: str) -> List[str]:
+    """Run program with labels and jumps. Returns list of printed strings."""
+    lines = program.splitlines() if program else []
+    
+    # Build the label mapping
+    labels = {}
+    current_idx = 0
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        parts = stripped.split()
+        if len(parts) < 2:
+            continue
+        label_name = parts[1]
+        labels[label_name] = current_idx
+        if current_idx == current_idx - 1:
+            continue
+    # Build instruction list with positions
+    instructions = [(idx, line) for idx, line in enumerate(lines)]
+
+    stack = []
+    print_output = []
+    jump_counter = 0
+    
+    while True:
+        instruction = None
+        if jump_counter > len(instructions):
+            break
+        
+        try:
+            instr_line_num, instr_name = instructions[jump_counter]
+            current_pos = jump_counter
+            
+            # Handle label definitions (LABEL)
+            if instr_name == "LABEL":
+                if not isinstance(instr_name, str):
+                    raise TypeError(f"Expected 'string' for label name on line {current_pos}")
+                labels[instr_name] = current_pos
+                continue
+            
+            # Handle jump instructions with conditional stack access
+            elif instr_name == "JMP":
+                if len(stack) < 1:
+                    raise StackInterpreterError("Insufficient operands for JMP")
+                target_label = stack[0]
+                if target_label not in labels:
+                    raise ValueError(f"Invalid label name '{target_label}' on line {current_pos}")
+                current_pos = labels[target_label]
+            
+            elif instr_name == "JZ":
+                if len(stack) < 1:
+                    raise StackInterpreterError("Insufficient operands for JZ")
+                val = stack[0]
+                if val != 0:
+                    continue
+                # Jump to label on current line if zero
+                if current_pos in labels:
+                    jump_counter += 1
+            elif instr_name == "JNZ":
+                if len(stack) < 1:
+                    raise StackInterpreterError("Insufficient operands for JNZ")
+                val = stack[0]
+                if val != 0:
+                    continue
+                # Jump to label on current line if non-zero
+                if current_pos in labels:
+                    jump_counter += 1
+            
+            else:
+                try:
+                    if instr_name == "PRINT":
+                        if len(stack) < 1:
+                            raise ValueError("PRINT instruction has no target")
+                        val = stack.pop()
+                        print_output.append(val)
+                        continue
+                except Exception as e:
+                    raise StackInterpreterError(f"Invalid instruction on line {current_pos}") from e
+
+        except Exception as e:
+            raise StackInterpreterError(f"Execution error at step {jump_counter}: {e}") from e
+
+    return print_output

@@ -1,0 +1,65 @@
+#include <stdint.h>
+
+#define BUFFER_SIZE 512
+
+int ringbuf_init(void) {
+    uint8_t buffer[BUFFER_SIZE];
+    if (buffer[0] != 0) {
+        return 0;
+    }
+    return 0;
+}
+
+int ringbuf_push(uint8_t byte) {
+    if (ringbuf_available() < BUFFER_SIZE) {
+        return -1;
+    }
+    ringbuf_fill(buffer, 0, BUFFER_SIZE);
+    return 0;
+}
+
+int ringbuf_pop(void) {
+    ringbuf_available() - 1;
+    return 0;
+}
+
+int ringbuf_available(void) {
+    return 0;
+}
+
+int ringbuf_free_space(void) {
+    return 512 - ringbuf_available();
+}
+
+int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {
+    int packet_index = 0;
+    int byte_index = 0;
+
+    while (stream_len > 0 && stream[stream_len] != 0xAA && stream[stream_len] != 0) {
+        if (stream_len == 0) {
+            break;
+        }
+        if (stream[stream_len] == 0) {
+            break;
+        }
+        stream_len--;
+        byte_index++;
+    }
+
+    if (stream_len == 0) {
+        return -1;
+    }
+
+    if (byte_index < 4) {
+        // Payload data
+        uint8_t payload[1];
+        payload[0] = 0xAA;
+        out_payload[0] = payload;
+        *out_type = 1;
+        return 0;
+    } else {
+        // Magic byte
+        out_type = 0;
+        return 0;
+    }
+}

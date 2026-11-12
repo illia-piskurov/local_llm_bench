@@ -1,0 +1,26 @@
+{
+  "model": "llama3.2:1b",
+  "created_at": "2026-11-11T13:54:16.584469Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef run(program):\n    stack = []\n    labels = {}\n    for line in program.split('\\n'):\n        if line.strip().startswith('#'):\n            continue\n        op, *args = line.split()\n        if op == 'PUSH':\n            try:\n                stack.append(int(args[0]))\n            except ValueError:\n                raise ValueError(f\"Invalid PUSH instruction: {line}\")\n            labels[args[0]] = len(labels)\n        elif op == 'LABEL':\n            labels[args[0]] = len(labels)\n        elif op == 'JMP':\n            labels[args[0]] = len(labels)\n        elif op == 'JZ':\n            if stack[-1] == 0:\n                stack.pop()\n                continue\n            raise ZeroDivisionError(f\"Division by zero: {line}\")\n            stack.pop()\n        elif op == 'JNZ':\n            if stack[-1] != 0:\n                stack.pop()\n                continue\n            raise ZeroDivisionError(f\"Division by zero: {line}\")\n            stack.pop()\n        elif op == 'DUP':\n            if len(stack) < 1:\n                raise ValueError(f\"Stack is empty: {line}\")\n            stack.append(stack[-1])\n        elif op == 'SWAP':\n            if len(stack) < 2:\n                raise ValueError(f\"Stack does not have enough values for SWAP: {line}\")\n            a, b = stack.pop(), stack.pop()\n            stack.append(a)\n            stack.append(b)\n        elif op == 'PRINT':\n            if not stack:\n                raise ValueError(f\"Stack is empty: {line}\")\n            print(stack[-1])\n    return stack\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 4911827834,
+  "load_duration": 1332542,
+  "prompt_eval_count": 909,
+  "prompt_eval_cached_count": 772,
+  "prompt_eval_duration": 135022000,
+  "eval_count": 338,
+  "eval_duration": 4768565000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 909,
+    "total_output_tokens": 338,
+    "tokens_per_second": 70.88086248168999,
+    "time_to_first_token_seconds": 0.135022,
+    "model_load_time_seconds": 0.001332542
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261111_132248_fbbe7e",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:4b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-11-11 13:26:43",
+  "stats": {
+    "input_tokens": 332,
+    "total_output_tokens": 665,
+    "reasoning_output_tokens": null,
+    "tokens_per_second": 26.62094429413285,
+    "time_to_first_token_seconds": 1.25589,
+    "model_load_time_seconds": 0.001317708
+  }
+}

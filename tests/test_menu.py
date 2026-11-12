@@ -67,3 +67,73 @@ def test_server_url_back_does_not_overwrite_the_saved_address(monkeypatch):
     _answers(monkeypatch, main.BACK)
     assert main.configure_server_url() == "http://127.0.0.1:1234"
     assert saved == []
+
+
+def _ollama_prompts(monkeypatch, texts, selects):
+    """Feeds questionary.text / questionary.select answers; records the defaults each prompt offered."""
+    text_queue, select_queue, offered = list(texts), list(selects), []
+
+    def text(message, default="", **kwargs):
+        offered.append(default)
+        return _Answer(text_queue.pop(0))
+
+    def select(message, choices=None, default=None, **kwargs):
+        offered.append(default)
+        return _Answer(select_queue.pop(0))
+
+    monkeypatch.setattr(main.questionary, "text", text)
+    monkeypatch.setattr(main.questionary, "select", select)
+    return offered
+
+
+@pytest.fixture
+def ollama_server(monkeypatch):
+    monkeypatch.setenv("LM_STUDIO_URL", "http://127.0.0.1:11434/v1")
+    for var in ("OLLAMA_THINK", "OLLAMA_NUM_CTX", "OLLAMA_THINK_BUDGET"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setattr(main, "_last_ollama_settings", None)
+
+
+def test_lm_studio_run_asks_nothing_and_sets_nothing(monkeypatch):
+    monkeypatch.setattr(main.questionary, "text", lambda *a, **kw: pytest.fail("LM Studio must not be asked"))
+    cfg = main.prompt_generation_config()
+    assert cfg.to_dict().keys() == {"seed", "timeout_seconds"}
+    assert cfg.think is None
+
+
+def test_ollama_run_asks_for_budgets_and_thinking(monkeypatch, ollama_server):
+    offered = _ollama_prompts(monkeypatch, texts=["6000", "2048", "8192"], selects=["high"])
+    cfg = main.prompt_generation_config()
+    assert offered == [str(lmstudio.DEFAULT_MAX_TOKENS), "medium", "8192", str(lmstudio.OLLAMA_DEFAULT_NUM_CTX)]
+    assert (cfg.max_tokens, cfg.think, cfg.think_budget, cfg.context_length) == (6000, "high", 2048, 8192)
+
+
+def test_ollama_run_skips_the_thinking_budget_when_thinking_is_off(monkeypatch, ollama_server):
+    _ollama_prompts(monkeypatch, texts=["4000", "16384"], selects=["off"])
+    cfg = main.prompt_generation_config()
+    assert cfg.think == "off"
+    assert cfg.think_budget == lmstudio.OLLAMA_DEFAULT_THINK_BUDGET
+
+
+def test_ollama_prompts_remember_the_previous_answers(monkeypatch, ollama_server):
+    _ollama_prompts(monkeypatch, texts=["6000", "0", "8192"], selects=["low"])
+    main.prompt_generation_config()
+    offered = _ollama_prompts(monkeypatch, texts=["6000", "0", "8192"], selects=["low"])
+    main.prompt_generation_config()
+    assert offered == ["6000", "low", "0", "8192"]
+
+
+def test_cancelled_ollama_prompt_cancels_the_run(monkeypatch, ollama_server):
+    _ollama_prompts(monkeypatch, texts=["6000", None], selects=["on"])
+    ran: list = []
+    monkeypatch.setattr(main, "run_queue", lambda *a, **kw: ran.append(kw))
+    main.start_run(Model("llm", "m"), [], None, force=False)
+    assert ran == []
+
+
+def test_start_run_passes_the_chosen_settings_to_run_queue(monkeypatch, ollama_server):
+    _ollama_prompts(monkeypatch, texts=["5000", "1000", "8192"], selects=["low"])
+    ran: list = []
+    monkeypatch.setattr(main, "run_queue", lambda *a, **kw: ran.append(kw))
+    main.start_run(Model("llm", "m"), [], None, force=True)
+    assert ran[0]["gen_config"].max_tokens == 5000 and ran[0]["force"] is True

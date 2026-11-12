@@ -1,0 +1,28 @@
+{
+  "run_id": "run_20261111_164730_b8950c",
+  "host_id": "70ccb4981862",
+  "model": "qwen3.5:0.8b-mlx",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-11 16:47:49",
+  "passed": 4,
+  "total": 18,
+  "failures": [
+    "push_print: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+    "add: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+    "sub_order: unexpected exception/timeout: ValueError: Instruction 'SUB' has insufficient arguments",
+    "mul: unexpected exception/timeout: ValueError: Instruction 'MUL' has insufficient arguments",
+    "div_order: unexpected exception/timeout: ValueError: Instruction 'DIV' has insufficient arguments",
+    "div_truncate: unexpected exception/timeout: ValueError: Instruction 'DIV' has insufficient arguments",
+    "dup: unexpected exception/timeout: ValueError: Instruction 'DUP' has insufficient arguments",
+    "swap: unexpected exception/timeout: ValueError: Instruction 'SWAP' has insufficient arguments",
+    "pop: unexpected exception/timeout: ValueError: Instruction 'POP' has insufficient arguments",
+    "comments_and_blank_lines: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+    "multiple_prints: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+    "print_does_not_pop: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+    "negative_numbers: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+    "complex_chain: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

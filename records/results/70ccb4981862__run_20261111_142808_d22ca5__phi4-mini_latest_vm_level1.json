@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-11 14:28:26",
+  "passed": 12,
+  "total": 18,
+  "failures": [
+    "sub_order: expected ['7'], got ['-7']",
+    "div_order: expected ['5'], got ['0']",
+    "div_truncate: expected ['3'], got ['0']",
+    "div_by_zero: expected error, but execution succeeded (['0'])",
+    "swap: expected ['1'], got ['-1']",
+    "complex_chain: expected ['10'], got ['-1']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

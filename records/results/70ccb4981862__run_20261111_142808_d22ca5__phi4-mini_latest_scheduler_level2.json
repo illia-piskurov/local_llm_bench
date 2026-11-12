@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-11 14:29:42",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception/timeout: KeyError: 5",
+    "simple_chain: unexpected exception/timeout: KeyError: 2",
+    "diamond_pick_longer_branch: unexpected exception/timeout: KeyError: 1",
+    "independent_tasks: unexpected exception/timeout: KeyError: 3",
+    "wide_graph: unexpected exception/timeout: KeyError: 2"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "c_framing",
+  "level": "level2",
+  "tested_at": "2026-11-11 16:01:49",
+  "passed": 0,
+  "total": 0,
+  "failures": [
+    "[TRUNCATED] c_framing/level2: server reported finish_reason=length"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

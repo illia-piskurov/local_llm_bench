@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:1b",
+  "created_at": "2026-11-11T11:19:48.495422Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:\n    \"\"\"\n    Implements a task scheduler with dependencies, priorities, and a limited worker pool.\n\n    Args:\n        tasks: A dictionary where keys are task names and values are tuples\n               (duration, deps, priority).\n\n    Returns:\n        The length of the longest dependency path by sum of durations, ignoring priority.\n        If there is a cycle in the dependency graph, return None.\n    \"\"\"\n\n    in_degree = {}\n    graph = {}\n    for task, (duration, deps, priority) in tasks.items():\n        in_degree[task] = 0\n        graph[task] = []\n\n    for task, (duration, deps, priority) in tasks.items():\n        for dep in deps:\n            graph[task].append(dep)\n            in_degree[dep] = in_degree.get(dep, 0) + 1\n\n    queue = []\n    for task, (duration, deps, priority) in tasks.items():\n        if in_degree[task] == 0:\n            queue.append(task)\n\n    result = []\n    while queue:\n        task = queue.pop(0)\n        result.append(task)\n\n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    if len(result) != len(tasks):\n        return None\n\n    return sum(task for task in result if task not in tasks)\n\ndef makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:\n    \"\"\"\n    Returns the total completion time of all tasks using the same scheduling rules as plan_order.\n    Use the same deterministic tie-breaking for ready tasks:\n        descending priority, ascending duration, alphabetical name.\n    If there is a cycle in the dependency graph, return None.\n    \"\"\"\n    completion_times = {}\n    for task, (duration, deps, priority) in tasks.items():\n        completion_times[task] = duration\n    \n    current_time = 0\n    for task in tasks:\n        if task not in completion_times:\n            return None\n        current_time += completion_times[task]\n    \n    return current_time\n\ndef makespan_tiebreaker(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:\n    \"\"\"\n    Returns the total completion time of all tasks using the same scheduling rules as plan_order.\n    Use the same deterministic tie-breaking for ready tasks:\n        descending priority, ascending duration, alphabetical name.\n    If there is a cycle in the dependency graph, return None.\n    \"\"\"\n    in_degree = {}\n    graph = {}\n    for task, (duration, deps, priority) in tasks.items():\n        in_degree[task] = 0\n        graph[task] = []\n\n    for task, (duration, deps, priority) in tasks.items():\n        for dep in deps:\n            graph[task].append(dep)\n            in_degree[dep] = in_degree.get(dep, 0) + 1\n\n    queue = []\n    for task, (duration, deps, priority) in tasks.items():\n        if in_degree[task] == 0:\n            queue.append(task)\n\n    result = []\n    while queue:\n        task = queue.pop(0)\n        result.append(task)\n\n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    if len(result) != len(tasks):\n        return None\n\n    return sum(task for task in result if task not in tasks)\n\ndef has_cycle(graph: dict[str, list[str]]) -> bool:\n    \"\"\"\n    Detects if there is a cycle in the dependency graph.\n    \"\"\"\n    visited = set()\n    recursion_stack = set()\n\n    def dfs(node):\n        visited.add(node)\n        recursion_stack.add(node)\n\n        for neighbor in graph[node]:\n            if neighbor not in visited:\n                if dfs(neighbor):\n                    return True\n            elif neighbor in recursion_stack:\n                return True\n\n        recursion_stack.remove(node)\n        return False\n\n    for node in graph:\n        if node not in visited:\n            if dfs(node):\n                return True\n\n    return False\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 11462497917,
+  "load_duration": 1301000,
+  "prompt_eval_count": 802,
+  "prompt_eval_cached_count": 606,
+  "prompt_eval_duration": 334427000,
+  "eval_count": 1057,
+  "eval_duration": 11111141000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 802,
+    "total_output_tokens": 1057,
+    "tokens_per_second": 95.12974410098838,
+    "time_to_first_token_seconds": 0.334427,
+    "model_load_time_seconds": 0.001301
+  }
+}

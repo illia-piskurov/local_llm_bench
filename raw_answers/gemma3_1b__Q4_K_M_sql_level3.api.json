@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:1b",
+  "created_at": "2026-11-11T11:20:15.393695Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef compile_query(query: dict) -> dict:\n    sql = \"SELECT *\"\n    params = []\n    if 'select' in query:\n        select_clause = query['select']\n        if isinstance(select_clause, list):\n            sql += \" AND \" + \" AND \".join([f\"({s})\" for s, _ in select_clause])\n        else:\n            sql += \" AND \" + str(select_clause)\n    if 'orderBy' in query:\n        orderBy_list = query['orderBy']\n        if isinstance(orderBy_list, list):\n            sql += \" ORDER BY \" + \" \".join([f\"({p})\" for p, _ in orderBy_list])\n        else:\n            sql += \" ORDER BY \" + str(orderBy_list)\n    if 'limit' in query:\n        limit_value = query['limit']\n        if isinstance(limit_value, int):\n            sql += \" LIMIT \" + str(limit_value)\n        else:\n            sql += \" LIMIT \" + str(limit_value)\n    if 'offset' in query:\n        offset_value = query['offset']\n        if isinstance(offset_value, int):\n            sql += \" OFFSET \" + str(offset_value)\n        else:\n            sql += \" OFFSET \" + str(offset_value)\n    if 'having' in query:\n        having_clause = query['having']\n        if isinstance(having_clause, list):\n            sql += \" HAVING \" + having_clause\n        else:\n            sql += \" HAVING \" + having_clause\n    if 'subquery' in query:\n        subquery_clause = query['subquery']\n        if isinstance(subquery_clause, list):\n            sql += \" { \" + \" \".join([f\"({s})\" for s, _ in subquery_clause]) + \"}\"\n        else:\n            sql += \" { \" + \" \".join([f\"({s})\" for s, _ in subquery_clause]) + \"}\"\n    return {\"sql\": sql, \"params\": params}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 5477814666,
+  "load_duration": 1327208,
+  "prompt_eval_count": 848,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 580208000,
+  "eval_count": 472,
+  "eval_duration": 4870365000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 848,
+    "total_output_tokens": 472,
+    "tokens_per_second": 96.91265439037937,
+    "time_to_first_token_seconds": 0.580208,
+    "model_load_time_seconds": 0.001327208
+  }
+}

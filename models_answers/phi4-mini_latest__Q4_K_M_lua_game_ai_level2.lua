@@ -1,0 +1,156 @@
+BT = {}
+
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+function BT.Blackboard.new()
+    local bb = {watchers = {}}
+    function bb:get(key, default)
+        return bb[key] or default
+    end
+    function bb:set(key, value)
+        bb[key] = value
+        for _, watcher in pairs(bb.watchers[key] or {}) do
+            watcher(key, value, bb[key])
+        end
+    end
+    function bb:watch(key, callback)
+        if not bb.watchers[key] then
+            bb.watchers[key] = {}
+        end
+        table.insert(bb.watchers[key], callback)
+    end
+    return setmetatable(bb, {__index = BT.Blackboard})
+end
+
+function BT.Action(fn)
+    local function tick(ctx)
+        local result = fn(ctx)
+        if result == true or result == BT.SUCCESS then
+            return BT.SUCCESS
+        elseif result == false or result == BT.FAILURE then
+            return result
+        else
+            return BT.RUNNING
+        end
+    end
+    function tick.reset()
+    end
+    return tick
+end
+
+function BT.Condition(predicate)
+    local function tick(ctx)
+        local result = predicate(ctx)
+        if result then
+            return BT.SUCCESS
+        else
+            return BT.FAILURE
+        end
+    end
+    function tick.reset()
+    end
+    return tick
+end
+
+function BT.Sequence(children)
+    local childrenCount = #children
+    local index = 1
+    local cooldownTicks = 0
+    local lastResult = BT.FAILURE
+    local function tick(ctx)
+        if index > childrenCount then
+            return lastResult == BT.FAILURE and cooldownTicks > 0 and cooldownTicks > 1 or lastResult == BT.SUCCESS
+        end
+        local child = children[index]
+        local result = child(ctx)
+        if result == BT.FAILURE then
+            return result
+        elseif result == BT.RUNNING then
+            index = index + 1
+            return result
+        else
+            lastResult = result
+            index = index + 1
+            if result == BT.SUCCESS then
+                cooldownTicks = cooldownTicks + 1
+            else
+                cooldownTicks = 0
+            end
+            return result
+        end
+    end
+    function tick.reset()
+        index = 1
+        cooldownTicks = 0
+        lastResult = BT.FAILURE
+    end
+    return tick
+end
+
+function BT.Selector(children)
+    local childrenCount = #children
+    local index = 1
+    local cooldownTicks = 0
+    local lastResult = BT.FAILURE
+    local function tick(ctx)
+        if index > childrenCount then
+            return lastResult == BT.FAILURE and cooldownTicks > 0 and cooldownTicks > 1 or lastResult == BT.SUCCESS
+        end
+        local child = children[index]
+        local result = child(ctx)
+        if result == BT.SUCCESS then
+            return result
+        elseif result == BT.RUNNING then
+            index = index + 1
+            return result
+        end
+    end
+    function tick.reset()
+        index = 1
+        cooldownTicks = 0
+        lastResult = BT.FAILURE
+    end
+    return tick
+end
+
+function BT.Inverter(child)
+    local function tick(ctx)
+        local result = child(ctx)
+        if result == BT.SUCCESS then
+            return BT.FAILURE
+        elseif result == BT.FAILURE then
+            return BT.SUCCESS
+        else
+            return result
+        end
+    end
+    function tick.reset()
+        child.reset()
+    end
+    return tick
+end
+
+function BT.Cooldown(child, ticks)
+    local cooldownTicks = 0
+    local lastResult = BT.FAILURE
+    local function tick(ctx)
+        if lastResult == BT.SUCCESS then
+            cooldownTicks = cooldownTicks + 1
+            if cooldownTicks >= ticks then
+                lastResult = BT.FAILURE
+                cooldownTicks = 0
+                return child(ctx)
+            else
+                return BT.FAILURE
+            end
+        end
+        return lastResult
+    end
+    function tick.reset()
+        cooldownTicks = 0
+        lastResult = BT.FAILURE
+    end
+    return tick
+end

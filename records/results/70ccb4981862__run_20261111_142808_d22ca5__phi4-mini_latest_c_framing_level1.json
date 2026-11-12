@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "c_framing",
+  "level": "level1",
+  "tested_at": "2026-11-11 14:34:02",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "empty_state: exception too few parameters provided: given 0, expected 1",
+    "basic_push_pop: exception too few parameters provided: given 0, expected 1",
+    "pointer_wrap_around: exception too few parameters provided: given 0, expected 1",
+    "full_overflow_check: exception too few parameters provided: given 0, expected 1"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

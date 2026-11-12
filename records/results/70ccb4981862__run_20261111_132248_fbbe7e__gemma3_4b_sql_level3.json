@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_132248_fbbe7e",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:4b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-11-11 13:30:34",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "failed to load solution: Syntax error in solution: unterminated string literal (detected at line 173) (<unknown>, line 173)"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

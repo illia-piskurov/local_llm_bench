@@ -1,0 +1,107 @@
+import heapq
+import heapq
+import sys
+from collections import defaultdict, deque
+
+def critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None:
+    # Build dependency graph
+    deps = defaultdict(list)
+    for task, deps, _ in tasks:
+        for dep in deps:
+            deps[dep].append(task)
+    graph = defaultdict(list)
+    for task in tasks:
+        for dep in deps[task]:
+            graph[dep].append(task)
+    # Compute longest path (ignoring priorities) for each task
+    longest_paths = {}
+    for task in tasks:
+        # Find longest path from task to sink (no dependencies)
+        # Use topological sort and dynamic programming
+        # For simplicity, assume graph is acyclic or cycle detection will fail
+        # If cycle detected, return None
+        # Here we assume no cycles due to problem constraints
+        # Compute longest path length for each task
+        # We can use a simple DFS
+        def dfs(task):
+            if task in longest_paths:
+                return longest_paths[task]
+            # Check if task has no dependencies (sink)
+            if not graph[task]:
+                return tasks[task][0]
+            max_len = 0
+            for neighbor in graph[task]:
+                max_len = max(max_len, 1 + dfs(neighbor))
+            longest_paths[task] = max_len
+            return max_len
+        # If cycle detected, return None
+        if dfs(task) == -1:  # indicating cycle
+            return None
+        longest_paths[task] = longest_paths[task] + tasks[task][0]
+        return longest_paths[task]
+
+def makespan(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> int | None:
+    # Check for cycles in dependency graph
+    deps = defaultdict(list)
+    for task, deps, _ in tasks:
+        for dep in deps:
+            deps[dep].append(task)
+    graph = defaultdict(list)
+    for task in tasks:
+        for dep in deps[task]:
+            graph[dep].append(task)
+    # Check for cycles using DFS
+    is_cyclic = False
+    for task in tasks:
+        visited = set()
+        stack = [task]
+        while stack:
+            current = stack.pop()
+            if current in visited:
+                is_cyclic = True
+                break
+            visited.add(current)
+            for neighbor in graph[current]:
+                if neighbor not in visited:
+                    stack.append(neighbor)
+        if is_cyclic:
+            return None
+    # Sort tasks by priority (descending), then duration (ascending), then alphabetical name
+    tasks_sorted = sorted(tasks, key=lambda x: (-tasks[x][1], tasks[x][2], tasks[x][0]))
+    # Schedule tasks to complete in makespan time
+    scheduled = []
+    heap = []
+    for task in tasks_sorted:
+        # Push to heap with priority, duration, task name
+        heapq.heappush(heap, (tasks[task][1], tasks[task][2], task))
+        # Check if scheduling this task would exceed workers
+        if len(scheduled) >= workers:
+            continue
+        # Add to scheduled
+        scheduled.append(task)
+        # Check if adding would exceed workers
+        if len(scheduled) >= workers:
+            continue
+        # Try to add more tasks
+        while heap and len(scheduled) < workers:
+            # Pop the highest priority task
+            _, _, task = heapq.heappop(heap)
+            if task in scheduled:
+                continue
+            # Add to scheduled
+            scheduled.append(task)
+            # Check if adding would exceed workers
+            if len(scheduled) >= workers:
+                continue
+            # Push back to heap
+            heapq.heappush(heap, (tasks[task][1], tasks[task][2], task))
+    # If still need more, select next
+    while scheduled and len(scheduled) < workers:
+        _, _, task = heapq.heappop(heap)
+        if task in scheduled:
+            continue
+        scheduled.append(task)
+        if len(scheduled) >= workers:
+            continue
+        heapq.heappush(heap, (tasks[task][1], tasks[task][2], task))
+    return len(scheduled) * tasks[0][0] if scheduled else None

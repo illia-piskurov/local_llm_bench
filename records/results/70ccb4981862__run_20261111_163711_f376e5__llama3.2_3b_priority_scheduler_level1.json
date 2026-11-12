@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261111_163711_f376e5",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:3b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-11 16:39:02",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: expected ['b', 'c', 'a'], got ['a', 'c', 'b']",
+    "dependency_unlocks_later: expected ['a', 'b', 'c'], got ['a', 'c', 'b']",
+    "single_worker_duration_tiebreak: expected ['b', 'c', 'a'], got ['a', 'c', 'b']",
+    "resource_limit_and_priority: expected ['compile', 'lint', 'test', 'package', 'deploy'], got ['lint', 'compile', 'test', 'package', 'deploy']",
+    "simultaneous_unlocks: expected ['root', 'c', 'd', 'b'], got ['root', 'b', 'd', 'c']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

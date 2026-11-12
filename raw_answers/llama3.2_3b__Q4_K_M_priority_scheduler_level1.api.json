@@ -1,0 +1,26 @@
+{
+  "model": "llama3.2:3b",
+  "created_at": "2026-11-11T14:39:01.950196Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nfrom collections import defaultdict, deque\nfrom typing import Dict, List, Tuple\n\ndef plan_order(tasks: Dict[str, Tuple[int, List[str], int]], workers: int) -> List[str] | None:\n    # Create a graph to store task dependencies\n    graph = defaultdict(list)\n    # Create a dictionary to store task in-degree\n    in_degree = {task: 0 for task in tasks}\n    # Create a dictionary to store task duration and priority\n    task_info = {task: (duration, priority) for task, (duration, _, priority) in tasks.items()}\n\n    # Build the graph and update in-degree\n    for task, (duration, deps, _) in tasks.items():\n        for dep in deps:\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    # Initialize a queue with tasks that have no dependencies\n    queue = deque([task for task in tasks if in_degree[task] == 0])\n\n    # Initialize a list to store the result\n    result = []\n\n    # Process tasks in the queue\n    while queue:\n        # Get the task with the highest priority and shortest duration\n        task = max(queue, key=lambda x: (-task_info[x][1], task_info[x][0]))\n        # Add the task to the result\n        result.append(task)\n        # Remove the task from the queue\n        queue.remove(task)\n        # Update the in-degree of tasks that depend on the current task\n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            # Add the task to the queue if it has no more dependencies\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    # If there are tasks that have not been processed, it means there is a cyclic dependency\n    if len(result) != len(tasks):\n        return None\n\n    return result\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 9904527875,
+  "load_duration": 1223417,
+  "prompt_eval_count": 233,
+  "prompt_eval_cached_count": 23,
+  "prompt_eval_duration": 503812000,
+  "eval_count": 399,
+  "eval_duration": 9358221000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 233,
+    "total_output_tokens": 399,
+    "tokens_per_second": 42.636308759966234,
+    "time_to_first_token_seconds": 0.503812,
+    "model_load_time_seconds": 0.001223417
+  }
+}

@@ -1,0 +1,207 @@
+```python
+def compile_query(query: dict) -> dict:
+    """
+    Compiles a query AST tree to parameterized SQL with JOIN, GROUP BY, and extended operators,
+    including computed expressions in SELECT, HAVING, and subqueries.
+    """
+    table = query['table']
+    select = query.get('select', [])
+    where = query.get('where')
+    orderBy = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+    joins = query.get('joins', [])
+    groupBy = query.get('groupBy', [])
+    having = query.get('having')
+    subqueries = query.get('subqueries', [])
+
+    sql = f"SELECT "
+    params = []
+    param_count = 1
+
+    # Handle SELECT expressions
+    select_expressions = []
+    for item in select:
+        if isinstance(item, dict) and 'expr' in item:
+            select_expressions.append(f"{item['as'] if 'as' in item else item['expr']}")
+        else:
+            select_expressions.append(item)
+    sql += ", ".join(select_expressions)
+    sql += " FROM " + table
+
+    if joins:
+        join_clauses = []
+        for join in joins:
+            join_type = join.get('type', 'INNER')
+            join_table = join['table']
+            join_on = join['on']
+            join_clause = f"{join_table} "
+            if join_type == 'LEFT':
+                join_clause += f"LEFT JOIN "
+            elif join_type == 'RIGHT':
+                join_clause += f"RIGHT JOIN "
+            else:
+                join_clause += f"JOIN "
+
+            conditions = []
+            for left_col, right_col in join_on.items():
+                conditions.append(f"{left_col} = {right_col}")
+
+            join_clause += " ON " + " AND ".join(conditions)
+            join_clauses.append(join_clause)
+        sql += " " + " ".join(join_clauses)
+
+    if where:
+        where_conditions = []
+        for cond in where:
+            if isinstance(cond, dict):
+                if 'AND' in cond:
+                    where_conditions.append(cond)
+                elif 'OR' in cond:
+                    where_conditions.append(cond)
+                else:
+                    where_conditions.append(cond)
+            else:
+                where_conditions.append(cond)
+
+        if where_conditions:
+            conditions = []
+            for cond in where_conditions:
+                field = list(cond.keys())[0]
+                value = cond[field]
+
+                if isinstance(value, list):
+                    for v in value:
+                        conditions.append(f"{field} IN ({v})")
+                elif value is None:
+                    conditions.append(f"{field} IS NULL")
+                elif isinstance(value, str):
+                    conditions.append(f"{field} LIKE '{value}'")
+                else:
+                    conditions.append(f"{field} = '{value}'")
+
+            if conditions:
+                sql += " WHERE " + " AND ".join(conditions)
+
+    if having:
+        having_conditions = []
+        for cond in having:
+            if isinstance(cond, dict):
+                if 'AND' in cond:
+                    having_conditions.append(cond)
+                elif 'OR' in cond:
+                    having_conditions.append(cond)
+                else:
+                    having_conditions.append(cond)
+            else:
+                having_conditions.append(cond)
+
+        if having_conditions:
+            conditions = []
+            for cond in having_conditions:
+                field = list(cond.keys())[0]
+                value = cond[field]
+
+                if isinstance(value, list):
+                    for v in value:
+                        conditions.append(f"{field} IN ({v})")
+                elif value is None:
+                    conditions.append(f"{field} IS NULL")
+                elif isinstance(value, str):
+                    conditions.append(f"{field} LIKE '{value}'")
+                else:
+                    conditions.append(f"{field} = '{value}'")
+
+            if conditions:
+                sql += " HAVING " + " AND ".join(conditions)
+
+    if subqueries:
+        for subquery in subqueries:
+            field = subquery['field']
+            op = subquery['op']
+            query_data = subquery['query']
+            
+            if op == 'IN':
+                value = query_data['value']
+                
+                if isinstance(value, list):
+                    for v in value:
+                        params.append(f"'{v}'")
+                else:
+                    params.append(f"'{value}'")
+                sql += f" {field} IN ({', '.join(params)})"
+            else:
+                raise ValueError(f"Unsupported operator: {op}")
+
+    if orderBy:
+        order_by_clauses = []
+        for order_by in orderBy:
+            field = order_by['field']
+            dir = order_by.get('dir', 'ASC')
+            order_by_clauses.append(f"{field} {dir}")
+        sql += " ORDER BY " + ", ".join(order_by_clauses)
+
+    if limit:
+        sql += f" LIMIT {limit}"
+
+    if offset:
+        sql += f" OFFSET {offset}"
+
+    return {"sql": sql, "params": params}
+
+if __name__ == '__main__':
+    query1 = {
+        'table': 'users',
+        'select': [
+            {'expr': 'COUNT(items.id)', 'as': 'item_count'}
+        ]
+    }
+    result1 = compile_query(query1)
+    print(result1)
+
+    query2 = {
+        'table': 'orders',
+        'select': [
+            {'expr': 'SUM(sales.amount)', 'as': 'total_sales'}
+        ],
+        'where': {
+            'status': {
+                'IN': ['completed', 'pending']
+            }
+        },
+        'having': {
+            'total_sales': {
+                ''>': 100
+            }
+        }
+    }
+    result2 = compile_query(query2)
+    print(result2)
+
+    query3 = {
+        'table': 'orders',
+        'select': [
+            {'expr': 'order_id', 'as': 'order_id'},
+            {'expr': 'SUM(sales.amount)', 'as': 'total_sales'}
+        ],
+        'where': {
+            'user_id': {
+                'IN': (
+                    {
+                        'field': 'user_id',
+                        'op': 'IN',
+                        'query': {
+                            'table': 'vip_members',
+                            'select': ['user_id'],
+                            'where': {
+                                'tier': 1
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    }
+    result3 = compile_query(query3)
+    print(result3)
+```

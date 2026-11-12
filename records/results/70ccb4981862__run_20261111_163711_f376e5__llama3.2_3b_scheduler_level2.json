@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261111_163711_f376e5",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:3b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-11 16:38:52",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+    "simple_chain: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+    "diamond_pick_longer_branch: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+    "independent_tasks: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+    "wide_graph: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

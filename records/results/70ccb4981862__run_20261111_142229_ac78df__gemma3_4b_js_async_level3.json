@@ -1,0 +1,28 @@
+{
+  "run_id": "run_20261111_142229_ac78df",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:4b",
+  "benchmark": "js_async",
+  "level": "level3",
+  "tested_at": "2026-11-11 14:24:04",
+  "passed": 3,
+  "total": 17,
+  "failures": [
+    "order_preservation: assertion returned False",
+    "concurrency_limit: assertion returned False",
+    "concurrency_as_number: assertion returned False",
+    "concurrency_default_one: assertion returned False",
+    "index_passed: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "mapper_rejection: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "retry_transient_failure: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "retry_exhausted: assertion returned False",
+    "exponential_backoff: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "task_timeout: assertion returned False",
+    "timeout_triggers_retry: assertion returned False",
+    "mid_flight_abort: assertion returned False",
+    "settled_all_success: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "settled_mixed_failures: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,134 @@
+{
+  "id": "run_20261111_164730_b8950c",
+  "host_id": "70ccb4981862",
+  "model_key": "qwen3.5:0.8b-mlx",
+  "model_name": "qwen3.5:0.8b-mlx",
+  "quantization": "mxfp8",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 10000,
+    "artifact": {
+      "key": "qwen3.5:0.8b-mlx",
+      "display_name": "qwen3.5:0.8b-mlx",
+      "architecture": "qwen3_5",
+      "quantization": "mxfp8",
+      "quantization_bits": null,
+      "size_bytes": 1244131636,
+      "params_string": "852.88M",
+      "max_context_length": 262144,
+      "format": "safetensors",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "1397641c2c92"
+  },
+  "suite_version": "537d00a (1397641c2c92)",
+  "started_at": "2026-11-11 16:47:30",
+  "completed_at": "2026-11-11 16:52:32",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:47:49",
+      "passed": 4,
+      "total": 18,
+      "failures": [
+        "push_print: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+        "add: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+        "sub_order: unexpected exception/timeout: ValueError: Instruction 'SUB' has insufficient arguments",
+        "mul: unexpected exception/timeout: ValueError: Instruction 'MUL' has insufficient arguments",
+        "div_order: unexpected exception/timeout: ValueError: Instruction 'DIV' has insufficient arguments",
+        "div_truncate: unexpected exception/timeout: ValueError: Instruction 'DIV' has insufficient arguments",
+        "dup: unexpected exception/timeout: ValueError: Instruction 'DUP' has insufficient arguments",
+        "swap: unexpected exception/timeout: ValueError: Instruction 'SWAP' has insufficient arguments",
+        "pop: unexpected exception/timeout: ValueError: Instruction 'POP' has insufficient arguments",
+        "comments_and_blank_lines: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+        "multiple_prints: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+        "print_does_not_pop: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+        "negative_numbers: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+        "complex_chain: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:49:53",
+      "passed": 5,
+      "total": 27,
+      "failures": [
+        "push_print: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+        "add: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+        "sub_order: unexpected exception/timeout: ValueError: Instruction 'SUB' has insufficient arguments",
+        "mul: unexpected exception/timeout: ValueError: Instruction 'MUL' has insufficient arguments",
+        "div_order: unexpected exception/timeout: ValueError: Instruction 'DIV' has insufficient arguments",
+        "div_truncate: unexpected exception/timeout: ValueError: Instruction 'DIV' has insufficient arguments",
+        "dup: unexpected exception/timeout: ValueError: Instruction 'DUP' has insufficient arguments",
+        "swap: unexpected exception/timeout: ValueError: Instruction 'SWAP' has insufficient arguments",
+        "pop: unexpected exception/timeout: ValueError: Instruction 'POP' has insufficient arguments",
+        "comments_and_blank_lines: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+        "multiple_prints: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+        "print_does_not_pop: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+        "negative_numbers: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+        "complex_chain: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments",
+        "countdown_loop: unexpected exception/timeout: ValueError: Instruction 'DUP' has insufficient arguments",
+        "count_up_loop: unexpected exception/timeout: ValueError: Instruction 'ADD' has insufficient arguments",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: ValueError: Instruction 'PRINT' has insufficient arguments"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 16:52:08",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[TRUNCATED] vm/level3: server reported finish_reason=length"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:47:48",
+      "stats": {
+        "input_tokens": 285,
+        "total_output_tokens": 1335,
+        "reasoning_output_tokens": 735,
+        "tokens_per_second": 81.45935191687087,
+        "time_to_first_token_seconds": 0.437763792,
+        "model_load_time_seconds": 0.70729725
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:49:50",
+      "stats": {
+        "input_tokens": 1045,
+        "total_output_tokens": 506,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 78.4465115402032,
+        "time_to_first_token_seconds": 0.090306958,
+        "model_load_time_seconds": 0.025741
+      }
+    }
+  ]
+}

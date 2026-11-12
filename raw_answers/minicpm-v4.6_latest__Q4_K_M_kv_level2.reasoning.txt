@@ -1,0 +1,96 @@
+We need to extend the in-memory key-value store with two new commands: COUNT <value> and WATCH <key>. We must ensure that the implementation respects the requirements: changes within transactions (including uncommitted) are visible via GET immediately, but discarded on ROLLBACK. Also, WATCH notifications are emitted immediately at SET/DELETE, not at COMMIT/ROLLBACK.
+
+We need to consider the state: store is in-memory, possibly with nested transactions. The WATCH command should start watching a key, and for any SET or DELETE that modifies the currently visible value of the key (including changes inside uncommitted transactions), output "WATCH <key> <old_value> -> <new_value>". Note: old_value is "NULL" for absent value, new_value is the new value. Also, if SET assigns the same value, no notification.
+
+COUNT <value> should output the number of keys whose current value (taking into account open transactions) is equal to <value>.
+
+We need to ensure that the store is in-memory, and transactions are nested. The run function should be called with program as a string, and return the list of output strings.
+
+We'll implement the store as a dictionary, and transactions as lists or something. For WATCH, we need to keep track of the current visible value of the key, and when a SET or DELETE modifies it, output the watch message.
+
+We'll also need to handle the COUNT command: count the keys whose value equals the given value, considering open transactions.
+
+We need to consider that the WATCH command starts watching a key, and any SET or DELETE that modifies the currently visible value (including uncommitted changes) should output the watch message. The watch message is immediate, not at COMMIT/ROLLBACK.
+
+We need to ensure that the store's state is updated when WATCH is called, but the output is immediate.
+
+Let's design:
+
+- store: dictionary, key->value.
+- transactions: list of dictionaries (for nested transactions).
+- current_visible_value: the value of the key at the moment of WATCH, presumably the current value of the key in the store? But we need to track the visible value, which might be the value of the key in the store, but if it's a watch, we need to know the old and new values.
+
+When WATCH is called for key, we set current_visible_value to the value of the key (which is stored). Then, any SET or DELETE that modifies the value (including uncommitted transactions) will output the watch message. However, note: the WATCH notifications are emitted immediately at the moment of SET/DELETE execution, not at COMMIT/ROLLBACK. So we need to check when the SET or DELETE is executed, and if it modifies the value, output the watch message.
+
+But also, COUNT command: count the number of keys whose current value (taking into account open transactions) is equal to <value>. So we need to iterate over the keys, check their current value (which is the value stored), and if it equals the given value, increment count. But note: "taking into account open transactions" means we consider the state of transactions, including the changes within them.
+
+We need to consider that the store is in-memory, and transactions are nested. When we do COUNT, we need to count the keys whose value (in the store) is equal to the given value, considering the state of transactions (i.e., the values stored in transactions).
+
+We'll need to keep track of the current value of the key, and also the state of transactions.
+
+Let's plan the implementation:
+
+We'll have a function run(program) that processes the input, and returns the list of output strings.
+
+We'll also have a store dictionary, transactions list, and a current_visible_value variable.
+
+For WATCH <key>, we set current_visible_value to the value of the key (which is stored). Then, when a SET or DELETE is executed for that key, we check if the value has changed (i.e., if the new value is different from current_visible_value). If it does, output "WATCH <key> <old_value> -> <new_value>". Note: old_value is "NULL" for absent value, new_value is the new value.
+
+For COUNT <value>, we need to count the number of keys whose current value (i.e., the stored value) is equal to value. We iterate over the keys, check the stored value, and if it equals value, increment count. But we need to consider the state of transactions: the stored value might be part of a transaction, so we need to check the current value of the key, which is the value stored, and also check if that value is in any of the transactions (i.e., is part of a transaction). However, the COUNT command says "taking into account open transactions", so we should consider the current value of the key, which is the value stored, and also check if that value is present in any of the transactions (i.e., is part of a transaction). But note: the value stored in a transaction might be different from the current_visible_value? Actually, the current_visible_value is the value of the key at the moment of WATCH, which is the value stored. So when we do COUNT, we count keys whose current value (i.e., the value stored) is equal to value, regardless of whether that value is in a transaction. But the requirement: "taking into account open transactions" suggests we should consider the state of transactions, i.e., the values stored in transactions might be different from the current_visible_value. However, the COUNT command's description: "output the number of keys whose current value (taking into account open transactions) is equal to <value>". So we need to check the current value of the key (which is the value stored), and if it equals value, count it, considering the state of transactions (i.e., whether the value is part of a transaction). But how does the store's value in a transaction affect the current_visible_value? The current_visible_value is the value of the key at the moment of WATCH, which is the value stored. So if the value is part of a transaction, the current_visible_value might be different from the stored value? Actually, the store is in-memory, and transactions are nested. When we BEGIN a transaction, we start a new transaction, and the values are stored there. When we COMMIT, the transaction is committed, and the values are merged into the parent transaction. When we ROLLBACK, the transaction is rolled back, and the values are discarded. So the current_visible_value is the value of the key at the moment of WATCH, which is the value stored in the store. So if a key is in a transaction, its current_visible_value is the value stored in that transaction, which might be different from the value we set or deleted. So when we do COUNT, we need to count the keys whose current value (i.e., the value stored) is equal to value, considering the state of transactions (i.e., whether the value is part of a transaction). But the requirement for COUNT is to count the number of keys whose current value (taking into account open transactions) is equal to <value>. So we need to check the current value of each key, which is the value stored, and if it equals value, count it, regardless of whether it's in a transaction. However, the requirement says "taking into account open transactions", which might mean we should consider the state of transactions, i.e., whether the value is part of a transaction. But the COUNT command's output is the number of keys whose current value is equal to <value>, which seems to be just the count of keys with value equal to <value>, regardless of transaction state. But the requirement for WATCH is about modifications, which might involve transaction state. So for COUNT, we just count the keys whose value is equal to <value>, ignoring transaction state.
+
+But we need to ensure that the store is in-memory, and transactions are nested. So when we do COUNT, we iterate over the keys, check the stored value, and if it equals <value>, increment count.
+
+Now, we need to handle the run program function, which will process the input, and return the list of output strings.
+
+We'll implement the store as a dictionary, transactions as lists (or as nested dictionaries?), but for COUNT, we need to consider the state of transactions, so we need to keep track of the current value of each key, and the state of transactions.
+
+Let's design:
+
+- store: dict, key -> value.
+- transactions: list of dict, each dict might contain key -> value, and possibly other state. But for COUNT, we need to count keys whose current value (i.e., the value stored) is equal to <value>. So we can just iterate over the keys, check the stored value, and if it equals <value>, count. But we also need to consider the state of transactions, i.e., whether the key is in a transaction. However, the requirement for WATCH is about modifications, which might involve transaction state. For COUNT, it's just about the value.
+
+But the problem says: "COUNT <value>  — output the number of keys whose current value (taking into account open
+                transactions) is equal to <value>
+WATCH <key>    — start watching a key. ... any SET or DELETE that modifies the currently visible value of this key (including
+                changes inside uncommitted transactions) must immediately output: "WATCH <key> <old_value> -> <new_value>"
+                where "NULL" is used in place of an absent value."
+
+So for COUNT, we need to count the number of keys whose current value (i.e., the value stored) is equal to <value>, considering the state of transactions (i.e., whether the value is part of a transaction). But the current value is the value stored, which might be part of a transaction. However, the requirement for WATCH is about modifications, which might involve transaction state. So for COUNT, we can just count the keys whose value is equal to <value>, regardless of transaction state.
+
+But to be safe, we can implement the store as a dictionary where each key is a key, and the value is a value, and the transactions are lists of (key, value). Then, when we do COUNT, we iterate over the keys, check if the value is equal to <value>, and count.
+
+For WATCH, we need to keep track of the current visible value of the key, which is the value stored. When a SET or DELETE is executed for that key, we check if the new value is different from the current visible value (i.e., if the value has changed), then output the watch message. The old value is "NULL" for absent value.
+
+So we'll implement:
+
+- store: dict, key -> value.
+- transactions: list of (key, value), or maybe list of dicts with key and value.
+- current_visible_value: the value of the key at the moment of WATCH, which is the value stored.
+
+We'll also need a function to get the current value of a key, which is the value stored.
+
+Now, for run program, we'll process the input, and return the list of output strings.
+
+Let's write the code.
+
+We'll define run(program: str) -> list[str].
+
+We'll initialize store, transactions, current_visible_value, and output list.
+
+We'll process each line, handle commands.
+
+For WATCH <key>, we need to start watching a key, so we set current_visible_value to the value of the key (which is stored). Then, when a SET or DELETE is executed for that key, we check if the new value is different from current_visible_value, and output the watch message.
+
+For COUNT <value>, we iterate over the keys, check if the stored value equals value, and count.
+
+We need to handle the case where a key is not present, etc.
+
+Let's implement.
+
+We'll assume the input program is a string with lines, each line is a command or key-value.
+
+We'll parse the lines, split by space, and handle commands.
+
+We'll also need to handle the output for other commands, which are ignored.
+
+Now, write the code.

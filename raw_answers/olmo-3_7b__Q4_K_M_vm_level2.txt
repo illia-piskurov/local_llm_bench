@@ -1,0 +1,99 @@
+```python
+def run(program: str) -> list[str]:
+    lines = program.splitlines()
+    labels = {}
+    for line_num, line in enumerate(lines, 1):
+        stripped_line = line.strip()
+        if not stripped_line or stripped_line.startswith('#'):
+            continue
+        if stripped_line.startswith('LABEL '):
+            parts = stripped_line.split()
+            if len(parts) < 2:
+                raise Exception(f"Error on line {line_num}: Invalid LABEL instruction")
+            label_name = parts[1]
+            labels[label_name] = line_num
+    stack = []
+    output = []
+    current_line = 0
+    while current_line < len(lines):
+        line = lines[current_line].strip()
+        if not line or line.startswith('#'):
+            current_line += 1
+            continue
+        parts = line.split()
+        instruction = parts[0]
+        if instruction == 'PUSH':
+            if len(parts) < 2:
+                raise Exception(f"Error on line {current_line +1}: PUSH requires an argument")
+            n = int(parts[1])
+            stack.append(n)
+        elif instruction == 'POP':
+            if not stack:
+                raise Exception(f"Error on line {current_line +1}: POP on empty stack")
+            stack.pop()
+        elif instruction == 'ADD':
+            if len(stack) < 2:
+                raise Exception(f"Error on line {current_line +1}: not enough elements for ADD")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a + b)
+        elif instruction == 'SUB':
+            if len(stack) < 2:
+                raise Exception(f"Error on line {current_line +1}: not enough elements for SUB")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(a - b)
+        elif instruction == 'MUL':
+            if len(stack) < 2:
+                raise Exception(f"Error on line {current_line +1}: not enough elements for MUL")
+            a = stack.pop()
+            b = stack.pop()
+            stack.append(a * b)
+        elif instruction == 'DIV':
+            if len(stack) < 2:
+                raise Exception(f"Error on line {current_line +1}: not enough elements for DIV")
+            b = stack.pop()
+            a = stack.pop()
+            if b == 0:
+                raise Exception(f"Error on line {current_line +1}: division by zero")
+            stack.append(a // b)
+        elif instruction == 'DUP':
+            if not stack:
+                raise Exception(f"Error on line {current_line +1}: DUP on empty stack")
+            x = stack.pop()
+            stack.append(x)
+            stack.append(x)
+        elif instruction == 'SWAP':
+            if len(stack) < 2:
+                raise Exception(f"Error on line {current_line +1}: not enough elements for SWAP")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(b)
+            stack.append(a)
+        elif instruction == 'PRINT':
+            if not stack:
+                raise Exception(f"Error on line {current_line +1}: PRINT on empty stack")
+            output.append(str(stack[-1]))
+        elif instruction == 'JMP':
+            if len(parts) < 2:
+                raise Exception(f"Error on line {current_line +1}: invalid JMP instruction")
+            label_name = parts[1]
+            if label_name not in labels:
+                raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+            target_line = labels[label_name]
+            current_line = target_line - 1
+        elif instruction == 'JZ':
+            if len(parts) < 2:
+                raise Exception(f"Error on line {current_line +1}: invalid JZ instruction")
+            label_name = parts[1]
+            if label_name not in labels:
+                raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+            if not stack:
+                raise Exception(f"Error on line {current_line +1}: JZ on empty stack")
+            value = stack.pop()
+            if value == 0:
+                target_line = labels[label_name]
+                current_line = target_line - 1
+        elif instruction == 'JNZ':
+            if len(parts) < 2:
+                raise Exception(f"Error on line {current_line +1}:

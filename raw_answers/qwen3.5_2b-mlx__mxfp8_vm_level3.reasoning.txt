@@ -1,0 +1,38 @@
+The user wants to extend an existing interpreter (which I've been implementing) with:
+1. Subroutines (CALL/RET)
+2. Comparison operations (EQ/GT/LT)
+3. Named variables (STORE/LOAD)
+
+I need to:
+1. Update the parsing to handle these new instructions
+2. Add a stack for the call stack when CALL is encountered
+3. Add logic for RET to pop return address and jump back
+4. Implement comparison operations using stack operations
+5. Add variable storage/lookup (STORE/LOAD)
+6. Preserve all previously implemented instructions while adding support for these new ones
+7. Keep the run(program: str) -> list[str] signature
+
+Let me think through each instruction carefully:
+
+For CALL and RET, I need to track return addresses on a call stack. When CALL <name> is encountered:
+- Push current line position (or just current position index for simplicity) onto call stack
+- Jump to label <name> with the updated call stack state
+
+For RET:
+- Pop top of call stack as return address
+- If empty, raise error
+- Jump back to label returned by RET instruction's target
+
+For comparisons:
+- EQ/ GT/LT pop two values (a from top, b below it) or vice versa depending on convention
+- The convention I used earlier was: pop b then a, push result
+- For this implementation, let me assume the stack operations should be consistent: when comparing A and B, I need to use two stack positions. If we push 1 for true condition, it means we want 0 or 1 as result based on condition.
+
+For variables (STORE/LOAD):
+- Need a map from variable name to value (stack or direct)
+- STORE: pop value from stack and store into var_name
+- LOAD: if var_name not in variables_map, raise error; then push value onto stack
+
+Wait, looking at the requirements more carefully:
+- Subroutines should work via CALL/RET
+- We need to support nested calls (stack-based)

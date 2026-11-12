@@ -1,0 +1,13 @@
+{
+  "run_id": "run_20261111_132248_fbbe7e",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:4b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-11 13:24:49",
+  "passed": 10,
+  "total": 10,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

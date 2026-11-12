@@ -1,0 +1,72 @@
+{
+  "id": "run_20261111_170007_bd9f87",
+  "host_id": "70ccb4981862",
+  "model_key": "olmo-3:7b",
+  "model_name": "olmo-3:7b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "max_tokens": 12000,
+    "context_length": 17384,
+    "artifact": {
+      "key": "olmo-3:7b",
+      "display_name": "olmo-3:7b",
+      "architecture": "olmo3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 4472011564,
+      "params_string": "7.3B",
+      "max_context_length": 65536,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 4000,
+    "suite_hash": "1397641c2c92"
+  },
+  "suite_version": "537d00a (1397641c2c92)",
+  "started_at": "2026-11-11 17:00:07",
+  "completed_at": "2026-11-11 17:44:49",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 17:18:51",
+      "passed": 18,
+      "total": 18,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 17:43:05",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[TRUNCATED] vm/level2: server reported finish_reason=length"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 17:18:49",
+      "stats": {
+        "input_tokens": 321,
+        "total_output_tokens": 9214,
+        "reasoning_output_tokens": 8624,
+        "tokens_per_second": 11.193042274696941,
+        "time_to_first_token_seconds": 0.227232,
+        "model_load_time_seconds": 0.006724709
+      }
+    }
+  ]
+}

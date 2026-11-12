@@ -1,0 +1,26 @@
+{
+  "model": "phi4-mini:latest",
+  "created_at": "2026-11-11T12:35:01.276435Z",
+  "message": {
+    "role": "assistant",
+    "content": "```c\n#include <stdint.h>\n#include <string.h>\n\n#define MAGIC 0xAA\n#define MAX_PACKET_SIZE 256 // Assuming a maximum packet size for the ring buffer\n\n// RingBuffer structure and functions from Level 1 here...\n\nint ring_buffer[MAX_PACKET_SIZE];\nint head = 0;\nint tail = 0;\nint count = 0;\n\nvoid feed_bytes(const uint8_t *data, int len) {\n    for (int i = 0; i < len; i++) {\n        int next_head = (head + 1) % MAX_PACKET_SIZE;\n        if (next_head == tail) {\n            // Buffer is full, discard incoming bytes\n            return;\n        }\n        ring_buffer[head] = data[i];\n        head = next_head;\n        if (count < MAX_PACKET_SIZE) {\n            count++;\n        }\n    }\n}\n\nint get_next_packet(uint8_t *out_payload, int *out_type) {\n    int i = 0;\n    int packet_len = 0;\n    int payload_len = 0;\n    int checksum = 0;\n    int found_magic = 0;\n    int found_type = 0;\n    int found_len = 0;\n\n    while (i < count) {\n        if (ring_buffer[i] == MAGIC) {\n            if (found_magic) {\n                return -1; // Corrupted packet: multiple magic bytes\n            }\n            found_magic = 1;\n            i += 1; // Skip magic byte\n\n            if (i + 1 >= count) {\n                return -1; // Not enough data for a full packet\n            }\n            *out_type = ring_buffer[i + 1];\n            found_type = 1;\n            i += 2; // Skip type and len\n\n            if (i + 1 >= count) {\n                return -1; // Not enough data for len\n            }\n            payload_len = ring_buffer[i + 1];\n            found_len = 1;\n            i += 2; // Skip len\n\n            if (payload_len == 0) {\n                checksum = 0;\n            } else if (i + payload_len + 1 >= count) {\n                return -1; // Not enough data for payload and checksum\n            }\n            checksum = 0;\n            for (int j = 0; j < payload_len; j++) {\n                checksum ^= ring_buffer[i + 2 + j];\n            }\n            if (checksum != ring_buffer[i + payload_len + 1]) {\n                return -1; // Corrupted packet: checksum mismatch\n            }\n            payload_len += 1; // Include checksum byte in payload length\n            i += payload_len + 1; // Skip payload and checksum\n        } else {\n            i += 1; // Skip noise byte\n        }\n    }\n\n    if (!found_magic || !found_type || !found_len) {\n        return -1; // No valid packet found\n    }\n\n    if (payload_len > *out_type) {\n        return -1; // Payload length exceeds type identifier\n    }\n\n    memcpy(out_payload, &ring_buffer[head], payload_len);\n    *out_type = *out_type;\n    return payload_len;\n}\n\n// RingBuffer structure and functions from Level 1 here...\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 33245318417,
+  "load_duration": 3343583,
+  "prompt_eval_count": 1100,
+  "prompt_eval_cached_count": 1,
+  "prompt_eval_duration": 4567619000,
+  "eval_count": 681,
+  "eval_duration": 28592362000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1100,
+    "total_output_tokens": 681,
+    "tokens_per_second": 23.817549595937543,
+    "time_to_first_token_seconds": 4.567619,
+    "model_load_time_seconds": 0.003343583
+  }
+}

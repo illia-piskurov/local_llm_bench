@@ -1,0 +1,631 @@
+{
+  "id": "run_20261111_132248_fbbe7e",
+  "host_id": "70ccb4981862",
+  "model_key": "gemma3:4b",
+  "model_name": "gemma3:4b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 16384,
+    "artifact": {
+      "key": "gemma3:4b",
+      "display_name": "gemma3:4b",
+      "architecture": "gemma3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 3350272403,
+      "params_string": "3.9B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "537d00a (051cb8695784)",
+  "started_at": "2026-11-11 13:22:48",
+  "completed_at": "2026-11-11 14:03:52",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:23:15",
+      "passed": 4,
+      "total": 18,
+      "failures": [
+        "push_print: expected ['5'], got []",
+        "add: expected ['5'], got []",
+        "sub_order: expected ['7'], got []",
+        "mul: expected ['24'], got []",
+        "div_order: expected ['5'], got []",
+        "div_truncate: expected ['3'], got []",
+        "dup: expected ['18'], got []",
+        "swap: expected ['1'], got []",
+        "pop: expected ['1'], got []",
+        "comments_and_blank_lines: expected ['7'], got []",
+        "multiple_prints: expected ['1', '2', '3'], got []",
+        "print_does_not_pop: expected ['5', '5'], got []",
+        "negative_numbers: expected ['2'], got []",
+        "complex_chain: expected ['10'], got []"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:23:49",
+      "passed": 5,
+      "total": 27,
+      "failures": [
+        "push_print: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "add: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "sub_order: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "mul: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "div_order: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "div_truncate: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "dup: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "swap: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "pop: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "comments_and_blank_lines: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "multiple_prints: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "print_does_not_pop: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "negative_numbers: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "complex_chain: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "unconditional_jump_skips_code: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "jz_taken_when_zero: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "countdown_loop: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "count_up_loop: unexpected exception/timeout: NameError: name 'instruction' isn't defined",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: NameError: name 'instruction' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 13:24:36",
+      "passed": 8,
+      "total": 37,
+      "failures": [
+        "push_print: expected ['5'], got []",
+        "add: expected ['5'], got []",
+        "sub_order: expected ['7'], got []",
+        "mul: expected ['24'], got []",
+        "div_order: expected ['5'], got []",
+        "div_truncate: expected ['3'], got []",
+        "dup: expected ['18'], got []",
+        "swap: expected ['1'], got []",
+        "pop: expected ['1'], got []",
+        "comments_and_blank_lines: expected ['7'], got []",
+        "multiple_prints: expected ['1', '2', '3'], got []",
+        "print_does_not_pop: expected ['5', '5'], got []",
+        "negative_numbers: expected ['2'], got []",
+        "complex_chain: expected ['10'], got []",
+        "unconditional_jump_skips_code: unexpected exception/timeout: ValueError: Invalid instruction: JMP (line 2)",
+        "jz_taken_when_zero: unexpected exception/timeout: ValueError: Invalid instruction: JZ (line 2)",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ValueError: Invalid instruction: JZ (line 2)",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: ValueError: Invalid instruction: JNZ (line 2)",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ValueError: Invalid instruction: JNZ (line 2)",
+        "countdown_loop: unexpected exception/timeout: ValueError: Invalid instruction: JNZ (line 8)",
+        "count_up_loop: unexpected exception/timeout: ValueError: Invalid instruction: JNZ (line 10)",
+        "label_does_nothing_on_its_own: expected ['42'], got []",
+        "call_ret_basic: unexpected exception/timeout: ValueError: Undefined label: double",
+        "call_ret_nested: unexpected exception/timeout: ValueError: Undefined label: func_a",
+        "comparison_eq_gt_lt: expected ['1', '0', '1', '0', '1', '0'], got []",
+        "store_and_load: unexpected exception/timeout: ValueError: Undefined variable: x",
+        "store_overwrite: unexpected exception/timeout: ValueError: Undefined variable: val",
+        "recursive_factorial: unexpected exception/timeout: ValueError: Undefined label: fact",
+        "recursive_fibonacci: unexpected exception/timeout: ValueError: Undefined label: fib"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:24:49",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:25:13",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: expected 5, got None",
+        "simple_chain: expected 9, got None",
+        "diamond_pick_longer_branch: expected 12, got None",
+        "independent_tasks: expected 7, got None",
+        "wide_graph: expected 19, got None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:25:34",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: expected ['b', 'c', 'a'], got None",
+        "dependency_unlocks_later: expected ['a', 'b', 'c'], got None",
+        "single_worker_duration_tiebreak: expected ['b', 'c', 'a'], got None",
+        "resource_limit_and_priority: expected ['compile', 'lint', 'test', 'package', 'deploy'], got None",
+        "simultaneous_unlocks: expected ['root', 'c', 'd', 'b'], got None"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:26:16",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "single_task: expected order=['a'], ms=5, cp=5; got order=None, ms=None, cp=0",
+        "parallel_tasks_reduce_makespan: expected order=['c', 'b', 'a'], ms=4, cp=3; got order=None, ms=None, cp=0",
+        "dependencies_and_workers: expected order=['a', 'c', 'b', 'd'], ms=11, cp=11; got order=None, ms=None, cp=0",
+        "critical_path_longer_than_worker_parallelism: expected order=['a', 'b', 'c', 'd'], ms=16, cp=4; got order=None, ms=None, cp=0",
+        "wide_graph_with_unlocks: expected order=['compile', 'fetch', 'test', 'package'], ms=8, cp=8; got order=None, ms=None, cp=0",
+        "cycle_returns_none: expected None, got order=None, ms=None, cp=0"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:26:44",
+      "passed": 0,
+      "total": 15,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "get_missing: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "delete_then_get: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "delete_missing_key_noop: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "overwrite_set: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "commit_no_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "rollback_no_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "simple_transaction_commit: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "simple_transaction_rollback: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "rollback_restores_delete: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "nested_transactions: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "multiple_keys_independent: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "set_new_key_inside_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:27:27",
+      "passed": 0,
+      "total": 25,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "get_missing: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "delete_then_get: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "delete_missing_key_noop: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "overwrite_set: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "commit_no_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "rollback_no_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "simple_transaction_commit: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "simple_transaction_rollback: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "rollback_restores_delete: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "nested_transactions: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "multiple_keys_independent: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "set_new_key_inside_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "count_basic: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "count_zero: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "count_respects_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "count_after_delete: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_set_new_key: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_set_change: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_no_change_no_notification: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_delete: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_unrelated_key_silent: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_inside_transaction_fires: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-11 13:28:13",
+      "passed": 0,
+      "total": 30,
+      "failures": [
+        "basic_set_get: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "get_missing: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "delete_then_get: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "delete_missing_key_noop: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "overwrite_set: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "commit_no_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "rollback_no_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "simple_transaction_commit: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "simple_transaction_rollback: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "rollback_restores_delete: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "nested_transactions: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "multiple_keys_independent: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "set_new_key_inside_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "count_basic: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "count_zero: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "count_respects_transaction: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "count_after_delete: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_set_new_key: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_set_change: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_no_change_no_notification: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_delete: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_unrelated_key_silent: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "watch_inside_transaction_fires: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "snapshot_restores_full_state: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "snapshot_is_deep_copied: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "restore_preserves_open_transactions: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "restore_keeps_watch_registrations: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable",
+        "snapshot_inside_nested_transactions: unexpected exception/timeout: TypeError: 'NoneType' object isn't iterable"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:28:39",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "simple_select_all: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+        "select_specific_columns: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+        "simple_where_equality: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+        "where_and_or_nested: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+        "order_by_limit_offset: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+        "multiple_and_conditions: exception/timeout: AttributeError: 'str' object has no attribute 'keys'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:29:25",
+      "passed": 0,
+      "total": 5,
+      "failures": [
+        "left_join_with_group_by: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+        "multiple_joins_inner_and_left: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+        "where_in_operator: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+        "where_is_null_and_like: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+        "where_is_not_null: exception/timeout: AttributeError: 'str' object has no attribute 'keys'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-11 13:30:34",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "failed to load solution: Syntax error in solution: unterminated string literal (detected at line 173) (<unknown>, line 173)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:30:49",
+      "passed": 4,
+      "total": 4,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:31:16",
+      "passed": 5,
+      "total": 8,
+      "failures": [
+        "clean_packet: assertion returned False",
+        "with_junk_prefix: assertion returned False",
+        "recover_after_false_magic: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-11 13:32:04",
+      "passed": 5,
+      "total": 10,
+      "failures": [
+        "clean_packet: assertion returned False",
+        "with_junk_prefix: assertion returned False",
+        "recover_after_false_magic: assertion returned False",
+        "fragmented_packet: assertion returned False",
+        "sequential_packets: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:32:15",
+      "passed": 4,
+      "total": 7,
+      "failures": [
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "index_passed: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:23:13",
+      "stats": {
+        "input_tokens": 288,
+        "total_output_tokens": 724,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 33.4469127044356,
+        "time_to_first_token_seconds": 0.771544,
+        "model_load_time_seconds": 2.812790666
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:23:47",
+      "stats": {
+        "input_tokens": 1155,
+        "total_output_tokens": 949,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 32.022851831006946,
+        "time_to_first_token_seconds": 2.571869,
+        "model_load_time_seconds": 0.000899625
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 13:24:32",
+      "stats": {
+        "input_tokens": 1389,
+        "total_output_tokens": 1113,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 28.57526134618236,
+        "time_to_first_token_seconds": 4.166242,
+        "model_load_time_seconds": 0.001459208
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:24:48",
+      "stats": {
+        "input_tokens": 183,
+        "total_output_tokens": 351,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 29.68561161240233,
+        "time_to_first_token_seconds": 0.596261,
+        "model_load_time_seconds": 0.001292
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:25:13",
+      "stats": {
+        "input_tokens": 676,
+        "total_output_tokens": 610,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 28.133097777826563,
+        "time_to_first_token_seconds": 1.805415,
+        "model_load_time_seconds": 0.00153825
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:25:34",
+      "stats": {
+        "input_tokens": 241,
+        "total_output_tokens": 568,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 29.569192483053158,
+        "time_to_first_token_seconds": 1.141373,
+        "model_load_time_seconds": 0.00109625
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:26:15",
+      "stats": {
+        "input_tokens": 1006,
+        "total_output_tokens": 1039,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 28.108603962512372,
+        "time_to_first_token_seconds": 3.52714,
+        "model_load_time_seconds": 0.001583041
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:26:43",
+      "stats": {
+        "input_tokens": 332,
+        "total_output_tokens": 665,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 26.62094429413285,
+        "time_to_first_token_seconds": 1.25589,
+        "model_load_time_seconds": 0.001317708
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:27:25",
+      "stats": {
+        "input_tokens": 1215,
+        "total_output_tokens": 894,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 24.028559474958236,
+        "time_to_first_token_seconds": 3.212041,
+        "model_load_time_seconds": 0.001467417
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-11 13:28:10",
+      "stats": {
+        "input_tokens": 1368,
+        "total_output_tokens": 1063,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 28.390392413446158,
+        "time_to_first_token_seconds": 4.937642,
+        "model_load_time_seconds": 0.001796292
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:28:39",
+      "stats": {
+        "input_tokens": 370,
+        "total_output_tokens": 705,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 28.714218824992987,
+        "time_to_first_token_seconds": 1.235517,
+        "model_load_time_seconds": 0.001317875
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:29:25",
+      "stats": {
+        "input_tokens": 1345,
+        "total_output_tokens": 1129,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 27.20692502754671,
+        "time_to_first_token_seconds": 4.192872,
+        "model_load_time_seconds": 0.000940167
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-11 13:30:34",
+      "stats": {
+        "input_tokens": 1662,
+        "total_output_tokens": 1644,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 26.46679450042549,
+        "time_to_first_token_seconds": 6.074194,
+        "model_load_time_seconds": 0.001821625
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:30:48",
+      "stats": {
+        "input_tokens": 281,
+        "total_output_tokens": 355,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 27.00554389583802,
+        "time_to_first_token_seconds": 1.221165,
+        "model_load_time_seconds": 0.001127084
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:31:16",
+      "stats": {
+        "input_tokens": 979,
+        "total_output_tokens": 668,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 27.654057837634,
+        "time_to_first_token_seconds": 2.764636,
+        "model_load_time_seconds": 0.001645875
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-11 13:32:03",
+      "stats": {
+        "input_tokens": 1279,
+        "total_output_tokens": 1036,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 24.66375223327777,
+        "time_to_first_token_seconds": 4.794651,
+        "model_load_time_seconds": 0.001496333
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-11 13:32:15",
+      "stats": {
+        "input_tokens": 234,
+        "total_output_tokens": 281,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 28.44927746934666,
+        "time_to_first_token_seconds": 1.016559,
+        "model_load_time_seconds": 0.001351166
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-11 13:32:35",
+      "stats": {
+        "input_tokens": 778,
+        "total_output_tokens": 477,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 27.287375710151093,
+        "time_to_first_token_seconds": 2.488112,
+        "model_load_time_seconds": 0.001413958
+      }
+    }
+  ]
+}

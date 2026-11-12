@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T11:23:47.395166Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef run(program: str) -> list[str]:\n    \"\"\"\n    Interprets a simple stack-based language with labels and conditional jumps\n    and returns a list of printed strings.\n    \"\"\"\n    stack = []\n    printed = []\n    lines = program.splitlines()\n    i = 0\n    labels = {}\n\n    while i < len(lines):\n        line = lines[i].strip()\n        if not line or line.startswith(\"#\"):\n            i += 1\n            continue\n\n        if line.startswith(\"LABEL\"):\n            label_name = line.split()[1]\n            labels[label_name] = i\n        elif line.startswith(\"JMP\"):\n            label_name = line.split()[1]\n            if label_name in labels:\n                i = labels[label_name]\n                continue\n        elif line.startswith(\"JZ\"):\n            label_name = line.split()[1]\n            if label_name in labels:\n                if not stack or stack[-1] == 0:\n                    i = labels[label_name]\n                    continue\n                else:\n                    val = stack.pop()\n                    stack.append(val)\n        elif line.startswith(\"JNZ\"):\n            label_name = line.split()[1]\n            if label_name in labels:\n                if stack:\n                    val = stack.pop()\n                    stack.append(val)\n                else:\n                    stack.append(0)\n                i = labels[label_name]\n                continue\n        elif instruction == \"PUSH\":\n            try:\n                value = int(parts[1])\n                stack.append(value)\n            except (IndexError, ValueError):\n                raise ValueError(f\"Invalid PUSH instruction: {line} (expected <n>\")\n        elif instruction == \"POP\":\n            if not stack:\n                raise ValueError(f\"Stack underflow: POP (line {i+1})\")\n            stack.pop()\n        elif instruction == \"ADD\":\n            if len(stack) < 2:\n                raise ValueError(f\"Stack underflow: ADD (line {i+1})\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1 + val2)\n        elif instruction == \"SUB\":\n            if len(stack) < 2:\n                raise ValueError(f\"Stack underflow: SUB (line {i+1})\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1 - val2)\n        elif instruction == \"MUL\":\n            if len(stack) < 2:\n                raise ValueError(f\"Stack underflow: MUL (line {i+1})\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1 * val2)\n        elif instruction == \"DIV\":\n            if len(stack) < 2:\n                raise ValueError(f\"Stack underflow: DIV (line {i+1})\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            if val2 == 0:\n                raise ZeroDivisionError(f\"Division by zero (line {i+1})\")\n            stack.append(val1 // val2)\n        elif instruction == \"DUP\":\n            if not stack:\n                raise ValueError(f\"Stack underflow: DUP (line {i+1})\")\n            top = stack[-1]\n            stack.append(top)\n        elif instruction == \"SWAP\":\n            if len(stack) < 2:\n                raise ValueError(f\"Stack underflow: SWAP (line {i+1})\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1)\n            stack.append(val2)\n        elif instruction == \"PRINT\":\n            if not stack:\n                print(\"Stack is empty\")\n            else:\n                print(stack[-1])\n        else:\n            raise ValueError(f\"Invalid instruction: {instruction} (line {i+1})\")\n\n        i += 1\n    return printed\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 32223482875,
+  "load_duration": 899625,
+  "prompt_eval_count": 1155,
+  "prompt_eval_cached_count": 283,
+  "prompt_eval_duration": 2571869000,
+  "eval_count": 949,
+  "eval_duration": 29635087000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1155,
+    "total_output_tokens": 949,
+    "tokens_per_second": 32.022851831006946,
+    "time_to_first_token_seconds": 2.571869,
+    "model_load_time_seconds": 0.000899625
+  }
+}

@@ -1,0 +1,179 @@
+class Interpreter:
+    def __init__(self):
+        self.stack = []
+        self.lines = []
+        self.line_num = 0
+        self.labels = {}
+        self.call_stack = []
+
+    def add_line(self, line):
+        self.lines.append(line)
+        self.line_num += 1
+        parts = line.split()
+        if parts[0] == 'LABEL':
+            self.labels[parts[1]] = self.line_num
+        elif parts[0] == 'CALL':
+            self.call_stack.append(self.line_num)
+            self.add_line(f'PUSH {self.line_num}\n')
+        elif parts[0] == 'RET':
+            if not self.call_stack:
+                raise ValueError(f"Call stack is empty at line {self.line_num}: {line}")
+            return_address = self.call_stack.pop()
+            self.add_line(f'JMP {return_address}\n')
+        elif parts[0] == 'STORE':
+            if not self.stack:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+            var = parts[1]
+            self.labels[var] = self.line_num
+            self.add_line(f'STORE {var}\n')
+        elif parts[0] == 'LOAD':
+            if var := parts[1] not in self.labels:
+                raise ValueError(f"Variable {var} has not been stored yet at line {self.line_num}: {line}")
+            self.add_line(f'PUSH {self.labels[var]}\n')
+        elif parts[0] == 'PUSH':
+            try:
+                num = int(parts[1])
+                self.stack.append(num)
+            except ValueError:
+                self.line_num -= 1
+                raise ValueError(f"Invalid number at line {self.line_num}: {line}")
+        elif parts[0] == 'POP':
+            self.add_line(line)
+            if not self.stack:
+                raise ValueError(f"Stack is empty at line {self.line_num}: {line}")
+            self.stack.pop()
+        elif parts[0] == 'ADD':
+            self.add_line(line)
+            if len(self.stack) < 2:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+            try:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                self.stack.append(a + b)
+            except IndexError:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+        elif parts[0] == 'SUB':
+            self.add_line(line)
+            if len(self.stack) < 2:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+            try:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                self.stack.append(a - b)
+            except IndexError:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+        elif parts[0] == 'MUL':
+            self.add_line(line)
+            if len(self.stack) < 2:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+            try:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                self.stack.append(a * b)
+            except IndexError:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+        elif parts[0] == 'DIV':
+            self.add_line(line)
+            if len(self.stack) < 2:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+            try:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                if b == 0:
+                    raise ValueError(f"Division by zero at line {self.line_num}: {line}")
+                self.stack.append(a // b)
+            except IndexError:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+        elif parts[0] == 'DUP':
+            self.add_line(line)
+            if not self.stack:
+                raise ValueError(f"Stack is empty at line {self.line_num}: {line}")
+            self.stack.append(self.stack[-1])
+        elif parts[0] == 'SWAP':
+            self.add_line(line)
+            if len(self.stack) < 2:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+            try:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                self.stack.append(b)
+                self.stack.append(a)
+            except IndexError:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+        elif parts[0] == 'PRINT':
+            self.add_line(line)
+            if not self.stack:
+                raise ValueError(f"Stack is empty at line {self.line_num}: {line}")
+            self.line_num += 1
+            print(self.stack[-1])
+            self.stack.pop()
+        elif parts[0] == 'EQ':
+            self.add_line(line)
+            if len(self.stack) < 2:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+            try:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                self.stack.append(int(a == b))
+            except IndexError:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+        elif parts[0] == 'GT':
+            self.add_line(line)
+            if len(self.stack) < 2:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+            try:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                self.stack.append(int(a > b))
+            except IndexError:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+        elif parts[0] == 'LT':
+            self.add_line(line)
+            if len(self.stack) < 2:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+            try:
+                b = self.stack.pop()
+                a = self.stack.pop()
+                self.stack.append(int(a < b))
+            except IndexError:
+                raise ValueError(f"Not enough values on stack at line {self.line_num}: {line}")
+        elif parts[0] == 'CALL':
+            continue
+        elif parts[0] == 'RET':
+            continue
+        else:
+            raise ValueError(f"Unknown instruction at line {self.line_num}: {line}")
+
+
+def run(program: str) -> list[str]:
+    interpreter = Interpreter()
+    interpreter.add_line(program)
+    interpreter.interpret()
+    return [str(val) for val in interpreter.stack]
+
+
+# Example usage:
+program = """
+PUSH 5
+PUSH 10
+ADD
+PUSH 3
+MUL
+DUP
+SWAP
+PRINT
+CALL sub
+RET
+STORE x
+LOAD x
+EQ
+JNZ done
+LABEL sub
+PUSH 5
+PUSH 0
+ADD
+PUSH 5
+JMP sub
+LABEL done
+"""
+print(run(program))

@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-11 15:56:55",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: unexpected exception: ValueError: need more than 1 values to unpack",
+    "dependency_unlocks_later: unexpected exception: ValueError: need more than 1 values to unpack",
+    "single_worker_duration_tiebreak: unexpected exception: ValueError: need more than 1 values to unpack",
+    "resource_limit_and_priority: unexpected exception: ValueError: too many values to unpack (expected 2)",
+    "simultaneous_unlocks: unexpected exception: ValueError: need more than 1 values to unpack",
+    "cycle_returns_none: unexpected exception: ValueError: need more than 1 values to unpack"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

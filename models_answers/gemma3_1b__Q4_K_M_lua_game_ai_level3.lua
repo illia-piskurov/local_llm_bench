@@ -1,0 +1,193 @@
+-- Global table for execution statuses
+local BT = {}
+
+-- Node for action
+local function BT.Action(ctx)
+  if ctx == "1" then
+    return BT.SUCCESS
+  end
+  return BT.FAILURE
+end
+
+-- Node for condition check
+local function BT.Condition(ctx)
+  if ctx == "1" then
+    return BT.FAILURE
+  end
+  return BT.SUCCESS
+end
+
+-- Node for sequence
+local function BT.Sequence(children)
+  for i, child in ipairs(children) do
+    if child == BT.FAILURE then
+      return BT.FAILURE
+    end
+    return BT.RUNNING
+  end
+end
+
+-- Node for selector
+local function BT.Selector(children)
+  for i, child in ipairs(children) do
+    if child == BT.FAILURE then
+      return BT.FAILURE
+    end
+    return BT.RUNNING
+  end
+end
+
+-- Reactive memory board `BT.Blackboard`
+local BT = {
+  Blackboard = {
+    new = function(key, default = nil)
+      bb = {
+        get = function(key, default)
+          bb:get(key, default)
+          return default
+        end,
+        set = function(key, value)
+          bb:set(key, value)
+          bb:watch(key, function(key, new_value, old_value)
+            bb:watch(key, key, new_value, old_value)
+          end)
+          return
+        end,
+        watch = function(key, callback, old_value)
+          bb:watch(key, callback, old_value)
+          return
+        end,
+      )
+      return bb
+    end,
+    default = nil
+  },
+  RunNING = function(ctx)
+    return BT.RUNNING
+  end,
+  Reset = function(ctx)
+    return BT.Reset()
+  end,
+}
+
+-- Decorators (single-child nodes)
+local function BT.Inverter(child)
+  if child == BT.FAILURE then
+    return BT.FAILURE
+  end
+  return BT.SUCCESS
+end
+
+local function BT.Cooldown(child, ticks)
+  if child == BT.SUCCESS then
+    return BT.FAILURE
+  end
+  return BT.RUNNING
+end
+
+-- Node for sequence
+local function BT.Sequence(children)
+  for i, child in ipairs(children) do
+    if child == BT.FAILURE then
+      return BT.FAILURE
+    end
+    return BT.RUNNING
+  end
+end
+
+-- Node for selector
+local function BT.Selector(children)
+  for i, child in ipairs(children) do
+    if child == BT.FAILURE then
+      return BT.FAILURE
+    end
+    return BT.RUNNING
+  end
+end
+
+-- Coroutine-based async action
+local function BT.AsyncAction(coroutine_fn)
+  local ctx = "1"
+  if ctx == "1" then
+    return BT.SUCCESS
+  end
+  return BT.FAILURE
+end
+
+-- Cascading tree reset
+local function BT.CascadeReset(node)
+  if node == BT.FAILURE then
+    return
+  end
+
+  for child in node:children do
+    BT.CascadeReset(child)
+  end
+end
+
+-- Example usage (for testing)
+-- Example:
+-- BT.Action("1")
+-- BT.Action("2")
+-- BT.Action("3")
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Condition("1")
+-- BT.Condition("2")
+-- BT.Condition("3")
+-- BT.Condition("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Sequence([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Selector([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Action("1")
+-- BT.Action("2")
+-- BT.Action("3")
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Condition("1")
+-- BT.Condition("2")
+-- BT.Condition("3")
+-- BT.Condition("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Sequence([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Selector([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Action("1")
+-- BT.Action("2")
+-- BT.Action("3")
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Condition("1")
+-- BT.Condition("2")
+-- BT.Condition("3")
+-- BT.Condition("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Sequence([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Selector([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Action("1")
+-- BT.Action("2")
+-- BT.Action("3")
+-- BT.Action("1") -- Should return BT.FAILURE

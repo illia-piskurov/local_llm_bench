@@ -1,0 +1,26 @@
+{
+  "model": "phi4-mini:latest",
+  "created_at": "2026-11-11T12:30:02.45808Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nfrom typing import List, Tuple, Dict, Optional\nfrom heapq import heappush, heappop\nfrom collections import defaultdict\n\ndef plan_order(tasks: Dict[str, Tuple[int, List[str], int]], workers: int) -> Optional[List[str]]:\n    def can_execute(task, completed):\n        return all(dep in completed for dep in task[1])\n\n    def execute_task(task, time, completed, result):\n        duration, deps, priority = task\n        if can_execute(task, completed):\n            result.append((time, task[0], priority))\n            completed.add(task[0])\n            for dep in deps:\n                tasks[dep] = tasks[dep][:2] + (duration, deps, priority)\n            tasks[dep] = tasks[dep][:1] + (duration, deps, priority)\n            return time + duration\n        return time\n\n    def get_next_tasks(time, completed, available):\n        tasks = {k: v for k, v in tasks.items() if k not in completed and (v[1] or can_execute(v, completed))}\n        tasks = dict(sorted(tasks.items(), key=lambda item: (-item[1][2], item[1][0], item[0])))\n        return [task for task in tasks.values() if task[1] and task[0] not in completed and task[0] not in available]\n\n    completed = set()\n    available = set()\n    result = []\n    tasks = {k: v for k, v in tasks.items()}\n    available.update(tasks.keys())\n    ready = get_next_tasks(0, completed, available)\n    heap = [(priority, task[0], task[0]) for task in ready]\n    heapq.heapify(heap)\n    while ready or available:\n        if ready:\n            task = heappop(heap)\n            next_time = execute_task(task, time, completed, result)\n            if next_time > time:\n                heappush(heap, (task[1], next_time, task[1]))\n                ready = get_next_tasks(time, completed, available)\n        else:\n            while available:\n                task = heappop(heap)\n                next_time = execute_task(task, time, completed, result)\n                if next_time > time:\n                    heappush(heap, (task[1], next_time, task[1]))\n                    ready = get_next_tasks(time, completed, available)\n                else:\n                    available.remove(task[2])\n                    completed.add(task[2])\n                    result.append((time, task[1], task[2]))\n    return [task[1] for task in result]\n\n# Example usage\ntasks = {\n    'A': (3, [], 2),\n    'B': (2, ['A'], 1),\n    'C': (1, ['B'], 3),\n    'D': (2, ['C'], 2),\n    'E': (1, ['A', 'B'], 4),\n}\nworkers = 2\nprint(plan_order(tasks, workers))\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 19710993708,
+  "load_duration": 724583,
+  "prompt_eval_count": 211,
+  "prompt_eval_cached_count": 4,
+  "prompt_eval_duration": 708601000,
+  "eval_count": 626,
+  "eval_duration": 18972892000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 211,
+    "total_output_tokens": 626,
+    "tokens_per_second": 32.99444280819181,
+    "time_to_first_token_seconds": 0.708601,
+    "model_load_time_seconds": 0.000724583
+  }
+}

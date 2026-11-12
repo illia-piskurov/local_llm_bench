@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_142229_ac78df",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:4b",
+  "benchmark": "lua_game_ai",
+  "level": "level2",
+  "tested_at": "2026-11-11 14:25:06",
+  "passed": 0,
+  "total": 12,
+  "failures": [
+    "Lua syntax error: error loading code: [string \"<python>\"]:116: function arguments expected near ':'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

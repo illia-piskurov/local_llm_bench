@@ -102,15 +102,15 @@ def test_reasoning_tokens_are_a_share_of_the_real_output_count(ollama):
 
 def test_context_window_fits_prompt_and_answer(ollama):
     calls = ollama(_chunks())
-    lmstudio.ask_model("m", [{"role": "user", "content": "x" * 3000}])  # ~1000 prompt tokens
+    lmstudio.ask_model("m", [{"role": "user", "content": "x" * 24000}])  # ~8000 prompt tokens
     opts = calls[0]["json"]["options"]
     assert opts["num_ctx"] == lmstudio.OLLAMA_DEFAULT_NUM_CTX
     # the answer budget never reaches the window, otherwise Ollama would shift out the start of the prompt
-    assert opts["num_predict"] <= opts["num_ctx"] - 1000
+    assert opts["num_predict"] <= opts["num_ctx"] - 8000
     assert opts["num_predict"] < lmstudio.DEFAULT_MAX_TOKENS
 
 
-def test_truncation_retry_grows_the_window(ollama):
+def test_large_max_tokens_grows_the_window(ollama):
     calls = ollama(_chunks())
     cfg = GenerationConfig(max_tokens=lmstudio.DEFAULT_MAX_TOKENS * 2)
     lmstudio.ask_model("m", [{"role": "user", "content": "q"}], config=cfg)
@@ -121,7 +121,15 @@ def test_truncation_retry_grows_the_window(ollama):
 
 @pytest.mark.parametrize(
     ("env", "expected"),
-    [(None, "medium"), ("", "medium"), ("off", False), ("false", False), ("on", True), ("high", "high"), ("auto", None)],
+    [
+        (None, "medium"),
+        ("", "medium"),
+        ("off", False),
+        ("false", False),
+        ("on", True),
+        ("high", "high"),
+        ("auto", None),
+    ],
 )
 def test_think_mode_from_environment(ollama, monkeypatch, env, expected):
     if env is not None:
@@ -208,3 +216,34 @@ def test_stream_without_final_chunk_is_an_error(ollama):
     ollama(_chunks()[:-1])
     with pytest.raises(RuntimeError, match="final chunk"):
         lmstudio.ask_model("m", [{"role": "user", "content": "q"}])
+
+
+def test_run_settings_override_the_environment(ollama, monkeypatch):
+    monkeypatch.setenv("OLLAMA_THINK", "high")
+    monkeypatch.setenv("OLLAMA_THINK_BUDGET", "5")
+    calls = ollama(_chunks())
+    cfg = GenerationConfig(think="low", think_budget=0, context_length=8192)
+    lmstudio.ask_model("m", [{"role": "user", "content": "q"}], config=cfg)
+    assert calls[0]["json"]["think"] == "low"
+    assert calls[0]["json"]["options"]["num_ctx"] == 8192
+    assert lmstudio.backend_generation_params(cfg) == {"think": "low", "think_budget": 0}
+    assert lmstudio.backend_generation_params() == {"think": "high", "think_budget": 5}
+
+
+def test_run_can_turn_thinking_off(ollama):
+    calls = ollama(_chunks())
+    lmstudio.ask_model("m", [{"role": "user", "content": "q"}], config=GenerationConfig(think="off"))
+    assert calls[0]["json"]["think"] is False
+
+
+def test_sampling_is_left_to_the_model_unless_set(ollama):
+    calls = ollama(_chunks())
+    lmstudio.ask_model("m", [{"role": "user", "content": "q"}])
+    options = calls[0]["json"]["options"]
+    assert "temperature" not in options and "top_p" not in options
+    assert {"seed", "num_predict", "num_ctx"} <= options.keys()
+
+    calls = ollama(_chunks())
+    lmstudio.ask_model("m", [{"role": "user", "content": "q"}], config=GenerationConfig(temperature=0.6, top_p=0.9))
+    assert calls[-1]["json"]["options"]["temperature"] == 0.6
+    assert calls[-1]["json"]["options"]["top_p"] == 0.9

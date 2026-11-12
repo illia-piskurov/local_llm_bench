@@ -1,0 +1,104 @@
+```python
+def run(program: str) -> list[str]:
+    """
+    Interprets a simple stack-based language with labels and conditional jumps
+    and returns a list of printed strings.
+    """
+    stack = []
+    printed = []
+    lines = program.splitlines()
+    i = 0
+    labels = {}
+
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line or line.startswith("#"):
+            i += 1
+            continue
+
+        if line.startswith("LABEL"):
+            label_name = line.split()[1]
+            labels[label_name] = i
+        elif line.startswith("JMP"):
+            label_name = line.split()[1]
+            if label_name in labels:
+                i = labels[label_name]
+                continue
+        elif line.startswith("JZ"):
+            label_name = line.split()[1]
+            if label_name in labels:
+                if not stack or stack[-1] == 0:
+                    i = labels[label_name]
+                    continue
+                else:
+                    val = stack.pop()
+                    stack.append(val)
+        elif line.startswith("JNZ"):
+            label_name = line.split()[1]
+            if label_name in labels:
+                if stack:
+                    val = stack.pop()
+                    stack.append(val)
+                else:
+                    stack.append(0)
+                i = labels[label_name]
+                continue
+        elif instruction == "PUSH":
+            try:
+                value = int(parts[1])
+                stack.append(value)
+            except (IndexError, ValueError):
+                raise ValueError(f"Invalid PUSH instruction: {line} (expected <n>")
+        elif instruction == "POP":
+            if not stack:
+                raise ValueError(f"Stack underflow: POP (line {i+1})")
+            stack.pop()
+        elif instruction == "ADD":
+            if len(stack) < 2:
+                raise ValueError(f"Stack underflow: ADD (line {i+1})")
+            val2 = stack.pop()
+            val1 = stack.pop()
+            stack.append(val1 + val2)
+        elif instruction == "SUB":
+            if len(stack) < 2:
+                raise ValueError(f"Stack underflow: SUB (line {i+1})")
+            val2 = stack.pop()
+            val1 = stack.pop()
+            stack.append(val1 - val2)
+        elif instruction == "MUL":
+            if len(stack) < 2:
+                raise ValueError(f"Stack underflow: MUL (line {i+1})")
+            val2 = stack.pop()
+            val1 = stack.pop()
+            stack.append(val1 * val2)
+        elif instruction == "DIV":
+            if len(stack) < 2:
+                raise ValueError(f"Stack underflow: DIV (line {i+1})")
+            val2 = stack.pop()
+            val1 = stack.pop()
+            if val2 == 0:
+                raise ZeroDivisionError(f"Division by zero (line {i+1})")
+            stack.append(val1 // val2)
+        elif instruction == "DUP":
+            if not stack:
+                raise ValueError(f"Stack underflow: DUP (line {i+1})")
+            top = stack[-1]
+            stack.append(top)
+        elif instruction == "SWAP":
+            if len(stack) < 2:
+                raise ValueError(f"Stack underflow: SWAP (line {i+1})")
+            val2 = stack.pop()
+            val1 = stack.pop()
+            stack.append(val1)
+            stack.append(val2)
+        elif instruction == "PRINT":
+            if not stack:
+                print("Stack is empty")
+            else:
+                print(stack[-1])
+        else:
+            raise ValueError(f"Invalid instruction: {instruction} (line {i+1})")
+
+        i += 1
+    return printed
+```

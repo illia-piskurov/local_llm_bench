@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261111_152143_9dc99e",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.6:latest",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-11 15:21:53",
+  "passed": 14,
+  "total": 18,
+  "failures": [
+    "dup: unexpected exception/timeout: IndexError: pop from empty list",
+    "swap: expected ['1'], got ['-1']",
+    "multiple_prints: unexpected exception/timeout: IndexError: pop from empty list",
+    "print_does_not_pop: unexpected exception/timeout: IndexError: pop from empty list"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

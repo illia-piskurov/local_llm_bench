@@ -1,0 +1,205 @@
+The user wants to extend an existing Python file interpreter with labels and conditional jumps. I need to add support for:
+1. `LABEL <name>` - defines a label at current position
+2. `JMP <name>` - unconditional jump to label
+3. `JZ <name>` - jump if top of stack == 0
+4. `JNZ <name>` - jump if top of stack != 0
+
+Requirements:
+- Preserve existing behavior (instructions and their functionality)
+- Keep the return signature `run(program: str) -> list[str]`
+- Don't change instructions already supported
+- Need to parse labels as identifiers, not strings with spaces that look like variables (though labels are just names without semicolons or other things)
+- Error handling for jumps when no label exists or jump target is invalid
+
+Key points:
+- Labels can be anywhere in the code
+- When executing, we need to track current position and handle jumps
+- The interpreter needs to process instructions sequentially until all instructions are done or execution ends
+- Need to add `labels` dict that maps names to line numbers
+- When parsing `LABEL name`, we set `instructions[current_line] = label_name`
+- For `JMP <name>`: need to ensure the jump target exists on stack and is valid
+- For `JZ <name>`: check if top of stack == 0, then if true, call `run()` with program's remaining lines? No, we can't re-parse the entire file - need to keep current state and execute remaining instructions
+
+I'll use a simpler approach that builds on the previous implementation. The challenge is handling jumps within the loop while tracking instruction positions properly. Let me reconsider...
+
+Actually, looking at the existing implementation more carefully:
+- `run` returns `instructions` (which is actually the line numbers where PRINT outputs go) - wait, no, that's not right
+
+Looking back at the code I wrote, there's an issue - I need to return list of printed strings from `print()` calls. The current structure seems to have returned just `instructions` but should be collecting printed values. Let me look more carefully.
+
+
+ 
+Actually, looking at the first version I provided:
+```python
+    if not instructions:
+        return []
+    ...
+return instructions  # This is WRONG - it should return list of PRINT outputs
+```
+
+I need to fix the logic. The run function needs to actually collect and return the printed strings from all `PRINT` operations, not just store the parsed instructions.
+
+Here's my revised plan:
+1. Parse input properly into (instruction, args) pairs with line numbers
+2. Add a stack-based interpreter that processes instructions
+3. Track PRINT outputs separately from execution flow
+4. Implement label parsing and jump logic
+5. Handle all instructions carefully with proper error handling
+
+```python
+import re
+from typing import List, Tuple, Optional
+
+
+class StackInterpreterError(ValueError):
+    """Raised when an operation cannot be performed due to stack underflow or division by zero."""
+    pass
+
+
+def parse_input(lines: List[str]) -> Tuple[List[Tuple[int, int]], List[str]]:
+    """
+    Parse input lines into (instruction, argument) pairs and ignore comments and empty lines.
+    Returns a list of tuples where each tuple contains (instruction, arguments_as_list_of_ints).
+    Instruction is always from the set {PUSH, POP, ADD, SUB, MUL, DIV, DUP, SWAP, PRINT}.
+    """
+    instructions: List[Tuple[str, int]] = []  # Keep instruction name and line number
+    
+    cleaned_lines: List[str] = []
+    
+    for idx, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        
+        cleaned_lines.append(line)
+        
+        parts: List[str] = cleaned_lines[idx].split()
+```
+
+I need to complete the argument parsing logic and then handle each instruction type carefully. The key is to ensure that label definitions work correctly within the instruction execution loop. I see there's a complex state tracking mechanism with `current_pos` being an index into instructions rather than a stack of values. When executing, we process the top value, then call `run` for the next iteration if not done. This approach ensures proper jump and label handling while managing the program state carefully.
+
+The key insight is that labels get created when current position matches their target location, allowing conditional execution based on stack operations. I'll track these labels to enable branching without duplicating instructions.
+
+```python
+import re
+from typing import List, Tuple, Optional
+
+
+class StackInterpreterError(ValueError):
+    """Raised when an operation cannot be performed due to stack underflow or division by zero."""
+    pass
+
+
+def parse_input(lines: List[str]) -> Tuple[List[Tuple[int, int]], str]:
+    """
+    Parse input lines into instruction tuples with line numbers.
+    Returns (instruction_list, current_pos) where current_pos tracks execution position.
+    """
+    instructions = []
+    
+    idx = 0
+    cleaned_lines: List[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        cleaned_lines.append(line)
+        
+        parts = stripped.split()
+        if len(parts) < 2:
+            continue
+        
+        instr, args_str = parts[0], " ".join(parts[1:])[:2]
+        arg_list: List[int] = []
+        i = 0
+        while i < len(args_str):
+            token = args_str[i].isdigit()
+            if not token:
+                break
+            try:
+                arg = int(args_str[i])
+                arg_list.append(arg)
+            except ValueError:
+                break
+```
+
+I'm building a parser that handles instruction parsing with line number tracking and validates arguments as integers. The key is checking the first character of each argument to determine if it's numeric, then accumulating valid integer values into a list. _list.append((instructions[idx], arg))
+    return instructions
+
+
+def execute(program: List[str]) -> None:
+    """Run program with label-based jumps."""
+    current_pos = 0
+    stack = []
+    
+    while current_pos < len(program):
+        line_num, instr_line = program[current_pos]
+        
+        if not program[current_pos].startswith("#"):
+            line_str = program[current_pos]
+            try:
+                parsed_instr, arg_list = parse_instruction(line_str)
+                execute_program(line_num, instr_name, args_list)
+            except Exception as e:
+                raise StackInterpreterError(f"Line {line_num}: {e}") from e
+        
+        if current_pos < len(program):
+            current_pos += 1
+    
+    return stack
+
+
+def parse_instruction(line_str: str) -> Tuple[str, list[int]]:
+    """Parse instruction line into (name, args)."""
+    parts = line_str.split()
+    
+    if not parts:
+        raise ValueError("Empty instruction")
+    
+    instr_name = parts[0]
+    args_list: list[int] = []
+    i = 1
+    
+    while i < len(parts):
+        arg = int(parts[i])
+        args_list.append(arg)
+        i += 1
+    
+    return (instr_name, args_list)
+
+
+def execute_program(label_name: str, stack: List[int], args_list: list[int]) -> None:
+    """Execute current instruction and handle labels."""
+    if instr_name == "LABEL":
+        label_name = parts[0]
+        current_pos += 1
+    
+    elif instr_name == "JMP":
+        target_label = parts[1]
+        if target_label not in all_labels:
+            raise ValueError(f"Invalid jump destination {target_label}")
+        stack.append(target_label)
+    
+    elif instr_name == "JZ":
+        if len(stack) < 1:
+            raise ValueError("Insufficient operands for JZ")
+        condition_val = stack[-1]
+        if condition_val != 0:
+            pass
+        
+        print(f"Execution stopped at {current_pos}")
+
+I'm building a parser that extracts instruction details from lines and handles execution with label references. The key is tracking program position, validating instructions, and managing stack operations for conditional jumps. I see there's an issue with the loop structure. The `while` condition checks if `instruction_idx < len(parsed_instructions)` where each iteration processes one instruction. However, I'm using `stack.pop()` which might not be working correctly since we need to preserve stack state for future instructions.
+
+Let me trace through a sample execution flow:
+1. Parse all instructions into tuples
+2. Loop through executing instructions
+3. For each instruction, either execute it or skip it based on conditions
+4. When encountering a `PRINT`, push the result onto a tracking list
+5. Move to next instruction if not done
+
+The key is managing the loop and stack state carefully to ensure we can jump to different labels while keeping track of execution progress. The issue with my current approach is that I'm modifying the original program object directly when calling `stack.append()`, which could cause issues. Let me fix this by copying instructions into a separate structure first, ensuring each instruction gets a unique identifier for comparison purposes.
+
+When parsing input, I'll extract lines and skip empty ones or comments, then split each line to get instructions with their arguments. For labels, I need to track position mapping separately since they define jump targets without executing code.
+
+The key challenge is handling the loop carefully - if I process an instruction that jumps to a new line, I shouldn't continue processing the original instructions sequentially but instead advance past them while preserving the state for that destination.

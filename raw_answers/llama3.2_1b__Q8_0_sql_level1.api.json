@@ -1,0 +1,26 @@
+{
+  "model": "llama3.2:1b",
+  "created_at": "2026-11-11T13:57:42.054675Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nimport re\n\ndef compile_query(query):\n    table = query.get('table', '')\n    select = query.get('select', [])\n    where = query.get('where', {})\n    orderBy = query.get('orderBy', [])\n    limit = query.get('limit', 0)\n    offset = query.get('offset', 0)\n\n    params = []\n    sql = 'SELECT '\n    if select:\n        sql += ', '.join(select)\n    sql += ' FROM ' + table\n\n    if where:\n        placeholders = []\n        for field, op, value in where.items():\n            if isinstance(value, dict):\n                placeholders.extend(re.findall(r'\\$(\\d+)', str(value)))\n            else:\n                placeholders.append(f'${value}')\n        sql += ' WHERE '\n        for field, op, value in where.items():\n            if isinstance(value, dict):\n                sql += f'{field} {op} {placeholders.pop(0)}'\n            else:\n                sql += f'{field} {op} {value}'\n\n    if orderBy:\n        sql += ' ORDER BY '\n        for field, dir in orderBy:\n            sql += f'{field} {dir}'\n\n    if limit:\n        sql += ' LIMIT ' + str(limit)\n\n    if offset:\n        sql += ' OFFSET ' + str(offset)\n\n    sql = sql.strip()\n    return {'sql': sql, 'params': params}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 5863705416,
+  "load_duration": 1288000,
+  "prompt_eval_count": 362,
+  "prompt_eval_cached_count": 20,
+  "prompt_eval_duration": 285898000,
+  "eval_count": 288,
+  "eval_duration": 5559756000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 362,
+    "total_output_tokens": 288,
+    "tokens_per_second": 51.800834425107865,
+    "time_to_first_token_seconds": 0.285898,
+    "model_load_time_seconds": 0.001288
+  }
+}

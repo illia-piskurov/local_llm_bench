@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T11:28:39.091462Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef compile_query(query: dict) -> dict:\n    \"\"\"\n    Compiles a query AST tree to parameterized SQL.\n    \"\"\"\n    table = query['table']\n    select = query.get('select', ['*'])\n    where = query.get('where')\n    orderBy = query.get('orderBy', [])\n    limit = query.get('limit')\n    offset = query.get('offset')\n\n    sql = f\"SELECT {', '.join(select)} FROM {table}\"\n    params = []\n\n    if where:\n        where_conditions = []\n        for cond in where:\n            if isinstance(cond, dict):\n                if 'AND' in cond:\n                    where_conditions.append(cond)\n                elif 'OR' in cond:\n                    where_conditions.append(cond)\n                else:\n                    where_conditions.append(cond)\n            else:\n                where_conditions.append(cond)\n\n        if where_conditions:\n            conditions = []\n            for cond in where_conditions:\n                field = list(cond.keys())[0]\n                value = cond[field]\n                \n                if isinstance(value, list):\n                    for v in value:\n                        conditions.append(f\"{field} = '{v}'\")\n                else:\n                    conditions.append(f\"{field} = '{value}'\")\n\n            if conditions:\n                sql += \" WHERE \" + \" AND \".join(conditions)\n    \n    if orderBy:\n        order_by_clauses = []\n        for order_by in orderBy:\n            field = order_by['field']\n            dir = order_by.get('dir', 'ASC')\n            order_by_clauses.append(f\"{field} {dir}\")\n        sql += \" ORDER BY \" + \", \".join(order_by_clauses)\n\n    if limit:\n        sql += f\" LIMIT {limit}\"\n\n    if offset:\n        sql += f\" OFFSET {offset}\"\n\n    return {\"sql\": sql, \"params\": params}\n\nif __name__ == '__main__':\n    query1 = {\n        'table': 'users',\n        'select': ['id', 'name'],\n        'where': {\n            'id': 1,\n            'name': 'Alice',\n            'AND': [\n                {'age': 30, '>': 25},\n                {'city': 'New York', '=': 'New York'}\n            ]\n        }\n    }\n    result1 = compile_query(query1)\n    print(result1)\n\n    query2 = {\n        'table': 'products',\n        'select': ['*'],\n        'where': {\n            'price': {\n                'OR': [\n                    {'price': 100, '>': 50},\n                    {'price': 200, '<': 150}\n                ]\n            }\n        },\n        'orderBy': [{'name': 'ASC'}],\n        'limit': 10\n    }\n    result2 = compile_query(query2)\n    print(result2)\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 25864803125,
+  "load_duration": 1317875,
+  "prompt_eval_count": 370,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 1235517000,
+  "eval_count": 705,
+  "eval_duration": 24552296000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 370,
+    "total_output_tokens": 705,
+    "tokens_per_second": 28.714218824992987,
+    "time_to_first_token_seconds": 1.235517,
+    "model_load_time_seconds": 0.001317875
+  }
+}

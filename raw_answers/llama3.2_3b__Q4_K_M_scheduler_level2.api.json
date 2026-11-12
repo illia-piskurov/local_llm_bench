@@ -1,0 +1,26 @@
+{
+  "model": "llama3.2:3b",
+  "created_at": "2026-11-11T14:38:51.582437Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nfrom collections import defaultdict, deque\n\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n    \n    for task, dependencies in tasks.items():\n        for dependency in dependencies:\n            graph[dependency].append(task)\n            in_degree[task] += 1\n    \n    queue = deque([task for task in tasks if in_degree[task] == 0])\n    \n    if not queue:\n        return None\n    \n    sorted_tasks = []\n    \n    while queue:\n        task = queue.popleft()\n        sorted_tasks.append(task)\n        \n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n    \n    if len(sorted_tasks) != len(tasks):\n        return None\n    \n    return sorted_tasks\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n    durations = {task: duration for task, (duration, _) in tasks.items()}\n    \n    for task, dependencies in tasks.items():\n        for dependency in dependencies:\n            graph[dependency].append(task)\n            in_degree[task] += 1\n    \n    queue = deque([task for task in tasks if in_degree[task] == 0])\n    \n    if not queue:\n        return None\n    \n    critical_path_length = 0\n    \n    while queue:\n        task = queue.popleft()\n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n            if task in durations and neighbor in durations:\n                durations[neighbor] = max(durations[neighbor], durations[task] + tasks[neighbor][0])\n                critical_path_length = max(critical_path_length, durations[neighbor])\n    \n    if len(tasks) != len(durations):\n        return None\n    \n    return critical_path_length\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 10759815875,
+  "load_duration": 1449750,
+  "prompt_eval_count": 508,
+  "prompt_eval_cached_count": 379,
+  "prompt_eval_duration": 402175000,
+  "eval_count": 438,
+  "eval_duration": 10349077000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 508,
+    "total_output_tokens": 438,
+    "tokens_per_second": 42.322614857344284,
+    "time_to_first_token_seconds": 0.402175,
+    "model_load_time_seconds": 0.00144975
+  }
+}

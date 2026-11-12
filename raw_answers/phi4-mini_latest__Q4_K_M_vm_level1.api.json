@@ -1,0 +1,26 @@
+{
+  "model": "phi4-mini:latest",
+  "created_at": "2026-11-11T12:28:25.071142Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef run(program: str) -> list[str]:\n    instructions = program.strip().split('\\n')\n    stack = []\n    output = []\n    for i, instruction in enumerate(instructions, 1):\n        if not instruction.strip() or instruction.startswith('#'):\n            continue\n        parts = instruction.split()\n        command = parts[0]\n        if command == 'PUSH':\n            stack.append(int(parts[1]))\n        elif command == 'POP':\n            if not stack:\n                raise Exception(f\"Error on line {i}: stack underflow\")\n            stack.pop()\n        elif command == 'ADD':\n            if len(stack) < 2:\n                raise Exception(f\"Error on line {i}: stack underflow\")\n            a, b = stack.pop(), stack.pop()\n            stack.append(a + b)\n        elif command == 'SUB':\n            if len(stack) < 2:\n                raise Exception(f\"Error on line {i}: stack underflow\")\n            a, b = stack.pop(), stack.pop()\n            stack.append(a - b)\n        elif command == 'MUL':\n            if len(stack) < 2:\n                raise Exception(f\"Error on line {i}: stack underflow\")\n            a, b = stack.pop(), stack.pop()\n            stack.append(a * b)\n        elif command == 'DIV':\n            if len(stack) < 2:\n                raise Exception(f\"Error on line {i}: stack underflow\")\n            a, b = stack.pop(), stack.pop()\n            if b == 0:\n                raise Exception(f\"Error on line {i}: division by zero\")\n            stack.append(a // b)\n        elif command == 'DUP':\n            if not stack:\n                raise Exception(f\"Error on line {i}: stack underflow\")\n            stack.append(stack[-1])\n        elif command == 'SWAP':\n            if len(stack) < 2:\n                raise Exception(f\"Error on line {i}: stack underflow\")\n            stack[-1], stack[-2] = stack[-2], stack[-1]\n        elif command == 'PRINT':\n            if not stack:\n                raise Exception(f\"Error on line {i}: stack underflow\")\n            output.append(str(stack[-1]))\n        else:\n            raise Exception(f\"Unknown command on line {i}: {command}\")\n    return output\n\n# Example usage:\n# program = \"\"\"\n# PUSH 3\n# PUSH 4\n# ADD\n# PRINT\n# \"\"\"\n# print(run(program))\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 17032623375,
+  "load_duration": 2048995875,
+  "prompt_eval_count": 268,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 749900000,
+  "eval_count": 512,
+  "eval_duration": 14220868000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 268,
+    "total_output_tokens": 512,
+    "tokens_per_second": 36.00342820142906,
+    "time_to_first_token_seconds": 0.7499,
+    "model_load_time_seconds": 2.048995875
+  }
+}

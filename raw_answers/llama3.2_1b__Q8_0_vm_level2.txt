@@ -1,0 +1,46 @@
+```python
+def run(program):
+    stack = []
+    labels = {}
+    for line in program.split('\n'):
+        if line.strip().startswith('#'):
+            continue
+        op, *args = line.split()
+        if op == 'PUSH':
+            try:
+                stack.append(int(args[0]))
+            except ValueError:
+                raise ValueError(f"Invalid PUSH instruction: {line}")
+            labels[args[0]] = len(labels)
+        elif op == 'LABEL':
+            labels[args[0]] = len(labels)
+        elif op == 'JMP':
+            labels[args[0]] = len(labels)
+        elif op == 'JZ':
+            if stack[-1] == 0:
+                stack.pop()
+                continue
+            raise ZeroDivisionError(f"Division by zero: {line}")
+            stack.pop()
+        elif op == 'JNZ':
+            if stack[-1] != 0:
+                stack.pop()
+                continue
+            raise ZeroDivisionError(f"Division by zero: {line}")
+            stack.pop()
+        elif op == 'DUP':
+            if len(stack) < 1:
+                raise ValueError(f"Stack is empty: {line}")
+            stack.append(stack[-1])
+        elif op == 'SWAP':
+            if len(stack) < 2:
+                raise ValueError(f"Stack does not have enough values for SWAP: {line}")
+            a, b = stack.pop(), stack.pop()
+            stack.append(a)
+            stack.append(b)
+        elif op == 'PRINT':
+            if not stack:
+                raise ValueError(f"Stack is empty: {line}")
+            print(stack[-1])
+    return stack
+```

@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T11:28:10.23944Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nimport copy\n\nclass InMemoryKeyValueStore:\n    def __init__(self):\n        self.data = {}\n        self.transactions = []\n        self.watches = {}\n        self.snapshots = {}\n\n    def set(self, key, value):\n        if key in self.watches:\n            old_value = self.get(key)\n            if old_value != None:\n                print(f\"WATCH {key} {old_value} -> {value}\")\n            self.watches[key] = value\n        else:\n            self.data[key] = value\n\n    def get(self, key):\n        if self.transactions:\n            for k, v in reversed(self.transactions):\n                if k == key:\n                    return v\n            return None\n        elif key in self.data:\n            return self.data[key]\n        else:\n            return \"NULL\"\n\n    def delete(self, key):\n        if key in self.watches:\n            old_value = self.get(key)\n            if old_value != None:\n                print(f\"WATCH {key} {old_value} -> {None}\")\n            self.watches.pop(key, None)\n        if key in self.data:\n            del self.data[key]\n\n    def begin(self):\n        self.transactions.append(None)\n\n    def commit(self):\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n            return\n\n        committed_transactions = []\n        while self.transactions and isinstance(self.transactions[-1], tuple):\n            key, value = self.transactions.pop()\n            committed_transactions.append((key, value))\n\n        for k, v in committed_transactions:\n            self.data[k] = v\n\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n            return\n\n    def rollback(self):\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n            return\n\n        self.transactions.pop()\n\n    def count(self, value):\n        count = 0\n        for key in self.data:\n            if self.get(key) == value:\n                count += 1\n        print(count)\n\n    def watch(self, key):\n        self.watches[key] = None\n\n    def snapshot(self, name):\n        self.snapshots[name] = copy.deepcopy(self)\n\n    def restore(self, name):\n        if name in self.snapshots:\n            self.data = self.snapshots[name].data\n            self.transactions = self.snapshots[name].transactions\n            self.watches = self.snapshots[name].watches\n        else:\n            print(\"Snapshot not found\")\n\n    def run(self, program):\n        output = []\n        for line in program.strip().split('\\n'):\n            line = line.strip()\n            if not line:\n                continue\n\n            parts = line.split()\n            command = parts[0]\n\n            if command == \"SET\":\n                key = parts[1]\n                value = parts[2]\n                self.set(key, value)\n            elif command == \"GET\":\n                value = self.get(parts[1])\n                output.append(str(value))\n            elif command == \"DELETE\":\n                key = parts[1]\n                self.delete(key)\n            elif command == \"BEGIN\":\n                self.begin()\n            elif command == \"COMMIT\":\n                self.commit()\n            elif command == \"ROLLBACK\":\n                self.rollback()\n            elif command == \"COUNT\":\n                value = parts[1]\n                self.count(value)\n            elif command == \"WATCH\":\n                key = parts[1]\n                self.watch(key)\n            elif command == \"SNAPSHOT\":\n                name = parts[1]\n                self.snapshot(name)\n            elif command == \"RESTORE\":\n                name = parts[1]\n                self.restore(name)\n            else:\n                pass  # Ignore unknown commands\n\n        return output\n\n\nif __name__ == '__main__':\n    # Example Usage\n    store = InMemoryKeyValueStore()\n    program = \"\"\"\nSET key1 10\nBEGIN\nSET key2 20\nWATCH key1\nGET key1\nCOMMIT\nROLLBACK\nGET key1\nGET key2\nDELETE key1\nBEGIN\nSET key3 30\nCOMMIT\nSNAPSHOT snapshot1\nWATCH key3\nCOUNT 30\nWATCH key1\nSET key1 40\nCOUNT 30\nRESTORE snapshot1\nGET key1\nGET key3\n\"\"\"\n    output = store.run(program)\n    print('\\n'.join(output))\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 42462727167,
+  "load_duration": 1796292,
+  "prompt_eval_count": 1368,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 4937642000,
+  "eval_count": 1063,
+  "eval_duration": 37442244000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1368,
+    "total_output_tokens": 1063,
+    "tokens_per_second": 28.390392413446158,
+    "time_to_first_token_seconds": 4.937642,
+    "model_load_time_seconds": 0.001796292
+  }
+}

@@ -1,0 +1,78 @@
+```python
+from collections import defaultdict, deque
+from typing import Dict, List, Tuple, Set
+
+def plan_order(tasks: Dict[str, Tuple[int, List[str], int]], workers: int) -> List[str] | None:
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task, _ in tasks}
+    for task, deps, _ in tasks:
+        for dep in deps:
+            graph[dep].append(task)
+            in_degree[task] += 1
+
+    queue = deque([task for task, _ in tasks if in_degree[task] == 0])
+    result = []
+    while queue:
+        task = queue.popleft()
+        result.append(task)
+        for neighbor in graph[task]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    if len(result) != len(tasks):
+        return None
+
+    # Check for cyclic dependencies
+    for task, deps in tasks.items():
+        if len(deps) != len(set(deps)):
+            return None
+
+    return result
+
+def critical_path(tasks: Dict[str, Tuple[int, List[str], int]]) -> int | None:
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task, _ in tasks}
+    for task, deps, _ in tasks:
+        for dep in deps:
+            graph[dep].append(task)
+            in_degree[task] += 1
+
+    queue = deque([task for task, _ in tasks if in_degree[task] == 0])
+    result = []
+    while queue:
+        task = queue.popleft()
+        result.append(task)
+        for neighbor in graph[task]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    if len(result) != len(tasks):
+        return None
+
+    # Check for cyclic dependencies
+    for task, deps in tasks.items():
+        if len(deps) != len(set(deps)):
+            return None
+
+    max_duration = 0
+    max_path = 0
+    for task, deps in tasks.items():
+        if len(deps) == 0:
+            continue
+        path = []
+        path.append(task)
+        for dep in deps:
+            path.append(dep)
+        path.append('end')
+        duration = sum(task['duration'] for task in path)
+        if duration > max_duration:
+            max_duration = duration
+            max_path = len(path)
+
+    return max_path
+
+def makespan(tasks: Dict[str, Tuple[int, List[str], int]], workers: int) -> int | None:
+    return plan_order(tasks, workers) or critical_path(tasks)
+```

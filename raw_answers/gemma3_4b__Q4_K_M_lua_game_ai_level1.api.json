@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T12:24:29.134503Z",
+  "message": {
+    "role": "assistant",
+    "content": "```lua\nBT = {}\n\nBT.SUCCESS = \"SUCCESS\"\nBT.FAILURE = \"FAILURE\"\nBT.RUNNING = \"RUNNING\"\n\n---@param fn function\nBT.Action = {}\nfunction BT.Action.tick(self, ctx)\n  local result = self:fn(ctx)\n  if result == true or result == BT.SUCCESS then\n    return BT.SUCCESS\n  elseif result == false or result == BT.FAILURE then\n    return BT.FAILURE\n  elseif result == BT.RUNNING then\n    return BT.RUNNING\n  else\n    return BT.FAILURE\n  end\nend\n\nfunction BT.Action.reset(self)\n  -- No reset needed for Action nodes\nend\n\n---@param predicate function\nBT.Condition = {}\nfunction BT.Condition.tick(self, ctx)\n  local result = self:predicate(ctx)\n  if result then\n    return BT.SUCCESS\n  else\n    return BT.FAILURE\n  end\nend\n\nfunction BT.Condition.reset(self)\n  -- No reset needed for Condition nodes\nend\n\n---@param children table{BT.Node}\nBT.Sequence = {}\nfunction BT.Sequence.tick(self, ctx)\n  local child_index = 1\n  local running = BT.RUNNING\n\n  while running == BT.RUNNING do\n    local node = self:getChild(child_index)\n    if node then\n      running = node:tick(ctx)\n      if running == BT.FAILURE then\n        return BT.FAILURE\n      end\n    else\n      return BT.FAILURE -- Should not happen, but handle it\n    end\n    child_index = child_index + 1\n  end\n\n  return running\nend\n\nfunction BT.Sequence.getChild(self, index)\n  local children = getchildren(self)\n  if children and index > 0 and index <= #children then\n    return children[index]\n  else\n    return nil\n  end\nend\n\nfunction BT.Sequence.reset(self)\n  -- Reset remembered child index to 1\n  -- No actual reset needed, just a placeholder\nend\n\n---@param children table{BT.Node}\nBT.Selector = {}\nfunction BT.Selector.tick(self, ctx)\n  local child_index = 1\n  local running = BT.RUNNING\n\n  while running == BT.RUNNING do\n    local node = self:getChild(child_index)\n    if node then\n      running = node:tick(ctx)\n      if running == BT.SUCCESS then\n        return BT.SUCCESS\n      end\n    else\n      return BT.FAILURE -- Should not happen, but handle it\n    end\n    child_index = child_index + 1\n  end\n\n  return running\nend\n\nfunction BT.Selector.getChild(self, index)\n  local children = getchildren(self)\n  if children and index > 0 and index <= #children then\n    return children[index]\n  else\n    return nil\n  end\nend\n\nfunction BT.Selector.reset(self)\n  -- Reset remembered child index to 1\n  -- No actual reset needed, just a placeholder\nend\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 24251166542,
+  "load_duration": 1244292,
+  "prompt_eval_count": 537,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 1485928000,
+  "eval_count": 707,
+  "eval_duration": 22711341000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 537,
+    "total_output_tokens": 707,
+    "tokens_per_second": 31.129821880619026,
+    "time_to_first_token_seconds": 1.485928,
+    "model_load_time_seconds": 0.001244292
+  }
+}

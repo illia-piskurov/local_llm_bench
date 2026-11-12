@@ -1,0 +1,223 @@
+{
+  "id": "run_20261111_151043_a8aeba",
+  "host_id": "70ccb4981862",
+  "model_key": "phi4-mini:latest",
+  "model_name": "phi4-mini:latest",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 10000,
+    "artifact": {
+      "key": "phi4-mini:latest",
+      "display_name": "phi4-mini:latest",
+      "architecture": "phi3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 2491876774,
+      "params_string": "3.8B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "1397641c2c92"
+  },
+  "suite_version": "537d00a (1397641c2c92)",
+  "started_at": "2026-11-11 15:10:43",
+  "completed_at": "2026-11-11 15:16:11",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:11:35",
+      "passed": 1,
+      "total": 7,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: timed out after 10s (runaway JavaScript)",
+        "concurrency_as_number: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "concurrency_default_one: timed out after 10s (runaway JavaScript)",
+        "index_passed: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "mapper_rejection: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:12:48",
+      "passed": 2,
+      "total": 12,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "index_passed: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "mapper_rejection: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "retry_transient_failure: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "retry_exhausted: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "exponential_backoff: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "task_timeout: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "timeout_triggers_retry: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:14:34",
+      "passed": 1,
+      "total": 17,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "concurrency_default_one: assertion returned False",
+        "index_passed: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "mapper_rejection: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "retry_transient_failure: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "retry_exhausted: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "exponential_backoff: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "task_timeout: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "timeout_triggers_retry: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "already_aborted_signal: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "mid_flight_abort: assertion returned False",
+        "settled_all_success: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "settled_mixed_failures: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "settled_with_retries: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:14:51",
+      "passed": 0,
+      "total": 7,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:18: attempt to index a function value (local 'tick')",
+        "sequence_all_success: exception [string \"<python>\"]:18: attempt to index a function value (local 'tick')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:18: attempt to index a function value (local 'tick')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:18: attempt to index a function value (local 'tick')",
+        "selector_first_success: exception [string \"<python>\"]:18: attempt to index a function value (local 'tick')",
+        "selector_all_failure: exception [string \"<python>\"]:18: attempt to index a function value (local 'tick')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:18: attempt to index a function value (local 'tick')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:15:29",
+      "passed": 0,
+      "total": 12,
+      "failures": [
+        "Lua syntax error: [string \"<python>\"]:7: attempt to index a nil value (field 'Blackboard')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:16:11",
+      "passed": 0,
+      "total": 16,
+      "failures": [
+        "Lua syntax error: [string \"<python>\"]:1: attempt to index a nil value (global 'BT')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:10:54",
+      "stats": {
+        "input_tokens": 212,
+        "total_output_tokens": 284,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 35.162697429569675,
+        "time_to_first_token_seconds": 0.548786,
+        "model_load_time_seconds": 2.570142875
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:11:53",
+      "stats": {
+        "input_tokens": 732,
+        "total_output_tokens": 555,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 32.10942800496372,
+        "time_to_first_token_seconds": 0.706427,
+        "model_load_time_seconds": 0.002676458
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:13:14",
+      "stats": {
+        "input_tokens": 1037,
+        "total_output_tokens": 682,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 30.069812227690733,
+        "time_to_first_token_seconds": 2.998778,
+        "model_load_time_seconds": 0.002467375
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:14:51",
+      "stats": {
+        "input_tokens": 480,
+        "total_output_tokens": 418,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 27.7352478174251,
+        "time_to_first_token_seconds": 2.001015,
+        "model_load_time_seconds": 0.000889416
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:15:29",
+      "stats": {
+        "input_tokens": 1189,
+        "total_output_tokens": 909,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 24.883776475797514,
+        "time_to_first_token_seconds": 1.445334,
+        "model_load_time_seconds": 0.001448208
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:16:11",
+      "stats": {
+        "input_tokens": 1496,
+        "total_output_tokens": 722,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 20.9586345931437,
+        "time_to_first_token_seconds": 6.853913,
+        "model_load_time_seconds": 0.001660625
+      }
+    }
+  ]
+}

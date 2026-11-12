@@ -1,0 +1,30 @@
+{
+  "model": "minicpm-v4.6:latest",
+  "created_at": "2026-11-11T13:25:40.318797Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nfrom collections import deque, defaultdict\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    # Check for cycles in dependencies\n    if critical_path_is_cyclic(tasks):\n        return None\n\n    # Compute durations and dependencies for each task\n    durations = [duration for (duration, _) in tasks]\n    dependencies = [dep for (duration, dep) in tasks]\n\n    # Build graph and compute topological sort\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n    for task, (duration, dependencies) in tasks:\n        for dep in dependencies:\n            graph[dep].append(task)\n            in_degree[task] += 1\n\n    # Topological sort using Kahn's algorithm\n    queue = deque([task for task in in_degree if in_degree[task] == 0])\n    topological_order = []\n    while queue:\n        task = queue.popleft()\n        topological_order.append(task)\n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n\n    # Calculate path durations\n    path_durations = [0] * len(topological_order)\n    for task in topological_order:\n        for neighbor in graph[task]:\n            path_durations[task] = max(path_durations[task], durations[task] + durations[neighbor])\n\n    # Find the critical path (longest path)\n    critical_path = max(path_durations, key=lambda x: x)\n    return critical_path\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 4715868083,
+  "load_duration": 753916,
+  "prompt_eval_count": 622,
+  "prompt_eval_cached_count": 616,
+  "prompt_eval_duration": 36124000,
+  "eval_count": 360,
+  "eval_duration": 4618669000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 622,
+    "total_output_tokens": 360,
+    "tokens_per_second": 77.94453337097767,
+    "time_to_first_token_seconds": 0.036124,
+    "model_load_time_seconds": 0.000753916
+  },
+  "think_budget": {
+    "limit": 8192,
+    "discarded_thinking_tokens": 8193
+  }
+}

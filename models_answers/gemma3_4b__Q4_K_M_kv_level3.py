@@ -1,0 +1,159 @@
+import copy
+
+class InMemoryKeyValueStore:
+    def __init__(self):
+        self.data = {}
+        self.transactions = []
+        self.watches = {}
+        self.snapshots = {}
+
+    def set(self, key, value):
+        if key in self.watches:
+            old_value = self.get(key)
+            if old_value != None:
+                print(f"WATCH {key} {old_value} -> {value}")
+            self.watches[key] = value
+        else:
+            self.data[key] = value
+
+    def get(self, key):
+        if self.transactions:
+            for k, v in reversed(self.transactions):
+                if k == key:
+                    return v
+            return None
+        elif key in self.data:
+            return self.data[key]
+        else:
+            return "NULL"
+
+    def delete(self, key):
+        if key in self.watches:
+            old_value = self.get(key)
+            if old_value != None:
+                print(f"WATCH {key} {old_value} -> {None}")
+            self.watches.pop(key, None)
+        if key in self.data:
+            del self.data[key]
+
+    def begin(self):
+        self.transactions.append(None)
+
+    def commit(self):
+        if not self.transactions:
+            print("NO TRANSACTION")
+            return
+
+        committed_transactions = []
+        while self.transactions and isinstance(self.transactions[-1], tuple):
+            key, value = self.transactions.pop()
+            committed_transactions.append((key, value))
+
+        for k, v in committed_transactions:
+            self.data[k] = v
+
+        if not self.transactions:
+            print("NO TRANSACTION")
+            return
+
+    def rollback(self):
+        if not self.transactions:
+            print("NO TRANSACTION")
+            return
+
+        self.transactions.pop()
+
+    def count(self, value):
+        count = 0
+        for key in self.data:
+            if self.get(key) == value:
+                count += 1
+        print(count)
+
+    def watch(self, key):
+        self.watches[key] = None
+
+    def snapshot(self, name):
+        self.snapshots[name] = copy.deepcopy(self)
+
+    def restore(self, name):
+        if name in self.snapshots:
+            self.data = self.snapshots[name].data
+            self.transactions = self.snapshots[name].transactions
+            self.watches = self.snapshots[name].watches
+        else:
+            print("Snapshot not found")
+
+    def run(self, program):
+        output = []
+        for line in program.strip().split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+
+            parts = line.split()
+            command = parts[0]
+
+            if command == "SET":
+                key = parts[1]
+                value = parts[2]
+                self.set(key, value)
+            elif command == "GET":
+                value = self.get(parts[1])
+                output.append(str(value))
+            elif command == "DELETE":
+                key = parts[1]
+                self.delete(key)
+            elif command == "BEGIN":
+                self.begin()
+            elif command == "COMMIT":
+                self.commit()
+            elif command == "ROLLBACK":
+                self.rollback()
+            elif command == "COUNT":
+                value = parts[1]
+                self.count(value)
+            elif command == "WATCH":
+                key = parts[1]
+                self.watch(key)
+            elif command == "SNAPSHOT":
+                name = parts[1]
+                self.snapshot(name)
+            elif command == "RESTORE":
+                name = parts[1]
+                self.restore(name)
+            else:
+                pass  # Ignore unknown commands
+
+        return output
+
+
+if __name__ == '__main__':
+    # Example Usage
+    store = InMemoryKeyValueStore()
+    program = """
+SET key1 10
+BEGIN
+SET key2 20
+WATCH key1
+GET key1
+COMMIT
+ROLLBACK
+GET key1
+GET key2
+DELETE key1
+BEGIN
+SET key3 30
+COMMIT
+SNAPSHOT snapshot1
+WATCH key3
+COUNT 30
+WATCH key1
+SET key1 40
+COUNT 30
+RESTORE snapshot1
+GET key1
+GET key3
+"""
+    output = store.run(program)
+    print('\n'.join(output))

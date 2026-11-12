@@ -1,0 +1,1019 @@
+```c
+#include <stdint.h>
+
+static uint8_t buffer[BUFFER_SIZE];
+static uint8_t out_type[BUFFER_SIZE];
+static uint8_t out_payload[BUFFER_SIZE];
+
+int ringbuf_init(void) {
+    buffer[0] = 0;
+    out_type[0] = 0;
+    out_payload[0] = 0;
+    return 0;
+}
+
+int ringbuf_push(uint8_t byte) {
+    if (buffer[0] == 0) {
+        buffer[0] = byte;
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
+int ringbuf_pop(void) {
+    if (buffer[0] == 0) {
+        return -1;
+    } else {
+        uint8_t byte = buffer[0];
+        buffer[0] = 0;
+        return byte;
+    }
+}
+
+int ringbuf_available(void) {
+    return buffer[0] != 0;
+}
+
+int ringbuf_free_space(void) {
+    return BUFFER_SIZE - buffer[0];
+}
+
+int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {
+    int i;
+    for (i = 0; i < stream_len; i++) {
+        if (stream[i] == 0xAA) {
+            if (i + 1 < stream_len && stream[i + 1] != 0xAA) {
+                return -1;
+            }
+            if (i + 2 < stream_len && stream[i + 2] != 0xAA) {
+                return -1;
+            }
+            if (i + 3 < stream_len && stream[i + 3] != 0xAA) {
+                return -1;
+            }
+            if (i + 4 < stream_len && stream[i + 4] != 0xAA) {
+                return -1;
+            }
+            return i + 4;
+        }
+    }
+    if (i + 1 < stream_len && stream[i + 1] != 0xAA) {
+        return -1;
+    }
+    if (i + 2 < stream_len && stream[i + 2] != 0xAA) {
+        return -1;
+    }
+    if (i + 3 < stream_len && stream[i + 3] != 0xAA) {
+        return -1;
+    }
+    if (i + 4 < stream_len && stream[i + 4] != 0xAA) {
+        return -1;
+    }
+    if (i + 5 < stream_len && stream[i + 5] != 0xAA) {
+        return -1;
+    }
+    if (i + 6 < stream_len && stream[i + 6] != 0xAA) {
+        return -1;
+    }
+    if (i + 7 < stream_len && stream[i + 7] != 0xAA) {
+        return -1;
+    }
+    if (i + 8 < stream_len && stream[i + 8] != 0xAA) {
+        return -1;
+    }
+    if (i + 9 < stream_len && stream[i + 9] != 0xAA) {
+        return -1;
+    }
+    if (i + 10 < stream_len && stream[i + 10] != 0xAA) {
+        return -1;
+    }
+    if (i + 11 < stream_len && stream[i + 11] != 0xAA) {
+        return -1;
+    }
+    if (i + 12 < stream_len && stream[i + 12] != 0xAA) {
+        return -1;
+    }
+    if (i + 13 < stream_len && stream[i + 13] != 0xAA) {
+        return -1;
+    }
+    if (i + 14 < stream_len && stream[i + 14] != 0xAA) {
+        return -1;
+    }
+    if (i + 15 < stream_len && stream[i + 15] != 0xAA) {
+        return -1;
+    }
+    if (i + 16 < stream_len && stream[i + 16] != 0xAA) {
+        return -1;
+    }
+    if (i + 17 < stream_len && stream[i + 17] != 0xAA) {
+        return -1;
+    }
+    if (i + 18 < stream_len && stream[i + 18] != 0xAA) {
+        return -1;
+    }
+    if (i + 19 < stream_len && stream[i + 19] != 0xAA) {
+        return -1;
+    }
+    if (i + 20 < stream_len && stream[i + 20] != 0xAA) {
+        return -1;
+    }
+    if (i + 21 < stream_len && stream[i + 21] != 0xAA) {
+        return -1;
+    }
+    if (i + 22 < stream_len && stream[i + 22] != 0xAA) {
+        return -1;
+    }
+    if (i + 23 < stream_len && stream[i + 23] != 0xAA) {
+        return -1;
+    }
+    if (i + 24 < stream_len && stream[i + 24] != 0xAA) {
+        return -1;
+    }
+    if (i + 25 < stream_len && stream[i + 25] != 0xAA) {
+        return -1;
+    }
+    if (i + 26 < stream_len && stream[i + 26] != 0xAA) {
+        return -1;
+    }
+    if (i + 27 < stream_len && stream[i + 27] != 0xAA) {
+        return -1;
+    }
+    if (i + 28 < stream_len && stream[i + 28] != 0xAA) {
+        return -1;
+    }
+    if (i + 29 < stream_len && stream[i + 29] != 0xAA) {
+        return -1;
+    }
+    if (i + 30 < stream_len && stream[i + 30] != 0xAA) {
+        return -1;
+    }
+    if (i + 31 < stream_len && stream[i + 31] != 0xAA) {
+        return -1;
+    }
+    if (i + 32 < stream_len && stream[i + 32] != 0xAA) {
+        return -1;
+    }
+    if (i + 33 < stream_len && stream[i + 33] != 0xAA) {
+        return -1;
+    }
+    if (i + 34 < stream_len && stream[i + 34] != 0xAA) {
+        return -1;
+    }
+    if (i + 35 < stream_len && stream[i + 35] != 0xAA) {
+        return -1;
+    }
+    if (i + 36 < stream_len && stream[i + 36] != 0xAA) {
+        return -1;
+    }
+    if (i + 37 < stream_len && stream[i + 37] != 0xAA) {
+        return -1;
+    }
+    if (i + 38 < stream_len && stream[i + 38] != 0xAA) {
+        return -1;
+    }
+    if (i + 39 < stream_len && stream[i + 39] != 0xAA) {
+        return -1;
+    }
+    if (i + 40 < stream_len && stream[i + 40] != 0xAA) {
+        return -1;
+    }
+    if (i + 41 < stream_len && stream[i + 41] != 0xAA) {
+        return -1;
+    }
+    if (i + 42 < stream_len && stream[i + 42] != 0xAA) {
+        return -1;
+    }
+    if (i + 43 < stream_len && stream[i + 43] != 0xAA) {
+        return -1;
+    }
+    if (i + 44 < stream_len && stream[i + 44] != 0xAA) {
+        return -1;
+    }
+    if (i + 45 < stream_len && stream[i + 45] != 0xAA) {
+        return -1;
+    }
+    if (i + 46 < stream_len && stream[i + 46] != 0xAA) {
+        return -1;
+    }
+    if (i + 47 < stream_len && stream[i + 47] != 0xAA) {
+        return -1;
+    }
+    if (i + 48 < stream_len && stream[i + 48] != 0xAA) {
+        return -1;
+    }
+    if (i + 49 < stream_len && stream[i + 49] != 0xAA) {
+        return -1;
+    }
+    if (i + 50 < stream_len && stream[i + 50] != 0xAA) {
+        return -1;
+    }
+    if (i + 51 < stream_len && stream[i + 51] != 0xAA) {
+        return -1;
+    }
+    if (i + 52 < stream_len && stream[i + 52] != 0xAA) {
+        return -1;
+    }
+    if (i + 53 < stream_len && stream[i + 53] != 0xAA) {
+        return -1;
+    }
+    if (i + 54 < stream_len && stream[i + 54] != 0xAA) {
+        return -1;
+    }
+    if (i + 55 < stream_len && stream[i + 55] != 0xAA) {
+        return -1;
+    }
+    if (i + 56 < stream_len && stream[i + 56] != 0xAA) {
+        return -1;
+    }
+    if (i + 57 < stream_len && stream[i + 57] != 0xAA) {
+        return -1;
+    }
+    if (i + 58 < stream_len && stream[i + 58] != 0xAA) {
+        return -1;
+    }
+    if (i + 59 < stream_len && stream[i + 59] != 0xAA) {
+        return -1;
+    }
+    if (i + 60 < stream_len && stream[i + 60] != 0xAA) {
+        return -1;
+    }
+    if (i + 61 < stream_len && stream[i + 61] != 0xAA) {
+        return -1;
+    }
+    if (i + 62 < stream_len && stream[i + 62] != 0xAA) {
+        return -1;
+    }
+    if (i + 63 < stream_len && stream[i + 63] != 0xAA) {
+        return -1;
+    }
+    if (i + 64 < stream_len && stream[i + 64] != 0xAA) {
+        return -1;
+    }
+    if (i + 65 < stream_len && stream[i + 65] != 0xAA) {
+        return -1;
+    }
+    if (i + 66 < stream_len && stream[i + 66] != 0xAA) {
+        return -1;
+    }
+    if (i + 67 < stream_len && stream[i + 67] != 0xAA) {
+        return -1;
+    }
+    if (i + 68 < stream_len && stream[i + 68] != 0xAA) {
+        return -1;
+    }
+    if (i + 69 < stream_len && stream[i + 69] != 0xAA) {
+        return -1;
+    }
+    if (i + 70 < stream_len && stream[i + 70] != 0xAA) {
+        return -1;
+    }
+    if (i + 71 < stream_len && stream[i + 71] != 0xAA) {
+        return -1;
+    }
+    if (i + 72 < stream_len && stream[i + 72] != 0xAA) {
+        return -1;
+    }
+    if (i + 73 < stream_len && stream[i + 73] != 0xAA) {
+        return -1;
+    }
+    if (i + 74 < stream_len && stream[i + 74] != 0xAA) {
+        return -1;
+    }
+    if (i + 75 < stream_len && stream[i + 75] != 0xAA) {
+        return -1;
+    }
+    if (i + 76 < stream_len && stream[i + 76] != 0xAA) {
+        return -1;
+    }
+    if (i + 77 < stream_len && stream[i + 77] != 0xAA) {
+        return -1;
+    }
+    if (i + 78 < stream_len && stream[i + 78] != 0xAA) {
+        return -1;
+    }
+    if (i + 79 < stream_len && stream[i + 79] != 0xAA) {
+        return -1;
+    }
+    if (i + 80 < stream_len && stream[i + 80] != 0xAA) {
+        return -1;
+    }
+    if (i + 81 < stream_len && stream[i + 81] != 0xAA) {
+        return -1;
+    }
+    if (i + 82 < stream_len && stream[i + 82] != 0xAA) {
+        return -1;
+    }
+    if (i + 83 < stream_len && stream[i + 83] != 0xAA) {
+        return -1;
+    }
+    if (i + 84 < stream_len && stream[i + 84] != 0xAA) {
+        return -1;
+    }
+    if (i + 85 < stream_len && stream[i + 85] != 0xAA) {
+        return -1;
+    }
+    if (i + 86 < stream_len && stream[i + 86] != 0xAA) {
+        return -1;
+    }
+    if (i + 87 < stream_len && stream[i + 87] != 0xAA) {
+        return -1;
+    }
+    if (i + 88 < stream_len && stream[i + 88] != 0xAA) {
+        return -1;
+    }
+    if (i + 89 < stream_len && stream[i + 89] != 0xAA) {
+        return -1;
+    }
+    if (i + 90 < stream_len && stream[i + 90] != 0xAA) {
+        return -1;
+    }
+    if (i + 91 < stream_len && stream[i + 91] != 0xAA) {
+        return -1;
+    }
+    if (i + 92 < stream_len && stream[i + 92] != 0xAA) {
+        return -1;
+    }
+    if (i + 93 < stream_len && stream[i + 93] != 0xAA) {
+        return -1;
+    }
+    if (i + 94 < stream_len && stream[i + 94] != 0xAA) {
+        return -1;
+    }
+    if (i + 95 < stream_len && stream[i + 95] != 0xAA) {
+        return -1;
+    }
+    if (i + 96 < stream_len && stream[i + 96] != 0xAA) {
+        return -1;
+    }
+    if (i + 97 < stream_len && stream[i + 97] != 0xAA) {
+        return -1;
+    }
+    if (i + 98 < stream_len && stream[i + 98] != 0xAA) {
+        return -1;
+    }
+    if (i + 99 < stream_len && stream[i + 99] != 0xAA) {
+        return -1;
+    }
+    if (i + 100 < stream_len && stream[i + 100] != 0xAA) {
+        return -1;
+    }
+    if (i + 101 < stream_len && stream[i + 101] != 0xAA) {
+        return -1;
+    }
+    if (i + 102 < stream_len && stream[i + 102] != 0xAA) {
+        return -1;
+    }
+    if (i + 103 < stream_len && stream[i + 103] != 0xAA) {
+        return -1;
+    }
+    if (i + 104 < stream_len && stream[i + 104] != 0xAA) {
+        return -1;
+    }
+    if (i + 105 < stream_len && stream[i + 105] != 0xAA) {
+        return -1;
+    }
+    if (i + 106 < stream_len && stream[i + 106] != 0xAA) {
+        return -1;
+    }
+    if (i + 107 < stream_len && stream[i + 107] != 0xAA) {
+        return -1;
+    }
+    if (i + 108 < stream_len && stream[i + 108] != 0xAA) {
+        return -1;
+    }
+    if (i + 109 < stream_len && stream[i + 109] != 0xAA) {
+        return -1;
+    }
+    if (i + 110 < stream_len && stream[i + 110] != 0xAA) {
+        return -1;
+    }
+    if (i + 111 < stream_len && stream[i + 111] != 0xAA) {
+        return -1;
+    }
+    if (i + 112 < stream_len && stream[i + 112] != 0xAA) {
+        return -1;
+    }
+    if (i + 113 < stream_len && stream[i + 113] != 0xAA) {
+        return -1;
+    }
+    if (i + 114 < stream_len && stream[i + 114] != 0xAA) {
+        return -1;
+    }
+    if (i + 115 < stream_len && stream[i + 115] != 0xAA) {
+        return -1;
+    }
+    if (i + 116 < stream_len && stream[i + 116] != 0xAA) {
+        return -1;
+    }
+    if (i + 117 < stream_len && stream[i + 117] != 0xAA) {
+        return -1;
+    }
+    if (i + 118 < stream_len && stream[i + 118] != 0xAA) {
+        return -1;
+    }
+    if (i + 119 < stream_len && stream[i + 119] != 0xAA) {
+        return -1;
+    }
+    if (i + 120 < stream_len && stream[i + 120] != 0xAA) {
+        return -1;
+    }
+    if (i + 121 < stream_len && stream[i + 121] != 0xAA) {
+        return -1;
+    }
+    if (i + 122 < stream_len && stream[i + 122] != 0xAA) {
+        return -1;
+    }
+    if (i + 123 < stream_len && stream[i + 123] != 0xAA) {
+        return -1;
+    }
+    if (i + 124 < stream_len && stream[i + 124] != 0xAA) {
+        return -1;
+    }
+    if (i + 125 < stream_len && stream[i + 125] != 0xAA) {
+        return -1;
+    }
+    if (i + 126 < stream_len && stream[i + 126] != 0xAA) {
+        return -1;
+    }
+    if (i + 127 < stream_len && stream[i + 127] != 0xAA) {
+        return -1;
+    }
+    if (i + 128 < stream_len && stream[i + 128] != 0xAA) {
+        return -1;
+    }
+    if (i + 129 < stream_len && stream[i + 129] != 0xAA) {
+        return -1;
+    }
+    if (i + 130 < stream_len && stream[i + 130] != 0xAA) {
+        return -1;
+    }
+    if (i + 131 < stream_len && stream[i + 131] != 0xAA) {
+        return -1;
+    }
+    if (i + 132 < stream_len && stream[i + 132] != 0xAA) {
+        return -1;
+    }
+    if (i + 133 < stream_len && stream[i + 133] != 0xAA) {
+        return -1;
+    }
+    if (i + 134 < stream_len && stream[i + 134] != 0xAA) {
+        return -1;
+    }
+    if (i + 135 < stream_len && stream[i + 135] != 0xAA) {
+        return -1;
+    }
+    if (i + 136 < stream_len && stream[i + 136] != 0xAA) {
+        return -1;
+    }
+    if (i + 137 < stream_len && stream[i + 137] != 0xAA) {
+        return -1;
+    }
+    if (i + 138 < stream_len && stream[i + 138] != 0xAA) {
+        return -1;
+    }
+    if (i + 139 < stream_len && stream[i + 139] != 0xAA) {
+        return -1;
+    }
+    if (i + 140 < stream_len && stream[i + 140] != 0xAA) {
+        return -1;
+    }
+    if (i + 141 < stream_len && stream[i + 141] != 0xAA) {
+        return -1;
+    }
+    if (i + 142 < stream_len && stream[i + 142] != 0xAA) {
+        return -1;
+    }
+    if (i + 143 < stream_len && stream[i + 143] != 0xAA) {
+        return -1;
+    }
+    if (i + 144 < stream_len && stream[i + 144] != 0xAA) {
+        return -1;
+    }
+    if (i + 145 < stream_len && stream[i + 145] != 0xAA) {
+        return -1;
+    }
+    if (i + 146 < stream_len && stream[i + 146] != 0xAA) {
+        return -1;
+    }
+    if (i + 147 < stream_len && stream[i + 147] != 0xAA) {
+        return -1;
+    }
+    if (i + 148 < stream_len && stream[i + 148] != 0xAA) {
+        return -1;
+    }
+    if (i + 149 < stream_len && stream[i + 149] != 0xAA) {
+        return -1;
+    }
+    if (i + 150 < stream_len && stream[i + 150] != 0xAA) {
+        return -1;
+    }
+    if (i + 151 < stream_len && stream[i + 151] != 0xAA) {
+        return -1;
+    }
+    if (i + 152 < stream_len && stream[i + 152] != 0xAA) {
+        return -1;
+    }
+    if (i + 153 < stream_len && stream[i + 153] != 0xAA) {
+        return -1;
+    }
+    if (i + 154 < stream_len && stream[i + 154] != 0xAA) {
+        return -1;
+    }
+    if (i + 155 < stream_len && stream[i + 155] != 0xAA) {
+        return -1;
+    }
+    if (i + 156 < stream_len && stream[i + 156] != 0xAA) {
+        return -1;
+    }
+    if (i + 157 < stream_len && stream[i + 157] != 0xAA) {
+        return -1;
+    }
+    if (i + 158 < stream_len && stream[i + 158] != 0xAA) {
+        return -1;
+    }
+    if (i + 159 < stream_len && stream[i + 159] != 0xAA) {
+        return -1;
+    }
+    if (i + 160 < stream_len && stream[i + 160] != 0xAA) {
+        return -1;
+    }
+    if (i + 161 < stream_len && stream[i + 161] != 0xAA) {
+        return -1;
+    }
+    if (i + 162 < stream_len && stream[i + 162] != 0xAA) {
+        return -1;
+    }
+    if (i + 163 < stream_len && stream[i + 163] != 0xAA) {
+        return -1;
+    }
+    if (i + 164 < stream_len && stream[i + 164] != 0xAA) {
+        return -1;
+    }
+    if (i + 165 < stream_len && stream[i + 165] != 0xAA) {
+        return -1;
+    }
+    if (i + 166 < stream_len && stream[i + 166] != 0xAA) {
+        return -1;
+    }
+    if (i + 167 < stream_len && stream[i + 167] != 0xAA) {
+        return -1;
+    }
+    if (i + 168 < stream_len && stream[i + 168] != 0xAA) {
+        return -1;
+    }
+    if (i + 169 < stream_len && stream[i + 169] != 0xAA) {
+        return -1;
+    }
+    if (i + 170 < stream_len && stream[i + 170] != 0xAA) {
+        return -1;
+    }
+    if (i + 171 < stream_len && stream[i + 171] != 0xAA) {
+        return -1;
+    }
+    if (i + 172 < stream_len && stream[i + 172] != 0xAA) {
+        return -1;
+    }
+    if (i + 173 < stream_len && stream[i + 173] != 0xAA) {
+        return -1;
+    }
+    if (i + 174 < stream_len && stream[i + 174] != 0xAA) {
+        return -1;
+    }
+    if (i + 175 < stream_len && stream[i + 175] != 0xAA) {
+        return -1;
+    }
+    if (i + 176 < stream_len && stream[i + 176] != 0xAA) {
+        return -1;
+    }
+    if (i + 177 < stream_len && stream[i + 177] != 0xAA) {
+        return -1;
+    }
+    if (i + 178 < stream_len && stream[i + 178] != 0xAA) {
+        return -1;
+    }
+    if (i + 179 < stream_len && stream[i + 179] != 0xAA) {
+        return -1;
+    }
+    if (i + 180 < stream_len && stream[i + 180] != 0xAA) {
+        return -1;
+    }
+    if (i + 181 < stream_len && stream[i + 181] != 0xAA) {
+        return -1;
+    }
+    if (i + 182 < stream_len && stream[i + 182] != 0xAA) {
+        return -1;
+    }
+    if (i + 183 < stream_len && stream[i + 183] != 0xAA) {
+        return -1;
+    }
+    if (i + 184 < stream_len && stream[i + 184] != 0xAA) {
+        return -1;
+    }
+    if (i + 185 < stream_len && stream[i + 185] != 0xAA) {
+        return -1;
+    }
+    if (i + 186 < stream_len && stream[i + 186] != 0xAA) {
+        return -1;
+    }
+    if (i + 187 < stream_len && stream[i + 187] != 0xAA) {
+        return -1;
+    }
+    if (i + 188 < stream_len && stream[i + 188] != 0xAA) {
+        return -1;
+    }
+    if (i + 189 < stream_len && stream[i + 189] != 0xAA) {
+        return -1;
+    }
+    if (i + 190 < stream_len && stream[i + 190] != 0xAA) {
+        return -1;
+    }
+    if (i + 191 < stream_len && stream[i + 191] != 0xAA) {
+        return -1;
+    }
+    if (i + 192 < stream_len && stream[i + 192] != 0xAA) {
+        return -1;
+    }
+    if (i + 193 < stream_len && stream[i + 193] != 0xAA) {
+        return -1;
+    }
+    if (i + 194 < stream_len && stream[i + 194] != 0xAA) {
+        return -1;
+    }
+    if (i + 195 < stream_len && stream[i + 195] != 0xAA) {
+        return -1;
+    }
+    if (i + 196 < stream_len && stream[i + 196] != 0xAA) {
+        return -1;
+    }
+    if (i + 197 < stream_len && stream[i + 197] != 0xAA) {
+        return -1;
+    }
+    if (i + 198 < stream_len && stream[i + 198] != 0xAA) {
+        return -1;
+    }
+    if (i + 199 < stream_len && stream[i + 199] != 0xAA) {
+        return -1;
+    }
+    if (i + 200 < stream_len && stream[i + 200] != 0xAA) {
+        return -1;
+    }
+    if (i + 201 < stream_len && stream[i + 201] != 0xAA) {
+        return -1;
+    }
+    if (i + 202 < stream_len && stream[i + 202] != 0xAA) {
+        return -1;
+    }
+    if (i + 203 < stream_len && stream[i + 203] != 0xAA) {
+        return -1;
+    }
+    if (i + 204 < stream_len && stream[i + 204] != 0xAA) {
+        return -1;
+    }
+    if (i + 205 < stream_len && stream[i + 205] != 0xAA) {
+        return -1;
+    }
+    if (i + 206 < stream_len && stream[i + 206] != 0xAA) {
+        return -1;
+    }
+    if (i + 207 < stream_len && stream[i + 207] != 0xAA) {
+        return -1;
+    }
+    if (i + 208 < stream_len && stream[i + 208] != 0xAA) {
+        return -1;
+    }
+    if (i + 209 < stream_len && stream[i + 209] != 0xAA) {
+        return -1;
+    }
+    if (i + 210 < stream_len && stream[i + 210] != 0xAA) {
+        return -1;
+    }
+    if (i + 211 < stream_len && stream[i + 211] != 0xAA) {
+        return -1;
+    }
+    if (i + 212 < stream_len && stream[i + 212] != 0xAA) {
+        return -1;
+    }
+    if (i + 213 < stream_len && stream[i + 213] != 0xAA) {
+        return -1;
+    }
+    if (i + 214 < stream_len && stream[i + 214] != 0xAA) {
+        return -1;
+    }
+    if (i + 215 < stream_len && stream[i + 215] != 0xAA) {
+        return -1;
+    }
+    if (i + 216 < stream_len && stream[i + 216] != 0xAA) {
+        return -1;
+    }
+    if (i + 217 < stream_len && stream[i + 217] != 0xAA) {
+        return -1;
+    }
+    if (i + 218 < stream_len && stream[i + 218] != 0xAA) {
+        return -1;
+    }
+    if (i + 219 < stream_len && stream[i + 219] != 0xAA) {
+        return -1;
+    }
+    if (i + 220 < stream_len && stream[i + 220] != 0xAA) {
+        return -1;
+    }
+    if (i + 221 < stream_len && stream[i + 221] != 0xAA) {
+        return -1;
+    }
+    if (i + 222 < stream_len && stream[i + 222] != 0xAA) {
+        return -1;
+    }
+    if (i + 223 < stream_len && stream[i + 223] != 0xAA) {
+        return -1;
+    }
+    if (i + 224 < stream_len && stream[i + 224] != 0xAA) {
+        return -1;
+    }
+    if (i + 225 < stream_len && stream[i + 225] != 0xAA) {
+        return -1;
+    }
+    if (i + 226 < stream_len && stream[i + 226] != 0xAA) {
+        return -1;
+    }
+    if (i + 227 < stream_len && stream[i + 227] != 0xAA) {
+        return -1;
+    }
+    if (i + 228 < stream_len && stream[i + 228] != 0xAA) {
+        return -1;
+    }
+    if (i + 229 < stream_len && stream[i + 229] != 0xAA) {
+        return -1;
+    }
+    if (i + 230 < stream_len && stream[i + 230] != 0xAA) {
+        return -1;
+    }
+    if (i + 231 < stream_len && stream[i + 231] != 0xAA) {
+        return -1;
+    }
+    if (i + 232 < stream_len && stream[i + 232] != 0xAA) {
+        return -1;
+    }
+    if (i + 233 < stream_len && stream[i + 233] != 0xAA) {
+        return -1;
+    }
+    if (i + 234 < stream_len && stream[i + 234] != 0xAA) {
+        return -1;
+    }
+    if (i + 235 < stream_len && stream[i + 235] != 0xAA) {
+        return -1;
+    }
+    if (i + 236 < stream_len && stream[i + 236] != 0xAA) {
+        return -1;
+    }
+    if (i + 237 < stream_len && stream[i + 237] != 0xAA) {
+        return -1;
+    }
+    if (i + 238 < stream_len && stream[i + 238] != 0xAA) {
+        return -1;
+    }
+    if (i + 239 < stream_len && stream[i + 239] != 0xAA) {
+        return -1;
+    }
+    if (i + 240 < stream_len && stream[i + 240] != 0xAA) {
+        return -1;
+    }
+    if (i + 241 < stream_len && stream[i + 241] != 0xAA) {
+        return -1;
+    }
+    if (i + 242 < stream_len && stream[i + 242] != 0xAA) {
+        return -1;
+    }
+    if (i + 243 < stream_len && stream[i + 243] != 0xAA) {
+        return -1;
+    }
+    if (i + 244 < stream_len && stream[i + 244] != 0xAA) {
+        return -1;
+    }
+    if (i + 245 < stream_len && stream[i + 245] != 0xAA) {
+        return -1;
+    }
+    if (i + 246 < stream_len && stream[i + 246] != 0xAA) {
+        return -1;
+    }
+    if (i + 247 < stream_len && stream[i + 247] != 0xAA) {
+        return -1;
+    }
+    if (i + 248 < stream_len && stream[i + 248] != 0xAA) {
+        return -1;
+    }
+    if (i + 249 < stream_len && stream[i + 249] != 0xAA) {
+        return -1;
+    }
+    if (i + 250 < stream_len && stream[i + 250] != 0xAA) {
+        return -1;
+    }
+    if (i + 251 < stream_len && stream[i + 251] != 0xAA) {
+        return -1;
+    }
+    if (i + 252 < stream_len && stream[i + 252] != 0xAA) {
+        return -1;
+    }
+    if (i + 253 < stream_len && stream[i + 253] != 0xAA) {
+        return -1;
+    }
+    if (i + 254 < stream_len && stream[i + 254] != 0xAA) {
+        return -1;
+    }
+    if (i + 255 < stream_len && stream[i + 255] != 0xAA) {
+        return -1;
+    }
+    if (i + 256 < stream_len && stream[i + 256] != 0xAA) {
+        return -1;
+    }
+    if (i + 257 < stream_len && stream[i + 257] != 0xAA) {
+        return -1;
+    }
+    if (i + 258 < stream_len && stream[i + 258] != 0xAA) {
+        return -1;
+    }
+    if (i + 259 < stream_len && stream[i + 259] != 0xAA) {
+        return -1;
+    }
+    if (i + 260 < stream_len && stream[i + 260] != 0xAA) {
+        return -1;
+    }
+    if (i + 261 < stream_len && stream[i + 261] != 0xAA) {
+        return -1;
+    }
+    if (i + 262 < stream_len && stream[i + 262] != 0xAA) {
+        return -1;
+    }
+    if (i + 263 < stream_len && stream[i + 263] != 0xAA) {
+        return -1;
+    }
+    if (i + 264 < stream_len && stream[i + 264] != 0xAA) {
+        return -1;
+    }
+    if (i + 265 < stream_len && stream[i + 265] != 0xAA) {
+        return -1;
+    }
+    if (i + 266 < stream_len && stream[i + 266] != 0xAA) {
+        return -1;
+    }
+    if (i + 267 < stream_len && stream[i + 267] != 0xAA) {
+        return -1;
+    }
+    if (i + 268 < stream_len && stream[i + 268] != 0xAA) {
+        return -1;
+    }
+    if (i + 269 < stream_len && stream[i + 269] != 0xAA) {
+        return -1;
+    }
+    if (i + 270 < stream_len && stream[i + 270] != 0xAA) {
+        return -1;
+    }
+    if (i + 271 < stream_len && stream[i + 271] != 0xAA) {
+        return -1;
+    }
+    if (i + 272 < stream_len && stream[i + 272] != 0xAA) {
+        return -1;
+    }
+    if (i + 273 < stream_len && stream[i + 273] != 0xAA) {
+        return -1;
+    }
+    if (i + 274 < stream_len && stream[i + 274] != 0xAA) {
+        return -1;
+    }
+    if (i + 275 < stream_len && stream[i + 275] != 0xAA) {
+        return -1;
+    }
+    if (i + 276 < stream_len && stream[i + 276] != 0xAA) {
+        return -1;
+    }
+    if (i + 277 < stream_len && stream[i + 277] != 0xAA) {
+        return -1;
+    }
+    if (i + 278 < stream_len && stream[i + 278] != 0xAA) {
+        return -1;
+    }
+    if (i + 279 < stream_len && stream[i + 279] != 0xAA) {
+        return -1;
+    }
+    if (i + 280 < stream_len && stream[i + 280] != 0xAA) {
+        return -1;
+    }
+    if (i + 281 < stream_len && stream[i + 281] != 0xAA) {
+        return -1;
+    }
+    if (i + 282 < stream_len && stream[i + 282] != 0xAA) {
+        return -1;
+    }
+    if (i + 283 < stream_len && stream[i + 283] != 0xAA) {
+        return -1;
+    }
+    if (i + 284 < stream_len && stream[i + 284] != 0xAA) {
+        return -1;
+    }
+    if (i + 285 < stream_len && stream[i + 285] != 0xAA) {
+        return -1;
+    }
+    if (i + 286 < stream_len && stream[i + 286] != 0xAA) {
+        return -1;
+    }
+    if (i + 287 < stream_len && stream[i + 287] != 0xAA) {
+        return -1;
+    }
+    if (i + 288 < stream_len && stream[i + 288] != 0xAA) {
+        return -1;
+    }
+    if (i + 289 < stream_len && stream[i + 289] != 0xAA) {
+        return -1;
+    }
+    if (i + 290 < stream_len && stream[i + 290] != 0xAA) {
+        return -1;
+    }
+    if (i + 291 < stream_len && stream[i + 291] != 0xAA) {
+        return -1;
+    }
+    if (i + 292 < stream_len && stream[i + 292] != 0xAA) {
+        return -1;
+    }
+    if (i + 293 < stream_len && stream[i + 293] != 0xAA) {
+        return -1;
+    }
+    if (i + 294 < stream_len && stream[i + 294] != 0xAA) {
+        return -1;
+    }
+    if (i + 295 < stream_len && stream[i + 295] != 0xAA) {
+        return -1;
+    }
+    if (i + 296 < stream_len && stream[i + 296] != 0xAA) {
+        return -1;
+    }
+    if (i + 297 < stream_len && stream[i + 297] != 0xAA) {
+        return -1;
+    }
+    if (i + 298 < stream_len && stream[i + 298] != 0xAA) {
+        return -1;
+    }
+    if (i + 299 < stream_len && stream[i + 299] != 0xAA) {
+        return -1;
+    }
+    if (i + 300 < stream_len && stream[i + 300] != 0xAA) {
+        return -1;
+    }
+    if (i + 301 < stream_len && stream[i + 301] != 0xAA) {
+        return -1;
+    }
+    if (i + 302 < stream_len && stream[i + 302] != 0xAA) {
+        return -1;
+    }
+    if (i + 303 < stream_len && stream[i + 303] != 0xAA) {
+        return -1;
+    }
+    if (i + 304 < stream_len && stream[i + 304] != 0xAA) {
+        return -1;
+    }
+    if (i + 305 < stream_len && stream[i + 305] != 0xAA) {
+        return -1;
+    }
+    if (i + 306 < stream_len && stream[i + 306] != 0xAA) {
+        return -1;
+    }
+    if (i + 307 < stream_len && stream[i + 307] != 0xAA) {
+        return -1;
+    }
+    if (i + 308 < stream_len && stream[i + 308] != 0xAA) {
+        return -1;
+    }
+    if (i + 309 < stream_len && stream[i + 309] != 0xAA) {
+        return -1;
+    }
+    if (i + 310 < stream_len && stream[i + 310] != 0xAA) {
+        return -1;
+    }
+    if (i + 311 < stream_len && stream[i + 311] != 0xAA) {
+        return -1;
+    }
+    if (i + 312 < stream_len && stream[i + 312] != 0xAA) {
+        return -1;
+    }
+    if (i + 313 < stream_len && stream[i + 313] != 0xAA) {
+        return -1;
+    }
+    if (i + 314 < stream_len && stream[i + 314] != 0xAA) {
+        return -1;
+    }
+    if (i + 315 < stream_len && stream[i + 315] != 0xAA) {
+        return -1;
+    }
+    if (i + 316 < stream_len && stream[i + 316] != 0xAA) {
+        return -1;
+    }
+    if (i + 317 < stream_len && stream[i + 317] != 0xAA) {
+        return -1;
+    }
+    if (i + 318 < stream_len && stream[i + 318] != 0xAA) {
+        return -1;
+    }
+    if (i + 319 < stream_len && stream[i + 319] != 0xAA) {
+        return -1;
+    }
+    if (i + 320 < stream_len && stream[i + 320] != 0xAA) {
+       

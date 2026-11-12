@@ -1,0 +1,30 @@
+{
+  "run_id": "run_20261111_151043_a8aeba",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "js_async",
+  "level": "level3",
+  "tested_at": "2026-11-11 15:14:34",
+  "passed": 1,
+  "total": 17,
+  "failures": [
+    "order_preservation: assertion returned False",
+    "concurrency_limit: assertion returned False",
+    "concurrency_as_number: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "concurrency_default_one: assertion returned False",
+    "index_passed: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "mapper_rejection: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "retry_transient_failure: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "retry_exhausted: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "exponential_backoff: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "task_timeout: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "timeout_triggers_retry: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "already_aborted_signal: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "mid_flight_abort: assertion returned False",
+    "settled_all_success: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "settled_mixed_failures: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+    "settled_with_retries: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

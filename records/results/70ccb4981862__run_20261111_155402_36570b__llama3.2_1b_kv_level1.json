@@ -1,0 +1,28 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-11-11 15:57:12",
+  "passed": 1,
+  "total": 15,
+  "failures": [
+    "basic_set_get: expected ['10'], got []",
+    "get_missing: expected ['NULL'], got []",
+    "delete_then_get: expected ['NULL'], got []",
+    "delete_missing_key_noop: expected ['NULL'], got []",
+    "overwrite_set: expected ['2'], got []",
+    "commit_no_transaction: expected ['NO TRANSACTION'], got []",
+    "rollback_no_transaction: expected ['NO TRANSACTION'], got []",
+    "simple_transaction_commit: expected ['10'], got ['NO TRANSACTION']",
+    "simple_transaction_rollback: expected ['5'], got ['NO TRANSACTION']",
+    "rollback_restores_delete: expected ['NULL', '5'], got ['NO TRANSACTION']",
+    "nested_transactions: expected ['20', '10', 'NULL'], got ['COMMIT', 'NO TRANSACTION']",
+    "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['COMMIT', 'NO TRANSACTION']",
+    "multiple_keys_independent: expected ['2', '1', '2'], got ['NO TRANSACTION']",
+    "set_new_key_inside_transaction: expected ['100', '100'], got ['NO TRANSACTION']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,53 @@
+We are to implement a task scheduler with dependencies, priorities, and a limited worker pool.
+
+We need to check for cyclic dependencies. If there is a cyclic dependency, return None.
+
+We need to process tasks, select tasks based on priority, duration, and name, and ensure that the worker pool is not exceeded.
+
+We need to return a list of task names.
+
+Let's break down the steps:
+
+1. Check for cyclic dependencies in the tasks. We can use a graph or a set of dependencies to detect cycles.
+
+2. For each task, we need to consider its dependencies. We need to check if the task can be scheduled.
+
+3. When multiple tasks are ready to run, select based on priority (higher priority first), then duration (shortest duration), then alphabetical task name.
+
+4. At most workers tasks can run simultaneously. So we need to manage the number of tasks that can be scheduled at once.
+
+5. If there is a cyclic dependency, return None.
+
+We need to implement a function plan_order that takes tasks and workers.
+
+We need to return a list of task names.
+
+Let's design the solution.
+
+We can use a graph to represent dependencies. For each task, we have deps (list of task names). We can check for cycles in the graph.
+
+We need to process tasks, and for each task, we need to check if it can be scheduled.
+
+We need to sort tasks by priority, then by duration, then by name.
+
+We need to select tasks that can be scheduled, respecting the worker limit.
+
+We need to return the list of task names.
+
+Let's write the code.
+
+We'll use a set for dependencies to detect cycles.
+
+We'll use a queue to process tasks.
+
+We'll need to check if the current task can be scheduled.
+
+We'll need to check if the worker pool is exceeded.
+
+Let's implement.
+
+Note: The function plan_order returns a list[str] | None. If there is a cyclic dependency, return None.
+
+We need to return the list of task names.
+
+Let's write the code.

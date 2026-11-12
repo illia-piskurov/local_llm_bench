@@ -1,0 +1,27 @@
+{
+  "run_id": "run_20261111_131859_f2d393",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:1b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-11-11 13:19:53",
+  "passed": 2,
+  "total": 15,
+  "failures": [
+    "basic_set_get: expected ['10'], got ['SET SET a 10\\nGET a']",
+    "get_missing: expected ['NULL'], got ['GET x']",
+    "delete_then_get: expected ['NULL'], got ['SET SET a 10\\nDELETE a\\nGET a']",
+    "delete_missing_key_noop: expected ['NULL'], got ['GET x\\nGET x']",
+    "overwrite_set: expected ['2'], got ['SET SET a 1\\nSET a 2\\nGET a']",
+    "simple_transaction_commit: expected ['10'], got ['SET BEGIN\\nSET a 10\\nCOMMIT\\nGET a']",
+    "simple_transaction_rollback: expected ['5'], got ['SET SET a 5\\nBEGIN\\nSET a 10\\nROLLBACK\\nGET a']",
+    "rollback_restores_delete: expected ['NULL', '5'], got ['SET SET a 5\\nBEGIN\\nDELETE a\\nGET a\\nROLLBACK\\nGET a']",
+    "nested_transactions: expected ['20', '10', 'NULL'], got ['SET BEGIN\\nSET a 10\\nBEGIN\\nSET a 20\\nGET a\\nROLLBACK\\nGET a\\nROLLBACK\\nGET a']",
+    "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['SET BEGIN\\nSET a 1\\nBEGIN\\nSET a 2\\nCOMMIT\\nGET a\\nCOMMIT\\nGET a']",
+    "rollback_after_commit_is_no_transaction: expected ['NO TRANSACTION'], got ['SET BEGIN\\nSET a 1\\nCOMMIT\\nROLLBACK']",
+    "multiple_keys_independent: expected ['2', '1', '2'], got ['SET SET a 1\\nSET b 2\\nBEGIN\\nSET a 99\\nGET b\\nROLLBACK\\nGET a\\nGET b']",
+    "set_new_key_inside_transaction: expected ['100', '100'], got ['SET BEGIN\\nSET x 100\\nGET x\\nCOMMIT\\nGET x']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

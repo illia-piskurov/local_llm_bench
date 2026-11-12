@@ -1,0 +1,27 @@
+{
+  "model": "minicpm-v4.6:latest",
+  "created_at": "2026-11-11T13:25:53.981219Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nimport heapq\nimport heapq\nfrom collections import defaultdict, deque\n\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    # Check for cyclic dependencies\n    deps = defaultdict(list)\n    for task, deps, _ in tasks:\n        for dep in deps:\n            deps[dep].append(task)\n    graph = defaultdict(list)\n    for task in tasks:\n        for dep in deps[task]:\n            graph[dep].append(task)\n    for task in tasks:\n        for dep in graph[task]:\n            graph[dep].append(task)\n    # Check for cycles\n    is_cyclic = False\n    for task in tasks:\n        visited = set()\n        stack = [task]\n        while stack:\n            current = stack.pop()\n            if current in visited:\n                is_cyclic = True\n                break\n            visited.add(current)\n            for neighbor in graph[current]:\n                if neighbor not in visited:\n                    stack.append(neighbor)\n        if is_cyclic:\n            return None\n    # Sort tasks by priority (descending), then duration (ascending), then name (ascending)\n    tasks_sorted = sorted(tasks, key=lambda x: (-tasks[x][1], tasks[x][2], tasks[x][0]))\n    # Select tasks that can be scheduled, respecting worker limit\n    scheduled = []\n    for task in tasks_sorted:\n        # Check if task can be scheduled\n        if len(scheduled) >= workers:\n            continue\n        # Check dependencies\n        if any(task in deps[dep] for dep in deps):\n            continue\n        # Add to scheduled\n        scheduled.append(task)\n        # Check if adding would exceed workers\n        if len(scheduled) >= workers:\n            continue\n        # Push to heap with priority, duration, task name\n        heapq.heappush(scheduled_queue, (tasks[task][1], tasks[task][2], task))\n    # If still need more, select next\n    while scheduled and len(scheduled) < workers:\n        # Pop from heap, check if can be scheduled\n        _, _, task = heapq.heappop(scheduled_queue)\n        if task in scheduled:\n            continue\n        scheduled.append(task)\n        heapq.heappush(scheduled_queue, (tasks[task][1], tasks[task][2], task))\n    return [task for task in scheduled if task in scheduled] or None\n```",
+    "thinking": "We are to implement a task scheduler with dependencies, priorities, and a limited worker pool.\n\nWe need to check for cyclic dependencies. If there is a cyclic dependency, return None.\n\nWe need to process tasks, select tasks based on priority, duration, and name, and ensure that the worker pool is not exceeded.\n\nWe need to return a list of task names.\n\nLet's break down the steps:\n\n1. Check for cyclic dependencies in the tasks. We can use a graph or a set of dependencies to detect cycles.\n\n2. For each task, we need to consider its dependencies. We need to check if the task can be scheduled.\n\n3. When multiple tasks are ready to run, select based on priority (higher priority first), then duration (shortest duration), then alphabetical task name.\n\n4. At most workers tasks can run simultaneously. So we need to manage the number of tasks that can be scheduled at once.\n\n5. If there is a cyclic dependency, return None.\n\nWe need to implement a function plan_order that takes tasks and workers.\n\nWe need to return a list of task names.\n\nLet's design the solution.\n\nWe can use a graph to represent dependencies. For each task, we have deps (list of task names). We can check for cycles in the graph.\n\nWe need to process tasks, and for each task, we need to check if it can be scheduled.\n\nWe need to sort tasks by priority, then by duration, then by name.\n\nWe need to select tasks that can be scheduled, respecting the worker limit.\n\nWe need to return the list of task names.\n\nLet's write the code.\n\nWe'll use a set for dependencies to detect cycles.\n\nWe'll use a queue to process tasks.\n\nWe'll need to check if the current task can be scheduled.\n\nWe'll need to check if the worker pool is exceeded.\n\nLet's implement.\n\nNote: The function plan_order returns a list[str] | None. If there is a cyclic dependency, return None.\n\nWe need to return the list of task names.\n\nLet's write the code."
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 12866409459,
+  "load_duration": 2771334,
+  "prompt_eval_count": 231,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 194648000,
+  "eval_count": 986,
+  "eval_duration": 12639548000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 231,
+    "total_output_tokens": 986,
+    "tokens_per_second": 78.00911868050979,
+    "time_to_first_token_seconds": 0.194648,
+    "model_load_time_seconds": 0.002771334,
+    "reasoning_output_tokens": 451
+  }
+}

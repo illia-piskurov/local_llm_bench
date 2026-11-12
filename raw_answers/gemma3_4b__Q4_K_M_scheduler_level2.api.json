@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T11:25:13.293545Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    \"\"\"\n    Performs a topological sort on a directed acyclic graph (DAG) represented as a dictionary\n    of tasks and their dependencies.\n\n    Args:\n        tasks: A dictionary where the key is the task name (str), and the value is a list of\n               dependency task names that must complete prior to this task.\n\n    Returns:\n        A list of all task names in an order where every task appears strictly after all of its\n        dependencies (topological sort). If the dependency graph contains a cycle, return None.\n    \"\"\"\n    in_degree = {}\n    for task in tasks:\n        in_degree[task] = 0\n    for task in tasks:\n        for dependency in tasks[task]:\n            in_degree[task] += 1\n\n    queue = []\n    for task in in_degree:\n        if in_degree[task] == 0:\n            queue.append(task)\n\n    sorted_tasks = []\n    while queue:\n        task = queue.pop(0)\n        sorted_tasks.append(task)\n\n        for dependent_task in tasks:\n            if task in tasks[dependent_task]:\n                in_degree[dependent_task] -= 1\n                if in_degree[dependent_task] == 0:\n                    queue.append(dependent_task)\n\n    if len(sorted_tasks) != len(tasks):\n        return None\n    else:\n        return sorted_tasks\n\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    \"\"\"\n    Calculates the length of the critical path in a task dependency graph.\n\n    Args:\n        tasks: A dictionary where each value is a tuple of (duration, dependencies_list).\n\n    Returns:\n        The length of the critical path — the total duration of the longest dependent\n        sequence of tasks. If the dependency graph contains a cycle, return None.\n    \"\"\"\n    sorted_tasks = topo_sort(tasks)\n    if sorted_tasks is None:\n        return None\n\n    task_durations = {}\n    for task in tasks:\n        task_durations[task] = tasks[task][0]\n\n    completion_times = {}\n    for task in sorted_tasks:\n        completion_times[task] = task_durations[task]\n        for dependency in tasks[task][1]:\n            if dependency in completion_times:\n                completion_times[task] = max(completion_times[task], completion_times[dependency] + task_durations[task])\n\n    return max(completion_times.values())\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 23507379917,
+  "load_duration": 1538250,
+  "prompt_eval_count": 676,
+  "prompt_eval_cached_count": 178,
+  "prompt_eval_duration": 1805415000,
+  "eval_count": 610,
+  "eval_duration": 21682646000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 676,
+    "total_output_tokens": 610,
+    "tokens_per_second": 28.133097777826563,
+    "time_to_first_token_seconds": 1.805415,
+    "model_load_time_seconds": 0.00153825
+  }
+}

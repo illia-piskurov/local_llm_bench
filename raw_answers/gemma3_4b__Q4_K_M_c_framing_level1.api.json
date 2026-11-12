@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T11:30:48.683991Z",
+  "message": {
+    "role": "assistant",
+    "content": "```c\n#include <stdint.h>\n#include <stdbool.h>\n\n#define BUFFER_SIZE 512\n\n// Fixed-size ring buffer implementation\ntypedef struct {\n    uint8_t buffer[BUFFER_SIZE];\n    int head;\n    int tail;\n    int count;\n} ringbuf_t;\n\nstatic ringbuf_t ringbuf;\n\nvoid ringbuf_init(void) {\n    ringbuf.head = 0;\n    ringbuf.tail = 0;\n    ringbuf.count = 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if (ringbuf.count == BUFFER_SIZE) {\n        return -1; // Buffer full\n    }\n\n    ringbuf.buffer[ringbuf.tail] = byte;\n    ringbuf.tail = (ringbuf.tail + 1) % BUFFER_SIZE;\n    ringbuf.count++;\n    return 0;\n}\n\nint ringbuf_pop(void) {\n    if (ringbuf.count == 0) {\n        return -1; // Buffer empty\n    }\n\n    uint8_t byte = ringbuf.buffer[ringbuf.head];\n    ringbuf.head = (ringbuf.head + 1) % BUFFER_SIZE;\n    ringbuf.count--;\n    return byte;\n}\n\nint ringbuf_available(void) {\n    return ringbuf.count;\n}\n\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - ringbuf.count;\n}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 14615191917,
+  "load_duration": 1127084,
+  "prompt_eval_count": 281,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 1221165000,
+  "eval_count": 355,
+  "eval_duration": 13145449000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 281,
+    "total_output_tokens": 355,
+    "tokens_per_second": 27.00554389583802,
+    "time_to_first_token_seconds": 1.221165,
+    "model_load_time_seconds": 0.001127084
+  }
+}

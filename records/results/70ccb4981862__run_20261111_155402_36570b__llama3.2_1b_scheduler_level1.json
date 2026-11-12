@@ -1,0 +1,13 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-11 15:56:42",
+  "passed": 10,
+  "total": 10,
+  "failures": [],
+  "manual_score": null,
+  "comment": ""
+}

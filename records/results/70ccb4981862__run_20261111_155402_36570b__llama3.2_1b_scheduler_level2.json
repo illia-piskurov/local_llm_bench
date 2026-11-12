@@ -1,0 +1,17 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-11 15:56:50",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "simple_chain: expected 9, got 4",
+    "diamond_pick_longer_branch: expected 12, got 10",
+    "wide_graph: expected 19, got 10"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

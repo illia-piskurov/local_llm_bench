@@ -1,0 +1,107 @@
+```lua
+-- Global table for execution statuses
+local BT = {}
+
+-- Node for action
+local function BT.Action(ctx)
+  if ctx == "1" then
+    return BT.SUCCESS
+  end
+  return BT.FAILURE
+end
+
+-- Node for condition check
+local function BT.Condition(ctx)
+  if ctx == "1" then
+    return BT.FAILURE
+  end
+  return BT.SUCCESS
+end
+
+-- Node for sequence
+local function BT.Sequence(children)
+  for i, child in ipairs(children) do
+    if child == BT.FAILURE then
+      return BT.FAILURE
+    end
+    return BT.RUNNING
+  end
+end
+
+-- Node for selector
+local function BT.Selector(children)
+  for i, child in ipairs(children) do
+    if child == BT.FAILURE then
+      return BT.FAILURE
+    end
+    return BT.RUNNING
+  end
+end
+
+-- Example usage (for testing)
+-- Example:
+-- BT.Action("1")
+-- BT.Action("2")
+-- BT.Action("3")
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Condition("1")
+-- BT.Condition("2")
+-- BT.Condition("3")
+-- BT.Condition("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Sequence([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Selector([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Action("1")
+-- BT.Action("2")
+-- BT.Action("3")
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Condition("1")
+-- BT.Condition("2")
+-- BT.Condition("3")
+-- BT.Condition("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Sequence([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Selector([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Action("1")
+-- BT.Action("2")
+-- BT.Action("3")
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Condition("1")
+-- BT.Condition("2")
+-- BT.Condition("3")
+-- BT.Condition("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Sequence([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Selector([BT.Action("1"), BT.Action("2")])
+-- BT.Action("1") -- Should return BT.FAILURE
+
+-- Example:
+-- BT.Action("1")
+-- BT.Action("2")
+-- BT.Action("3")
+-- BT.Action("1") -- Should return BT.FAILURE
+```

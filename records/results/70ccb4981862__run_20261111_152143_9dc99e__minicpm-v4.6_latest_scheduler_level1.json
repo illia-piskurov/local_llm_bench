@@ -1,0 +1,24 @@
+{
+  "run_id": "run_20261111_152143_9dc99e",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.6:latest",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-11 15:23:41",
+  "passed": 0,
+  "total": 10,
+  "failures": [
+    "no_dependencies: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+    "simple_chain: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+    "diamond: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+    "multiple_roots: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+    "single_task: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+    "self_cycle: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+    "two_node_cycle: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+    "long_cycle: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+    "cycle_with_extra_nodes: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+    "wide_graph: unexpected exception/timeout: TypeError: 'int' object isn't iterable"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

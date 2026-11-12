@@ -1,0 +1,28 @@
+```python
+import os
+
+def run(program: str) -> list[str]:
+    output = []
+    try:
+        if "SNAPSHOT" in program:
+            name = program.split("SNAPSHOT", 1)[1].strip()
+            if name in output:
+                output.append(f"SNAPSHOT {name}")
+            else:
+                output.append(f"SNAPSHOT {name}")
+            snapshot = os.saveas(f"{name}.snapshot")
+            print(f"Snapshot saved: {name}")
+        elif "RESTORE" in program:
+            name = program.split("RESTORE", 1)[1].strip()
+            if name in output:
+                output.append(f"RESTORE {name}")
+            else:
+                output.append(f"RESTORE {name}")
+            restore = os.restoreall(f"{name}.snapshot")
+            print(f"Restore saved: {name}")
+        else:
+            output.append("NO")
+    except Exception:
+        output.append("NO")
+    return output
+```

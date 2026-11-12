@@ -1,0 +1,29 @@
+{
+  "run_id": "run_20261111_163711_f376e5",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:3b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-11 16:37:31",
+  "passed": 3,
+  "total": 18,
+  "failures": [
+    "push_print: unexpected exception/timeout: IndexError: list index out of range",
+    "add: unexpected exception/timeout: IndexError: list index out of range",
+    "sub_order: unexpected exception/timeout: IndexError: list index out of range",
+    "mul: unexpected exception/timeout: IndexError: list index out of range",
+    "div_order: unexpected exception/timeout: IndexError: list index out of range",
+    "div_truncate: unexpected exception/timeout: IndexError: list index out of range",
+    "dup: unexpected exception/timeout: IndexError: list index out of range",
+    "swap: unexpected exception/timeout: IndexError: list index out of range",
+    "pop: unexpected exception/timeout: IndexError: list index out of range",
+    "comments_and_blank_lines: unexpected exception/timeout: IndexError: list index out of range",
+    "multiple_prints: unexpected exception/timeout: IndexError: list index out of range",
+    "print_does_not_pop: unexpected exception/timeout: IndexError: list index out of range",
+    "negative_numbers: unexpected exception/timeout: IndexError: list index out of range",
+    "empty_program: unexpected exception/timeout: IndexError: list index out of range",
+    "complex_chain: unexpected exception/timeout: IndexError: list index out of range"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_131859_f2d393",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:1b",
+  "benchmark": "c_framing",
+  "level": "level1",
+  "tested_at": "2026-11-11 13:20:19",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level1.c:14:9: error: call to undeclared function 'ringbuf_available'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   14 |     if (ringbuf_available() < BUFFER_SIZE) {\n      |         ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level1.c:17:5: error: call to undeclared function 'ringbuf_fill'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   17 |     ringbuf_fill(buffer, 0, BUFFER_SIZE);\n      |     ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level1.c:17:18: error: use of undeclared identifier 'buffer'\n   17 |     ringbuf_fill(buffer, 0, BUFFER_SIZE);\n      |                  ^~~~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level1.c:22:5: error: call to undeclared function 'ringbuf_available'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   22 |     ringbuf_available() - 1;\n      |     ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level1.c:22:25: warning: expression result unused [-Wunused-value]\n   22 |     ringbuf_available() - 1;\n      |     ~~~~~~~~~~~~~~~~~~~ ^ ~\n1 warning and 4 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

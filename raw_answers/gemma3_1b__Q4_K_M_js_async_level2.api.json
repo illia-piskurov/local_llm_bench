@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:1b",
+  "created_at": "2026-11-11T11:20:40.180872Z",
+  "message": {
+    "role": "assistant",
+    "content": "```javascript\nasync function pMap(items, mapper, options) {\n  if (!items || items.length === 0) {\n    return [];\n  }\n\n  const concurrency = options === undefined ? 1 : options;\n  const results = [];\n  let retries = 0;\n  let backoffMs = 0;\n  let timeoutMs = 0;\n\n  const promise = new Promise((resolve, reject) => {\n    setTimeout(() => {\n      resolve(results);\n    }, backoffMs);\n  });\n\n  for (let i = 0; i < items.length; i++) {\n    try {\n      const result = await mapper(items[i], i);\n      results.push(result);\n    } catch (error) {\n      retries++;\n      if (retries >= concurrency) {\n        reject(error);\n        return;\n      }\n      backoffMs = backoffMs + (backoffMs * (2 ** 0));\n      timeoutMs = timeoutMs + (backoffMs * (2 ** 1));\n      Promise.resolve(timeoutMs).then(() => {\n        // Retry\n        if (retries < concurrency) {\n          promise.then(() => {\n            // Continue\n          }).catch(err => {\n            reject(err);\n          });\n        });\n      });\n    }\n  }\n\n  if (retries >= concurrency) {\n    reject(new Error(\"Timeout\"));\n  }\n\n  return results;\n}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 3783962250,
+  "load_duration": 416667,
+  "prompt_eval_count": 624,
+  "prompt_eval_cached_count": 228,
+  "prompt_eval_duration": 275466000,
+  "eval_count": 341,
+  "eval_duration": 3502976000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 624,
+    "total_output_tokens": 341,
+    "tokens_per_second": 97.34579968575292,
+    "time_to_first_token_seconds": 0.275466,
+    "model_load_time_seconds": 0.000416667
+  }
+}

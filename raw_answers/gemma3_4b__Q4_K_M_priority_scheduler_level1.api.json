@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T11:25:34.19962Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:\n    \"\"\"\n    Implements a task scheduler with dependencies, priorities, and a limited worker pool.\n    \"\"\"\n    task_names = list(tasks.keys())\n    ready_tasks = []\n    running_tasks = []\n    completed_tasks = []\n    time = 0\n    task_status = {task: \"ready\" for task in task_names}\n    task_start_time = {task: -1 for task in task_names}\n\n    while ready_tasks or running_tasks:\n        # Add ready tasks to the running tasks\n        for task_name in list(task_status):\n            if task_status[task_name] == \"ready\":\n                deps_met = all(dep in completed_tasks for dep in tasks[task_name][1])\n                if deps_met:\n                    ready_tasks.append((task_name, tasks[task_name][0], tasks[task_name][2]))\n                    task_status[task_name] = \"running\"\n                    task_start_time[task_name] = time\n\n        # Sort running tasks based on priority, duration, and name\n        running_tasks = sorted(running_tasks, key=lambda x: (x[2], x[1], x[0]))\n\n        # Remove completed tasks\n        completed_tasks = [task for task in running_tasks if task_status[task] != \"running\"]\n        running_tasks = [task for task in running_tasks if task_status[task] == \"running\"]\n\n        # Limit the number of running tasks\n        num_running = len(running_tasks)\n        if num_running > workers:\n            running_tasks = running_tasks[:workers]\n\n        # Advance time\n        time += 1\n\n        # Update task status\n        for task_name in running_tasks:\n            task_status[task_name] = \"running\"\n\n        # Mark tasks as complete\n        for task_name in running_tasks:\n            if time - task_start_time[task_name] == tasks[task_name][0]:\n                completed_tasks.append(task_name)\n                task_status[task_name] = \"completed\"\n\n    # Check for cyclic dependencies\n    if any(task_status[task] != \"completed\" for task in task_names):\n        return None\n\n    return completed_tasks\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 20436388583,
+  "load_duration": 1096250,
+  "prompt_eval_count": 241,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 1141373000,
+  "eval_count": 568,
+  "eval_duration": 19209182000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 241,
+    "total_output_tokens": 568,
+    "tokens_per_second": 29.569192483053158,
+    "time_to_first_token_seconds": 1.141373,
+    "model_load_time_seconds": 0.00109625
+  }
+}

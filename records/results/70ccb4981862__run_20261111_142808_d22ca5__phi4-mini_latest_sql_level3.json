@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-11-11 14:33:49",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "select_expression_alias: exception/timeout: NameError: local variable referenced before assignment",
+    "having_clause: SQL: expected 'SELECT sales.category, SUM(sales.amount) AS total_sales FROM sales GROUP BY sales.category HAVING SUM(sales.amount) > $1', got 'SELECT ('sales.category, total_sales: SUM(sales.amount)', 1) FROM sales HAVING ('SUM(sales.amount) > $3', 3) GROUP BY sales.category'; params: expected [1000], got []",
+    "where_subquery_in: exception/timeout: KeyError: value",
+    "subquery_with_parent_params_order: exception/timeout: KeyError: op"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,68 @@
+def run(program: str) -> list[str]:
+    """
+    Execute a simple stack-based language program with labels and conditional jumps.
+    
+    Args:
+        program: Multi-line string containing instructions
+    
+    Returns:
+        List of printed strings from PRINT operations
+    """
+    stack = []
+    lines = program.split('\n')
+    output_lines = []
+
+    for line in lines:
+        if not line.strip():
+            continue  # Skip empty lines
+        
+        # Handle comments (lines starting with #)
+        if line.startswith('#'):
+            continue
+        
+        parts = line.split()
+        
+        if len(parts) < 2:
+            raise ValueError(f"Instruction '{line}' has insufficient arguments")
+        
+        op = parts[0]
+        args = parts[1:]
+        
+        try:
+            if op == 'LABEL':
+                # Define a label at the current position (does nothing during execution)
+                pass
+            elif op == 'JMP':
+                # Unconditional jump to label
+                stack.pop()  # Pop from stack before jumping
+                output_lines.append(str(stack[-1]))
+            elif op == 'JZ':
+                # Pop value, jump if value == 0
+                if len(stack) < 2:
+                    raise ValueError(f"Instruction '{line}' has insufficient arguments")
+                val = stack.pop()
+                if val == 0:
+                    output_lines.append(str(stack[-1]))
+            elif op == 'JNZ':
+                # Pop value, jump if value != 0
+                if len(stack) < 2:
+                    raise ValueError(f"Instruction '{line}' has insufficient arguments")
+                val = stack.pop()
+                if val != 0:
+                    output_lines.append(str(stack[-1]))
+            elif op == 'PRINT':
+                if len(stack) < 1:
+                    raise ValueError(f"Instruction '{line}' has insufficient arguments")
+                output_lines.append(str(stack[-1]))
+        except Exception as e:
+            # Handle any unexpected errors
+            pass
+    
+    return output_lines
+
+if __name__ == "__main__":
+    try:
+        result = run("PUSH 5\nPOP\nADD\nDUP\nPRINT")
+        print(result)
+    except Exception as e:
+        print(f"Error: {e}")

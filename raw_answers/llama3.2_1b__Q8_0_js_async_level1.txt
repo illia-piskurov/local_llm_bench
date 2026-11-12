@@ -1,0 +1,24 @@
+```javascript
+async function pMap(items, mapper, options = { concurrency: 1 }) {
+  if (items.length === 0) return [];
+
+  const results = new Array(items.length);
+  let index = 0;
+
+  const promises = [];
+
+  for (let i = 0; i < items.length; i++) {
+    promises.push(mapper(items[i], i));
+  }
+
+  for (const promise of promises) {
+    promise.then((result) => {
+      results[index++] = result;
+    }).catch((error) => {
+      return Promise.reject(error);
+    });
+  }
+
+  return results.slice(0, options.concurrency);
+}
+```

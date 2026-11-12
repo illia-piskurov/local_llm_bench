@@ -1,0 +1,26 @@
+{
+  "model": "phi4-mini:latest",
+  "created_at": "2026-11-11T12:34:01.668284Z",
+  "message": {
+    "role": "assistant",
+    "content": "```c\n#include <stdint.h>\n#include <string.h>\n\n#define BUFFER_SIZE 512\n\ntypedef struct RingBuffer {\n    uint8_t buffer[BUFFER_SIZE];\n    int head;\n    int tail;\n    int count;\n} RingBuffer;\n\nvoid ringbuf_init(RingBuffer *rb) {\n    rb->head = 0;\n    rb->tail = 0;\n    rb->count = 0;\n}\n\nint ringbuf_push(RingBuffer *rb, uint8_t byte) {\n    if (rb->count == BUFFER_SIZE) {\n        return -1; // Buffer is full\n    }\n    rb->buffer[rb->head] = byte;\n    rb->head = (rb->head + 1) % BUFFER_SIZE;\n    rb->count++;\n    return 0; // Success\n}\n\nint ringbuf_pop(RingBuffer *rb) {\n    if (rb->count == 0) {\n        return -1; // Buffer is empty\n    }\n    int byte = rb->buffer[rb->tail];\n    rb->tail = (rb->tail + 1) % BUFFER_SIZE;\n    rb->count--;\n    return byte; // Return the popped byte\n}\n\nint ringbuf_available(RingBuffer *rb) {\n    return rb->count;\n}\n\nint ringbuf_free_space(RingBuffer *rb) {\n    return BUFFER_SIZE - rb->count;\n}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 12371831958,
+  "load_duration": 1649583,
+  "prompt_eval_count": 230,
+  "prompt_eval_cached_count": 1,
+  "prompt_eval_duration": 1240127000,
+  "eval_count": 288,
+  "eval_duration": 11013846000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 230,
+    "total_output_tokens": 288,
+    "tokens_per_second": 26.148903843398575,
+    "time_to_first_token_seconds": 1.240127,
+    "model_load_time_seconds": 0.001649583
+  }
+}

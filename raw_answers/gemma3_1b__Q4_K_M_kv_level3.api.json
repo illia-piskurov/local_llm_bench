@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:1b",
+  "created_at": "2026-11-11T11:20:00.357249Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nimport os\n\ndef run(program: str) -> list[str]:\n    output = []\n    try:\n        if \"SNAPSHOT\" in program:\n            name = program.split(\"SNAPSHOT\", 1)[1].strip()\n            if name in output:\n                output.append(f\"SNAPSHOT {name}\")\n            else:\n                output.append(f\"SNAPSHOT {name}\")\n            snapshot = os.saveas(f\"{name}.snapshot\")\n            print(f\"Snapshot saved: {name}\")\n        elif \"RESTORE\" in program:\n            name = program.split(\"RESTORE\", 1)[1].strip()\n            if name in output:\n                output.append(f\"RESTORE {name}\")\n            else:\n                output.append(f\"RESTORE {name}\")\n            restore = os.restoreall(f\"{name}.snapshot\")\n            print(f\"Restore saved: {name}\")\n        else:\n            output.append(\"NO\")\n    except Exception:\n        output.append(\"NO\")\n    return output\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 2937976625,
+  "load_duration": 1388500,
+  "prompt_eval_count": 693,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 484348000,
+  "eval_count": 239,
+  "eval_duration": 2425069000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 693,
+    "total_output_tokens": 239,
+    "tokens_per_second": 98.55389681695654,
+    "time_to_first_token_seconds": 0.484348,
+    "model_load_time_seconds": 0.0013885
+  }
+}

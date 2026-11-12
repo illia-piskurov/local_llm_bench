@@ -1,0 +1,80 @@
+def run(program: str) -> list[str]:
+    instructions = program.strip().split('\n')
+    labels = {line.split()[1]: i for i, line in enumerate(instructions, 1) if line.startswith('LABEL')}
+    output = []
+    stack = []
+    i = 0
+    while i < len(instructions):
+        instruction = instructions[i].strip()
+        if not instruction or instruction.startswith('#'):
+            i += 1
+            continue
+        parts = instruction.split()
+        command = parts[0]
+        if command == 'PUSH':
+            stack.append(int(parts[1]))
+        elif command == 'POP':
+            if not stack:
+                raise Exception(f"Error on line {i + 1}: stack underflow")
+            stack.pop()
+        elif command == 'ADD':
+            if len(stack) < 2:
+                raise Exception(f"Error on line {i + 1}: stack underflow")
+            a, b = stack.pop(), stack.pop()
+            stack.append(a + b)
+        elif command == 'SUB':
+            if len(stack) < 2:
+                raise Exception(f"Error on line {i + 1}: stack underflow")
+            a, b = stack.pop(), stack.pop()
+            stack.append(a - b)
+        elif command == 'MUL':
+            if len(stack) < 2:
+                raise Exception(f"Error on line {i + 1}: stack underflow")
+            a, b = stack.pop(), stack.pop()
+            stack.append(a * b)
+        elif command == 'DIV':
+            if len(stack) < 2:
+                raise Exception(f"Error on line {i + 1}: stack underflow")
+            a, b = stack.pop(), stack.pop()
+            if b == 0:
+                raise Exception(f"Error on line {i + 1}: division by zero")
+            stack.append(a // b)
+        elif command == 'DUP':
+            if not stack:
+                raise Exception(f"Error on line {i + 1}: stack underflow")
+            stack.append(stack[-1])
+        elif command == 'SWAP':
+            if len(stack) < 2:
+                raise Exception(f"Error on line {i + 1}: stack underflow")
+            stack[-1], stack[-2] = stack[-2], stack[-1]
+        elif command == 'PRINT':
+            if not stack:
+                raise Exception(f"Error on line {i + 1}: stack underflow")
+            output.append(str(stack[-1]))
+        elif command.startswith('LABEL'):
+            labels[parts[1]] = i
+        elif command.startswith('JMP'):
+            i = labels[parts[1]]
+        elif command.startswith('JZ'):
+            if not stack:
+                raise Exception(f"Error on line {i + 1}: stack underflow")
+            if stack.pop() == 0:
+                i = labels[parts[1]]
+        elif command.startswith('JNZ'):
+            if not stack:
+                raise Exception(f"Error on line {i + 1}: stack underflow")
+            if stack.pop() != 0:
+                i = labels[parts[1]]
+        else:
+            raise Exception(f"Unknown command on line {i + 1}: {command}")
+        i += 1
+    return output
+
+# Example usage:
+# program = """
+# PUSH 3
+# PUSH 4
+# ADD
+# PRINT
+# """
+# print(run(program))

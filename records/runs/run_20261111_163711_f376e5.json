@@ -1,0 +1,289 @@
+{
+  "id": "run_20261111_163711_f376e5",
+  "host_id": "70ccb4981862",
+  "model_key": "llama3.2:3b",
+  "model_name": "llama3.2:3b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 10000,
+    "artifact": {
+      "key": "llama3.2:3b",
+      "display_name": "llama3.2:3b",
+      "architecture": "llama",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 2019393189,
+      "params_string": "3.2B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "1397641c2c92"
+  },
+  "suite_version": "537d00a (1397641c2c92)",
+  "started_at": "2026-11-11 16:37:11",
+  "completed_at": "2026-11-11 16:41:20",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:37:31",
+      "passed": 3,
+      "total": 18,
+      "failures": [
+        "push_print: unexpected exception/timeout: IndexError: list index out of range",
+        "add: unexpected exception/timeout: IndexError: list index out of range",
+        "sub_order: unexpected exception/timeout: IndexError: list index out of range",
+        "mul: unexpected exception/timeout: IndexError: list index out of range",
+        "div_order: unexpected exception/timeout: IndexError: list index out of range",
+        "div_truncate: unexpected exception/timeout: IndexError: list index out of range",
+        "dup: unexpected exception/timeout: IndexError: list index out of range",
+        "swap: unexpected exception/timeout: IndexError: list index out of range",
+        "pop: unexpected exception/timeout: IndexError: list index out of range",
+        "comments_and_blank_lines: unexpected exception/timeout: IndexError: list index out of range",
+        "multiple_prints: unexpected exception/timeout: IndexError: list index out of range",
+        "print_does_not_pop: unexpected exception/timeout: IndexError: list index out of range",
+        "negative_numbers: unexpected exception/timeout: IndexError: list index out of range",
+        "empty_program: unexpected exception/timeout: IndexError: list index out of range",
+        "complex_chain: unexpected exception/timeout: IndexError: list index out of range"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:37:56",
+      "passed": 4,
+      "total": 27,
+      "failures": [
+        "push_print: unexpected exception/timeout: IndexError: list index out of range",
+        "add: unexpected exception/timeout: IndexError: list index out of range",
+        "sub_order: unexpected exception/timeout: IndexError: list index out of range",
+        "mul: unexpected exception/timeout: IndexError: list index out of range",
+        "div_order: unexpected exception/timeout: IndexError: list index out of range",
+        "div_truncate: unexpected exception/timeout: IndexError: list index out of range",
+        "dup: unexpected exception/timeout: IndexError: list index out of range",
+        "swap: unexpected exception/timeout: IndexError: list index out of range",
+        "pop: unexpected exception/timeout: IndexError: list index out of range",
+        "comments_and_blank_lines: unexpected exception/timeout: IndexError: list index out of range",
+        "multiple_prints: unexpected exception/timeout: IndexError: list index out of range",
+        "print_does_not_pop: unexpected exception/timeout: IndexError: list index out of range",
+        "negative_numbers: unexpected exception/timeout: IndexError: list index out of range",
+        "empty_program: unexpected exception/timeout: IndexError: list index out of range",
+        "complex_chain: unexpected exception/timeout: IndexError: list index out of range",
+        "unconditional_jump_skips_code: unexpected exception/timeout: IndexError: list index out of range",
+        "jz_taken_when_zero: unexpected exception/timeout: IndexError: list index out of range",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: IndexError: list index out of range",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: IndexError: list index out of range",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: IndexError: list index out of range",
+        "countdown_loop: unexpected exception/timeout: IndexError: list index out of range",
+        "count_up_loop: unexpected exception/timeout: IndexError: list index out of range",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: IndexError: list index out of range"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 16:38:35",
+      "passed": 7,
+      "total": 37,
+      "failures": [
+        "push_print: unexpected exception/timeout: IndexError: list index out of range",
+        "add: unexpected exception/timeout: IndexError: list index out of range",
+        "sub_order: unexpected exception/timeout: IndexError: list index out of range",
+        "mul: unexpected exception/timeout: IndexError: list index out of range",
+        "div_order: unexpected exception/timeout: IndexError: list index out of range",
+        "div_truncate: unexpected exception/timeout: IndexError: list index out of range",
+        "dup: unexpected exception/timeout: IndexError: list index out of range",
+        "swap: unexpected exception/timeout: IndexError: list index out of range",
+        "pop: unexpected exception/timeout: IndexError: list index out of range",
+        "comments_and_blank_lines: unexpected exception/timeout: IndexError: list index out of range",
+        "multiple_prints: unexpected exception/timeout: IndexError: list index out of range",
+        "print_does_not_pop: unexpected exception/timeout: IndexError: list index out of range",
+        "negative_numbers: unexpected exception/timeout: IndexError: list index out of range",
+        "empty_program: unexpected exception/timeout: IndexError: list index out of range",
+        "complex_chain: unexpected exception/timeout: IndexError: list index out of range",
+        "unconditional_jump_skips_code: unexpected exception/timeout: IndexError: list index out of range",
+        "jz_taken_when_zero: unexpected exception/timeout: IndexError: list index out of range",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: IndexError: list index out of range",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: IndexError: list index out of range",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: IndexError: list index out of range",
+        "countdown_loop: unexpected exception/timeout: IndexError: list index out of range",
+        "count_up_loop: unexpected exception/timeout: IndexError: list index out of range",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: IndexError: list index out of range",
+        "call_ret_basic: unexpected exception/timeout: IndexError: list index out of range",
+        "call_ret_nested: unexpected exception/timeout: IndexError: list index out of range",
+        "comparison_eq_gt_lt: unexpected exception/timeout: IndexError: list index out of range",
+        "store_and_load: unexpected exception/timeout: IndexError: list index out of range",
+        "store_overwrite: unexpected exception/timeout: IndexError: list index out of range",
+        "recursive_factorial: unexpected exception/timeout: IndexError: list index out of range",
+        "recursive_fibonacci: unexpected exception/timeout: IndexError: list index out of range"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:38:40",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:38:52",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "simple_chain: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "diamond_pick_longer_branch: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "independent_tasks: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'",
+        "wide_graph: unexpected exception/timeout: TypeError: unsupported type for __hash__: 'list'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:39:02",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: expected ['b', 'c', 'a'], got ['a', 'c', 'b']",
+        "dependency_unlocks_later: expected ['a', 'b', 'c'], got ['a', 'c', 'b']",
+        "single_worker_duration_tiebreak: expected ['b', 'c', 'a'], got ['a', 'c', 'b']",
+        "resource_limit_and_priority: expected ['compile', 'lint', 'test', 'package', 'deploy'], got ['lint', 'compile', 'test', 'package', 'deploy']",
+        "simultaneous_unlocks: expected ['root', 'c', 'd', 'b'], got ['root', 'b', 'd', 'c']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:39:30",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "single_task: expected order=['a'], ms=5, cp=5; got order=['a'], ms=5, cp=0",
+        "parallel_tasks_reduce_makespan: expected order=['c', 'b', 'a'], ms=4, cp=3; got order=['a', 'b', 'c'], ms=3, cp=0",
+        "dependencies_and_workers: expected order=['a', 'c', 'b', 'd'], ms=11, cp=11; got order=['a', 'b', 'c', 'd'], ms=9, cp=0",
+        "critical_path_longer_than_worker_parallelism: expected order=['a', 'b', 'c', 'd'], ms=16, cp=4; got order=['a', 'd', 'c', 'b'], ms=4, cp=0",
+        "wide_graph_with_unlocks: expected order=['compile', 'fetch', 'test', 'package'], ms=8, cp=8; got order=['fetch', 'compile', 'test', 'package'], ms=7, cp=0",
+        "cycle_returns_none: expected None, got order=None, ms=2, cp=0"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:37:30",
+      "stats": {
+        "input_tokens": 290,
+        "total_output_tokens": 673,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 41.756536805905384,
+        "time_to_first_token_seconds": 0.665762,
+        "model_load_time_seconds": 1.789719833
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:37:54",
+      "stats": {
+        "input_tokens": 1099,
+        "total_output_tokens": 920,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 40.77687029542399,
+        "time_to_first_token_seconds": 0.374731,
+        "model_load_time_seconds": 0.002595875
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 16:38:32",
+      "stats": {
+        "input_tokens": 1353,
+        "total_output_tokens": 1311,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 39.52709553756277,
+        "time_to_first_token_seconds": 2.974977,
+        "model_load_time_seconds": 0.001729625
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:38:40",
+      "stats": {
+        "input_tokens": 187,
+        "total_output_tokens": 193,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 43.66011078809667,
+        "time_to_first_token_seconds": 0.4259,
+        "model_load_time_seconds": 0.001056167
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:38:51",
+      "stats": {
+        "input_tokens": 508,
+        "total_output_tokens": 438,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 42.322614857344284,
+        "time_to_first_token_seconds": 0.402175,
+        "model_load_time_seconds": 0.00144975
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:39:01",
+      "stats": {
+        "input_tokens": 233,
+        "total_output_tokens": 399,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 42.636308759966234,
+        "time_to_first_token_seconds": 0.503812,
+        "model_load_time_seconds": 0.001223417
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:39:29",
+      "stats": {
+        "input_tokens": 805,
+        "total_output_tokens": 1071,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 40.34021984704164,
+        "time_to_first_token_seconds": 0.444734,
+        "model_load_time_seconds": 0.00327825
+      }
+    }
+  ]
+}

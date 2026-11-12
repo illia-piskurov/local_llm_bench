@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-11-11 14:31:09",
+  "passed": 10,
+  "total": 15,
+  "failures": [
+    "simple_transaction_commit: expected ['10'], got ['NULL']",
+    "rollback_restores_delete: expected ['NULL', '5'], got ['5', '5']",
+    "nested_transactions: expected ['20', '10', 'NULL'], got ['NULL', 'NULL', 'NULL']",
+    "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['NULL', 'NULL']",
+    "set_new_key_inside_transaction: expected ['100', '100'], got ['NULL', 'NULL']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

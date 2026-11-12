@@ -1,0 +1,99 @@
+```python
+import re
+
+def compile_query(query):
+    table = query.get('table', '')
+    select = query.get('select', [])
+    where = query.get('where', {})
+    having = query.get('having', {})
+    subqueries = query.get('subqueries', [])
+
+    params = []
+    sql = 'SELECT '
+    if select:
+        sql += ', '.join(select)
+    sql += ' FROM ' + table
+
+    if where:
+        placeholders = []
+        for field, op, value in where.items():
+            if isinstance(value, dict):
+                placeholders.extend(re.findall(r'\$(\d+)', str(value)))
+            else:
+                placeholders.append(f'${value}')
+        sql += ' WHERE '
+        for field, op, value in where.items():
+            if isinstance(value, dict):
+                sql += f'{field} {op} {placeholders.pop(0)}'
+            else:
+                sql += f'{field} {op} {value}'
+
+    if having:
+        having_params = []
+        for condition in having:
+            if isinstance(condition, dict):
+                having_params.extend(re.findall(r'\$(\d+)', str(condition)))
+            else:
+                having_params.append(condition)
+        sql += ' HAVING '
+        for condition in having:
+            if isinstance(condition, dict):
+                sql += f'{condition["field"]} {condition["op"]} ({condition["params"]})'
+            else:
+                sql += f'{condition}'
+
+    if subqueries:
+        subquery_params = []
+        for subquery in subqueries:
+            if isinstance(subquery, dict):
+                subquery_params.extend(re.findall(r'\$(\d+)', str(subquery)))
+            else:
+                subquery_params.append(subquery)
+        sql += ' WITH '
+        for subquery in subqueries:
+            if isinstance(subquery, dict):
+                sql += f'{subquery["field"]} AS {subquery["params"]}'
+            else:
+                sql += f'{subquery} AS {subquery["params"]}'
+        sql += ' AS '
+        for subquery in subqueries:
+            if isinstance(subquery, dict):
+                sql += f'{subquery["field"]} AS {subquery["params"]}'
+            else:
+                sql += f'{subquery} AS {subquery["params"]}'
+        sql += ' SELECT '
+        for field, op, value in select:
+            if isinstance(value, dict):
+                sql += f'{field} {op} {placeholders.pop(0)}'
+            else:
+                sql += f'{field} {op} {value}'
+
+    if 'joins' in query:
+        joins = query.get('joins', [])
+        sql += ' JOIN '
+        for join in joins:
+            sql += join['type'] + ' ' + join['table'] + ' ON ' + join['on']
+
+    if 'groupBy' in query:
+        groupBy = query.get('groupBy', [])
+        sql += ' GROUP BY '
+        for field in groupBy:
+            sql += field + ' '
+
+    if 'op' in query:
+        op = query.get('op', '')
+        if op == 'IN':
+            value = query.get('value', [])
+            sql += ' IN (' + ', '.join(re.escape(x) for x in value) + ')'
+        elif op == 'IS NULL':
+            sql += ' IS NULL'
+        elif op == 'IS NOT NULL':
+            sql += ' IS NOT NULL'
+        elif op == 'LIKE':
+            value = query.get('value', [])
+            sql += ' LIKE %s' % re.escape(''.join(re.escape(x) for x in value))
+        else:
+            raise ValueError('Unsupported operator: ' + op)
+
+    return {'sql': sql, 'params': params}
+```

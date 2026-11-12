@@ -12,10 +12,9 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
-import quickjs
-
 from benchmarks.base import Benchmark, Level, TestResult
-from sandboxes.js_quickjs import PRELUDE
+from sandboxes.case_worker import run_cases_isolated
+from sandboxes.js_quickjs import check_js_syntax
 from sandboxes.js_quickjs import create_js_context as _create_context
 from sandboxes.js_quickjs import drain_js_jobs as _drain
 
@@ -399,26 +398,21 @@ def run_js_suite(cases: list[tuple[str, Callable[[str], bool]]], js_path: Path) 
     except Exception as e:
         return 0, len(cases), [f"Error reading file {js_path}: {e}"]
 
-    # Syntax check
-    try:
-        test_ctx = quickjs.Context()
-        test_ctx.set_time_limit(2)
-        test_ctx.eval(PRELUDE)
-        test_ctx.eval(solution_js)
-    except Exception as e:
-        return 0, len(cases), [f"JavaScript syntax error: {e}"]
+    # Every case, the syntax check included, runs in a killable worker: guest code can spin inside QuickJS forever.
+    outcomes = run_cases_isolated([("syntax", check_js_syntax), *cases], solution_js)
+    status, detail = outcomes[0]
+    if status != "pass":
+        return 0, len(cases), [f"JavaScript syntax error: {detail}"]
 
     passed = 0
     failures: list[str] = []
-    for test_name, test_fn in cases:
-        try:
-            ok = test_fn(solution_js)
-            if ok:
-                passed += 1
-            else:
-                failures.append(f"{test_name}: assertion returned False")
-        except Exception as e:
-            failures.append(f"{test_name}: exception {e}")
+    for (test_name, _), (status, detail) in zip(cases, outcomes[1:], strict=True):
+        if status == "pass":
+            passed += 1
+        elif status == "error":
+            failures.append(f"{test_name}: exception {detail}")
+        else:
+            failures.append(f"{test_name}: {detail}")
 
     return passed, len(cases), failures
 

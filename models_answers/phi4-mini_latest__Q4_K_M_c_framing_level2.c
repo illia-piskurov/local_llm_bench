@@ -1,0 +1,75 @@
+#include <stdint.h>
+#include <string.h>
+
+#define MAGIC 0xAA
+
+// RingBuffer structure and functions from Level 1 here...
+
+int decode_packet(const uint8_t *stream, int stream_len, uint8_t *out_payload, int *out_type) {
+    int i = 0;
+    int packet_len = 0;
+    int payload_len = 0;
+    int checksum = 0;
+    int found_magic = 0;
+    int found_type = 0;
+    int found_len = 0;
+
+    while (i < stream_len) {
+        if (i + 3 > stream_len) {
+            return -1; // Not enough data for a full packet
+        }
+
+        if (stream[i] == MAGIC) {
+            if (found_magic) {
+                return -1; // Corrupted packet: multiple magic bytes
+            }
+            found_magic = 1;
+            i += 1; // Skip magic byte
+
+            if (i + 1 > stream_len) {
+                return -1; // Not enough data for type
+            }
+            *out_type = stream[i + 1];
+            found_type = 1;
+            i += 2; // Skip type and len
+
+            if (i + 1 > stream_len) {
+                return -1; // Not enough data for len
+            }
+            payload_len = stream[i + 1];
+            found_len = 1;
+            i += 2; // Skip len
+
+            if (payload_len == 0) {
+                checksum = 0;
+            } else if (i + payload_len > stream_len) {
+                return -1; // Not enough data for payload
+            }
+            checksum = 0;
+            for (int j = 0; j < payload_len; j++) {
+                checksum ^= stream[i + 2 + j];
+            }
+            if (checksum != stream[i + payload_len]) {
+                return -1; // Corrupted packet: checksum mismatch
+            }
+            payload_len += 1; // Include checksum byte in payload length
+            i += payload_len; // Skip payload and checksum
+        } else {
+            i += 1; // Skip noise byte
+        }
+    }
+
+    if (!found_magic || !found_type || !found_len) {
+        return -1; // No valid packet found
+    }
+
+    if (payload_len > *out_type) {
+        return -1; // Payload length exceeds type identifier
+    }
+
+    memcpy(out_payload, stream + i - payload_len, payload_len);
+    *out_type = *out_type;
+    return payload_len;
+}
+
+// RingBuffer structure and functions from Level 1 here...

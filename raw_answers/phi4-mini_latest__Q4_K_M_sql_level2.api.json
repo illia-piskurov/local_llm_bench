@@ -1,0 +1,26 @@
+{
+  "model": "phi4-mini:latest",
+  "created_at": "2026-11-11T12:33:00.653843Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef compile_query(query: dict) -> dict:\n    def compile_condition(condition):\n        if isinstance(condition, dict):\n            op = condition['op']\n            if op in ('=', '!=', '>', '<', '>=', '<=', 'IN'):\n                if op == 'IN':\n                    values = condition['value']\n                    placeholders = ', '.join(f\"${i+1}\" for i in range(len(values)))\n                    return f\"{condition['field']} {op} ({placeholders})\"\n                else:\n                    return f\"{condition['field']} {op} ${len(params)+1}\"\n            elif op == 'LIKE':\n                return f\"{condition['field']} LIKE ${len(params)+1}\"\n            elif op in ('IS NULL', 'IS NOT NULL'):\n                return f\"{condition['field']} {op}\"\n            elif op in ('AND', 'OR'):\n                return ' {} '.format(' '.join(compile_condition(c) for c in condition[op]))\n            else:\n                raise ValueError(f\"Unsupported operator: {op}\")\n        return str(condition)\n\n    def compile_order_by(order_by):\n        return ', '.join(f\"{item['field']} {item.get('dir', 'ASC')}\" for item in order_by)\n\n    def compile_joins(joins):\n        join_clauses = []\n        for join in joins:\n            join_type = join.get('type', 'INNER').upper()\n            table = join['table']\n            on = join['on']\n            on_clauses = ' '.join(f\"{left} = {right}\" for left, right in on.items())\n            join_clauses.append(f\"{join_type} JOIN {table} ON {on_clauses}\")\n        return ' '.join(join_clauses)\n\n    table = query['table']\n    select = query.get('select', ['*'])\n    where = query.get('where', {})\n    order_by = query.get('orderBy', [])\n    limit = query.get('limit', None)\n    offset = query.get('offset', None)\n    joins = query.get('joins', [])\n    group_by = query.get('groupBy', [])\n    params = []\n\n    sql = f\"SELECT {', '.join(select)} FROM {table}\"\n    if joins:\n        sql += f\" {compile_joins(joins)}\"\n    if where:\n        sql += f\" WHERE {compile_condition(where)}\"\n    if group_by:\n        sql += f\" GROUP BY {', '.join(group_by)}\"\n    if order_by:\n        sql += f\" ORDER BY {compile_order_by(order_by)}\"\n    if limit is not None:\n        sql += f\" LIMIT {limit}\"\n    if offset is not None:\n        sql += f\" OFFSET {offset}\"\n\n    return {\"sql\": sql, \"params\": params}\n\n# Example usage:\n# query = {\n#     \"table\": \"users\",\n#     \"select\": [\"name\", \"age\"],\n#     \"where\": {\n#         \"AND\": [\n#             {\"field\": \"age\", \"op\": \">\", \"value\": 18},\n#             {\"field\": \"name\", \"op\": \"LIKE\", \"value\": \"A%\"}\n#         ]\n#     },\n#     \"joins\": [\n#         {\"type\": \"LEFT\", \"table\": \"orders\", \"on\": {\"users.id\": \"orders.user_id\"}}\n#     ],\n#     \"groupBy\": [\"orders.status\"],\n#     \"orderBy\": [{\"field\": \"name\", \"dir\": \"ASC\"}],\n#     \"limit\": 10\n# }\n# print(compile_query(query))\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 38856850459,
+  "load_duration": 1552875,
+  "prompt_eval_count": 1064,
+  "prompt_eval_cached_count": 822,
+  "prompt_eval_duration": 1780467000,
+  "eval_count": 745,
+  "eval_duration": 37053121000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1064,
+    "total_output_tokens": 745,
+    "tokens_per_second": 20.106268511092495,
+    "time_to_first_token_seconds": 1.780467,
+    "model_load_time_seconds": 0.001552875
+  }
+}

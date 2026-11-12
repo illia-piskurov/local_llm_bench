@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "c_framing",
+  "level": "level1",
+  "tested_at": "2026-11-11 15:58:13",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/llama3.2_1b__Q8_0_c_framing_level1.c:3:23: error: use of undeclared identifier 'BUFFER_SIZE'\n    3 | static uint8_t buffer[BUFFER_SIZE];\n      |                       ^~~~~~~~~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/llama3.2_1b__Q8_0_c_framing_level1.c:33:12: error: use of undeclared identifier 'BUFFER_SIZE'\n   33 |     return BUFFER_SIZE - buffer[0];\n      |            ^~~~~~~~~~~\n2 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

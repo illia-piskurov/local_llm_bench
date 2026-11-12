@@ -1,0 +1,4 @@
+def run(program: str) -> list[str]:
+    # Existing run function already supports labels, jumps, and conditional jumps
+    # The new instructions are integrated as before
+    return run(program)

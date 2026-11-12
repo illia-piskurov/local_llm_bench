@@ -15,6 +15,8 @@ Polyfill classes live inside an IIFE so they never become global lexical binding
 declares its own `class EventTarget` or `const console` must not hit a redeclaration SyntaxError.
 """
 
+import time
+
 import quickjs
 
 PRELUDE = """
@@ -387,10 +389,26 @@ def create_js_context(solution_js: str, time_limit: int = 5, memory_limit_mb: in
     return ctx
 
 
-def drain_js_jobs(ctx: quickjs.Context, max_steps: int = 1000) -> None:
-    """Processes microtask and virtual timer queues until completion."""
+def check_js_syntax(solution_js: str) -> bool:
+    """Evaluates the solution once in a fresh context; raises when it does not load."""
+    create_js_context(solution_js, time_limit=2)
+    return True
+
+
+DRAIN_TIMEOUT_SECONDS = 5.0
+
+
+def drain_js_jobs(ctx: quickjs.Context, max_steps: int = 1000, max_seconds: float = DRAIN_TIMEOUT_SECONDS) -> None:
+    """Processes microtask and virtual timer queues until completion.
+
+    The QuickJS time limit applies to a single job, so a promise chain where every job schedules the next one
+    never trips it and the queue never empties. ``max_seconds`` bounds the whole drain and raises TimeoutError.
+    """
+    deadline = time.monotonic() + max_seconds
     for _ in range(max_steps):
         while True:
+            if time.monotonic() > deadline:
+                raise TimeoutError(f"JavaScript did not settle within {max_seconds}s (runaway promise chain or loop)")
             try:
                 if not ctx.execute_pending_job():
                     break

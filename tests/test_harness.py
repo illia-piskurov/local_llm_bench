@@ -277,26 +277,6 @@ def test_ask_model_flags_truncated_and_does_not_mutate_config(monkeypatch):
     assert cfg.temperature is None
 
 
-def test_generate_with_retry_doubles_budget(monkeypatch):
-    import lmstudio
-    import runner
-
-    sent: list[dict] = []
-    truncated = {"output": [{"type": "message", "content": "```python\nx"}], "stats": {"total_output_tokens": 100}}
-    complete = {
-        "output": [{"type": "message", "content": "```python\nx = 1\n```"}],
-        "stats": {"total_output_tokens": 40},
-    }
-    _fake_post(monkeypatch, [truncated, complete], sent)
-
-    cfg = lmstudio.GenerationConfig(max_tokens=100)
-    messages = [{"role": "user", "content": "x"}]
-    res = runner._generate_with_retry("m", messages, cfg, runner._default_console)
-    assert not res.truncated
-    assert [p["max_output_tokens"] for p in sent] == [100, 200]
-    assert cfg.max_tokens == 100
-
-
 def test_lmstudio_payload_omits_unset_sampling_and_length(monkeypatch):
     import lmstudio
 
@@ -308,7 +288,7 @@ def test_lmstudio_payload_omits_unset_sampling_and_length(monkeypatch):
     assert lmstudio.GenerationConfig().to_dict().keys() == {"seed", "timeout_seconds"}
 
 
-def test_reasoning_only_reply_is_truncated_without_retry(monkeypatch):
+def test_reasoning_only_reply_is_truncated(monkeypatch):
     import pytest
 
     import runner
@@ -318,25 +298,26 @@ def test_reasoning_only_reply_is_truncated_without_retry(monkeypatch):
     _fake_post(monkeypatch, [reasoning_only], sent)
 
     with pytest.raises(runner.GenerationTruncatedError, match="no final answer"):
-        runner._generate_with_retry("m", [{"role": "user", "content": "x"}], None, runner._default_console)
+        runner._generate("m", [{"role": "user", "content": "x"}], None)
     assert len(sent) == 1
 
 
-def test_generate_with_retry_gives_up_at_cap(monkeypatch):
+def test_truncated_reply_is_not_retried_with_a_larger_budget(monkeypatch):
     import pytest
 
     import lmstudio
     import runner
 
     sent: list[dict] = []
-    budget = runner.MAX_TOKENS_RETRY_CAP
-    truncated = {"output": [{"type": "message", "content": "```python\nx"}], "stats": {}}
-    _fake_post(monkeypatch, [truncated], sent)
+    truncated = {"output": [{"type": "message", "content": "```python\nx"}], "stats": {"total_output_tokens": 100}}
+    complete = {"output": [{"type": "message", "content": "```python\nx = 1\n```"}], "stats": {}}
+    _fake_post(monkeypatch, [truncated, complete], sent)
 
-    cfg = lmstudio.GenerationConfig(max_tokens=budget)
-    with pytest.raises(runner.GenerationTruncatedError):
-        runner._generate_with_retry("m", [{"role": "user", "content": "x"}], cfg, runner._default_console)
-    assert len(sent) == 1
+    cfg = lmstudio.GenerationConfig(max_tokens=100)
+    with pytest.raises(runner.GenerationTruncatedError, match="token limit"):
+        runner._generate("m", [{"role": "user", "content": "x"}], cfg)
+    assert [p["max_output_tokens"] for p in sent] == [100]
+    assert cfg.max_tokens == 100
 
 
 def test_wasm_fuel_infinite_loop_trap(tmp_path):

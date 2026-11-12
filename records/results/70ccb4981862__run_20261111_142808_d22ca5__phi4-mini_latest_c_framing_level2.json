@@ -1,0 +1,21 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "c_framing",
+  "level": "level2",
+  "tested_at": "2026-11-11 14:34:28",
+  "passed": 1,
+  "total": 8,
+  "failures": [
+    "empty_state: exception 'ringbuf_init'",
+    "basic_push_pop: exception 'ringbuf_init'",
+    "pointer_wrap_around: exception 'ringbuf_init'",
+    "full_overflow_check: exception 'ringbuf_init'",
+    "clean_packet: assertion returned False",
+    "with_junk_prefix: assertion returned False",
+    "recover_after_false_magic: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,43 @@
+```python
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    """
+    Implements a task dependency scheduler in a single Python file.
+
+    Args:
+        tasks: A dictionary where the key is the task name (str), and the value is a list of
+               dependency task names that must complete prior to this task.
+
+    Returns:
+        A list of all task names in an order where every task appears strictly after all of its
+        dependencies (topological sort). If the dependency graph contains a cycle, return None.
+    """
+    in_degree = {}
+    graph = {}
+    for task in tasks:
+        in_degree[task] = 0
+        graph[task] = []
+
+    for task in tasks:
+        for dependency in tasks[task]:
+            graph[dependency].append(task)
+            in_degree[task] += 1
+
+    queue = []
+    for task in in_degree:
+        if in_degree[task] == 0:
+            queue.append(task)
+
+    result = []
+    while queue:
+        task = queue.pop(0)
+        result.append(task)
+        for dependent in graph[task]:
+            in_degree[dependent] -= 1
+            if in_degree[dependent] == 0:
+                queue.append(dependent)
+
+    if len(result) != len(tasks):
+        return None
+
+    return result
+```

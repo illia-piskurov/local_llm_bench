@@ -1,0 +1,75 @@
+We need to extend the existing task scheduler with two functions: critical_path and makespan. The critical_path function should return the length of the longest dependency path by sum of durations, ignoring priority. If there is a cycle, return None.
+
+The makespan function should return the total completion time of all tasks using the same scheduling rules as plan_order. We need to use the same deterministic tie-breaking for ready tasks: descending priority, ascending duration, alphabetical name. If there is a cycle, return None.
+
+We need to ensure that the dependency graph is checked for cycles in both functions. Also, we need to consider the worker limit in makespan? The problem says "use the same scheduling rules as plan_order". plan_order returns a list of tasks that can be scheduled, but makespan is the total completion time of all tasks. We need to schedule tasks to maximize completion time.
+
+We can use a similar approach: we need to find the longest path in the dependency graph (ignoring priorities), which is the critical path. Then, we need to schedule tasks to complete all tasks in the makespan, considering the worker limit.
+
+We can use a topological sort and then schedule tasks to complete the longest path first. However, the makespan is the total time to complete all tasks, considering the worker pool.
+
+We can simulate: we need to schedule tasks such that they finish as soon as possible, respecting dependencies and worker limit.
+
+Let's design:
+
+1. For critical_path: compute the longest path in the dependency graph (ignoring priorities). We can use a topological sort and sum durations of tasks on paths. If there is a cycle, return None.
+
+2. For makespan: we need to schedule tasks to complete all tasks in the makespan time. We can use a priority queue (heap) to select tasks based on priority (descending), then duration (ascending), then alphabetical name. We need to consider the worker limit, so we need to ensure that at most workers tasks can be scheduled simultaneously.
+
+We can use a priority queue to process tasks, and also keep track of which tasks are being scheduled and how many workers are used.
+
+We need to handle cycles: if there is a cycle, return None for both functions.
+
+Let's implement.
+
+First, we need to define the tasks as tuples (duration, deps, priority). But for critical_path, we ignore priority, so we can just use duration and deps. For makespan, we need to consider priority as well.
+
+We'll need to extract the task names for alphabetical tie-breaking.
+
+Let's write the code.
+
+We'll define a function critical_path(tasks: dict[str, tuple[int, list[str], int]]) -> int | None.
+
+We'll compute the longest path in the dependency graph (ignore priorities). We can use a topological sort and sum durations of tasks on paths. If there is a cycle, return None.
+
+We'll need to build the graph from deps.
+
+Then, for each task, we can find the longest path from that task to a sink (no dependencies). The length is the duration of the task plus the length of the path.
+
+We can use a depth-first search to find the longest path for each task.
+
+But note: the task deps are lists of task names that must finish before this task can start. So the task is dependent on those tasks. So the longest path from that task to a sink is the longest path in the graph where the task is a source.
+
+We can do: for each task, find the longest path in the graph that includes that task (i.e., the path from that task to a node with no dependencies).
+
+We can use a topological sort of the graph (nodes are tasks, edges are deps). Then for each task, we can compute the longest path from that task to a node with no incoming edges (i.e., a sink). The length is duration + length of path.
+
+If there is a cycle, return None.
+
+Then return the maximum of those lengths.
+
+Now, for makespan: we need to schedule tasks to complete all tasks in the makespan time. We can use a priority queue to process tasks, with priority based on priority (descending), then duration (ascending), then alphabetical name. If there is a cycle, return None.
+
+We need to consider the worker limit: at most workers tasks can run simultaneously. So we need to schedule tasks such that the number of tasks being scheduled does not exceed workers.
+
+We can simulate: we process tasks, adding them to a queue, and we need to ensure that we don't exceed workers. We can use a max-heap for tasks to be scheduled, but we need to consider the order.
+
+We can use a priority queue to get tasks with highest priority, then check if they can be scheduled, and if so, add to a schedule list, and reduce worker count. If schedule list reaches workers, we need to find the next tasks to schedule.
+
+We need to handle cycles: if there is a cycle, return None.
+
+Let's implement.
+
+We'll need to extract task names from the task tuple (the list[str] in deps). Also, we need to sort tasks for alphabetical tie-breaking.
+
+We'll need to ignore priorities for critical_path, so we can just use duration.
+
+Now, write the code.
+
+We'll assume tasks are given as dict[str, tuple[int, list[str], int]], so each task has duration, dependencies (list of task names), and priority (which we ignore for critical_path).
+
+For makespan, we need to consider priority, so we need to sort tasks by priority descending, then by duration ascending, then by name alphabetical.
+
+We'll need to check for cycles in the dependency graph.
+
+Let's code.

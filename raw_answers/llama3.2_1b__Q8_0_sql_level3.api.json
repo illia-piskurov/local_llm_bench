@@ -1,0 +1,26 @@
+{
+  "model": "llama3.2:1b",
+  "created_at": "2026-11-11T13:58:09.387321Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nimport re\n\ndef compile_query(query):\n    table = query.get('table', '')\n    select = query.get('select', [])\n    where = query.get('where', {})\n    having = query.get('having', {})\n    subqueries = query.get('subqueries', [])\n\n    params = []\n    sql = 'SELECT '\n    if select:\n        sql += ', '.join(select)\n    sql += ' FROM ' + table\n\n    if where:\n        placeholders = []\n        for field, op, value in where.items():\n            if isinstance(value, dict):\n                placeholders.extend(re.findall(r'\\$(\\d+)', str(value)))\n            else:\n                placeholders.append(f'${value}')\n        sql += ' WHERE '\n        for field, op, value in where.items():\n            if isinstance(value, dict):\n                sql += f'{field} {op} {placeholders.pop(0)}'\n            else:\n                sql += f'{field} {op} {value}'\n\n    if having:\n        having_params = []\n        for condition in having:\n            if isinstance(condition, dict):\n                having_params.extend(re.findall(r'\\$(\\d+)', str(condition)))\n            else:\n                having_params.append(condition)\n        sql += ' HAVING '\n        for condition in having:\n            if isinstance(condition, dict):\n                sql += f'{condition[\"field\"]} {condition[\"op\"]} ({condition[\"params\"]})'\n            else:\n                sql += f'{condition}'\n\n    if subqueries:\n        subquery_params = []\n        for subquery in subqueries:\n            if isinstance(subquery, dict):\n                subquery_params.extend(re.findall(r'\\$(\\d+)', str(subquery)))\n            else:\n                subquery_params.append(subquery)\n        sql += ' WITH '\n        for subquery in subqueries:\n            if isinstance(subquery, dict):\n                sql += f'{subquery[\"field\"]} AS {subquery[\"params\"]}'\n            else:\n                sql += f'{subquery} AS {subquery[\"params\"]}'\n        sql += ' AS '\n        for subquery in subqueries:\n            if isinstance(subquery, dict):\n                sql += f'{subquery[\"field\"]} AS {subquery[\"params\"]}'\n            else:\n                sql += f'{subquery} AS {subquery[\"params\"]}'\n        sql += ' SELECT '\n        for field, op, value in select:\n            if isinstance(value, dict):\n                sql += f'{field} {op} {placeholders.pop(0)}'\n            else:\n                sql += f'{field} {op} {value}'\n\n    if 'joins' in query:\n        joins = query.get('joins', [])\n        sql += ' JOIN '\n        for join in joins:\n            sql += join['type'] + ' ' + join['table'] + ' ON ' + join['on']\n\n    if 'groupBy' in query:\n        groupBy = query.get('groupBy', [])\n        sql += ' GROUP BY '\n        for field in groupBy:\n            sql += field + ' '\n\n    if 'op' in query:\n        op = query.get('op', '')\n        if op == 'IN':\n            value = query.get('value', [])\n            sql += ' IN (' + ', '.join(re.escape(x) for x in value) + ')'\n        elif op == 'IS NULL':\n            sql += ' IS NULL'\n        elif op == 'IS NOT NULL':\n            sql += ' IS NOT NULL'\n        elif op == 'LIKE':\n            value = query.get('value', [])\n            sql += ' LIKE %s' % re.escape(''.join(re.escape(x) for x in value))\n        else:\n            raise ValueError('Unsupported operator: ' + op)\n\n    return {'sql': sql, 'params': params}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 15884706708,
+  "load_duration": 1431000,
+  "prompt_eval_count": 1021,
+  "prompt_eval_cached_count": 20,
+  "prompt_eval_duration": 1055782999,
+  "eval_count": 777,
+  "eval_duration": 14809295000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1021,
+    "total_output_tokens": 777,
+    "tokens_per_second": 52.467048566457755,
+    "time_to_first_token_seconds": 1.055782999,
+    "model_load_time_seconds": 0.001431
+  }
+}

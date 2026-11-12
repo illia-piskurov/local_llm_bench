@@ -1,0 +1,31 @@
+{
+  "run_id": "run_20261112_132311_d9b823",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:3b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-12 13:23:37",
+  "passed": 1,
+  "total": 18,
+  "failures": [
+    "push_print: expected ['5'], got []",
+    "add: expected ['5'], got []",
+    "sub_order: expected ['7'], got []",
+    "mul: expected ['24'], got []",
+    "div_order: expected ['5'], got []",
+    "div_truncate: expected ['3'], got []",
+    "div_by_zero: expected error, but execution succeeded ([])",
+    "dup: expected ['18'], got []",
+    "swap: expected ['1'], got []",
+    "pop: expected ['1'], got []",
+    "comments_and_blank_lines: expected ['7'], got []",
+    "multiple_prints: expected ['1', '2', '3'], got []",
+    "print_does_not_pop: expected ['5', '5'], got []",
+    "negative_numbers: expected ['2'], got []",
+    "stack_underflow_add: expected error, but execution succeeded ([])",
+    "stack_underflow_pop: expected error, but execution succeeded ([])",
+    "complex_chain: expected ['10'], got []"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

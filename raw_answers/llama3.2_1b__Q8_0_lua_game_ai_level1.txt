@@ -1,0 +1,79 @@
+```lua
+local BT = {}
+
+function BT.Action(fn)
+    local function node:tick(ctx)
+        if fn(ctx) then
+            return BT.SUCCESS
+        elseif fn(ctx) == BT.RUNNING then
+            return BT.RUNNING
+        else
+            return BT.FAILURE
+        end
+    end
+
+    node:reset()
+    return fn
+end
+
+function BT.Condition(predicate)
+    local function node:tick(ctx)
+        if predicate(ctx) then
+            return BT.SUCCESS
+        else
+            return BT.FAILURE
+        end
+    end
+
+    node:reset()
+    return predicate
+end
+
+function BT.Sequence(children)
+    local function node:tick(ctx)
+        for i, child in ipairs(children) do
+            if child:tick(ctx) == BT.FAILURE then
+                return BT.FAILURE
+            end
+        end
+        return BT.RUNNING
+    end
+
+    node:reset()
+    return function()
+        for i, child in ipairs(children) do
+            if child:tick(ctx) == BT.SUCCESS then
+                return BT.SUCCESS
+            end
+        end
+        return BT.FAILURE
+    end
+end
+
+function BT.Selector(children)
+    local function node:tick(ctx)
+        for i, child in ipairs(children) do
+            if child:tick(ctx) == BT.SUCCESS then
+                return BT.SUCCESS
+            elseif child:tick(ctx) == BT.RUNNING then
+                return BT.RUNNING
+            end
+        end
+        return BT.FAILURE
+    end
+
+    node:reset()
+    return function()
+        for i, child in ipairs(children) do
+            if child:tick(ctx) == BT.SUCCESS then
+                return BT.SUCCESS
+            elseif child:tick(ctx) == BT.RUNNING then
+                return BT.RUNNING
+            end
+        end
+        return BT.FAILURE
+    end
+end
+
+return BT
+```

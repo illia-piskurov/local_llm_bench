@@ -1,0 +1,55 @@
+```python
+def compile_query(query: dict) -> dict:
+    def compile_condition(condition):
+        if isinstance(condition, dict):
+            op = condition['op']
+            if op in ('=', '!=', '>', '<', '>=', '<='):
+                return f"{condition['field']} {op} ${len(params)+1}"
+            elif op == 'AND':
+                return ' AND '.join(compile_condition(c) for c in condition['AND'])
+            elif op == 'OR':
+                return ' OR '.join(compile_condition(c) for c in condition['OR'])
+        return str(condition)
+
+    def compile_order_by(order_by):
+        return ', '.join(f"{item['field']} {item.get('dir', 'ASC')}" for item in order_by)
+
+    table = query['table']
+    select = query.get('select', ['*'])
+    where = query.get('where', {})
+    order_by = query.get('orderBy', [])
+    limit = query.get('limit', None)
+    offset = query.get('offset', None)
+
+    sql = f"SELECT {', '.join(select)} FROM {table}"
+    if where:
+        sql += f" WHERE {compile_condition(where)}"
+    if order_by:
+        sql += f" ORDER BY {compile_order_by(order_by)}"
+    if limit is not None:
+        sql += f" LIMIT {limit}"
+    if offset is not None:
+        sql += f" OFFSET {offset}"
+
+    params = []
+    if where:
+        condition_str = compile_condition(where)
+        for i, condition in enumerate(re.findall(r'\$\d+', condition_str), 1):
+            params.append(None)  # Placeholder for actual value
+    return {"sql": sql, "params": params}
+
+# Example usage:
+# query = {
+#     "table": "users",
+#     "select": ["name", "age"],
+#     "where": {
+#         "AND": [
+#             {"field": "age", "op": ">", "value": 18},
+#             {"field": "name", "op": "=", "value": "Alice"}
+#         ]
+#     },
+#     "orderBy": [{"field": "name", "dir": "ASC"}],
+#     "limit": 10
+# }
+# print(compile_query(query))
+```

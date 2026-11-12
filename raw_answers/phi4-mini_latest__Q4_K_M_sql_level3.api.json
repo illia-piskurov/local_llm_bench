@@ -1,0 +1,26 @@
+{
+  "model": "phi4-mini:latest",
+  "created_at": "2026-11-11T12:33:48.966682Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef compile_query(query: dict) -> dict:\n    def compile_condition(condition, param_index):\n        if isinstance(condition, dict):\n            op = condition['op']\n            if op in ('=', '!=', '>', '<', '>=', '<=', 'IN'):\n                if op == 'IN':\n                    values = condition['value']\n                    placeholders = ', '.join(f\"${param_index + i}\" for i in range(len(values)))\n                    param_index += len(values)\n                    return f\"{condition['field']} {op} ({placeholders})\", param_index\n                else:\n                    return f\"{condition['field']} {op} ${param_index}\", param_index\n            elif op == 'LIKE':\n                return f\"{condition['field']} LIKE ${param_index}\", param_index\n            elif op in ('IS NULL', 'IS NOT NULL'):\n                return f\"{condition['field']} {op}\", param_index\n            elif op in ('AND', 'OR'):\n                left, param_index = compile_condition(condition[0], param_index)\n                right, param_index = compile_condition(condition[1], param_index)\n                return f\"({left} {condition['op']} {right})\", param_index\n            else:\n                raise ValueError(f\"Unsupported operator: {op}\")\n        return str(condition), param_index\n\n    def compile_select(select, param_index):\n        compiled_select = []\n        for item in select:\n            if isinstance(item, dict):\n                expr, param_index = compile_condition(item['expr'], param_index)\n                compiled_select.append(f\"{item['as']}: {expr}\")\n            else:\n                compiled_select.append(item)\n        return ', '.join(compiled_select), param_index\n\n    def compile_order_by(order_by):\n        return ', '.join(f\"{item['field']} {item.get('dir', 'ASC')}\" for item in order_by)\n\n    def compile_joins(joins):\n        join_clauses = []\n        for join in joins:\n            join_type = join.get('type', 'INNER').upper()\n            table = join['table']\n            on = join['on']\n            on_clauses, param_index = compile_condition(on, param_index)\n            join_clauses.append(f\"{join_type} JOIN {table} ON {on_clauses}\")\n        return ' '.join(join_clauses)\n\n    table = query['table']\n    select = query.get('select', [])\n    where = query.get('where', {})\n    having = query.get('having', {})\n    order_by = query.get('orderBy', [])\n    limit = query.get('limit', None)\n    offset = query.get('offset', None)\n    joins = query.get('joins', [])\n    group_by = query.get('groupBy', [])\n\n    sql = f\"SELECT {compile_select(select, 1)} FROM {table}\"\n    if joins:\n        sql += f\" {compile_joins(joins)}\"\n    if where:\n        sql += f\" WHERE {compile_condition(where, 2)}\"\n    if having:\n        sql += f\" HAVING {compile_condition(having, 3)}\"\n    if group_by:\n        sql += f\" GROUP BY {', '.join(group_by)}\"\n    if order_by:\n        sql += f\" ORDER BY {compile_order_by(order_by)}\"\n    if limit is not None:\n        sql += f\" LIMIT {limit}\"\n    if offset is not None:\n        sql += f\" OFFSET {offset}\"\n\n    return {\"sql\": sql, \"params\": []}\n\n# Example usage:\n# query = {\n#     \"table\": \"orders\",\n#     \"select\": [\n#         {\"expr\": \"orders.id\", \"as\": \"order_id\"},\n#         {\"expr\": \"COUNT(orders.items)\", \"as\": \"item_count\"}\n#     ],\n#     \"where\": {\n#         \"AND\": [\n#             {\"field\": \"orders.total\", \"op\": \">\", \"value\": 100},\n#             {\"field\": \"orders.status\", \"op\": \"IN\", \"query\": {\"field\": \"orders.id\", \"op\": \"=\", \"value\": 1}}\n#         ]\n#     },\n#     \"having\": {\"op\": \"SUM\", \"field\": \"orders.total\", \"value\": 1000},\n#     \"joins\": [\n#         {\"type\": \"LEFT\", \"table\": \"items\", \"on\": {\"orders.id\": \"items.order_id\"}}\n#     ],\n#     \"groupBy\": [\"orders.status\"],\n#     \"orderBy\": [{\"field\": \"order_id\", \"dir\": \"ASC\"}],\n#     \"limit\": 10\n# }\n# print(compile_query(query))\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 47518706917,
+  "load_duration": 2202542,
+  "prompt_eval_count": 1221,
+  "prompt_eval_cached_count": 1,
+  "prompt_eval_duration": 4897301000,
+  "eval_count": 966,
+  "eval_duration": 42509724000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1221,
+    "total_output_tokens": 966,
+    "tokens_per_second": 22.724212464893917,
+    "time_to_first_token_seconds": 4.897301,
+    "model_load_time_seconds": 0.002202542
+  }
+}

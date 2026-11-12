@@ -1,0 +1,40 @@
+We are to implement a simple stack-based language interpreter in a single Python file.
+ The program is passed as multi-line text, with instructions separated by spaces.
+ We need to parse the input, process it, and return the output.
+
+ Steps:
+ 1. We need to parse the input string, split into lines, and process each line.
+ 2. We need to handle the stack operations: PUSH, POP, ADD, SUB, MUL, DIV, DUP, SWAP, PRINT.
+ 3. We need to check for errors: stack under enough values, division by zero, etc.
+ 4. We need to return a list of printed strings.
+
+ We can use a stack (list) to simulate the stack.
+ We'll iterate over the lines, ignoring comments (lines starting with #) and empty lines.
+ For each instruction, we'll check if the stack has enough elements, then perform the operation, and update the stack.
+ After processing, we'll print the top of the stack.
+
+ Let's plan the code:
+
+ We'll define a function run(program) that takes the program as a string, processes it, and returns the output.
+
+ We'll use a list to simulate the stack.
+
+ We'll also need to handle the error conditions: if the stack is empty for a POP, raise an error; if division by zero, raise an error.
+
+ We'll parse the input line by line, and for each line, check if it's an instruction.
+
+ We'll need to check the line number (we can keep track of the line number as we process).
+
+ Let's write the code.
+
+ Note: The instructions are given one per line, arguments separated by space. So each line is an instruction.
+
+ We'll assume the input is a single string, and we'll split it into lines.
+
+ We'll ignore lines that are comments (starting with #) or empty.
+
+ We'll process each line, and if it's an instruction, we'll check the stack and perform the operation.
+
+ After processing, we'll print the result.
+
+ Let's code it.

@@ -1,0 +1,26 @@
+{
+  "model": "phi4-mini:latest",
+  "created_at": "2026-11-11T13:13:14.051773Z",
+  "message": {
+    "role": "assistant",
+    "content": "```javascript\nasync function pMap(items, mapper, options = { concurrency: 1, retries: 0, backoffMs: 0, timeoutMs: 0, signal: null, settled: false }) {\n  const { concurrency, retries = 0, backoffMs = 0, timeoutMs = 0, signal, settled = false } = options;\n  if (items.length === 0) return [];\n  const results = new Array(items.length);\n  const executing = new Set();\n  const queue = [];\n  let attempt = 0;\n\n  const enqueue = (index) => {\n    if (index < items.length) {\n      queue.push(index);\n    }\n  };\n\n  const processNext = async () => {\n    while (queue.length && executing.size < concurrency) {\n      const currentIndex = queue.shift();\n      if (signal && signal.aborted) {\n        reject(new Error(\"Aborted\"));\n        return;\n      }\n      executing.add(currentIndex);\n      const attemptCurrent = ++attempt;\n      const executeMapper = async () => {\n        try {\n          if (settled) {\n            const startTime = Date.now();\n            const result = await mapper(items[currentIndex], currentIndex, () => {\n              executing.delete(currentIndex);\n              enqueue(currentIndex + 1);\n              if (currentIndex === items.length - 1) {\n                enqueue(currentIndex + 1);\n              }\n            });\n            const endTime = Date.now();\n            if (endTime - startTime > timeoutMs) {\n              throw new Error(\"Timeout\");\n            }\n            results[currentIndex] = { status: 'fulfilled', value: result };\n          } else {\n            const result = await Promise.race([\n              Promise.resolve(result),\n              new Promise((resolve, reject) => {\n                const timeout = setTimeout(() => reject(new Error(\"Timeout\")), timeoutMs);\n                process.nextTick(() => clearTimeout(timeout));\n                const timer = setTimeout(() => reject(new Error(\"Timeout\")), timeoutMs);\n                process.nextTick(() => clearTimeout(timer));\n              })\n            ]);\n            if (settled) {\n              results[currentIndex] = { status: 'fulfilled', value: result };\n            } else {\n              results[currentIndex] = result;\n            }\n          }\n        } catch (error) {\n          if (attemptCurrent <= retries + 1) {\n            const delay = backoffMs * Math.pow(2, attemptCurrent - 1);\n            await new Promise(resolve => setTimeout(resolve, delay));\n            processNext();\n          } else {\n            results[currentIndex] = { status: 'rejected', reason: error.message || error };\n          }\n        } finally {\n          executing.delete(currentIndex);\n          enqueue(currentIndex + 1);\n        }\n      };\n      await executeMapper();\n    }\n  };\n\n  enqueue(0);\n  processNext();\n\n  return new Promise((resolve, reject) => {\n    const cleanup = () => {\n      while (executing.size) {\n        processNext();\n      }\n      process.nextTick(cleanup);\n    };\n\n    const wrappedProcessNext = async () => {\n      try {\n        await processNext();\n        resolve(results);\n      } catch (error) {\n        reject(error);\n      }\n    };\n\n    cleanup();\n    return settled ? wrappedProcessNext() : wrappedProcessNext();\n  });\n}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 25724078334,
+  "load_duration": 2467375,
+  "prompt_eval_count": 1037,
+  "prompt_eval_cached_count": 1,
+  "prompt_eval_duration": 2998778000,
+  "eval_count": 682,
+  "eval_duration": 22680554000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1037,
+    "total_output_tokens": 682,
+    "tokens_per_second": 30.069812227690733,
+    "time_to_first_token_seconds": 2.998778,
+    "model_load_time_seconds": 0.002467375
+  }
+}

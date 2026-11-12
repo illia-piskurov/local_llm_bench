@@ -1,0 +1,26 @@
+{
+  "model": "llama3.2:1b",
+  "created_at": "2026-11-11T14:05:15.37974Z",
+  "message": {
+    "role": "assistant",
+    "content": "```lua\nlocal BT = {}\n\nfunction BT.Blackboard.new()\n    local bb = {}\n    setmetatable(bb, { __index = BT })\n    bb.__index = BT\n    bb:register watchers = {}\n    bb:register callbacks = {}\n    bb:register watchers:watch = {}\n    bb:register callbacks:watch = {}\n    return bb\nend\n\nfunction BT.Blackboard:get(key, default)\n    if bb:has(key) then\n        return bb:get(key, default)\n    else\n        return default\n    end\nend\n\nfunction BT.Blackboard:set(key, value)\n    bb:watch(key, function(key, new_value, old_value)\n        if key == 'success' then\n            if new_value == BT.SUCCESS then\n                return\n            end\n        elseif key == 'failure' then\n            if new_value == BT.FAILURE then\n                return\n            end\n        elseif key == 'running' then\n            if new_value == BT.RUNNING then\n                return\n            end\n        end\n    end)\n    bb:watch(key, function(key, new_value, old_value)\n        if key == 'success' then\n            if new_value == BT.SUCCESS then\n                return BT.SUCCESS\n            end\n        elseif key == 'failure' then\n            if new_value == BT.FAILURE then\n                return BT.FAILURE\n            end\n        elseif key == 'running' then\n            if new_value == BT.RUNNING then\n                return BT.RUNNING\n            end\n        end\n    end)\n    bb:register watchers[key] = new_value\n    bb:register callbacks[key] = function(key, new_value, old_value)\n        if key == 'success' then\n            return BT.SUCCESS\n        elseif key == 'failure' then\n            return BT.FAILURE\n        elseif key == 'running' then\n            return BT.RUNNING\n        end\n    end\n    bb:register callbacks[key] = function(key, new_value, old_value)\n        if key == 'success' then\n            return new_value\n        elseif key == 'failure' then\n            return new_value\n        elseif key == 'running' then\n            return old_value\n        end\n    end\n    return bb\nend\n\nfunction BT.Inverter(child)\n    local function node:tick(ctx)\n        if child:tick(ctx) == BT.SUCCESS then\n            return BT.FAILURE\n        elseif child:tick(ctx) == BT.FAILURE then\n            return BT.SUCCESS\n        elseif child:tick(ctx) == BT.RUNNING then\n            return BT.RUNNING\n        end\n    end\n    node:reset()\n    return child\nend\n\nfunction BT.Cooldown(child, ticks)\n    local function node:tick(ctx)\n        if child:tick(ctx) == BT.SUCCESS then\n            return BT.FAILURE\n        elseif child:tick(ctx) == BT.FAILURE then\n            return BT.SUCCESS\n        elseif child:tick(ctx) == BT.RUNNING then\n            return BT.RUNNING\n        end\n    end\n    node:reset()\n    child:cooldown(ticks)\n    return child\nend\n\nfunction BT.RegisterDecorator(child, decorator)\n    local function node:tick(ctx)\n        if decorator(node, ctx) then\n            return BT.SUCCESS\n        elseif decorator(node, ctx) == BT.FAILURE then\n            return BT.FAILURE\n        elseif decorator(node, ctx) == BT.RUNNING then\n            return BT.RUNNING\n        end\n    end\n    node:reset()\n    return decorator\nend\n\nreturn BT\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 14318379958,
+  "load_duration": 833708,
+  "prompt_eval_count": 1189,
+  "prompt_eval_cached_count": 891,
+  "prompt_eval_duration": 547993000,
+  "eval_count": 739,
+  "eval_duration": 13764361000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1189,
+    "total_output_tokens": 739,
+    "tokens_per_second": 53.68937940526262,
+    "time_to_first_token_seconds": 0.547993,
+    "model_load_time_seconds": 0.000833708
+  }
+}

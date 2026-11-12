@@ -1,0 +1,60 @@
+import heapq
+import heapq
+from collections import defaultdict, deque
+
+def plan_order(tasks: dict[str, tuple[int, list[str], int]], workers: int) -> list[str] | None:
+    # Check for cyclic dependencies
+    deps = defaultdict(list)
+    for task, deps, _ in tasks:
+        for dep in deps:
+            deps[dep].append(task)
+    graph = defaultdict(list)
+    for task in tasks:
+        for dep in deps[task]:
+            graph[dep].append(task)
+    for task in tasks:
+        for dep in graph[task]:
+            graph[dep].append(task)
+    # Check for cycles
+    is_cyclic = False
+    for task in tasks:
+        visited = set()
+        stack = [task]
+        while stack:
+            current = stack.pop()
+            if current in visited:
+                is_cyclic = True
+                break
+            visited.add(current)
+            for neighbor in graph[current]:
+                if neighbor not in visited:
+                    stack.append(neighbor)
+        if is_cyclic:
+            return None
+    # Sort tasks by priority (descending), then duration (ascending), then name (ascending)
+    tasks_sorted = sorted(tasks, key=lambda x: (-tasks[x][1], tasks[x][2], tasks[x][0]))
+    # Select tasks that can be scheduled, respecting worker limit
+    scheduled = []
+    for task in tasks_sorted:
+        # Check if task can be scheduled
+        if len(scheduled) >= workers:
+            continue
+        # Check dependencies
+        if any(task in deps[dep] for dep in deps):
+            continue
+        # Add to scheduled
+        scheduled.append(task)
+        # Check if adding would exceed workers
+        if len(scheduled) >= workers:
+            continue
+        # Push to heap with priority, duration, task name
+        heapq.heappush(scheduled_queue, (tasks[task][1], tasks[task][2], task))
+    # If still need more, select next
+    while scheduled and len(scheduled) < workers:
+        # Pop from heap, check if can be scheduled
+        _, _, task = heapq.heappop(scheduled_queue)
+        if task in scheduled:
+            continue
+        scheduled.append(task)
+        heapq.heappush(scheduled_queue, (tasks[task][1], tasks[task][2], task))
+    return [task for task in scheduled if task in scheduled] or None

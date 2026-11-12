@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T11:23:13.928458Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef run(program: str) -> list[str]:\n    \"\"\"\n    Interprets a simple stack-based language and returns a list of printed strings.\n    \"\"\"\n    stack = []\n    printed = []\n    lines = program.splitlines()\n    i = 0\n    while i < len(lines):\n        line = lines[i].strip()\n        if not line or line.startswith(\"#\"):\n            i += 1\n            continue\n\n        parts = line.split()\n        instruction = parts[0]\n\n        if instruction == \"PUSH\":\n            try:\n                value = int(parts[1])\n                stack.append(value)\n            except (IndexError, ValueError):\n                raise ValueError(f\"Invalid PUSH instruction: {line} (expected <n>\")\n        elif instruction == \"POP\":\n            if not stack:\n                raise ValueError(f\"Stack underflow: POP (line {i+1})\")\n            stack.pop()\n        elif instruction == \"ADD\":\n            if len(stack) < 2:\n                raise ValueError(f\"Stack underflow: ADD (line {i+1})\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1 + val2)\n        elif instruction == \"SUB\":\n            if len(stack) < 2:\n                raise ValueError(f\"Stack underflow: SUB (line {i+1})\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1 - val2)\n        elif instruction == \"MUL\":\n            if len(stack) < 2:\n                raise ValueError(f\"Stack underflow: MUL (line {i+1})\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1 * val2)\n        elif instruction == \"DIV\":\n            if len(stack) < 2:\n                raise ValueError(f\"Stack underflow: DIV (line {i+1})\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            if val2 == 0:\n                raise ZeroDivisionError(f\"Division by zero (line {i+1})\")\n            stack.append(val1 // val2)\n        elif instruction == \"DUP\":\n            if not stack:\n                raise ValueError(f\"Stack underflow: DUP (line {i+1})\")\n            top = stack[-1]\n            stack.append(top)\n        elif instruction == \"SWAP\":\n            if len(stack) < 2:\n                raise ValueError(f\"Stack underflow: SWAP (line {i+1})\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1)\n            stack.append(val2)\n        elif instruction == \"PRINT\":\n            if not stack:\n                print(\"Stack is empty\")\n            else:\n                print(stack[-1])\n        else:\n            raise ValueError(f\"Invalid instruction: {instruction} (line {i+1})\")\n\n        i += 1\n    return printed\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 25247604583,
+  "load_duration": 2812790666,
+  "prompt_eval_count": 288,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 771544000,
+  "eval_count": 724,
+  "eval_duration": 21646243000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 288,
+    "total_output_tokens": 724,
+    "tokens_per_second": 33.4469127044356,
+    "time_to_first_token_seconds": 0.771544,
+    "model_load_time_seconds": 2.812790666
+  }
+}

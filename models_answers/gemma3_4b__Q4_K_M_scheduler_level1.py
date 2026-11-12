@@ -1,0 +1,40 @@
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    """
+    Performs a topological sort on a directed acyclic graph (DAG) represented as a dictionary
+    of tasks and their dependencies.
+
+    Args:
+        tasks: A dictionary where the key is the task name (str), and the value is a list of
+               dependency task names that must complete prior to this task.
+
+    Returns:
+        A list of all task names in an order where every task appears strictly after all of its
+        dependencies (topological sort). If the dependency graph contains a cycle, return None.
+    """
+    in_degree = {}
+    for task in tasks:
+        in_degree[task] = 0
+    for task in tasks:
+        for dependency in tasks[task]:
+            in_degree[task] += 1
+
+    queue = []
+    for task in in_degree:
+        if in_degree[task] == 0:
+            queue.append(task)
+
+    sorted_tasks = []
+    while queue:
+        task = queue.pop(0)
+        sorted_tasks.append(task)
+
+        for dependent_task in tasks:
+            if task in tasks[dependent_task]:
+                in_degree[dependent_task] -= 1
+                if in_degree[dependent_task] == 0:
+                    queue.append(dependent_task)
+
+    if len(sorted_tasks) != len(tasks):
+        return None
+    else:
+        return sorted_tasks

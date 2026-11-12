@@ -1,0 +1,538 @@
+{
+  "id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model_key": "phi4-mini:latest",
+  "model_name": "phi4-mini:latest",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 10000,
+    "artifact": {
+      "key": "phi4-mini:latest",
+      "display_name": "phi4-mini:latest",
+      "architecture": "phi3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 2491876774,
+      "params_string": "3.8B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "537d00a (051cb8695784)",
+  "started_at": "2026-11-11 14:28:08",
+  "completed_at": null,
+  "status": "in_progress",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:28:26",
+      "passed": 12,
+      "total": 18,
+      "failures": [
+        "sub_order: expected ['7'], got ['-7']",
+        "div_order: expected ['5'], got ['0']",
+        "div_truncate: expected ['3'], got ['0']",
+        "div_by_zero: expected error, but execution succeeded (['0'])",
+        "swap: expected ['1'], got ['-1']",
+        "complex_chain: expected ['10'], got ['-1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:28:49",
+      "passed": 17,
+      "total": 27,
+      "failures": [
+        "sub_order: expected ['7'], got ['-7']",
+        "div_order: expected ['5'], got ['0']",
+        "div_truncate: expected ['3'], got ['0']",
+        "div_by_zero: expected error, but execution succeeded (['0'])",
+        "swap: expected ['1'], got ['-1']",
+        "complex_chain: expected ['10'], got ['-1']",
+        "unconditional_jump_skips_code: unexpected exception/timeout: Exception: Error on line 6: stack underflow",
+        "jz_taken_when_zero: unexpected exception/timeout: Exception: Error on line 8: stack underflow",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: Exception: Error on line 8: stack underflow",
+        "countdown_loop: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:29:28",
+      "passed": 8,
+      "total": 37,
+      "failures": [
+        "push_print: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "add: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "sub_order: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "mul: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "div_order: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "div_truncate: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "dup: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "swap: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "pop: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "comments_and_blank_lines: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "multiple_prints: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "print_does_not_pop: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "negative_numbers: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "complex_chain: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "unconditional_jump_skips_code: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "jz_taken_when_zero: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "countdown_loop: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "count_up_loop: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "call_ret_basic: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "call_ret_nested: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "comparison_eq_gt_lt: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "store_and_load: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "store_overwrite: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "recursive_factorial: unexpected exception/timeout: NameError: name 'stack' isn't defined",
+        "recursive_fibonacci: unexpected exception/timeout: NameError: name 'stack' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:29:34",
+      "passed": 6,
+      "total": 10,
+      "failures": [
+        "simple_chain: invalid topological order: ['c', 'b', 'a']",
+        "diamond: invalid topological order: ['d', 'b', 'c', 'a']",
+        "multiple_roots: invalid topological order: ['d', 'c', 'a', 'b']",
+        "wide_graph: invalid topological order: ['deploy', 'package', 'test', 'lint', 'compile']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:29:42",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception/timeout: KeyError: 5",
+        "simple_chain: unexpected exception/timeout: KeyError: 2",
+        "diamond_pick_longer_branch: unexpected exception/timeout: KeyError: 1",
+        "independent_tasks: unexpected exception/timeout: KeyError: 3",
+        "wide_graph: unexpected exception/timeout: KeyError: 2"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:30:03",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: unexpected exception: NameError: local variable referenced before assignment",
+        "dependency_unlocks_later: unexpected exception: NameError: local variable referenced before assignment",
+        "single_worker_duration_tiebreak: unexpected exception: NameError: local variable referenced before assignment",
+        "resource_limit_and_priority: unexpected exception: NameError: local variable referenced before assignment",
+        "simultaneous_unlocks: unexpected exception: NameError: local variable referenced before assignment",
+        "cycle_returns_none: unexpected exception: NameError: local variable referenced before assignment"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:30:54",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception: NameError: local variable referenced before assignment",
+        "parallel_tasks_reduce_makespan: unexpected exception: NameError: local variable referenced before assignment",
+        "dependencies_and_workers: unexpected exception: NameError: local variable referenced before assignment",
+        "critical_path_longer_than_worker_parallelism: unexpected exception: NameError: local variable referenced before assignment",
+        "wide_graph_with_unlocks: unexpected exception: NameError: local variable referenced before assignment",
+        "cycle_returns_none: unexpected exception: NameError: local variable referenced before assignment"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:31:09",
+      "passed": 10,
+      "total": 15,
+      "failures": [
+        "simple_transaction_commit: expected ['10'], got ['NULL']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['5', '5']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['NULL', 'NULL', 'NULL']",
+        "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['NULL', 'NULL']",
+        "set_new_key_inside_transaction: expected ['100', '100'], got ['NULL', 'NULL']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:31:29",
+      "passed": 0,
+      "total": 25,
+      "failures": [
+        "failed to load solution: Syntax error in solution: unterminated triple-quoted string literal (detected at line 87) (<unknown>, line 86)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:31:59",
+      "passed": 0,
+      "total": 30,
+      "failures": [
+        "failed to load solution: Syntax error in solution: unterminated triple-quoted string literal (detected at line 107) (<unknown>, line 106)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:32:21",
+      "passed": 3,
+      "total": 6,
+      "failures": [
+        "simple_where_equality: exception/timeout: NameError: local variable referenced before assignment",
+        "where_and_or_nested: exception/timeout: KeyError: op",
+        "multiple_and_conditions: exception/timeout: KeyError: op"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:33:01",
+      "passed": 3,
+      "total": 5,
+      "failures": [
+        "where_in_operator: params: expected [10, 20, 30], got []",
+        "where_is_null_and_like: exception/timeout: KeyError: op"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:33:49",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "select_expression_alias: exception/timeout: NameError: local variable referenced before assignment",
+        "having_clause: SQL: expected 'SELECT sales.category, SUM(sales.amount) AS total_sales FROM sales GROUP BY sales.category HAVING SUM(sales.amount) > $1', got 'SELECT ('sales.category, total_sales: SUM(sales.amount)', 1) FROM sales HAVING ('SUM(sales.amount) > $3', 3) GROUP BY sales.category'; params: expected [1000], got []",
+        "where_subquery_in: exception/timeout: KeyError: value",
+        "subquery_with_parent_params_order: exception/timeout: KeyError: op"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:34:02",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "empty_state: exception too few parameters provided: given 0, expected 1",
+        "basic_push_pop: exception too few parameters provided: given 0, expected 1",
+        "pointer_wrap_around: exception too few parameters provided: given 0, expected 1",
+        "full_overflow_check: exception too few parameters provided: given 0, expected 1"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:34:28",
+      "passed": 1,
+      "total": 8,
+      "failures": [
+        "empty_state: exception 'ringbuf_init'",
+        "basic_push_pop: exception 'ringbuf_init'",
+        "pointer_wrap_around: exception 'ringbuf_init'",
+        "full_overflow_check: exception 'ringbuf_init'",
+        "clean_packet: assertion returned False",
+        "with_junk_prefix: assertion returned False",
+        "recover_after_false_magic: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:35:01",
+      "passed": 0,
+      "total": 10,
+      "failures": [
+        "empty_state: exception 'ringbuf_init'",
+        "basic_push_pop: exception 'ringbuf_init'",
+        "pointer_wrap_around: exception 'ringbuf_init'",
+        "full_overflow_check: exception 'ringbuf_init'",
+        "clean_packet: exception 'decode_packet'",
+        "with_junk_prefix: exception 'decode_packet'",
+        "reject_bad_checksum: exception 'decode_packet'",
+        "recover_after_false_magic: exception 'decode_packet'",
+        "fragmented_packet: exception 'ringbuf_init'",
+        "sequential_packets: exception 'ringbuf_init'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:28:25",
+      "stats": {
+        "input_tokens": 268,
+        "total_output_tokens": 512,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 36.00342820142906,
+        "time_to_first_token_seconds": 0.7499,
+        "model_load_time_seconds": 2.048995875
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:28:47",
+      "stats": {
+        "input_tokens": 910,
+        "total_output_tokens": 721,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 34.821440386708275,
+        "time_to_first_token_seconds": 0.422853,
+        "model_load_time_seconds": 0.00127
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:29:25",
+      "stats": {
+        "input_tokens": 1127,
+        "total_output_tokens": 1127,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 34.09799266902234,
+        "time_to_first_token_seconds": 3.145632,
+        "model_load_time_seconds": 0.001275167
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:29:33",
+      "stats": {
+        "input_tokens": 164,
+        "total_output_tokens": 162,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 34.5332868910364,
+        "time_to_first_token_seconds": 0.494877,
+        "model_load_time_seconds": 0.000839208
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:29:42",
+      "stats": {
+        "input_tokens": 448,
+        "total_output_tokens": 267,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 34.72756485502802,
+        "time_to_first_token_seconds": 0.382541,
+        "model_load_time_seconds": 0.001016541
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:30:02",
+      "stats": {
+        "input_tokens": 211,
+        "total_output_tokens": 626,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 32.99444280819181,
+        "time_to_first_token_seconds": 0.708601,
+        "model_load_time_seconds": 0.000724583
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:30:52",
+      "stats": {
+        "input_tokens": 1004,
+        "total_output_tokens": 1314,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 26.91364076303162,
+        "time_to_first_token_seconds": 0.70488,
+        "model_load_time_seconds": 0.000971
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:31:07",
+      "stats": {
+        "input_tokens": 322,
+        "total_output_tokens": 339,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 28.279269043459983,
+        "time_to_first_token_seconds": 1.130448,
+        "model_load_time_seconds": 0.002986583
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:31:29",
+      "stats": {
+        "input_tokens": 859,
+        "total_output_tokens": 540,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 27.555633164919087,
+        "time_to_first_token_seconds": 0.90777,
+        "model_load_time_seconds": 0.001322375
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:31:59",
+      "stats": {
+        "input_tokens": 974,
+        "total_output_tokens": 671,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 25.434683864505686,
+        "time_to_first_token_seconds": 3.767229,
+        "model_load_time_seconds": 0.000931166
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:32:21",
+      "stats": {
+        "input_tokens": 341,
+        "total_output_tokens": 482,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 24.709699479814688,
+        "time_to_first_token_seconds": 1.789501,
+        "model_load_time_seconds": 0.000869792
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:33:00",
+      "stats": {
+        "input_tokens": 1064,
+        "total_output_tokens": 745,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 20.106268511092495,
+        "time_to_first_token_seconds": 1.780467,
+        "model_load_time_seconds": 0.001552875
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:33:48",
+      "stats": {
+        "input_tokens": 1221,
+        "total_output_tokens": 966,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 22.724212464893917,
+        "time_to_first_token_seconds": 4.897301,
+        "model_load_time_seconds": 0.002202542
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:34:01",
+      "stats": {
+        "input_tokens": 230,
+        "total_output_tokens": 288,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 26.148903843398575,
+        "time_to_first_token_seconds": 1.240127,
+        "model_load_time_seconds": 0.001649583
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:34:27",
+      "stats": {
+        "input_tokens": 816,
+        "total_output_tokens": 559,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 23.224540969440536,
+        "time_to_first_token_seconds": 1.24647,
+        "model_load_time_seconds": 0.001167791
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:35:01",
+      "stats": {
+        "input_tokens": 1100,
+        "total_output_tokens": 681,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 23.817549595937543,
+        "time_to_first_token_seconds": 4.567619,
+        "model_load_time_seconds": 0.003343583
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:35:15",
+      "stats": {
+        "input_tokens": 212,
+        "total_output_tokens": 284,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 22.789478739623064,
+        "time_to_first_token_seconds": 0.917437,
+        "model_load_time_seconds": 0.001414834
+      }
+    }
+  ]
+}

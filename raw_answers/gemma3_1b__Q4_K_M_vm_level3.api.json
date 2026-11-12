@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:1b",
+  "created_at": "2026-11-11T11:19:22.585602Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef run(program: str) -> list[str]:\n    \"\"\"\n    Runs the given program.\n    \"\"\"\n    try:\n        stack = []\n        for line in program.splitlines():\n            line = line.strip()\n            if line.startswith(\"PUSH\"):\n                args = line[3:].split()\n                if len(args) != 2:\n                    raise ValueError(\"Invalid PUSH format\")\n                n = int(args[0])\n                stack.append(n)\n            elif line.startswith(\"POP\"):\n                if len(stack) == 0:\n                    raise ValueError(\"Stack is empty\")\n                popped = stack.pop()\n                print(popped)\n            elif line.startswith(\"ADD\"):\n                if len(stack) != 2:\n                    raise ValueError(\"Invalid ADD format\")\n                b, a = stack.pop(), stack.pop()\n                stack.append(a + b)\n            elif line.startswith(\"SUB\"):\n                if len(stack) != 2:\n                    raise ValueError(\"Invalid SUB format\")\n                b, a = stack.pop(), stack.pop()\n                stack.append(a - b)\n            elif line.startswith(\"MUL\"):\n                if len(stack) != 2:\n                    raise ValueError(\"Invalid MUL format\")\n                b, a = stack.pop(), stack.pop()\n                stack.append(a * b)\n            elif line.startswith(\"DIV\"):\n                if len(stack) != 2:\n                    raise ValueError(\"Invalid DIV format\")\n                b, a = stack.pop(), stack.pop()\n                if b == 0:\n                    raise ZeroDivisionError(\"Division by zero\")\n                stack.append(a // b)\n            elif line.startswith(\"DUP\"):\n                if len(stack) != 0:\n                    raise ValueError(\"Invalid DUP format\")\n                stack.append(stack[-1])\n            elif line.startswith(\"SWAP\"):\n                if len(stack) != 0:\n                    raise ValueError(\"Invalid SWAP format\")\n                    stack[-1], stack[-2] = stack[-2], stack[-1]\n            elif line.startswith(\"PRINT\"):\n                if len(stack) != 0:\n                    raise ValueError(\"Invalid PRINT format\")\n                    print(stack.pop())\n            else:\n                raise ValueError(line)\n    except ValueError as e:\n        print(f\"Error: {e}\")\n    except ZeroDivisionError as e:\n        print(f\"Error: {e}\")\n    except Exception as e:\n        print(f\"An unexpected error occurred: {e}\")\n    return list(stack)\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 6811333791,
+  "load_duration": 962458,
+  "prompt_eval_count": 1033,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 743003000,
+  "eval_count": 596,
+  "eval_duration": 6038225000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1033,
+    "total_output_tokens": 596,
+    "tokens_per_second": 98.70450339296731,
+    "time_to_first_token_seconds": 0.743003,
+    "model_load_time_seconds": 0.000962458
+  }
+}

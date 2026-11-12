@@ -20,7 +20,7 @@ from benchmarks import REGISTRY
 from database import Database
 from host_configs import HostConfig, HostConfigStore
 from html_report import generate_html_report, open_report_in_browser
-from lmstudio import Model
+from lmstudio import GenerationConfig, Model
 from runner import run_queue, set_default_db
 from storage import ResultStore, RunStore, SpeedResultStore
 from sync import sync_db_and_records
@@ -44,6 +44,83 @@ def select_choice(message: str, choices: list[Choice]) -> Any:
     """Single-choice prompt that returns None for both the Back entry and a cancelled prompt (Ctrl-C)."""
     answer = questionary.select(message, choices=choices).ask()
     return None if isinstance(answer, str) and answer == BACK else answer
+
+
+# Ollama has no per-model presets, so the generation settings are chosen when a run starts. The last answers of
+# this session are offered as the next defaults.
+THINK_MODES = [
+    Choice("Medium effort", value="medium"),
+    Choice("Low effort (small models may think only a few tokens)", value="low"),
+    Choice("High effort", value="high"),
+    Choice("On (the model's own effort)", value="on"),
+    Choice("Off (no thinking)", value="off"),
+    Choice("Auto (the model decides, whatever its default is)", value="auto"),
+]
+_last_ollama_settings: dict | None = None
+
+
+def _is_number(text: str, minimum: int) -> bool | str:
+    if text.strip().isdigit() and int(text) >= minimum:
+        return True
+    return f"Enter a whole number >= {minimum}"
+
+
+def build_ollama_config(max_tokens: int, think: str, think_budget: int, num_ctx: int) -> GenerationConfig:
+    return GenerationConfig(max_tokens=max_tokens, context_length=num_ctx, think=think, think_budget=think_budget)
+
+
+def prompt_generation_config() -> GenerationConfig | None:
+    """Returns the settings for the next run, or None when the prompt is cancelled (Ctrl-C).
+
+    LM Studio keeps its own presets, so nothing is asked and nothing is sent; Ollama asks for the token budget,
+    thinking mode, thinking budget and context window.
+    """
+    global _last_ollama_settings
+    if not lmstudio.is_ollama():
+        return GenerationConfig()
+
+    d = _last_ollama_settings or lmstudio.ollama_run_defaults()
+    console.print("\n[bold]🦙 Ollama generation settings for this run[/bold]")
+    max_tokens = questionary.text(
+        "Max output tokens (thinking + answer):", default=str(d["max_tokens"]), validate=lambda t: _is_number(t, 1)
+    ).ask()
+    if max_tokens is None:
+        return None
+    think = questionary.select("Thinking mode:", choices=THINK_MODES, default=d["think"]).ask()
+    if think is None:
+        return None
+    think_budget = d["think_budget"]
+    if think != "off":
+        answer = questionary.text(
+            "Thinking budget (max thinking tokens, 0 = unlimited; over it the question is re-asked without thinking):",
+            default=str(think_budget),
+            validate=lambda t: _is_number(t, 0),
+        ).ask()
+        if answer is None:
+            return None
+        think_budget = int(answer)
+    num_ctx = questionary.text(
+        "Context window (num_ctx):", default=str(d["num_ctx"]), validate=lambda t: _is_number(t, 512)
+    ).ask()
+    if num_ctx is None:
+        return None
+
+    _last_ollama_settings = {
+        "max_tokens": int(max_tokens),
+        "think": think,
+        "think_budget": think_budget,
+        "num_ctx": int(num_ctx),
+    }
+    return build_ollama_config(**_last_ollama_settings)
+
+
+def start_run(model: Model, queue: list, host: HostConfig, force: bool) -> None:
+    """Asks for the generation settings (Ollama only) and runs the queue."""
+    gen_config = prompt_generation_config()
+    if gen_config is None:
+        console.print("[dim]Run cancelled.[/dim]")
+        return
+    run_queue(model, queue, host, force=force, gen_config=gen_config)
 
 
 set_default_db(db)
@@ -388,7 +465,7 @@ def main_menu(model: Model, host: HostConfig) -> None:
                 for level in b.levels:
                     if not store.has_scored_result(b, model.key, level.id):
                         queue.append((b, level.id))
-            run_queue(model, queue, host, force=False)
+            start_run(model, queue, host, force=False)
 
         elif action == "run_suite":
             suite_choices = [
@@ -398,7 +475,7 @@ def main_menu(model: Model, host: HostConfig) -> None:
             selected_bench = select_choice("Select benchmark to run:", choices=suite_choices)
             if selected_bench:
                 queue = [(selected_bench, level.id) for level in selected_bench.levels]
-                run_queue(model, queue, host, force=True)
+                start_run(model, queue, host, force=True)
 
         elif action == "run_single":
             suite_choices = [Choice(f"{b.short} ({b.code_lang})", value=b) for b in REGISTRY]
@@ -409,7 +486,7 @@ def main_menu(model: Model, host: HostConfig) -> None:
                 lvl_choices.append(Choice("🔙 Back", value=BACK))
                 lvl_id = select_choice("Select level:", choices=lvl_choices)
                 if lvl_id:
-                    run_queue(model, [(selected_bench, lvl_id)], host, force=True)
+                    start_run(model, [(selected_bench, lvl_id)], host, force=True)
 
         elif action == "run_force_all":
             confirm = questionary.confirm(
@@ -422,7 +499,7 @@ def main_menu(model: Model, host: HostConfig) -> None:
                 for b in REGISTRY:
                     for level in b.levels:
                         queue.append((b, level.id))
-                run_queue(model, queue, host, force=True)
+                start_run(model, queue, host, force=True)
             else:
                 console.print("[dim]Action cancelled.[/dim]")
 

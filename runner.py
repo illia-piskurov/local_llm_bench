@@ -30,9 +30,6 @@ from storage import (
     is_infra_failure,
 )
 
-# A truncated generation is retried with a doubled token budget, up to this cap.
-MAX_TOKENS_RETRY_CAP = 65536
-
 ROOT = Path(__file__).parent
 _default_console = Console(legacy_windows=False)
 _default_db: Database | None = None
@@ -78,7 +75,7 @@ def get_default_run_store() -> RunStore:
 
 
 class GenerationTruncatedError(Exception):
-    """The model output was cut off even after retrying with a larger token budget.
+    """The model output was cut off (token limit, context window, or no final answer).
 
     This is a harness/budget limitation, not a code defect, so no tests are run on the output.
     """
@@ -92,39 +89,21 @@ def now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def _generate_with_retry(
+def _generate(
     model_key: str,
     messages: list[dict],
     gen_config: GenerationConfig | None,
-    console: Console,
 ) -> lmstudio.ModelResponse:
-    """Queries the model, retrying with a doubled token budget while the output is truncated.
+    """Queries the model once; a truncated reply is not retried with a larger budget, it scores zero.
 
-    Without an explicit budget (LM Studio, where length is governed by the model's own preset) a retry could not
-    change anything, so a truncated reply is reported right away instead of being generated again.
+    Generation on a local machine is slow, so the first attempt is the only one: the token limit (when one is set,
+    e.g. the Ollama default) and the context length configured in the server's model settings decide the outcome.
     """
     cfg = lmstudio.resolve_for_backend(replace(gen_config) if gen_config else GenerationConfig())
-    while True:
-        response = lmstudio.ask_model(model_key, messages, config=cfg)
-        if not response.truncated:
-            return response
-        if cfg.max_tokens is None:
-            raise GenerationTruncatedError(
-                f"{response.truncated_reason}; raise the context length / max tokens in the server's model settings",
-                response,
-            )
-        next_budget = cfg.max_tokens * 2
-        if next_budget > MAX_TOKENS_RETRY_CAP:
-            raise GenerationTruncatedError(
-                f"{response.truncated_reason}; still truncated at max_tokens={cfg.max_tokens} "
-                f"(retry cap {MAX_TOKENS_RETRY_CAP})",
-                response,
-            )
-        console.print(
-            f"    [yellow]Output truncated ({response.truncated_reason}); "
-            f"retrying with max_tokens={next_budget}[/yellow]"
-        )
-        cfg = replace(cfg, max_tokens=next_budget, timeout_seconds=cfg.timeout_seconds * 2)
+    response = lmstudio.ask_model(model_key, messages, config=cfg)
+    if response.truncated:
+        raise GenerationTruncatedError(str(response.truncated_reason), response)
+    return response
 
 
 def ensure_level_answer(
@@ -193,7 +172,7 @@ def ensure_level_answer(
     messages.append({"role": "user", "content": level.prompt})
 
     try:
-        response = _generate_with_retry(model.key, messages, gen_config, console)
+        response = _generate(model.key, messages, gen_config)
     except GenerationTruncatedError as e:
         # Keep the partial output for inspection, but never leave it behind as a runnable answer.
         if e.response is not None:
@@ -421,7 +400,7 @@ def run_queue(
 
     gen_params = cfg.to_dict()
     gen_params["artifact"] = art_info.to_dict()
-    gen_params.update(lmstudio.backend_generation_params())
+    gen_params.update(lmstudio.backend_generation_params(cfg))
     gen_params["suite_hash"] = suite_h
 
     run = run_store.create(

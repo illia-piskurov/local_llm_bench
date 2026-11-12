@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:1b",
+  "created_at": "2026-11-11T11:21:04.167075Z",
+  "message": {
+    "role": "assistant",
+    "content": "```lua\n-- Global table for execution statuses\nlocal BT = {}\n\n-- Node for action\nlocal function BT.Action(ctx)\n  if ctx == \"1\" then\n    return BT.SUCCESS\n  end\n  return BT.FAILURE\nend\n\n-- Node for condition check\nlocal function BT.Condition(ctx)\n  if ctx == \"1\" then\n    return BT.FAILURE\n  end\n  return BT.SUCCESS\nend\n\n-- Node for sequence\nlocal function BT.Sequence(children)\n  for i, child in ipairs(children) do\n    if child == BT.FAILURE then\n      return BT.FAILURE\n    end\n    return BT.RUNNING\n  end\nend\n\n-- Node for selector\nlocal function BT.Selector(children)\n  for i, child in ipairs(children) do\n    if child == BT.FAILURE then\n      return BT.FAILURE\n    end\n    return BT.RUNNING\n  end\nend\n\n-- Reactive memory board `BT.Blackboard`\nlocal BT = {\n  Blackboard = {\n    new = function(key, default = nil)\n      bb = {\n        get = function(key, default)\n          bb:get(key, default)\n          return default\n        end,\n        set = function(key, value)\n          bb:set(key, value)\n          bb:watch(key, function(key, new_value, old_value)\n            bb:watch(key, key, new_value, old_value)\n          end)\n          return\n        end,\n        watch = function(key, callback, old_value)\n          bb:watch(key, callback, old_value)\n          return\n        end,\n      )\n      return bb\n    end,\n    default = nil\n  },\n  RunNING = function(ctx)\n    return BT.RUNNING\n  end,\n  Reset = function(ctx)\n    return BT.Reset()\n  end,\n}\n\n-- Decorators (single-child nodes)\nlocal function BT.Inverter(child)\n  if child == BT.FAILURE then\n    return BT.FAILURE\n  end\n  return BT.SUCCESS\nend\n\nlocal function BT.Cooldown(child, ticks)\n  if child == BT.SUCCESS then\n    return BT.FAILURE\n  end\n  return BT.RUNNING\nend\n\n-- Example usage (for testing)\n-- Example:\n-- BT.Action(\"1\")\n-- BT.Action(\"2\")\n-- BT.Action(\"3\")\n-- BT.Action(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Condition(\"1\")\n-- BT.Condition(\"2\")\n-- BT.Condition(\"3\")\n-- BT.Condition(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Sequence([BT.Action(\"1\"), BT.Action(\"2\")])\n-- BT.Action(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Selector([BT.Action(\"1\"), BT.Action(\"2\")])\n-- BT.Action(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Action(\"1\")\n-- BT.Action(\"2\")\n-- BT.Action(\"3\")\n-- BT.Action(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Condition(\"1\")\n-- BT.Condition(\"2\")\n-- BT.Condition(\"3\")\n-- BT.Condition(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Sequence([BT.Action(\"1\"), BT.Action(\"2\")])\n-- BT.Action(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Selector([BT.Action(\"1\"), BT.Action(\"2\")])\n-- BT.Action(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Action(\"1\")\n-- BT.Action(\"2\")\n-- BT.Action(\"3\")\n-- BT.Action(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Condition(\"1\")\n-- BT.Condition(\"2\")\n-- BT.Condition(\"3\")\n-- BT.Condition(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Sequence([BT.Action(\"1\"), BT.Action(\"2\")])\n-- BT.Action(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Selector([BT.Action(\"1\"), BT.Action(\"2\")])\n-- BT.Action(\"1\") -- Should return BT.FAILURE\n\n-- Example:\n-- BT.Action(\"1\")\n-- BT.Action(\"2\")\n-- BT.Action(\"3\")\n-- BT.Action(\"1\") -- Should return BT.FAILURE\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 11563939083,
+  "load_duration": 555708,
+  "prompt_eval_count": 1603,
+  "prompt_eval_cached_count": 1272,
+  "prompt_eval_duration": 242093000,
+  "eval_count": 1051,
+  "eval_duration": 11312142000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1603,
+    "total_output_tokens": 1051,
+    "tokens_per_second": 92.9090175848217,
+    "time_to_first_token_seconds": 0.242093,
+    "model_load_time_seconds": 0.000555708
+  }
+}

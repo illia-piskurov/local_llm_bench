@@ -1,0 +1,27 @@
+```python
+def run(program: str) -> list[str]:
+    output = []
+    try:
+        if "SET" in program:
+            key, value = program.split(" ", 1)
+            output.append(f"SET {key} {value}")
+        elif "GET" in program:
+            key = program.split(" ", 1)[1].strip()
+            output.append(f"GET {key}")
+        elif "DELETE" in program:
+            if key in program:
+                output.append("DELETE")
+            else:
+                output.append("NO")
+        elif "BEGIN" in program:
+            output.append("NO TRANSACTION")
+        elif "COMMIT" in program:
+            output.append("NO TRANSACTION")
+        elif "ROLLBACK" in program:
+            output.append("NO TRANSACTION")
+        else:
+            output.append("NO")
+    except Exception:
+        output.append("NO")
+    return output
+```

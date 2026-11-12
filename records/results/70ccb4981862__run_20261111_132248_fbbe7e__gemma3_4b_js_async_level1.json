@@ -1,0 +1,17 @@
+{
+  "run_id": "run_20261111_132248_fbbe7e",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:4b",
+  "benchmark": "js_async",
+  "level": "level1",
+  "tested_at": "2026-11-11 13:32:15",
+  "passed": 4,
+  "total": 7,
+  "failures": [
+    "concurrency_limit: assertion returned False",
+    "concurrency_as_number: assertion returned False",
+    "index_passed: assertion returned False"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

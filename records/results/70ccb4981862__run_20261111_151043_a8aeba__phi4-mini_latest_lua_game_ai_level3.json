@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_151043_a8aeba",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "lua_game_ai",
+  "level": "level3",
+  "tested_at": "2026-11-11 15:16:11",
+  "passed": 0,
+  "total": 16,
+  "failures": [
+    "Lua syntax error: [string \"<python>\"]:1: attempt to index a nil value (global 'BT')"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

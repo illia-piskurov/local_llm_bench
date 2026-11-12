@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-11 14:29:34",
+  "passed": 6,
+  "total": 10,
+  "failures": [
+    "simple_chain: invalid topological order: ['c', 'b', 'a']",
+    "diamond: invalid topological order: ['d', 'b', 'c', 'a']",
+    "multiple_roots: invalid topological order: ['d', 'c', 'a', 'b']",
+    "wide_graph: invalid topological order: ['deploy', 'package', 'test', 'lint', 'compile']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

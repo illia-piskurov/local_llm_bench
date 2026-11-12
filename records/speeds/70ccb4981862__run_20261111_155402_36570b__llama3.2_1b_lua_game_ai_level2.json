@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "lua_game_ai",
+  "level": "level2",
+  "tested_at": "2026-11-11 16:05:15",
+  "stats": {
+    "input_tokens": 1189,
+    "total_output_tokens": 739,
+    "reasoning_output_tokens": null,
+    "tokens_per_second": 53.68937940526262,
+    "time_to_first_token_seconds": 0.547993,
+    "model_load_time_seconds": 0.000833708
+  }
+}

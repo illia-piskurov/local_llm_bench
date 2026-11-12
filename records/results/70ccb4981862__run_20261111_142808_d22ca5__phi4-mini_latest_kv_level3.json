@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "kv",
+  "level": "level3",
+  "tested_at": "2026-11-11 14:31:59",
+  "passed": 0,
+  "total": 30,
+  "failures": [
+    "failed to load solution: Syntax error in solution: unterminated triple-quoted string literal (detected at line 107) (<unknown>, line 106)"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

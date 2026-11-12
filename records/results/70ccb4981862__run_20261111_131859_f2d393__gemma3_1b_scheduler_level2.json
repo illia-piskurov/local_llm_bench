@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261111_131859_f2d393",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:1b",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-11 13:19:32",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception/timeout: TypeError: object of type 'int' has no len()",
+    "simple_chain: unexpected exception/timeout: TypeError: object of type 'int' has no len()",
+    "diamond_pick_longer_branch: unexpected exception/timeout: TypeError: object of type 'int' has no len()",
+    "independent_tasks: unexpected exception/timeout: TypeError: object of type 'int' has no len()",
+    "wide_graph: unexpected exception/timeout: TypeError: object of type 'int' has no len()"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

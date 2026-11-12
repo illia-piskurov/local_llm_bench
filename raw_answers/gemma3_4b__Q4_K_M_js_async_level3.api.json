@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T12:23:34.785469Z",
+  "message": {
+    "role": "assistant",
+    "content": "```javascript\nasync function pMap(items, mapper, options) {\n  if (!items || items.length === 0) {\n    return [];\n  }\n\n  const concurrency = options?.concurrency ?? 1;\n  const running = new Set();\n  const results = new Array(items.length);\n  let currentIndex = 0;\n\n  return new Promise((resolve, reject) => {\n    const executeTask = async (index, item) => {\n      const timeoutMs = options?.timeoutMs ?? 0;\n      let retries = options?.retries ?? 0;\n      const signal = options?.signal;\n      let settled = options?.settled ?? false;\n\n      const attempt = async (retryNum) => {\n        if (signal && signal.aborted) {\n          reject(signal.reason || new Error(\"Aborted\"));\n          return;\n        }\n\n        if (settled) {\n          if (timeoutMs > 0) {\n            const timeout = setTimeout(() => {\n              console.log(`Task ${index} timed out after ${timeoutMs}ms`);\n              running.delete(index);\n              if (retries > 0) {\n                retries--;\n                setTimeout(() => attempt(retries + 1), options?.backoffMs ?? 0);\n              } else {\n                reject(new Error(`Task ${index} failed after ${retryNum} retries`));\n              }\n            }, timeoutMs);\n            await Promise.race([mapper(item, index), timeout]);\n            clearTimeout(timeout);\n          } else {\n            try {\n              const result = await mapper(item, index);\n              results[index] = { status: 'fulfilled', value: result };\n              running.delete(index);\n              if (currentIndex < items.length) {\n                executeTask(currentIndex, items[currentIndex]);\n              }\n              resolve(results);\n            } catch (error) {\n              if (retries > 0) {\n                retries--;\n                setTimeout(() => attempt(retries + 1), options?.backoffMs ?? 0);\n              } else {\n                results[index] = { status: 'rejected', reason: error };\n                resolve(results);\n              }\n            }\n          }\n        } else {\n          if (timeoutMs > 0) {\n            const timeout = setTimeout(() => {\n              console.log(`Task ${index} timed out after ${timeoutMs}ms`);\n              running.delete(index);\n              if (retries > 0) {\n                retries--;\n                setTimeout(() => attempt(retries + 1), options?.backoffMs ?? 0);\n              } else {\n                reject(new Error(`Task ${index} failed after ${retryNum} retries`));\n              }\n            }, timeoutMs);\n            await Promise.race([mapper(item, index), timeout]);\n            clearTimeout(timeout);\n          } else {\n            try {\n              const result = await mapper(item, index);\n              results[index] = { status: 'fulfilled', value: result };\n              running.delete(index);\n              if (currentIndex < items.length) {\n                executeTask(currentIndex, items[currentIndex]);\n              }\n              resolve(results);\n            } catch (error) {\n              if (retries > 0) {\n                retries--;\n                setTimeout(() => attempt(retries + 1), options?.backoffMs ?? 0);\n              } else {\n                results[index] = { status: 'rejected', reason: error };\n                resolve(results);\n              }\n            }\n          }\n        }\n      };\n\n      attempt(retries + 1);\n    };\n\n    for (let i = 0; i < items.length; i++) {\n      executeTask(i, items[i]);\n    }\n  });\n}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 27939011666,
+  "load_duration": 1003750,
+  "prompt_eval_count": 1013,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 2657196000,
+  "eval_count": 874,
+  "eval_duration": 25236258000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1013,
+    "total_output_tokens": 874,
+    "tokens_per_second": 34.63270980982997,
+    "time_to_first_token_seconds": 2.657196,
+    "model_load_time_seconds": 0.00100375
+  }
+}

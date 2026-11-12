@@ -1,0 +1,18 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "sql",
+  "level": "level3",
+  "tested_at": "2026-11-11 15:58:10",
+  "passed": 0,
+  "total": 4,
+  "failures": [
+    "select_expression_alias: exception/timeout: TypeError: join expects a list of str/bytes objects consistent with self object",
+    "having_clause: exception/timeout: TypeError: join expects a list of str/bytes objects consistent with self object",
+    "where_subquery_in: exception/timeout: ValueError: need more than 2 values to unpack",
+    "subquery_with_parent_params_order: exception/timeout: ValueError: need more than 2 values to unpack"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

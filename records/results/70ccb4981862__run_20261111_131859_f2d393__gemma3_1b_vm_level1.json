@@ -1,0 +1,32 @@
+{
+  "run_id": "run_20261111_131859_f2d393",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:1b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-11 13:19:07",
+  "passed": 0,
+  "total": 18,
+  "failures": [
+    "push_print: expected ['5'], got ['None']",
+    "add: expected ['5'], got ['None']",
+    "sub_order: expected ['7'], got ['None']",
+    "mul: expected ['24'], got ['None']",
+    "div_order: expected ['5'], got ['None']",
+    "div_truncate: expected ['3'], got ['None']",
+    "div_by_zero: expected error, but execution succeeded (None)",
+    "dup: expected ['18'], got ['None']",
+    "swap: expected ['1'], got ['None']",
+    "pop: expected ['1'], got ['None']",
+    "comments_and_blank_lines: expected ['7'], got ['None']",
+    "multiple_prints: expected ['1', '2', '3'], got ['None']",
+    "print_does_not_pop: expected ['5', '5'], got ['None']",
+    "negative_numbers: expected ['2'], got ['None']",
+    "stack_underflow_add: expected error, but execution succeeded (None)",
+    "stack_underflow_pop: expected error, but execution succeeded (None)",
+    "empty_program: expected [], got ['None']",
+    "complex_chain: expected ['10'], got ['None']"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,728 @@
+{
+  "id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model_key": "llama3.2:1b",
+  "model_name": "llama3.2:1b",
+  "quantization": "Q8_0",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 10000,
+    "artifact": {
+      "key": "llama3.2:1b",
+      "display_name": "llama3.2:1b",
+      "architecture": "llama",
+      "quantization": "Q8_0",
+      "quantization_bits": null,
+      "size_bytes": 1321098329,
+      "params_string": "1.2B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "1397641c2c92"
+  },
+  "suite_version": "537d00a (1397641c2c92)",
+  "started_at": "2026-11-11 15:54:02",
+  "completed_at": "2026-11-11 16:09:19",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:54:11",
+      "passed": 8,
+      "total": 18,
+      "failures": [
+        "sub_order: expected ['7'], got ['-7']",
+        "div_order: expected ['5'], got ['0']",
+        "div_truncate: expected ['3'], got ['0']",
+        "div_by_zero: expected error, but execution succeeded ([0])",
+        "swap: expected ['1'], got ['-1']",
+        "comments_and_blank_lines: unexpected exception/timeout: ValueError: need more than 0 values to unpack",
+        "multiple_prints: expected ['1', '2', '3'], got ['3']",
+        "print_does_not_pop: expected ['5', '5'], got ['5']",
+        "empty_program: unexpected exception/timeout: ValueError: need more than 0 values to unpack",
+        "complex_chain: expected ['10'], got ['-1']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:54:18",
+      "passed": 2,
+      "total": 27,
+      "failures": [
+        "add: expected ['5'], got ['2', '3']",
+        "sub_order: expected ['7'], got ['10', '3']",
+        "mul: expected ['24'], got ['4', '6']",
+        "div_order: expected ['5'], got ['20', '4']",
+        "div_truncate: expected ['3'], got ['7', '2']",
+        "div_by_zero: expected error, but execution succeeded ([5, 0])",
+        "dup: expected ['18'], got ['9', '9']",
+        "swap: expected ['1'], got ['2', '1']",
+        "pop: expected ['1'], got ['1', '2']",
+        "comments_and_blank_lines: unexpected exception/timeout: ValueError: need more than 0 values to unpack",
+        "multiple_prints: expected ['1', '2', '3'], got ['1', '2']",
+        "print_does_not_pop: expected ['5', '5'], got ['5']",
+        "negative_numbers: expected ['2'], got ['-3', '5']",
+        "stack_underflow_add: expected error, but execution succeeded ([1])",
+        "stack_underflow_pop: expected error, but execution succeeded ([])",
+        "empty_program: unexpected exception/timeout: ValueError: need more than 0 values to unpack",
+        "complex_chain: expected ['10'], got ['2', '3', '10', '6', '2']",
+        "unconditional_jump_skips_code: expected ['3'], got ['1', '999', '2']",
+        "jz_taken_when_zero: expected ['0'], got ['1', '0']",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: ZeroDivisionError: Division by zero: JZ zero",
+        "jnz_taken_when_nonzero: expected ['1'], got ['0', '1']",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: ZeroDivisionError: Division by zero: JNZ nz",
+        "countdown_loop: unexpected exception/timeout: ValueError: need more than 0 values to unpack",
+        "count_up_loop: unexpected exception/timeout: ValueError: need more than 0 values to unpack",
+        "jump_to_undefined_label: expected error, but execution succeeded ([1])"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:56:37",
+      "passed": 7,
+      "total": 37,
+      "failures": [
+        "push_print: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "add: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "sub_order: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "mul: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "div_order: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "div_truncate: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "dup: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "swap: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "pop: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "comments_and_blank_lines: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "multiple_prints: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "print_does_not_pop: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "negative_numbers: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "empty_program: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "complex_chain: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "unconditional_jump_skips_code: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "jz_taken_when_zero: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "countdown_loop: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "count_up_loop: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "call_ret_basic: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "call_ret_nested: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "comparison_eq_gt_lt: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "store_and_load: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "store_overwrite: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "recursive_factorial: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)",
+        "recursive_fibonacci: unexpected exception/timeout: WASM computation fuel limit exceeded (infinite loop)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:56:42",
+      "passed": 10,
+      "total": 10,
+      "failures": [],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:56:50",
+      "passed": 3,
+      "total": 6,
+      "failures": [
+        "simple_chain: expected 9, got 4",
+        "diamond_pick_longer_branch: expected 12, got 10",
+        "wide_graph: expected 19, got 10"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:56:55",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: unexpected exception: ValueError: need more than 1 values to unpack",
+        "dependency_unlocks_later: unexpected exception: ValueError: need more than 1 values to unpack",
+        "single_worker_duration_tiebreak: unexpected exception: ValueError: need more than 1 values to unpack",
+        "resource_limit_and_priority: unexpected exception: ValueError: too many values to unpack (expected 2)",
+        "simultaneous_unlocks: unexpected exception: ValueError: need more than 1 values to unpack",
+        "cycle_returns_none: unexpected exception: ValueError: need more than 1 values to unpack"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:57:07",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception: ValueError: need more than 1 values to unpack",
+        "parallel_tasks_reduce_makespan: unexpected exception: ValueError: need more than 1 values to unpack",
+        "dependencies_and_workers: unexpected exception: ValueError: need more than 1 values to unpack",
+        "critical_path_longer_than_worker_parallelism: unexpected exception: ValueError: need more than 1 values to unpack",
+        "wide_graph_with_unlocks: unexpected exception: ValueError: too many values to unpack (expected 2)",
+        "cycle_returns_none: unexpected exception: ValueError: need more than 1 values to unpack"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:57:12",
+      "passed": 1,
+      "total": 15,
+      "failures": [
+        "basic_set_get: expected ['10'], got []",
+        "get_missing: expected ['NULL'], got []",
+        "delete_then_get: expected ['NULL'], got []",
+        "delete_missing_key_noop: expected ['NULL'], got []",
+        "overwrite_set: expected ['2'], got []",
+        "commit_no_transaction: expected ['NO TRANSACTION'], got []",
+        "rollback_no_transaction: expected ['NO TRANSACTION'], got []",
+        "simple_transaction_commit: expected ['10'], got ['NO TRANSACTION']",
+        "simple_transaction_rollback: expected ['5'], got ['NO TRANSACTION']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['NO TRANSACTION']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['COMMIT', 'NO TRANSACTION']",
+        "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['COMMIT', 'NO TRANSACTION']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['NO TRANSACTION']",
+        "set_new_key_inside_transaction: expected ['100', '100'], got ['NO TRANSACTION']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:57:23",
+      "passed": 0,
+      "total": 25,
+      "failures": [
+        "basic_set_get: expected ['10'], got ['None']",
+        "get_missing: expected ['NULL'], got ['None']",
+        "delete_then_get: expected ['NULL'], got ['None']",
+        "delete_missing_key_noop: expected ['NULL'], got ['None']",
+        "overwrite_set: expected ['2'], got ['None']",
+        "commit_no_transaction: expected ['NO TRANSACTION'], got ['None']",
+        "rollback_no_transaction: expected ['NO TRANSACTION'], got ['None']",
+        "simple_transaction_commit: expected ['10'], got ['None']",
+        "simple_transaction_rollback: expected ['5'], got ['None']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['None']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['None']",
+        "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['None']",
+        "rollback_after_commit_is_no_transaction: expected ['NO TRANSACTION'], got ['None']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['None']",
+        "set_new_key_inside_transaction: expected ['100', '100'], got ['None']",
+        "count_basic: expected ['2'], got ['None']",
+        "count_zero: expected ['0'], got ['None']",
+        "count_respects_transaction: expected ['2', '1'], got ['None']",
+        "count_after_delete: expected ['1'], got ['None']",
+        "watch_set_new_key: expected ['WATCH a NULL -> 10'], got ['None']",
+        "watch_set_change: expected ['WATCH a 5 -> 10'], got ['None']",
+        "watch_no_change_no_notification: expected [], got ['None']",
+        "watch_delete: expected ['WATCH a 5 -> NULL'], got ['None']",
+        "watch_unrelated_key_silent: expected [], got ['None']",
+        "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got ['None']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:57:36",
+      "passed": 0,
+      "total": 30,
+      "failures": [
+        "basic_set_get: expected ['10'], got ['None']",
+        "get_missing: expected ['NULL'], got ['None']",
+        "delete_then_get: expected ['NULL'], got ['None']",
+        "delete_missing_key_noop: expected ['NULL'], got ['None']",
+        "overwrite_set: expected ['2'], got ['None']",
+        "commit_no_transaction: expected ['NO TRANSACTION'], got ['None']",
+        "rollback_no_transaction: expected ['NO TRANSACTION'], got ['None']",
+        "simple_transaction_commit: expected ['10'], got ['None']",
+        "simple_transaction_rollback: expected ['5'], got ['None']",
+        "rollback_restores_delete: expected ['NULL', '5'], got ['None']",
+        "nested_transactions: expected ['20', '10', 'NULL'], got ['None']",
+        "nested_commit_propagates_to_outer_only: expected ['2', '2'], got ['None']",
+        "rollback_after_commit_is_no_transaction: expected ['NO TRANSACTION'], got ['None']",
+        "multiple_keys_independent: expected ['2', '1', '2'], got ['None']",
+        "set_new_key_inside_transaction: expected ['100', '100'], got ['None']",
+        "count_basic: expected ['2'], got ['None']",
+        "count_zero: expected ['0'], got ['None']",
+        "count_respects_transaction: expected ['2', '1'], got ['None']",
+        "count_after_delete: expected ['1'], got ['None']",
+        "watch_set_new_key: expected ['WATCH a NULL -> 10'], got ['None']",
+        "watch_set_change: expected ['WATCH a 5 -> 10'], got ['None']",
+        "watch_no_change_no_notification: expected [], got ['None']",
+        "watch_delete: expected ['WATCH a 5 -> NULL'], got ['None']",
+        "watch_unrelated_key_silent: expected [], got ['None']",
+        "watch_inside_transaction_fires: expected ['WATCH a NULL -> 1'], got ['None']",
+        "snapshot_restores_full_state: expected ['2', '2'], got ['None']",
+        "snapshot_is_deep_copied: expected ['1', '2'], got ['None']",
+        "restore_preserves_open_transactions: expected ['1'], got ['None']",
+        "restore_keeps_watch_registrations: expected ['WATCH a NULL -> 1', 'WATCH a 1 -> 2', 'WATCH a 1 -> 3'], got ['None']",
+        "snapshot_inside_nested_transactions: expected ['1', '2', '1', '2'], got ['None']"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:57:43",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "simple_select_all: SQL: expected 'SELECT * FROM products', got 'SELECT FROM products'",
+        "simple_where_equality: exception/timeout: ValueError: need more than 2 values to unpack",
+        "where_and_or_nested: exception/timeout: ValueError: need more than 2 values to unpack",
+        "order_by_limit_offset: SQL: expected 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', got 'SELECT FROM articles ORDER BY dir fielddir field LIMIT 10 OFFSET 20'",
+        "multiple_and_conditions: exception/timeout: ValueError: need more than 2 values to unpack"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:57:53",
+      "passed": 0,
+      "total": 5,
+      "failures": [
+        "left_join_with_group_by: exception/timeout: TypeError: unsupported types for __add__: 'str', 'dict'",
+        "multiple_joins_inner_and_left: exception/timeout: TypeError: unsupported types for __add__: 'str', 'dict'",
+        "where_in_operator: exception/timeout: ValueError: need more than 2 values to unpack",
+        "where_is_null_and_like: exception/timeout: ValueError: need more than 2 values to unpack",
+        "where_is_not_null: exception/timeout: ValueError: need more than 2 values to unpack"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:58:10",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "select_expression_alias: exception/timeout: TypeError: join expects a list of str/bytes objects consistent with self object",
+        "having_clause: exception/timeout: TypeError: join expects a list of str/bytes objects consistent with self object",
+        "where_subquery_in: exception/timeout: ValueError: need more than 2 values to unpack",
+        "subquery_with_parent_params_order: exception/timeout: ValueError: need more than 2 values to unpack"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:58:13",
+      "passed": 0,
+      "total": 4,
+      "failures": [
+        "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/llama3.2_1b__Q8_0_c_framing_level1.c:3:23: error: use of undeclared identifier 'BUFFER_SIZE'\n    3 | static uint8_t buffer[BUFFER_SIZE];\n      |                       ^~~~~~~~~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/llama3.2_1b__Q8_0_c_framing_level1.c:33:12: error: use of undeclared identifier 'BUFFER_SIZE'\n   33 |     return BUFFER_SIZE - buffer[0];\n      |            ^~~~~~~~~~~\n2 errors generated.\n"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:01:49",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[TRUNCATED] c_framing/level2: server reported finish_reason=length"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level3",
+      "tested_at": "2026-11-11 16:04:38",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[TRUNCATED] c_framing/level3: server reported finish_reason=length"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:04:41",
+      "passed": 1,
+      "total": 7,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "concurrency_default_one: assertion returned False",
+        "index_passed: assertion returned False",
+        "mapper_rejection: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:04:46",
+      "passed": 1,
+      "total": 12,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "concurrency_default_one: assertion returned False",
+        "index_passed: assertion returned False",
+        "mapper_rejection: assertion returned False",
+        "retry_transient_failure: assertion returned False",
+        "retry_exhausted: assertion returned False",
+        "exponential_backoff: assertion returned False",
+        "task_timeout: assertion returned False",
+        "timeout_triggers_retry: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-11 16:04:53",
+      "passed": 1,
+      "total": 17,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "concurrency_default_one: assertion returned False",
+        "index_passed: assertion returned False",
+        "mapper_rejection: assertion returned False",
+        "retry_transient_failure: assertion returned False",
+        "retry_exhausted: assertion returned False",
+        "exponential_backoff: assertion returned False",
+        "task_timeout: assertion returned False",
+        "timeout_triggers_retry: assertion returned False",
+        "already_aborted_signal: assertion returned False",
+        "mid_flight_abort: assertion returned False",
+        "settled_all_success: assertion returned False",
+        "settled_mixed_failures: assertion returned False",
+        "settled_with_retries: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:05:01",
+      "passed": 0,
+      "total": 7,
+      "failures": [
+        "Lua syntax error: error loading code: [string \"<python>\"]:4: '(' expected near ':'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:05:15",
+      "passed": 0,
+      "total": 12,
+      "failures": [
+        "Lua syntax error: error loading code: [string \"<python>\"]:7: function arguments expected near 'watchers'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-11-11 16:09:19",
+      "passed": 0,
+      "total": 0,
+      "failures": [
+        "[TRUNCATED] lua_game_ai/level3: server reported finish_reason=length"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:54:10",
+      "stats": {
+        "input_tokens": 290,
+        "total_output_tokens": 483,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 69.44829868922447,
+        "time_to_first_token_seconds": 0.20966,
+        "model_load_time_seconds": 1.287536708
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:54:16",
+      "stats": {
+        "input_tokens": 909,
+        "total_output_tokens": 338,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 70.88086248168999,
+        "time_to_first_token_seconds": 0.135022,
+        "model_load_time_seconds": 0.001332542
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:56:33",
+      "stats": {
+        "input_tokens": 771,
+        "total_output_tokens": 8220,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 61.114261990425746,
+        "time_to_first_token_seconds": 0.55482,
+        "model_load_time_seconds": 0.0013435
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:56:40",
+      "stats": {
+        "input_tokens": 187,
+        "total_output_tokens": 184,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 65.76137555642524,
+        "time_to_first_token_seconds": 0.162062,
+        "model_load_time_seconds": 0.001370042
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:56:49",
+      "stats": {
+        "input_tokens": 499,
+        "total_output_tokens": 392,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 54.9602309451337,
+        "time_to_first_token_seconds": 0.138843,
+        "model_load_time_seconds": 0.000639209
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:56:54",
+      "stats": {
+        "input_tokens": 233,
+        "total_output_tokens": 232,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 59.370964629747824,
+        "time_to_first_token_seconds": 0.181573,
+        "model_load_time_seconds": 0.001612458
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:57:05",
+      "stats": {
+        "input_tokens": 638,
+        "total_output_tokens": 569,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 60.47122494296682,
+        "time_to_first_token_seconds": 0.177796,
+        "model_load_time_seconds": 0.00143825
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:57:11",
+      "stats": {
+        "input_tokens": 335,
+        "total_output_tokens": 208,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 58.789512629287465,
+        "time_to_first_token_seconds": 0.259190999,
+        "model_load_time_seconds": 0.001015958
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:57:21",
+      "stats": {
+        "input_tokens": 745,
+        "total_output_tokens": 475,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 57.099121791465116,
+        "time_to_first_token_seconds": 0.186591,
+        "model_load_time_seconds": 0.00143025
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:57:33",
+      "stats": {
+        "input_tokens": 934,
+        "total_output_tokens": 454,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 54.09925807753162,
+        "time_to_first_token_seconds": 0.799591,
+        "model_load_time_seconds": 0.001439833
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:57:42",
+      "stats": {
+        "input_tokens": 362,
+        "total_output_tokens": 288,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 51.800834425107865,
+        "time_to_first_token_seconds": 0.285898,
+        "model_load_time_seconds": 0.001288
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:57:52",
+      "stats": {
+        "input_tokens": 897,
+        "total_output_tokens": 517,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 58.44143585973287,
+        "time_to_first_token_seconds": 0.354719,
+        "model_load_time_seconds": 0.000821
+      }
+    },
+    {
+      "benchmark": "sql",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:58:09",
+      "stats": {
+        "input_tokens": 1021,
+        "total_output_tokens": 777,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 52.467048566457755,
+        "time_to_first_token_seconds": 1.055782999,
+        "model_load_time_seconds": 0.001431
+      }
+    },
+    {
+      "benchmark": "c_framing",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:58:13",
+      "stats": {
+        "input_tokens": 252,
+        "total_output_tokens": 173,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 61.363533177453405,
+        "time_to_first_token_seconds": 0.234345,
+        "model_load_time_seconds": 0.001060833
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:04:41",
+      "stats": {
+        "input_tokens": 232,
+        "total_output_tokens": 137,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 59.843724883108166,
+        "time_to_first_token_seconds": 0.380228,
+        "model_load_time_seconds": 0.000788417
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:04:46",
+      "stats": {
+        "input_tokens": 608,
+        "total_output_tokens": 238,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 57.43160089380946,
+        "time_to_first_token_seconds": 0.448813,
+        "model_load_time_seconds": 0.001061791
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-11 16:04:52",
+      "stats": {
+        "input_tokens": 745,
+        "total_output_tokens": 287,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 53.36103893013162,
+        "time_to_first_token_seconds": 1.167925,
+        "model_load_time_seconds": 0.00082325
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-11 16:05:00",
+      "stats": {
+        "input_tokens": 500,
+        "total_output_tokens": 392,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 55.376727026357344,
+        "time_to_first_token_seconds": 0.70812,
+        "model_load_time_seconds": 0.000952375
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-11 16:05:15",
+      "stats": {
+        "input_tokens": 1189,
+        "total_output_tokens": 739,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 53.68937940526262,
+        "time_to_first_token_seconds": 0.547993,
+        "model_load_time_seconds": 0.000833708
+      }
+    }
+  ]
+}

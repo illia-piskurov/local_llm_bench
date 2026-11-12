@@ -1,0 +1,27 @@
+We are going to implement a topological sort using Kahn's algorithm.
+ We need to check for cycles. If a cycle is detected, return None.
+
+ Steps:
+ 1. Compute in-degrees for each task.
+ 2. Initialize a queue with tasks that have zero in-degree.
+ 3. Process the queue: remove a task, add its dependencies to the queue (if any), and decrease in-degree of the removed task.
+ 4. If at any point the queue is empty and there is a cycle, return None.
+ 5. Otherwise, return the sorted list of tasks.
+
+ However, note: the problem says "return a list of all task names in an order where every task appears strictly after all of its dependencies". That is topological sort.
+
+ But also, if the dependency graph contains a cycle, return None.
+
+ We need to implement a function that returns a list or None.
+
+ Let's plan the code.
+
+ We'll use a dictionary for in-degrees and a queue for tasks with zero in-degree.
+
+ We'll also need a set to detect cycles.
+
+ We'll iterate until the queue is empty or a cycle is detected.
+
+ The code should be in a single Python file.
+
+ Let's write the code.

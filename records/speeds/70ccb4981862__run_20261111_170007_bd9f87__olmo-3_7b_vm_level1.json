@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261111_170007_bd9f87",
+  "host_id": "70ccb4981862",
+  "model": "olmo-3:7b",
+  "benchmark": "vm",
+  "level": "level1",
+  "tested_at": "2026-11-11 17:18:49",
+  "stats": {
+    "input_tokens": 321,
+    "total_output_tokens": 9214,
+    "reasoning_output_tokens": 8624,
+    "tokens_per_second": 11.193042274696941,
+    "time_to_first_token_seconds": 0.227232,
+    "model_load_time_seconds": 0.006724709
+  }
+}

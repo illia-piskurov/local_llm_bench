@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "priority_scheduler",
+  "level": "level1",
+  "tested_at": "2026-11-11 14:30:03",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "priority_beats_name_order: unexpected exception: NameError: local variable referenced before assignment",
+    "dependency_unlocks_later: unexpected exception: NameError: local variable referenced before assignment",
+    "single_worker_duration_tiebreak: unexpected exception: NameError: local variable referenced before assignment",
+    "resource_limit_and_priority: unexpected exception: NameError: local variable referenced before assignment",
+    "simultaneous_unlocks: unexpected exception: NameError: local variable referenced before assignment",
+    "cycle_returns_none: unexpected exception: NameError: local variable referenced before assignment"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,51 @@
+async function pMap(items, mapper, options = { concurrency: 1 }) {
+  const { concurrency } = options;
+  if (items.length === 0) return [];
+  const results = new Array(items.length);
+  const executing = new Set();
+  const queue = [];
+
+  const enqueue = (index) => {
+    if (index < items.length) {
+      queue.push(index);
+    }
+  };
+
+  const processNext = async () => {
+    while (queue.length && executing.size < concurrency) {
+      const currentIndex = queue.shift();
+      executing.add(currentIndex);
+      const result = await mapper(items[currentIndex], currentIndex, () => {
+        executing.delete(currentIndex);
+        enqueue(currentIndex + 1);
+        if (currentIndex === items.length - 1) {
+          enqueue(currentIndex + 1);
+        }
+      });
+      results[currentIndex] = result;
+    }
+  };
+
+  enqueue(0);
+  processNext();
+
+  return new Promise((resolve, reject) => {
+    const wrappedProcessNext = async () => {
+      try {
+        await processNext();
+        resolve(results);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    const cleanup = () => {
+      while (executing.size) {
+        processNext();
+      }
+      process.nextTick(cleanup);
+    };
+
+    cleanup();
+  });
+}

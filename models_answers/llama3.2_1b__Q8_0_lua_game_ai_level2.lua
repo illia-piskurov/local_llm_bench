@@ -1,0 +1,118 @@
+local BT = {}
+
+function BT.Blackboard.new()
+    local bb = {}
+    setmetatable(bb, { __index = BT })
+    bb.__index = BT
+    bb:register watchers = {}
+    bb:register callbacks = {}
+    bb:register watchers:watch = {}
+    bb:register callbacks:watch = {}
+    return bb
+end
+
+function BT.Blackboard:get(key, default)
+    if bb:has(key) then
+        return bb:get(key, default)
+    else
+        return default
+    end
+end
+
+function BT.Blackboard:set(key, value)
+    bb:watch(key, function(key, new_value, old_value)
+        if key == 'success' then
+            if new_value == BT.SUCCESS then
+                return
+            end
+        elseif key == 'failure' then
+            if new_value == BT.FAILURE then
+                return
+            end
+        elseif key == 'running' then
+            if new_value == BT.RUNNING then
+                return
+            end
+        end
+    end)
+    bb:watch(key, function(key, new_value, old_value)
+        if key == 'success' then
+            if new_value == BT.SUCCESS then
+                return BT.SUCCESS
+            end
+        elseif key == 'failure' then
+            if new_value == BT.FAILURE then
+                return BT.FAILURE
+            end
+        elseif key == 'running' then
+            if new_value == BT.RUNNING then
+                return BT.RUNNING
+            end
+        end
+    end)
+    bb:register watchers[key] = new_value
+    bb:register callbacks[key] = function(key, new_value, old_value)
+        if key == 'success' then
+            return BT.SUCCESS
+        elseif key == 'failure' then
+            return BT.FAILURE
+        elseif key == 'running' then
+            return BT.RUNNING
+        end
+    end
+    bb:register callbacks[key] = function(key, new_value, old_value)
+        if key == 'success' then
+            return new_value
+        elseif key == 'failure' then
+            return new_value
+        elseif key == 'running' then
+            return old_value
+        end
+    end
+    return bb
+end
+
+function BT.Inverter(child)
+    local function node:tick(ctx)
+        if child:tick(ctx) == BT.SUCCESS then
+            return BT.FAILURE
+        elseif child:tick(ctx) == BT.FAILURE then
+            return BT.SUCCESS
+        elseif child:tick(ctx) == BT.RUNNING then
+            return BT.RUNNING
+        end
+    end
+    node:reset()
+    return child
+end
+
+function BT.Cooldown(child, ticks)
+    local function node:tick(ctx)
+        if child:tick(ctx) == BT.SUCCESS then
+            return BT.FAILURE
+        elseif child:tick(ctx) == BT.FAILURE then
+            return BT.SUCCESS
+        elseif child:tick(ctx) == BT.RUNNING then
+            return BT.RUNNING
+        end
+    end
+    node:reset()
+    child:cooldown(ticks)
+    return child
+end
+
+function BT.RegisterDecorator(child, decorator)
+    local function node:tick(ctx)
+        if decorator(node, ctx) then
+            return BT.SUCCESS
+        elseif decorator(node, ctx) == BT.FAILURE then
+            return BT.FAILURE
+        elseif decorator(node, ctx) == BT.RUNNING then
+            return BT.RUNNING
+        end
+    end
+    node:reset()
+    return decorator
+end
+
+return BT

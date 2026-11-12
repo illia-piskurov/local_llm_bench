@@ -1,0 +1,21 @@
+{
+  "run_id": "run_20261111_142229_ac78df",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:4b",
+  "benchmark": "lua_game_ai",
+  "level": "level1",
+  "tested_at": "2026-11-11 14:24:29",
+  "passed": 0,
+  "total": 7,
+  "failures": [
+    "action_and_condition: exception [string \"<python>\"]:3: attempt to call a table value (field 'Action')",
+    "sequence_all_success: exception [string \"<python>\"]:5: attempt to call a table value (field 'Action')",
+    "sequence_short_circuit_failure: exception [string \"<python>\"]:5: attempt to call a table value (field 'Action')",
+    "sequence_resumes_running_child: exception [string \"<python>\"]:6: attempt to call a table value (field 'Action')",
+    "selector_first_success: exception [string \"<python>\"]:5: attempt to call a table value (field 'Action')",
+    "selector_all_failure: exception [string \"<python>\"]:5: attempt to call a table value (field 'Action')",
+    "selector_resumes_running_child: exception [string \"<python>\"]:6: attempt to call a table value (field 'Action')"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

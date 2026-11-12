@@ -1,0 +1,26 @@
+{
+  "model": "phi4-mini:latest",
+  "created_at": "2026-11-11T13:16:11.083442Z",
+  "message": {
+    "role": "assistant",
+    "content": "```lua\nfunction BT.AsyncAction(coroutine_fn)\n    local co = nil\n    local waitTicks = 0\n    local tickCount = 0\n    local finished = false\n    local function tick(ctx)\n        if not finished then\n            if co and coroutine.status(co) ~= \"dead\" then\n                if waitTicks > 0 then\n                    waitTicks = waitTicks - 1\n                    return BT.RUNNING\n                else\n                    co = coroutine.resume(co, ctx)\n                    if co == \"yield\" and co.args[1] == \"WAIT_TICKS\" then\n                        waitTicks = tonumber(co.args[2])\n                        return BT.RUNNING\n                    end\n                end\n                finished = true\n            end\n            if finished and coroutine.status(co) == \"dead\" then\n                return co\n            end\n        end\n        return finished and coroutine.status(co) == \"dead\" and co or BT.FAILURE\n    end\n    function tick.reset()\n        if co then\n            coroutine.close(co)\n        end\n        co = nil\n        waitTicks = 0\n        tickCount = 0\n    end\n    return tick\nend\n\nfunction BT.Sequence(children)\n    local childrenCount = #children\n    local index = 1\n    local cooldownTicks = 0\n    local lastResult = BT.FAILURE\n    local childrenToReset = {}\n    local function tick(ctx)\n        if index > childrenCount then\n            return lastResult == BT.FAILURE and cooldownTicks > 0 and cooldownTicks > 1 or lastResult == BT.SUCCESS\n        end\n        local child = children[index]\n        local result = child(ctx)\n        if result == BT.FAILURE then\n            return result\n        elseif result == BT.RUNNING then\n            index = index + 1\n            return result\n        else\n            lastResult = result\n            index = index + 1\n            if result == BT.SUCCESS then\n                cooldownTicks = cooldownTicks + 1\n            else\n                cooldownTicks = 0\n            end\n            for _, child in ipairs(children) do\n                table.insert(childrenToReset, child)\n            end\n            return result\n        end\n    end\n    function tick.reset()\n        for _, child in ipairs(children) do\n            child.reset()\n        end\n        index = 1\n        cooldownTicks = 0\n        lastResult = BT.FAILURE\n        childrenToReset = {}\n    end\n    return tick\nend\n\nfunction BT.Selector(children)\n    local childrenCount = #children\n    local index = 1\n    local cooldownTicks = 0\n    local lastResult = BT.FAILURE\n    local childrenToReset = {}\n    local function tick(ctx)\n        if index > childrenCount then\n            return lastResult == BT.FAILURE and cooldownTicks > 0 and cooldownTicks > 1 or lastResult == BT.SUCCESS\n        end\n        local child = children[index]\n        local result = child(ctx)\n        if result == BT.SUCCESS then\n            return result\n        elseif result == BT.RUNNING then\n            index = index + 1\n            return result\n        end\n    end\n    function tick.reset()\n        for _, child in ipairs(children) do\n            child.reset()\n        end\n        index = 1\n        cooldownTicks = 0\n        lastResult = BT.FAILURE\n        childrenToReset = {}\n    end\n    return tick\nend\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 41449033125,
+  "load_duration": 1660625,
+  "prompt_eval_count": 1496,
+  "prompt_eval_cached_count": 1,
+  "prompt_eval_duration": 6853913000,
+  "eval_count": 722,
+  "eval_duration": 34448809000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1496,
+    "total_output_tokens": 722,
+    "tokens_per_second": 20.9586345931437,
+    "time_to_first_token_seconds": 6.853913,
+    "model_load_time_seconds": 0.001660625
+  }
+}

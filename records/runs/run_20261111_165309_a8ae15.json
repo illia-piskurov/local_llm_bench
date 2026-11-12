@@ -1,0 +1,36 @@
+{
+  "id": "run_20261111_165309_a8ae15",
+  "host_id": "70ccb4981862",
+  "model_key": "olmo-3:7b",
+  "model_name": "olmo-3:7b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 10000,
+    "artifact": {
+      "key": "olmo-3:7b",
+      "display_name": "olmo-3:7b",
+      "architecture": "olmo3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 4472011564,
+      "params_string": "7.3B",
+      "max_context_length": 65536,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "1397641c2c92"
+  },
+  "suite_version": "537d00a (1397641c2c92)",
+  "started_at": "2026-11-11 16:53:09",
+  "completed_at": "2026-11-11 16:54:24",
+  "status": "interrupted",
+  "results": [],
+  "speeds": []
+}

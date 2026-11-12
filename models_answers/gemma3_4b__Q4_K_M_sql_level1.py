@@ -1,0 +1,90 @@
+def compile_query(query: dict) -> dict:
+    """
+    Compiles a query AST tree to parameterized SQL.
+    """
+    table = query['table']
+    select = query.get('select', ['*'])
+    where = query.get('where')
+    orderBy = query.get('orderBy', [])
+    limit = query.get('limit')
+    offset = query.get('offset')
+
+    sql = f"SELECT {', '.join(select)} FROM {table}"
+    params = []
+
+    if where:
+        where_conditions = []
+        for cond in where:
+            if isinstance(cond, dict):
+                if 'AND' in cond:
+                    where_conditions.append(cond)
+                elif 'OR' in cond:
+                    where_conditions.append(cond)
+                else:
+                    where_conditions.append(cond)
+            else:
+                where_conditions.append(cond)
+
+        if where_conditions:
+            conditions = []
+            for cond in where_conditions:
+                field = list(cond.keys())[0]
+                value = cond[field]
+                
+                if isinstance(value, list):
+                    for v in value:
+                        conditions.append(f"{field} = '{v}'")
+                else:
+                    conditions.append(f"{field} = '{value}'")
+
+            if conditions:
+                sql += " WHERE " + " AND ".join(conditions)
+    
+    if orderBy:
+        order_by_clauses = []
+        for order_by in orderBy:
+            field = order_by['field']
+            dir = order_by.get('dir', 'ASC')
+            order_by_clauses.append(f"{field} {dir}")
+        sql += " ORDER BY " + ", ".join(order_by_clauses)
+
+    if limit:
+        sql += f" LIMIT {limit}"
+
+    if offset:
+        sql += f" OFFSET {offset}"
+
+    return {"sql": sql, "params": params}
+
+if __name__ == '__main__':
+    query1 = {
+        'table': 'users',
+        'select': ['id', 'name'],
+        'where': {
+            'id': 1,
+            'name': 'Alice',
+            'AND': [
+                {'age': 30, '>': 25},
+                {'city': 'New York', '=': 'New York'}
+            ]
+        }
+    }
+    result1 = compile_query(query1)
+    print(result1)
+
+    query2 = {
+        'table': 'products',
+        'select': ['*'],
+        'where': {
+            'price': {
+                'OR': [
+                    {'price': 100, '>': 50},
+                    {'price': 200, '<': 150}
+                ]
+            }
+        },
+        'orderBy': [{'name': 'ASC'}],
+        'limit': 10
+    }
+    result2 = compile_query(query2)
+    print(result2)

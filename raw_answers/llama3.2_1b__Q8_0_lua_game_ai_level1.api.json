@@ -1,0 +1,26 @@
+{
+  "model": "llama3.2:1b",
+  "created_at": "2026-11-11T14:05:00.916918Z",
+  "message": {
+    "role": "assistant",
+    "content": "```lua\nlocal BT = {}\n\nfunction BT.Action(fn)\n    local function node:tick(ctx)\n        if fn(ctx) then\n            return BT.SUCCESS\n        elseif fn(ctx) == BT.RUNNING then\n            return BT.RUNNING\n        else\n            return BT.FAILURE\n        end\n    end\n\n    node:reset()\n    return fn\nend\n\nfunction BT.Condition(predicate)\n    local function node:tick(ctx)\n        if predicate(ctx) then\n            return BT.SUCCESS\n        else\n            return BT.FAILURE\n        end\n    end\n\n    node:reset()\n    return predicate\nend\n\nfunction BT.Sequence(children)\n    local function node:tick(ctx)\n        for i, child in ipairs(children) do\n            if child:tick(ctx) == BT.FAILURE then\n                return BT.FAILURE\n            end\n        end\n        return BT.RUNNING\n    end\n\n    node:reset()\n    return function()\n        for i, child in ipairs(children) do\n            if child:tick(ctx) == BT.SUCCESS then\n                return BT.SUCCESS\n            end\n        end\n        return BT.FAILURE\n    end\nend\n\nfunction BT.Selector(children)\n    local function node:tick(ctx)\n        for i, child in ipairs(children) do\n            if child:tick(ctx) == BT.SUCCESS then\n                return BT.SUCCESS\n            elseif child:tick(ctx) == BT.RUNNING then\n                return BT.RUNNING\n            end\n        end\n        return BT.FAILURE\n    end\n\n    node:reset()\n    return function()\n        for i, child in ipairs(children) do\n            if child:tick(ctx) == BT.SUCCESS then\n                return BT.SUCCESS\n            elseif child:tick(ctx) == BT.RUNNING then\n                return BT.RUNNING\n            end\n        end\n        return BT.FAILURE\n    end\nend\n\nreturn BT\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 7804358416,
+  "load_duration": 952375,
+  "prompt_eval_count": 500,
+  "prompt_eval_cached_count": 20,
+  "prompt_eval_duration": 708120000,
+  "eval_count": 392,
+  "eval_duration": 7078786000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 500,
+    "total_output_tokens": 392,
+    "tokens_per_second": 55.376727026357344,
+    "time_to_first_token_seconds": 0.70812,
+    "model_load_time_seconds": 0.000952375
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_131859_f2d393",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:1b",
+  "benchmark": "js_async",
+  "level": "level2",
+  "tested_at": "2026-11-11 13:20:40",
+  "passed": 0,
+  "total": 12,
+  "failures": [
+    "JavaScript syntax error: SyntaxError: unexpected token in expression: ')'\n    at <input>:38\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

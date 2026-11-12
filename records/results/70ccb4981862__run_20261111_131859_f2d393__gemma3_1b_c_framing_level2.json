@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_131859_f2d393",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:1b",
+  "benchmark": "c_framing",
+  "level": "level2",
+  "tested_at": "2026-11-11 13:20:24",
+  "passed": 0,
+  "total": 8,
+  "failures": [
+    "C99 -> WASM compilation error: zig: warning: argument unused during compilation: '-nostartfiles' [-Wunused-command-line-argument]\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level2.c:14:9: error: call to undeclared function 'ringbuf_available'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   14 |     if (ringbuf_available() < BUFFER_SIZE) {\n      |         ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level2.c:17:5: error: call to undeclared function 'ringbuf_fill'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   17 |     ringbuf_fill(buffer, 0, BUFFER_SIZE);\n      |     ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level2.c:17:18: error: use of undeclared identifier 'buffer'\n   17 |     ringbuf_fill(buffer, 0, BUFFER_SIZE);\n      |                  ^~~~~~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level2.c:22:5: error: call to undeclared function 'ringbuf_available'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]\n   22 |     ringbuf_available() - 1;\n      |     ^\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level2.c:22:25: warning: expression result unused [-Wunused-value]\n   22 |     ringbuf_available() - 1;\n      |     ~~~~~~~~~~~~~~~~~~~ ^ ~\n/Users/illiapiskurov/Projects/local_llm_bench/models_answers/gemma3_1b__Q4_K_M_c_framing_level2.c:57:24: error: incompatible pointer to integer conversion assigning to 'uint8_t' (aka 'unsigned char') from 'uint8_t[1]' (aka 'unsigned char[1]') [-Wint-conversion]\n   57 |         out_payload[0] = payload;\n      |                        ^ ~~~~~~~\n1 warning and 5 errors generated.\n"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

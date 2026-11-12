@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-11-11 15:57:43",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "simple_select_all: SQL: expected 'SELECT * FROM products', got 'SELECT FROM products'",
+    "simple_where_equality: exception/timeout: ValueError: need more than 2 values to unpack",
+    "where_and_or_nested: exception/timeout: ValueError: need more than 2 values to unpack",
+    "order_by_limit_offset: SQL: expected 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', got 'SELECT FROM articles ORDER BY dir fielddir field LIMIT 10 OFFSET 20'",
+    "multiple_and_conditions: exception/timeout: ValueError: need more than 2 values to unpack"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

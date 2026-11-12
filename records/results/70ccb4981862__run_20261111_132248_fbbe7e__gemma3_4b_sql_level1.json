@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261111_132248_fbbe7e",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:4b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-11-11 13:28:39",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "simple_select_all: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+    "select_specific_columns: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+    "simple_where_equality: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+    "where_and_or_nested: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+    "order_by_limit_offset: exception/timeout: AttributeError: 'str' object has no attribute 'keys'",
+    "multiple_and_conditions: exception/timeout: AttributeError: 'str' object has no attribute 'keys'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,82 @@
+BT = {}
+
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+function BT.Action(fn)
+    local function tick(ctx)
+        local result = fn(ctx)
+        if result == true or result == BT.SUCCESS then
+            return BT.SUCCESS
+        elseif result == false or result == BT.FAILURE then
+            return result
+        else
+            return BT.RUNNING
+        end
+    end
+    function tick.reset()
+    end
+    return tick
+end
+
+function BT.Condition(predicate)
+    local function tick(ctx)
+        local result = predicate(ctx)
+        if result then
+            return BT.SUCCESS
+        else
+            return BT.FAILURE
+        end
+    end
+    function tick.reset()
+    end
+    return tick
+end
+
+function BT.Sequence(children)
+    local childrenCount = #children
+    local index = 1
+    local function tick(ctx)
+        if index > childrenCount then
+            return BT.SUCCESS
+        end
+        local child = children[index]
+        local result = child(ctx)
+        if result == BT.FAILURE then
+            return result
+        elseif result == BT.RUNNING then
+            index = index + 1
+            return result
+        else
+            index = index + 1
+            return child(ctx, index)
+        end
+    end
+    function tick.reset()
+        index = 1
+    end
+    return tick
+end
+
+function BT.Selector(children)
+    local childrenCount = #children
+    local index = 1
+    local function tick(ctx)
+        if index > childrenCount then
+            return BT.SUCCESS
+        end
+        local child = children[index]
+        local result = child(ctx)
+        if result == BT.SUCCESS then
+            return result
+        elseif result == BT.RUNNING then
+            index = index + 1
+            return result
+        end
+    end
+    function tick.reset()
+        index = 1
+    end
+    return tick
+end

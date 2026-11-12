@@ -1,0 +1,19 @@
+{
+  "run_id": "run_20261111_152143_9dc99e",
+  "host_id": "70ccb4981862",
+  "model": "minicpm-v4.6:latest",
+  "benchmark": "scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-11 15:25:41",
+  "passed": 1,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception/timeout: NameError: name 'critical_path_is_cyclic' isn't defined",
+    "simple_chain: unexpected exception/timeout: NameError: name 'critical_path_is_cyclic' isn't defined",
+    "diamond_pick_longer_branch: unexpected exception/timeout: NameError: name 'critical_path_is_cyclic' isn't defined",
+    "independent_tasks: unexpected exception/timeout: NameError: name 'critical_path_is_cyclic' isn't defined",
+    "wide_graph: unexpected exception/timeout: NameError: name 'critical_path_is_cyclic' isn't defined"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

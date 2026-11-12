@@ -1,0 +1,50 @@
+#include <stdint.h>
+#include <stdbool.h>
+
+#define BUFFER_SIZE 512
+
+// Fixed-size ring buffer implementation
+typedef struct {
+    uint8_t buffer[BUFFER_SIZE];
+    int head;
+    int tail;
+    int count;
+} ringbuf_t;
+
+static ringbuf_t ringbuf;
+
+void ringbuf_init(void) {
+    ringbuf.head = 0;
+    ringbuf.tail = 0;
+    ringbuf.count = 0;
+}
+
+int ringbuf_push(uint8_t byte) {
+    if (ringbuf.count == BUFFER_SIZE) {
+        return -1; // Buffer full
+    }
+
+    ringbuf.buffer[ringbuf.tail] = byte;
+    ringbuf.tail = (ringbuf.tail + 1) % BUFFER_SIZE;
+    ringbuf.count++;
+    return 0;
+}
+
+int ringbuf_pop(void) {
+    if (ringbuf.count == 0) {
+        return -1; // Buffer empty
+    }
+
+    uint8_t byte = ringbuf.buffer[ringbuf.head];
+    ringbuf.head = (ringbuf.head + 1) % BUFFER_SIZE;
+    ringbuf.count--;
+    return byte;
+}
+
+int ringbuf_available(void) {
+    return ringbuf.count;
+}
+
+int ringbuf_free_space(void) {
+    return BUFFER_SIZE - ringbuf.count;
+}

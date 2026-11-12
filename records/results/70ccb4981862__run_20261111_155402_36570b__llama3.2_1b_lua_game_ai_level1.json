@@ -1,0 +1,15 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "lua_game_ai",
+  "level": "level1",
+  "tested_at": "2026-11-11 16:05:01",
+  "passed": 0,
+  "total": 7,
+  "failures": [
+    "Lua syntax error: error loading code: [string \"<python>\"]:4: '(' expected near ':'"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

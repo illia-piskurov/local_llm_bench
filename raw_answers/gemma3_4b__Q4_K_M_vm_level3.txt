@@ -1,0 +1,125 @@
+```python
+def run(program: str) -> list[str]:
+    """
+    Interprets a simple stack-based language with labels, conditional jumps,
+    subroutines, comparison operations, and named variables
+    and returns a list of printed strings.
+    """
+    stack = []
+    memory = {}
+    printed = []
+    i = 0
+    labels = {}
+
+    while i < len(program.splitlines()):
+        line = program.splitlines()[i].strip()
+        if not line or line.startswith("#"):
+            i += 1
+            continue
+
+        parts = line.split()
+        instruction = parts[0]
+
+        if instruction == "LABEL":
+            label_name = parts[1]
+            labels[label_name] = i
+        elif instruction == "CALL":
+            label_name = parts[1]
+            if label_name not in labels:
+                raise ValueError(f"Undefined label: {label_name}")
+            stack.append(i)  # Push return address
+            i = labels[label_name]
+        elif instruction == "RET":
+            if not stack:
+                raise ValueError("Stack empty during RET")
+            return_address = stack.pop()
+            i = return_address
+        elif instruction == "EQ":
+            if len(stack) < 2:
+                raise ValueError("Stack underflow during EQ")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(1 if a == b else 0)
+        elif instruction == "GT":
+            if len(stack) < 2:
+                raise ValueError("Stack underflow during GT")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(1 if a > b else 0)
+        elif instruction == "LT":
+            if len(stack) < 2:
+                raise ValueError("Stack underflow during LT")
+            b = stack.pop()
+            a = stack.pop()
+            stack.append(1 if a < b else 0)
+        elif instruction == "STORE":
+            var_name = parts[1]
+            if var_name not in memory:
+                raise ValueError(f"Undefined variable: {var_name}")
+            value = stack.pop()
+            memory[var_name] = value
+        elif instruction == "LOAD":
+            var_name = parts[1]
+            if var_name not in memory:
+                raise ValueError(f"Undefined variable: {var_name}")
+            stack.append(memory[var_name])
+        elif instruction == "PUSH":
+            try:
+                value = int(parts[1])
+                stack.append(value)
+            except (IndexError, ValueError):
+                raise ValueError(f"Invalid PUSH instruction: {line} (expected <n>")
+        elif instruction == "POP":
+            if not stack:
+                raise ValueError("Stack underflow during POP")
+            stack.pop()
+        elif instruction == "ADD":
+            if len(stack) < 2:
+                raise ValueError("Stack underflow during ADD")
+            val2 = stack.pop()
+            val1 = stack.pop()
+            stack.append(val1 + val2)
+        elif instruction == "SUB":
+            if len(stack) < 2:
+                raise ValueError("Stack underflow during SUB")
+            val2 = stack.pop()
+            val1 = stack.pop()
+            stack.append(val1 - val2)
+        elif instruction == "MUL":
+            if len(stack) < 2:
+                raise ValueError("Stack underflow during MUL")
+            val2 = stack.pop()
+            val1 = stack.pop()
+            stack.append(val1 * val2)
+        elif instruction == "DIV":
+            if len(stack) < 2:
+                raise ValueError("Stack underflow during DIV")
+            val2 = stack.pop()
+            val1 = stack.pop()
+            if val2 == 0:
+                raise ZeroDivisionError("Division by zero")
+            stack.append(val1 // val2)
+        elif instruction == "DUP":
+            if not stack:
+                raise ValueError("Stack underflow during DUP")
+            top = stack[-1]
+            stack.append(top)
+        elif instruction == "SWAP":
+            if len(stack) < 2:
+                raise ValueError("Stack underflow during SWAP")
+            val2 = stack.pop()
+            val1 = stack.pop()
+            stack.append(val1)
+            stack.append(val2)
+        elif instruction == "PRINT":
+            if not stack:
+                print("Stack is empty")
+            else:
+                print(stack[-1])
+        else:
+            raise ValueError(f"Invalid instruction: {instruction} (line {i+1})")
+
+        i += 1
+
+    return printed
+```

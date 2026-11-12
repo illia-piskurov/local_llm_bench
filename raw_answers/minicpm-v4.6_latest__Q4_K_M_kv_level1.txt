@@ -1,0 +1,36 @@
+```python
+def run(program: str):
+    store = {}
+    transactions = []
+    stack = []
+    output = []
+
+    for line in program.splitlines():
+        if not line:
+            continue
+        command, args = line.split(' ', 1)
+        if command == 'SET':
+            key, value = args.split(' ', 1)
+            store[key] = value
+        elif command == 'GET':
+            output.append(store.get(args.split(' ', 1)[0], 'NULL'))
+        elif command == 'DELETE':
+            if args.split(' ', 1)[0] in store:
+                del store[args.split(' ', 1)[0]]
+        elif command == 'BEGIN':
+            transactions.append({})
+            stack.append(transactions)
+        elif command == 'COMMIT':
+            if stack:
+                transaction = stack[-1]
+                store.update(transaction)
+                stack.append(transaction)
+                output.append("NO TRANSACTION")
+        elif command == 'ROLLBACK':
+            if stack:
+                stack.pop()
+                output.append("NO TRANSACTION")
+        # For other commands, do nothing and output nothing
+
+    return output
+```

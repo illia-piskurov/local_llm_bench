@@ -1,0 +1,26 @@
+{
+  "model": "llama3.2:1b",
+  "created_at": "2026-11-11T14:04:46.171266Z",
+  "message": {
+    "role": "assistant",
+    "content": "```javascript\nasync function pMap(items, mapper, options = { concurrency: 1 }) {\n  if (items.length === 0) return [];\n\n  const results = new Array(items.length);\n  let index = 0;\n\n  const promises = [];\n\n  for (let i = 0; i < items.length; i++) {\n    promises.push(mapper(items[i], i));\n  }\n\n  for (const promise of promises) {\n    promise.then((result) => {\n      results[index++] = result;\n    }).catch((error) => {\n      if (options.retries > 0) {\n        options.retries--;\n        return pMap(items, mapper, options);\n      }\n\n      throw error;\n    }).finally(() => {\n      if (options.timeoutMs > 0) {\n        const timeout = setTimeout(() => {\n          throw new Error(\"Timeout\");\n        }, options.timeoutMs);\n        return new Promise((resolve) => {\n          setTimeout(() => {\n            resolve();\n          }, options.backoffMs * Math.pow(2, options.retries));\n        });\n      }\n    });\n  }\n\n  return results.slice(0, options.concurrency);\n}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 4597740666,
+  "load_duration": 1061791,
+  "prompt_eval_count": 608,
+  "prompt_eval_cached_count": 368,
+  "prompt_eval_duration": 448813000,
+  "eval_count": 238,
+  "eval_duration": 4144060000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 608,
+    "total_output_tokens": 238,
+    "tokens_per_second": 57.43160089380946,
+    "time_to_first_token_seconds": 0.448813,
+    "model_load_time_seconds": 0.001061791
+  }
+}

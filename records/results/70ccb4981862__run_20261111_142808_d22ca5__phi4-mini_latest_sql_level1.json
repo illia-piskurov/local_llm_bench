@@ -1,0 +1,17 @@
+{
+  "run_id": "run_20261111_142808_d22ca5",
+  "host_id": "70ccb4981862",
+  "model": "phi4-mini:latest",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-11-11 14:32:21",
+  "passed": 3,
+  "total": 6,
+  "failures": [
+    "simple_where_equality: exception/timeout: NameError: local variable referenced before assignment",
+    "where_and_or_nested: exception/timeout: KeyError: op",
+    "multiple_and_conditions: exception/timeout: KeyError: op"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

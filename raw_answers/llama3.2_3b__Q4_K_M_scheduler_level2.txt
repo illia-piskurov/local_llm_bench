@@ -1,0 +1,65 @@
+```python
+from collections import defaultdict, deque
+
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task in tasks}
+    
+    for task, dependencies in tasks.items():
+        for dependency in dependencies:
+            graph[dependency].append(task)
+            in_degree[task] += 1
+    
+    queue = deque([task for task in tasks if in_degree[task] == 0])
+    
+    if not queue:
+        return None
+    
+    sorted_tasks = []
+    
+    while queue:
+        task = queue.popleft()
+        sorted_tasks.append(task)
+        
+        for neighbor in graph[task]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+    
+    if len(sorted_tasks) != len(tasks):
+        return None
+    
+    return sorted_tasks
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task in tasks}
+    durations = {task: duration for task, (duration, _) in tasks.items()}
+    
+    for task, dependencies in tasks.items():
+        for dependency in dependencies:
+            graph[dependency].append(task)
+            in_degree[task] += 1
+    
+    queue = deque([task for task in tasks if in_degree[task] == 0])
+    
+    if not queue:
+        return None
+    
+    critical_path_length = 0
+    
+    while queue:
+        task = queue.popleft()
+        for neighbor in graph[task]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+            if task in durations and neighbor in durations:
+                durations[neighbor] = max(durations[neighbor], durations[task] + tasks[neighbor][0])
+                critical_path_length = max(critical_path_length, durations[neighbor])
+    
+    if len(tasks) != len(durations):
+        return None
+    
+    return critical_path_length
+```

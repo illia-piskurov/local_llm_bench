@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T11:24:32.671999Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef run(program: str) -> list[str]:\n    \"\"\"\n    Interprets a simple stack-based language with labels, conditional jumps,\n    subroutines, comparison operations, and named variables\n    and returns a list of printed strings.\n    \"\"\"\n    stack = []\n    memory = {}\n    printed = []\n    i = 0\n    labels = {}\n\n    while i < len(program.splitlines()):\n        line = program.splitlines()[i].strip()\n        if not line or line.startswith(\"#\"):\n            i += 1\n            continue\n\n        parts = line.split()\n        instruction = parts[0]\n\n        if instruction == \"LABEL\":\n            label_name = parts[1]\n            labels[label_name] = i\n        elif instruction == \"CALL\":\n            label_name = parts[1]\n            if label_name not in labels:\n                raise ValueError(f\"Undefined label: {label_name}\")\n            stack.append(i)  # Push return address\n            i = labels[label_name]\n        elif instruction == \"RET\":\n            if not stack:\n                raise ValueError(\"Stack empty during RET\")\n            return_address = stack.pop()\n            i = return_address\n        elif instruction == \"EQ\":\n            if len(stack) < 2:\n                raise ValueError(\"Stack underflow during EQ\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(1 if a == b else 0)\n        elif instruction == \"GT\":\n            if len(stack) < 2:\n                raise ValueError(\"Stack underflow during GT\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(1 if a > b else 0)\n        elif instruction == \"LT\":\n            if len(stack) < 2:\n                raise ValueError(\"Stack underflow during LT\")\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(1 if a < b else 0)\n        elif instruction == \"STORE\":\n            var_name = parts[1]\n            if var_name not in memory:\n                raise ValueError(f\"Undefined variable: {var_name}\")\n            value = stack.pop()\n            memory[var_name] = value\n        elif instruction == \"LOAD\":\n            var_name = parts[1]\n            if var_name not in memory:\n                raise ValueError(f\"Undefined variable: {var_name}\")\n            stack.append(memory[var_name])\n        elif instruction == \"PUSH\":\n            try:\n                value = int(parts[1])\n                stack.append(value)\n            except (IndexError, ValueError):\n                raise ValueError(f\"Invalid PUSH instruction: {line} (expected <n>\")\n        elif instruction == \"POP\":\n            if not stack:\n                raise ValueError(\"Stack underflow during POP\")\n            stack.pop()\n        elif instruction == \"ADD\":\n            if len(stack) < 2:\n                raise ValueError(\"Stack underflow during ADD\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1 + val2)\n        elif instruction == \"SUB\":\n            if len(stack) < 2:\n                raise ValueError(\"Stack underflow during SUB\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1 - val2)\n        elif instruction == \"MUL\":\n            if len(stack) < 2:\n                raise ValueError(\"Stack underflow during MUL\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1 * val2)\n        elif instruction == \"DIV\":\n            if len(stack) < 2:\n                raise ValueError(\"Stack underflow during DIV\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            if val2 == 0:\n                raise ZeroDivisionError(\"Division by zero\")\n            stack.append(val1 // val2)\n        elif instruction == \"DUP\":\n            if not stack:\n                raise ValueError(\"Stack underflow during DUP\")\n            top = stack[-1]\n            stack.append(top)\n        elif instruction == \"SWAP\":\n            if len(stack) < 2:\n                raise ValueError(\"Stack underflow during SWAP\")\n            val2 = stack.pop()\n            val1 = stack.pop()\n            stack.append(val1)\n            stack.append(val2)\n        elif instruction == \"PRINT\":\n            if not stack:\n                print(\"Stack is empty\")\n            else:\n                print(stack[-1])\n        else:\n            raise ValueError(f\"Invalid instruction: {instruction} (line {i+1})\")\n\n        i += 1\n\n    return printed\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 43275540333,
+  "load_duration": 1459208,
+  "prompt_eval_count": 1389,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 4166242000,
+  "eval_count": 1113,
+  "eval_duration": 38949775000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 1389,
+    "total_output_tokens": 1113,
+    "tokens_per_second": 28.57526134618236,
+    "time_to_first_token_seconds": 4.166242,
+    "model_load_time_seconds": 0.001459208
+  }
+}

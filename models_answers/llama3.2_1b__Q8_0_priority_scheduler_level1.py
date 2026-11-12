@@ -1,0 +1,30 @@
+from collections import defaultdict, deque
+from typing import Dict, List, Tuple, Set
+
+def plan_order(tasks: Dict[str, Tuple[int, List[str], int]], workers: int) -> List[str] | None:
+    graph = defaultdict(list)
+    in_degree = {task: 0 for task, _ in tasks}
+    for task, deps, _ in tasks:
+        for dep in deps:
+            graph[dep].append(task)
+            in_degree[task] += 1
+
+    queue = deque([task for task, _ in tasks if in_degree[task] == 0])
+    result = []
+    while queue:
+        task = queue.popleft()
+        result.append(task)
+        for neighbor in graph[task]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    if len(result) != len(tasks):
+        return None
+
+    # Check for cyclic dependencies
+    for task, deps in tasks.items():
+        if len(deps) != len(set(deps)):
+            return None
+
+    return result

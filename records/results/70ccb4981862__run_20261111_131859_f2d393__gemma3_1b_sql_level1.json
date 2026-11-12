@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261111_131859_f2d393",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:1b",
+  "benchmark": "sql",
+  "level": "level1",
+  "tested_at": "2026-11-11 13:20:06",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "simple_select_all: SQL: expected 'SELECT * FROM products', got 'SELECT *'",
+    "select_specific_columns: exception/timeout: ValueError: too many values to unpack (expected 2)",
+    "simple_where_equality: SQL: expected 'SELECT * FROM users WHERE status = $1', got 'SELECT *'; params: expected ['active'], got []",
+    "where_and_or_nested: exception/timeout: ValueError: too many values to unpack (expected 2)",
+    "order_by_limit_offset: SQL: expected 'SELECT * FROM articles ORDER BY views DESC, id ASC LIMIT 10 OFFSET 20', got 'SELECT * ORDER BY (dir) (dir) LIMIT 10 OFFSET 20'",
+    "multiple_and_conditions: SQL: expected 'SELECT * FROM logs WHERE (level = $1 AND code != $2 AND timestamp > $3)', got 'SELECT *'; params: expected ['error', 404, 1000], got []"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

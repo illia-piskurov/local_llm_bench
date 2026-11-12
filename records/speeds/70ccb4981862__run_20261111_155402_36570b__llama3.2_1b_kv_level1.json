@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "kv",
+  "level": "level1",
+  "tested_at": "2026-11-11 15:57:11",
+  "stats": {
+    "input_tokens": 335,
+    "total_output_tokens": 208,
+    "reasoning_output_tokens": null,
+    "tokens_per_second": 58.789512629287465,
+    "time_to_first_token_seconds": 0.259190999,
+    "model_load_time_seconds": 0.001015958
+  }
+}

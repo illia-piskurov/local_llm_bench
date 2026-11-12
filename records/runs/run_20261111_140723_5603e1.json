@@ -1,0 +1,50 @@
+{
+  "id": "run_20261111_140723_5603e1",
+  "host_id": "70ccb4981862",
+  "model_key": "gemma3:4b",
+  "model_name": "gemma3:4b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 10000,
+    "artifact": {
+      "key": "gemma3:4b",
+      "display_name": "gemma3:4b",
+      "architecture": "gemma3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 3350272403,
+      "params_string": "3.9B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "537d00a (051cb8695784)",
+  "started_at": "2026-11-11 14:07:23",
+  "completed_at": "2026-11-11 14:19:46",
+  "status": "interrupted",
+  "results": [],
+  "speeds": [
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:07:43",
+      "stats": {
+        "input_tokens": 778,
+        "total_output_tokens": 477,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 31.466999429635898,
+        "time_to_first_token_seconds": 2.076464,
+        "model_load_time_seconds": 2.849153791
+      }
+    }
+  ]
+}

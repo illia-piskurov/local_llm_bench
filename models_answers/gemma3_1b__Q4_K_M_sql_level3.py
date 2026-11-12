@@ -1,0 +1,40 @@
+def compile_query(query: dict) -> dict:
+    sql = "SELECT *"
+    params = []
+    if 'select' in query:
+        select_clause = query['select']
+        if isinstance(select_clause, list):
+            sql += " AND " + " AND ".join([f"({s})" for s, _ in select_clause])
+        else:
+            sql += " AND " + str(select_clause)
+    if 'orderBy' in query:
+        orderBy_list = query['orderBy']
+        if isinstance(orderBy_list, list):
+            sql += " ORDER BY " + " ".join([f"({p})" for p, _ in orderBy_list])
+        else:
+            sql += " ORDER BY " + str(orderBy_list)
+    if 'limit' in query:
+        limit_value = query['limit']
+        if isinstance(limit_value, int):
+            sql += " LIMIT " + str(limit_value)
+        else:
+            sql += " LIMIT " + str(limit_value)
+    if 'offset' in query:
+        offset_value = query['offset']
+        if isinstance(offset_value, int):
+            sql += " OFFSET " + str(offset_value)
+        else:
+            sql += " OFFSET " + str(offset_value)
+    if 'having' in query:
+        having_clause = query['having']
+        if isinstance(having_clause, list):
+            sql += " HAVING " + having_clause
+        else:
+            sql += " HAVING " + having_clause
+    if 'subquery' in query:
+        subquery_clause = query['subquery']
+        if isinstance(subquery_clause, list):
+            sql += " { " + " ".join([f"({s})" for s, _ in subquery_clause]) + "}"
+        else:
+            sql += " { " + " ".join([f"({s})" for s, _ in subquery_clause]) + "}"
+    return {"sql": sql, "params": params}

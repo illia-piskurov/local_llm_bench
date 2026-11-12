@@ -1,0 +1,337 @@
+{
+  "id": "run_20261111_152143_9dc99e",
+  "host_id": "70ccb4981862",
+  "model_key": "minicpm-v4.6:latest",
+  "model_name": "minicpm-v4.6:latest",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 10000,
+    "artifact": {
+      "key": "minicpm-v4.6:latest",
+      "display_name": "minicpm-v4.6:latest",
+      "architecture": "qwen35",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 1637848812,
+      "params_string": "752.16M",
+      "max_context_length": 262144,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "1397641c2c92"
+  },
+  "suite_version": "537d00a (1397641c2c92)",
+  "started_at": "2026-11-11 15:21:43",
+  "completed_at": "2026-11-11 15:27:50",
+  "status": "interrupted",
+  "results": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:21:53",
+      "passed": 14,
+      "total": 18,
+      "failures": [
+        "dup: unexpected exception/timeout: IndexError: pop from empty list",
+        "swap: expected ['1'], got ['-1']",
+        "multiple_prints: unexpected exception/timeout: IndexError: pop from empty list",
+        "print_does_not_pop: unexpected exception/timeout: IndexError: pop from empty list"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:23:15",
+      "passed": 4,
+      "total": 27,
+      "failures": [
+        "push_print: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "add: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "sub_order: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "mul: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "div_order: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "div_truncate: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "dup: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "swap: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "pop: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "comments_and_blank_lines: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "multiple_prints: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "print_does_not_pop: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "negative_numbers: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "empty_program: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "complex_chain: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "unconditional_jump_skips_code: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "jz_taken_when_zero: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "countdown_loop: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "count_up_loop: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: RuntimeError: maximum recursion depth exceeded"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:23:35",
+      "passed": 7,
+      "total": 37,
+      "failures": [
+        "push_print: unexpected exception/timeout: ValueError: Call stack is empty",
+        "add: unexpected exception/timeout: ValueError: Call stack is empty",
+        "sub_order: unexpected exception/timeout: ValueError: Call stack is empty",
+        "mul: unexpected exception/timeout: ValueError: Call stack is empty",
+        "div_order: unexpected exception/timeout: ValueError: Call stack is empty",
+        "div_truncate: unexpected exception/timeout: ValueError: Call stack is empty",
+        "dup: unexpected exception/timeout: ValueError: Call stack is empty",
+        "swap: unexpected exception/timeout: ValueError: Call stack is empty",
+        "pop: unexpected exception/timeout: ValueError: Call stack is empty",
+        "comments_and_blank_lines: unexpected exception/timeout: ValueError: Call stack is empty",
+        "multiple_prints: unexpected exception/timeout: ValueError: Call stack is empty",
+        "print_does_not_pop: unexpected exception/timeout: ValueError: Call stack is empty",
+        "negative_numbers: unexpected exception/timeout: ValueError: Call stack is empty",
+        "empty_program: unexpected exception/timeout: ValueError: Call stack is empty",
+        "complex_chain: unexpected exception/timeout: ValueError: Call stack is empty",
+        "unconditional_jump_skips_code: unexpected exception/timeout: IndexError: list index out of range",
+        "jz_taken_when_zero: unexpected exception/timeout: IndexError: list index out of range",
+        "jz_not_taken_when_nonzero: unexpected exception/timeout: IndexError: list index out of range",
+        "jnz_taken_when_nonzero: unexpected exception/timeout: IndexError: list index out of range",
+        "jnz_not_taken_when_zero: unexpected exception/timeout: IndexError: list index out of range",
+        "countdown_loop: unexpected exception/timeout: IndexError: list index out of range",
+        "count_up_loop: unexpected exception/timeout: IndexError: list index out of range",
+        "label_does_nothing_on_its_own: unexpected exception/timeout: ValueError: Call stack is empty",
+        "call_ret_basic: unexpected exception/timeout: IndexError: list index out of range",
+        "call_ret_nested: unexpected exception/timeout: IndexError: list index out of range",
+        "comparison_eq_gt_lt: unexpected exception/timeout: NameError: name 'pop_values' isn't defined",
+        "store_and_load: unexpected exception/timeout: IndexError: list index out of range",
+        "store_overwrite: unexpected exception/timeout: IndexError: list index out of range",
+        "recursive_factorial: unexpected exception/timeout: IndexError: list index out of range",
+        "recursive_fibonacci: unexpected exception/timeout: IndexError: list index out of range"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:23:41",
+      "passed": 0,
+      "total": 10,
+      "failures": [
+        "no_dependencies: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+        "simple_chain: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+        "diamond: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+        "multiple_roots: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+        "single_task: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+        "self_cycle: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+        "two_node_cycle: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+        "long_cycle: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+        "cycle_with_extra_nodes: unexpected exception/timeout: TypeError: 'int' object isn't iterable",
+        "wide_graph: unexpected exception/timeout: TypeError: 'int' object isn't iterable"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:25:41",
+      "passed": 1,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception/timeout: NameError: name 'critical_path_is_cyclic' isn't defined",
+        "simple_chain: unexpected exception/timeout: NameError: name 'critical_path_is_cyclic' isn't defined",
+        "diamond_pick_longer_branch: unexpected exception/timeout: NameError: name 'critical_path_is_cyclic' isn't defined",
+        "independent_tasks: unexpected exception/timeout: NameError: name 'critical_path_is_cyclic' isn't defined",
+        "wide_graph: unexpected exception/timeout: NameError: name 'critical_path_is_cyclic' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:25:54",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "priority_beats_name_order: unexpected exception: ValueError: need more than 1 values to unpack",
+        "dependency_unlocks_later: unexpected exception: ValueError: need more than 1 values to unpack",
+        "single_worker_duration_tiebreak: unexpected exception: ValueError: need more than 1 values to unpack",
+        "resource_limit_and_priority: unexpected exception: ValueError: too many values to unpack (expected 3)",
+        "simultaneous_unlocks: unexpected exception: ValueError: need more than 1 values to unpack",
+        "cycle_returns_none: unexpected exception: ValueError: need more than 1 values to unpack"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:26:26",
+      "passed": 0,
+      "total": 6,
+      "failures": [
+        "single_task: unexpected exception: NameError: name 'plan_order' isn't defined",
+        "parallel_tasks_reduce_makespan: unexpected exception: NameError: name 'plan_order' isn't defined",
+        "dependencies_and_workers: unexpected exception: NameError: name 'plan_order' isn't defined",
+        "critical_path_longer_than_worker_parallelism: unexpected exception: NameError: name 'plan_order' isn't defined",
+        "wide_graph_with_unlocks: unexpected exception: NameError: name 'plan_order' isn't defined",
+        "cycle_returns_none: unexpected exception: NameError: name 'plan_order' isn't defined"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:27:10",
+      "passed": 5,
+      "total": 15,
+      "failures": [
+        "commit_no_transaction: unexpected exception/timeout: ValueError: need more than 1 values to unpack",
+        "rollback_no_transaction: unexpected exception/timeout: ValueError: need more than 1 values to unpack",
+        "simple_transaction_commit: unexpected exception/timeout: ValueError: need more than 1 values to unpack",
+        "simple_transaction_rollback: unexpected exception/timeout: ValueError: need more than 1 values to unpack",
+        "rollback_restores_delete: unexpected exception/timeout: ValueError: need more than 1 values to unpack",
+        "nested_transactions: unexpected exception/timeout: ValueError: need more than 1 values to unpack",
+        "nested_commit_propagates_to_outer_only: unexpected exception/timeout: ValueError: need more than 1 values to unpack",
+        "rollback_after_commit_is_no_transaction: unexpected exception/timeout: ValueError: need more than 1 values to unpack",
+        "multiple_keys_independent: unexpected exception/timeout: ValueError: need more than 1 values to unpack",
+        "set_new_key_inside_transaction: unexpected exception/timeout: ValueError: need more than 1 values to unpack"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "vm",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:21:52",
+      "stats": {
+        "input_tokens": 285,
+        "total_output_tokens": 864,
+        "reasoning_output_tokens": 439,
+        "tokens_per_second": 116.3859260318946,
+        "time_to_first_token_seconds": 0.318828,
+        "model_load_time_seconds": 1.547575167
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:23:13",
+      "stats": {
+        "input_tokens": 851,
+        "total_output_tokens": 47,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 108.27846456529652,
+        "time_to_first_token_seconds": 0.027956,
+        "model_load_time_seconds": 0.000795875
+      }
+    },
+    {
+      "benchmark": "vm",
+      "level": "level3",
+      "tested_at": "2026-11-11 15:23:32",
+      "stats": {
+        "input_tokens": 480,
+        "total_output_tokens": 1641,
+        "reasoning_output_tokens": 1063,
+        "tokens_per_second": 101.49273485811581,
+        "time_to_first_token_seconds": 0.297689,
+        "model_load_time_seconds": 0.00155225
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:23:40",
+      "stats": {
+        "input_tokens": 178,
+        "total_output_tokens": 576,
+        "reasoning_output_tokens": 264,
+        "tokens_per_second": 105.09844220753439,
+        "time_to_first_token_seconds": 0.147507,
+        "model_load_time_seconds": 0.00093925
+      }
+    },
+    {
+      "benchmark": "scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:25:40",
+      "stats": {
+        "input_tokens": 622,
+        "total_output_tokens": 360,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 77.94453337097767,
+        "time_to_first_token_seconds": 0.036124,
+        "model_load_time_seconds": 0.000753916
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:25:53",
+      "stats": {
+        "input_tokens": 231,
+        "total_output_tokens": 986,
+        "reasoning_output_tokens": 451,
+        "tokens_per_second": 78.00911868050979,
+        "time_to_first_token_seconds": 0.194648,
+        "model_load_time_seconds": 0.002771334
+      }
+    },
+    {
+      "benchmark": "priority_scheduler",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:26:24",
+      "stats": {
+        "input_tokens": 954,
+        "total_output_tokens": 2166,
+        "reasoning_output_tokens": 1239,
+        "tokens_per_second": 74.37330192120042,
+        "time_to_first_token_seconds": 0.534557,
+        "model_load_time_seconds": 0.001361083
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level1",
+      "tested_at": "2026-11-11 15:27:08",
+      "stats": {
+        "input_tokens": 333,
+        "total_output_tokens": 3111,
+        "reasoning_output_tokens": 2872,
+        "tokens_per_second": 75.47030298160826,
+        "time_to_first_token_seconds": 0.233502,
+        "model_load_time_seconds": 0.0010115
+      }
+    },
+    {
+      "benchmark": "kv",
+      "level": "level2",
+      "tested_at": "2026-11-11 15:27:48",
+      "stats": {
+        "input_tokens": 803,
+        "total_output_tokens": 2933,
+        "reasoning_output_tokens": 2576,
+        "tokens_per_second": 76.67609218792968,
+        "time_to_first_token_seconds": 0.338977,
+        "model_load_time_seconds": 0.001417917
+      }
+    }
+  ]
+}

@@ -1,0 +1,1238 @@
+Okay, I need to extend the existing stack-based interpreter with support for labels and conditional jumps. Let me think through how to approach this.
+
+First, the new instructions are LABEL, JMP, JZ, and JNZ. The LABEL instruction just marks a position as a label with a name, but during execution, it does nothing except record where it is. So I need a way to map label names to their line numbers or positions in the program. 
+
+Hmm, the program is given as a string with lines. Each line has an instruction. The labels are part of the program's structure, so I should probably pre-process the program to build a dictionary that maps label names to their line numbers. Wait, but since labels are defined at the current position when encountered, maybe I need to parse the lines first, and whenever a LABEL is found, record its line number. Then, when a jump is encountered (like JMP or JZ/JNZ), we can look up the label's position in this dictionary to know where to jump.
+
+So the plan is:
+
+1. Pre-process the program to create a labels dictionary. Go through each line, and when a line starts with 'LABEL <name>', extract the name and store the line number (adjusted for 1-based or 0-based? The original code uses 1-based line numbers in error messages, so probably better to use 1-based here).
+
+2. During execution, when a JMP, JZ, or JNZ instruction is encountered, check if the target label exists in the labels dict. If not, that's an error. Also, for JZ and JNZ, we need to pop the value from the stack first and then decide whether to jump.
+
+Wait, but how do the labels and jumps work in terms of line numbers? Let's see:
+
+Suppose the program has a line with LABEL my_label. Then later lines, say at line 5, there's a JMP my_label. When executing the JMP instruction, the interpreter should jump to the line where my_label was defined. So the labels dict needs to have entries like 'my_label': 3 (if it was the third line). 
+
+But the execution of the jump instructions will need to change the current line index. However, the original code's loop was processing each line in order sequentially, using a for loop over the lines with their line numbers. To handle jumps, I need to break out of that linear flow and instead manage the program counter (current line number) ourselves.
+
+Ah right, the original code was processing lines in order, but with jumps, we need to have a variable that keeps track of the current line number, not just iterate through them. So I'll need to modify the loop structure.
+
+Let me outline the steps:
+
+Modify the run function as follows:
+
+- Instead of looping through lines with enumerate starting at 1, we'll have a variable current_line starting at 0 (or 1?), and loop while current_line is less than the number of lines. Wait, perhaps better to track the current line as an integer, and for each step, process the line at that current_line, then increment unless a jump occurs.
+
+Wait, the original code's loop was:
+
+for line_num, line in enumerate(lines, 1):
+
+But with jumps, the line_num isn't just progressing 1 each time. So instead of a for loop, use a while loop with an index variable.
+
+So:
+
+lines = program.splitlines()
+
+labels = {}  # built from pre-processing
+
+current_line = 0  # 0-based index, but error messages need to be 1-based?
+
+Wait, need to decide on the line numbering. Let's see:
+
+In the original code's error messages, when an instruction fails, it uses line_num which starts at 1. So for the labels, when storing the line number where the LABEL was found, we should use the 1-based index.
+
+So during pre-processing:
+
+for line_num, line in enumerate(lines, 1):
+
+   if line starts with LABEL:
+
+      name = ... extract the name after 'LABEL '
+
+      labels[name] = line_num
+
+But when building the labels, we need to process all lines first to know all labels. Because a label can be defined after a jump instruction, but that's impossible because labels are just markers. Wait no, labels can be anywhere, as long as the JMP or JZ references them. But the labels must be defined before they are used. Hmm, but the user might define a label after it's referenced, which would be an error. So during the pre-processing, when building the labels, we can note that if a label is referenced before it's defined, that's an error. Or perhaps just let the runtime check when the jump is executed. 
+
+Alternatively, during preprocessing, collect all labels and their positions, and also check that if a label is used before it's defined, it's an error. But maybe that's overcomplicating. Perhaps it's better to just let the runtime check when the jump is executed. For example, if a JMP <name> is encountered and the name is not in labels, then raise an error with the current line number. Similarly for JZ and JNZ.
+
+So steps for the run function:
+
+1. Pre-process all lines to create the labels dictionary, which maps label names to their 1-based line numbers. This is done by iterating through each line once. So first, split the program into lines, then loop through them to build labels.
+
+Wait, but in the run function, how? Let's see.
+
+Inside the run function:
+
+First, split the program into lines, then create the labels dict by processing each line for LABEL instructions.
+
+So:
+
+lines = program.splitlines()
+
+labels = {}
+
+for line_num, line in enumerate(lines, 1):
+
+    line = line.strip()
+
+    if not line or line.startswith('#'):
+
+        continue
+
+    if line.startswith('LABEL '):
+
+        # extract the label name
+
+        parts = line.split()
+
+        if len(parts) < 2:
+
+            raise Exception(f"Error on line {line_num}: invalid LABEL instruction")
+
+        label_name = parts[1]
+
+        labels[label_name] = line_num
+
+But need to check that the label name is valid? Or maybe just store as is, and let jumps check later.
+
+Then, during execution:
+
+We need to track the current line index (starting at 0?), but the lines are 1-based in the labels. Wait, the lines list is 0-based in Python, but the line_num in labels is 1-based. So when we process a line, the actual line is lines[current_line_index], and its line number is current_line_index +1.
+
+Wait, let me think of variables:
+
+Let's have a variable current_line starting at 0 (the first line in lines is index 0, which is line 1 in the original code's numbering). So when we process the line at current_line, its original line number is current_line +1.
+
+But when building the labels, the line_num in the labels dict is 1-based. So if a LABEL is on line 3 (original line_num 3), then labels[name] = 3.
+
+Now, during execution, when we need to jump to a label, say 'my_label' which was at line 5 (original line_num 5), then the current_line should be set to 4 (since lines are 0-based). So the jump target's line number (from labels) is 5, so current_line becomes 5-1 =4?
+
+Yes. So the current_line variable is 0-based index into the lines list. So whenever we need to jump to a label with line number L (from labels), the new current_line is L -1.
+
+So the main loop will be a while loop, starting at current_line =0, and while current_line < len(lines):
+
+Then, process the line at current_line:
+
+Read the line, parse instruction, etc.
+
+For the JMP instruction:
+
+If the instruction is 'JMP <name>', then:
+
+Check if the name is in labels. If not, raise error with current_line +1 (since line numbers start at 1).
+
+Else, set current_line to labels[name] -1 (so that when we loop, the next iteration processes that line).
+
+For JZ and JNZ:
+
+First, pop the value from the stack. If the stack is empty, raise error (like the original POP does). Then check if the value is 0 (for JZ) or not (for JNZ). If condition met, jump to the label's line. Else, proceed.
+
+So for example:
+
+instruction is 'JZ label_name'
+
+value = stack.pop()
+
+if value ==0:
+
+   target_line = labels.get(label_name, None)
+
+   if target_line is None: # label not found
+
+      raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+
+   current_line = target_line -1
+
+else:
+
+   do nothing, just proceed.
+
+Same for JNZ: if the popped value is not zero, jump.
+
+Now, what about the other instructions like LABEL? They do nothing except record the current line number in labels. So when a LABEL is encountered, we just add it to the labels dict as before.
+
+Now, the original code's error messages for line numbers use the current line's original line number (which is current_line +1 when the line is being processed). So when an error occurs during processing a line (like not enough elements for ADD), the error message should use the current_line +1 as the line number.
+
+Now, integrating all this into the run function.
+
+First, the steps:
+
+Inside run(program):
+
+- Split into lines, process to build labels dict as above.
+
+Wait, but building the labels requires going through all lines once, but in the original code, the lines were being processed line by line in order. Wait, but in the original code, the labels weren't preprocessed. So now, the labels must be built before starting execution, because otherwise, when a JMP or JZ refers to a label that hasn't been processed yet (if the label is after the jump instruction), then the label wouldn't be in the labels dict. So we need to pre-process all labels first, even if they come after some code.
+
+Thus, the labels dictionary must be built by scanning the entire program's lines first. So the code for building the labels is done before entering the main loop.
+
+So the run function's code outline would be:
+
+def run(program: str) -> list[str]:
+
+    lines = program.splitlines()
+
+    # Preprocess labels
+
+    labels = {}
+
+    for line_num, line in enumerate(lines, 1):
+
+        line = line.strip()
+
+        if not line or line.startswith('#'):
+
+            continue
+
+        if line.startswith('LABEL '):
+
+            parts = line.split()
+
+            if len(parts) < 2:
+
+                raise Exception(f"Error on line {line_num}: invalid LABEL instruction")
+
+            label_name = parts[1]
+
+            labels[label_name] = line_num
+
+    # Now execute the program
+
+    stack = []
+
+    output = []
+
+    current_line = 0  # starts at first line (0-based index)
+
+    while current_line < len(lines):
+
+        line = lines[current_line].strip()
+
+        if not line or line.startswith('#'):
+
+            # skip this line, move to next
+
+            current_line +=1
+
+            continue
+
+        parts = line.split()
+
+        instruction = parts[0]
+
+        if instruction == 'PUSH':
+
+            # ... same as before
+
+        elif instruction == 'JMP':
+
+            # handle JMP
+
+            if len(parts) < 2:
+
+                raise Exception(f"Error on line {current_line +1}: invalid JMP instruction")
+
+            label_name = parts[1]
+
+            if label_name not in labels:
+
+                raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+
+            target_line = labels[label_name]
+
+            current_line = target_line -1  # since lines are 0-based
+
+        elif instruction == 'JZ':
+
+            if len(parts) < 2:
+
+                raise Exception(f"Error on line {current_line +1}: invalid JZ instruction")
+
+            label_name = parts[1]
+
+            if label_name not in labels:
+
+                raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+
+            if not stack:
+
+                raise Exception(f"Error on line {current_line +1}: JZ on empty stack")
+
+            value = stack.pop()
+
+            if value ==0:
+
+                target_line = labels[label_name]
+
+                current_line = target_line -1
+
+            else:
+
+                # no jump, proceed to next line
+
+                pass  # current_line will increment after processing
+
+        elif instruction == 'JNZ':
+
+            if len(parts) < 2:
+
+                raise Exception(f"Error on line {current_line +1}: invalid JNZ instruction")
+
+            label_name = parts[1]
+
+            if label_name not in labels:
+
+                raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+
+            if not stack:
+
+                raise Exception(f"Error on line {current_line +1}: JNZ on empty stack")
+
+            value = stack.pop()
+
+            if value !=0:
+
+                target_line = labels[label_name]
+
+                current_line = target_line -1
+
+            else:
+
+                pass
+
+        # ... handle other instructions similarly as before (ADD, SUB, etc.)
+
+        # ... after processing the instruction, move to next line unless a jump was taken
+
+        # Wait, in cases where the instruction is not a jump (like ADD), after processing, current_line increases by 1.
+
+        # But for JMP, JZ, JNZ, we have to adjust current_line manually.
+
+        # So after handling the instruction, we need to increment current_line by 1, UNLESS the instruction was a jump.
+
+        # Wait, no: for example, if it's a JMP, after setting current_line to target_line -1, the loop will process that line next. So after handling the instruction, we need to adjust current_line as needed, and then proceed.
+
+        # Wait, in the case of non-jump instructions, after processing, we just go to next line (current_line +=1). For jumps, the current_line is set to the target, so after handling the jump instruction, we don't increment, because the next iteration will process that line.
+
+        # So the code after handling each instruction needs to decide whether to increment current_line.
+
+        # So perhaps after processing the instruction, we have to decide whether to increment:
+
+        # after handling an instruction (like JMP, JZ, JNZ), we don't increment current_line, because the next line is already set.
+
+        # For other instructions (non-jump), we do increment.
+
+        # So after the instruction processing, we have to check:
+
+        if instruction not in ['JMP', 'JZ', 'JNZ']:
+
+            current_line +=1
+
+        # Wait but what about the case when the instruction is something else, like 'PRINT'? Then after processing, we proceed to next line.
+
+        # So that logic should work.
+
+        # However, for the case of 'JMP', after setting current_line to target_line -1, the next loop iteration will process that line, so after handling the JMP instruction, we do NOT increment current_line. Because the code will loop again with the new current_line.
+
+        # So the code after handling the instruction (the part that increments current_line) must only run if the instruction wasn't a jump.
+
+        # So for example:
+
+        # after processing the instruction, regardless of what it was, we do:
+
+        # if the instruction was a jump (JMP, JZ, JNZ), then we don't increment current_line, because the next line is already set.
+
+        # else, we do increment.
+
+        # So in code:
+
+        # after handling the instruction (the code above), then:
+
+        if instruction not in ('JMP', 'JZ', 'JNZ'):
+
+            current_line +=1
+
+        # Wait but what about the other cases where the instruction might have caused an error and exited the loop? For example, if an error is raised during instruction processing, like during JZ when the stack is empty, then the current_line is not incremented, but the exception is thrown and the loop terminates. So that's okay.
+
+        # Let's think through an example:
+
+        Suppose current_line is 5 (processing line 6 in 1-based). The instruction is JMP labelA which is at line 10. Then, after setting current_line to 9 (10-1), the loop will process line 9 next. So after handling the JMP, the code doesn't increment current_line. So the next iteration starts with current_line =9, processes that line, etc.
+
+        For a non-jump instruction like ADD, after processing (and assuming no error), the code adds 1 to current_line, so it proceeds to next line.
+
+        So the structure would be:
+
+        For each iteration:
+
+            process the current_line's instruction
+
+            then, check if the instruction was a jump. if not, increment current_line by 1.
+
+        So in code, after handling the instruction (like the above code blocks for each instruction), the code has to do this increment step unless it's a jump.
+
+        Now, this needs to be handled in code. Let me structure the code step by step.
+
+        Let me outline the code again.
+
+        Here's the plan for the run function:
+
+        - Split the program into lines.
+
+        - Preprocess labels into a dictionary mapping name to 1-based line numbers.
+
+        - Initialize stack, output list, current_line =0.
+
+        - While current_line < len(lines):
+
+            get the line at current_line, strip it.
+
+            if it's a comment or empty, skip (increment current_line by 1, and continue loop)
+
+            else, split into parts, get instruction.
+
+            handle each instruction based on type.
+
+            for example:
+
+            if instruction is 'PUSH':
+
+                ... process as before, push the number.
+
+            elif instruction is 'JMP':
+
+                ... check label exists, set current_line to target_line -1.
+
+            elif instruction is 'JZ':
+
+                ... pop value, check if zero, then jump if so.
+
+            elif instruction is 'JNZ':
+
+                ... similar to JZ.
+
+            else:
+
+                handle other instructions like ADD, SUB, etc., as before.
+
+            after handling the instruction (regardless of type), check if the instruction was a jump (JMP, JZ, JNZ). if not, increment current_line by 1.
+
+        Wait but in the case of JZ or JNZ, after handling, we may have set current_line to a new value, so in that case, we don't want to increment again. So the condition is: if the instruction is one of the jumps, then don't increment, else do.
+
+        So after processing the instruction (like in the case of JZ), the code must set current_line to the target line (if jumped), so after that, the code does not increment current_line. Because the next iteration will process that new line.
+
+        So the code after handling each instruction would have:
+
+        if instruction not in ('JMP', 'JZ', 'JNZ'):
+
+            current_line +=1
+
+        So that's the key.
+
+        Now, what about the other instructions like ADD, SUB, etc.?
+
+        For example, when handling ADD:
+
+        if len(stack) < 2: raise error with current_line +1.
+
+        then pop a and b, push a +b, and then after that, since it's not a jump instruction, we add 1 to current_line.
+
+        That's correct.
+
+        Now let's think of the code structure.
+
+        Let me start coding step by step.
+
+        The first part is building the labels:
+
+        lines = program.splitlines()
+
+        labels = {}
+
+        for line_num, line in enumerate(lines, 1):
+
+            stripped_line = line.strip()
+
+            if not stripped_line or stripped_line.startswith('#'):
+
+                continue
+
+            if stripped_line.startswith('LABEL '):
+
+                parts = stripped_line.split()
+
+                if len(parts) < 2:
+
+                    raise Exception(f"Error on line {line_num}: Invalid LABEL instruction")
+
+                label_name = parts[1]
+
+                labels[label_name] = line_num
+
+        Then, the execution part:
+
+        stack = []
+
+        output = []
+
+        current_line = 0
+
+        while current_line < len(lines):
+
+            line = lines[current_line].strip()
+
+            if not line or line.startswith('#'):
+
+                # skip this line, move to next
+
+                current_line +=1
+
+                continue
+
+            parts = line.split()
+
+            instruction = parts[0]
+
+            if instruction == 'PUSH':
+
+                if len(parts) < 2:
+
+                    raise Exception(f"Error on line {current_line +1}: PUSH requires an argument")
+
+                n = int(parts[1])
+
+                stack.append(n)
+
+            elif instruction == 'POP':
+
+                if not stack:
+
+                    raise Exception(f"Error on line {current_line +1}: POP on empty stack")
+
+                stack.pop()
+
+            elif instruction == 'ADD':
+
+                if len(stack) < 2:
+
+                    raise Exception(f"Error on line {current_line +1}: not enough elements for ADD")
+
+                a = stack.pop()
+
+                b = stack.pop()
+
+                stack.append(a + b)
+
+            elif instruction == 'SUB':
+
+                if len(stack) < 2:
+
+                    raise Exception(f"Error on line {current_line +1}: not enough elements for SUB")
+
+                b = stack.pop()
+
+                a = stack.pop()
+
+                stack.append(a - b)
+
+            elif instruction == 'MUL':
+
+                if len(stack) < 2:
+
+                    raise Exception(f"Error on line {current_line +1}: not enough elements for MUL")
+
+                a = stack.pop()
+
+                b = stack.pop()
+
+                stack.append(a * b)
+
+            elif instruction == 'DIV':
+
+                if len(stack) < 2:
+
+                    raise Exception(f"Error on line {current_line +1}: not enough elements for DIV")
+
+                b = stack.pop()
+
+                a = stack.pop()
+
+                if b ==0:
+
+                    raise Exception(f"Error on line {current_line +1}: division by zero")
+
+                stack.append(a // b)
+
+            elif instruction == 'DUP':
+
+                if not stack:
+
+                    raise Exception(f"Error on line {current_line +1}: DUP on empty stack")
+
+                x = stack.pop()
+
+                stack.append(x)
+
+                stack.append(x)
+
+            elif instruction == 'SWAP':
+
+                if len(stack) <2:
+
+                    raise Exception(f"Error on line {current_line +1}: not enough elements for SWAP")
+
+                b = stack.pop()
+
+                a = stack.pop()
+
+                stack.append(b)
+
+                stack.append(a)
+
+            elif instruction == 'PRINT':
+
+                if not stack:
+
+                    raise Exception(f"Error on line {current_line +1}: PRINT on empty stack")
+
+                output.append(str(stack[-1]))
+
+            elif instruction == 'JMP':
+
+                if len(parts) <2:
+
+                    raise Exception(f"Error on line {current_line +1}: invalid JMP instruction")
+
+                label_name = parts[1]
+
+                if label_name not in labels:
+
+                    raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+
+                target_line = labels[label_name]
+
+                current_line = target_line -1  # since lines are 0-based
+
+            elif instruction == 'JZ':
+
+                if len(parts) <2:
+
+                    raise Exception(f"Error on line {current_line +1}: invalid JZ instruction")
+
+                label_name = parts[1]
+
+                if label_name not in labels:
+
+                    raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+
+                if not stack:
+
+                    raise Exception(f"Error on line {current_line +1}: JZ on empty stack")
+
+                value = stack.pop()
+
+                if value ==0:
+
+                    target_line = labels[label_name]
+
+                    current_line = target_line -1
+
+                else:
+
+                    # no jump, proceed normally
+
+                    pass
+
+            elif instruction == 'JNZ':
+
+                if len(parts) <2:
+
+                    raise Exception(f"Error on line {current_line +1}: invalid JNZ instruction")
+
+                label_name = parts[1]
+
+                if label_name not in labels:
+
+                    raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+
+                if not stack:
+
+                    raise Exception(f"Error on line {current_line +1}: JNZ on empty stack")
+
+                value = stack.pop()
+
+                if value !=0:
+
+                    target_line = labels[label_name]
+
+                    current_line = target_line -1
+
+                else:
+
+                    pass
+
+            else:
+
+                # unknown instruction
+
+                raise Exception(f"Error on line {current_line +1}: unknown instruction '{instruction}'")
+
+            # Now, check if this was a jump instruction. If not, increment current_line.
+
+            if instruction not in ('JMP', 'JZ', 'JNZ'):
+
+                current_line +=1
+
+        After the loop, return output.
+
+        Wait, but in the cases of JZ/JMP/JNZ, after setting current_line to a new value, the next iteration will process that line. So after handling those, we do not increment current_line. But in the code above, after handling them, the instruction is in the list of jump types, so the code doesn't increment current_line. So that's correct.
+
+        However, there's a problem here: what if the instruction was a jump but the target line is beyond the program's length? For example, if the label points to a line number that is larger than the total lines. Then when setting current_line to target_line -1, it would be >= len(lines), so the loop will exit. But in that case, the interpreter should raise an error when trying to jump to a non-existent line.
+
+        Wait, in the labels building phase, when a LABEL instruction is encountered, the line_num is the actual line number (1-based) of that line. So if the line is part of the program, then it's okay. But if the label references a line that's beyond the program's length? No, because the labels are built from the existing lines. So labels only contain keys that are present in the lines. So if a label is defined at line N (which exists in the lines), then it's okay. But when a JUMP is made to a label that is defined, but the target line is beyond the program's lines? No, because labels are built from the existing lines. 
+
+        Wait, the labels are built from the lines that exist in the program. So for example, if the program has 5 lines, any label must be in lines 1-5. So when we have a JUMP to a label, the target_line is between 1 and len(lines). So target_line -1 will be between 0 and len(lines)-1, which is a valid index.
+
+        So the code doesn't need to check that the target_line is within the program's length. Because during label building, the labels are only for existing lines.
+
+        So the above code should handle that.
+
+        Now, what about when a label is used before it's defined? For instance, if the program has a JZ my_label on line 3, but the LABEL my_label is on line 5. Then during label building, the labels dict will have my_label:5. So when the JZ instruction is processed (line 3), it can look up the label and proceed. But if the label is referenced before being defined? Like a JZ my_label on line 2, and the LABEL my_label is on line 1. Then during label building, the label is added to the labels dict with line 1. So when line 2 is processed (the JZ), the label is found. So the code doesn't need to check that the label is defined before it's used. That's okay because the labels are preprocessed and stored.
+
+        However, if a label is referenced that is not in the labels dict (because it's undefined), then during runtime (like in JZ or JMP) it will raise an error with the current line number. For example, if the JZ references a label that doesn't exist in labels, then the error is thrown with the correct line number.
+
+        So the code should be okay.
+
+        Now, checking the error messages for line numbers. For example, when an instruction like ADD has not enough elements, the error message is f"Error on line {current_line +1}: not enough elements for ADD". That's correct because current_line is 0-based, so adding 1 gives the 1-based line number.
+
+        Similarly for division by zero in DIV instruction: the error message uses current_line+1.
+
+        Now, testing some scenarios:
+
+        Test case 1: A simple program with a label and jump.
+
+        Program:
+
+        LABEL start
+
+        5 PUSH 3
+
+        PRINT
+
+        JMP start
+
+        The labels dict will have 'start' mapped to 1 (since first line is line 1). 
+
+        Execution steps:
+
+        current_line starts at 0 (line 1 in 1-based). The line is LABEL start → which does nothing except add to labels. So after processing, since instruction is LABEL, which is not a jump type, we increment current_line by 1? Wait no:
+
+        Wait the instruction is 'LABEL', which is not in the jump list (JMP, JZ, JNZ). So after handling the instruction (like adding to labels), the code checks if the instruction is in those three. Since it's not, we do current_line +=1.
+
+        So after processing line 1 (current_line 0), the current_line becomes 1 (since after the instruction, we add 1).
+
+        Then, line 2 (current_line=1) is "5 PUSH 3". That's a PUSH instruction with an argument "3". Wait, the line is "5 PUSH 3"? No, maybe the line is "5 PUSH 3" but that's invalid because the first word is '5', not an instruction. Wait no, the line must start with an instruction. Let me correct the example.
+
+        Let me make the program:
+
+        LABEL start
+
+        PUSH 3
+
+        PRINT
+
+        JMP start
+
+        So the lines are:
+
+        Line 1: LABEL start → instruction is LABEL.
+
+        Line 2: PUSH 3 → instruction is PUSH.
+
+        Line3: PRINT → instruction is PRINT.
+
+        Line4: JMP start → instruction is JMP.
+
+        Execution steps:
+
+        current_line starts at 0 (line 1). Process the LABEL: instruction is LABEL. After handling, since it's not a jump instruction, current_line +=1 → becomes 1.
+
+        Now current_line=1: the line is "PUSH 3". Split into ['PUSH', '3'] → instruction is PUSH. Process: push 3. Then, since it's not a jump, current_line +=1 → 2.
+
+        Now current_line=2: line is PRINT. Process: append "3" to output. Then increment to 3.
+
+        current_line=3: line is JMP start → instruction is JMP. Check parts[1] is 'start', which is in labels (maps to 1). So target_line is 1 → current_line becomes 0 (1-1). 
+
+        Then, since the instruction was JMP (a jump type), we don't increment current_line. So next iteration starts with current_line=0 again.
+
+        Now, processing line 0 (the first line again):
+
+        The line is LABEL start → instruction is LABEL. Since it's not a jump instruction, after processing, current_line +=1 → becomes 1 again.
+
+        This creates an infinite loop unless there's another instruction. Wait, but in this example, after the JMP start, the program loops back to the start label. But the code after the label (line 2) is executed again. So the PRINT would run again, outputting 3 each time. The JMP would keep it in loop.
+
+        So the output would be ["3", "3", ...], but since this is an infinite loop, in practice, when run is called, it will keep executing until the program ends. Wait but the program doesn't have an exit. So in the code, this would loop forever. But the user's program should be designed properly. However, the code's responsibility is to handle the instructions as given, even if they loop indefinitely.
+
+        Another test case: JZ and label.
+
+        Program:
+
+        LABEL end
+
+        10 PUSH 5
+
+        JZ end
+
+        PRINT
+
+        So labels has 'end' → 1 (since first line is line 1). 
+
+        Execution steps:
+
+        current_line starts at 0 (line 1: LABEL end → adds to labels. Then current_line becomes 1.
+
+        current_line=1: line is "10 PUSH 5". Wait, that line's first word is '10', which is not an instruction. Wait that's invalid. Oops, that's a mistake. The line must start with an instruction. So correct example:
+
+        Program:
+
+        LABEL end
+
+        PUSH 5
+
+        JZ end
+
+        PRINT
+
+        So lines are:
+
+        Line 1: LABEL end → instruction is LABEL.
+
+        Line 2: PUSH 5 → instruction is PUSH.
+
+        Line3: JZ end → instruction is JZ.
+
+        Line4: PRINT → instruction is PRINT.
+
+        labels has 'end':1.
+
+        Execution:
+
+        current_line 0 (line1): process LABEL → current_line becomes 1.
+
+        current_line=1 (line2): PUSH 5 → stack now [5]. Then increment to 2.
+
+        current_line=2: JZ end → check parts[1] is 'end'. Label exists. Then pop stack (5). Since 5 !=0, do not jump. So after processing, since instruction is JZ (a jump type?), no: JZ is in the jump list. Wait the instruction is JZ, which is in the list of jump types (JMP, JZ, JNZ). So after handling JZ, since it's a jump instruction, we don't increment current_line. 
+
+        Wait after handling JZ, the code does:
+
+        if instruction in the jump types → no increment.
+
+        So after processing JZ (current_line was 2), the instruction is JZ, so current_line remains 2?
+
+        Wait no, after handling the JZ instruction, the code checks if the instruction was in the jump types. Since JZ is in that list, the code does not increment current_line.
+
+        So after handling JZ, current_line remains 2. Then the loop continues.
+
+        The next iteration is current_line=2 again. So it will process the same JZ instruction again. Which will pop the 5 again (but stack is now empty after first PUSH and JZ). Wait no:
+
+        Wait after the first PUSH 5 (line2, current_line=1), the stack has [5]. Then the JZ instruction (line3, current_line=2) pops the 5, and since it's not zero, does not jump. Then, since it's a jump instruction (JZ is in the list), the code does not increment current_line. So current_line stays at 2. 
+
+        Then, the next iteration again processes line3 (current_line=2), which again pops the stack (but now it's empty). Oh! That would cause an error on the next JZ execution.
+
+        Wait, because after the first JZ, the stack was popped once (from [5] to empty). So when the next iteration (current_line remains 2) comes back to process JZ again:
+
+        The stack is empty now. So during that processing:
+
+        instruction is JZ end → check if stack is empty. Then raise exception "Error on line 3 (current_line+1=3): JZ on empty stack".
+
+        So that's correct.
+
+        So the error occurs when trying to execute the JZ again because the stack is empty. So that's handled.
+
+        So code seems to handle that.
+
+        Now, what about JNZ?
+
+        Example:
+
+        PROGRAM:
+
+        LABEL end
+
+        5 PUSH 0
+
+        JNZ end
+
+        PRINT
+
+        The labels dict has 'end':1.
+
+        Execution steps:
+
+        current_line starts at 0 (line1: LABEL end → added to labels. current_line becomes 1.
+
+        current_line 1 (line2: PUSH 0 → stack [0]. Then increment to 2.
+
+        current_line 2: JNZ end → pop 0. Since 0 !=0? Wait no: JNZ is "jump if value !=0". So if the value is zero, do not jump. Here, the value is 0 → so do not jump. So after processing, since it's a jump instruction (JNZ), no increment. current_line remains 2.
+
+        Next iteration again processes JNZ end → pops 0 again (stack is now empty again). Raises error on line3 (current_line+1=3).
+
+        So that's correct.
+
+        Another test case: JZ when the value is zero.
+
+        Program:
+
+        LABEL end
+
+        10 PUSH 0
+
+        JZ end
+
+        PRINT
+
+        The labels have 'end' →1.
+
+        Execution:
+
+        current_line 0 → process label, current_line becomes 1.
+
+        current_line1: PUSH 0 → stack [0]. increment to 2.
+
+        current_line2: JZ end → pop 0 → value is zero → jump to end (line1). So current_line becomes 0 (1-1). 
+
+        Since it was a JZ (a jump instruction), current_line remains 0 (after setting to 0). Then next iteration:
+
+        current_line is 0 → process line1 (the label). Since it's a label instruction, not a jump, so after processing, current_line +=1 → 1.
+
+        Then, current_line 1 again, which is the PUSH 0 again. Then the loop continues, but this is an infinite loop unless there's another instruction after.
+
+        Wait but the PRINT is line3. Let me see the actual lines:
+
+        The program's lines are:
+
+        Line1: LABEL end → instruction is LABEL.
+
+        Line2: PUSH 0 → instruction is PUSH.
+
+        Line3: JZ end → instruction is JZ.
+
+        Line4: PRINT → instruction is PRINT.
+
+        So when current_line reaches 2 (line3: JZ end), after jumping to line1 (0-based line0), the next iteration processes line0 (the label). Then current_line becomes 1 again. Then line1 (PUSH 0) → stack now [0]. Then increment to 2. Then again line3 → JZ end → which again jumps to line0, etc. So the code will loop between line0 and line1, never reaching the PRINT instruction.
+
+        But the PRINT is on line4 (current_line 3). So in this setup, the program never reaches the PRINT. 
+
+        So the output would be empty, since PRINT is never executed. But the user's program might have intended that. 
+
+        So code is correct in that aspect.
+
+        Now, handling errors during jumps: for example, if a label is referenced that doesn't exist.
+
+        Program:
+
+        2 JMP unknown_label
+
+        The lines are: line1 is "2 JMP unknown_label". Let's see:
+
+        labels is empty (since no LABEL instruction). 
+
+        When processing line1 (current_line 0):
+
+        instruction is 'JMP', parts[1] is 'unknown_label', which is not in labels. So raise Exception: "Error on line 1: undefined label 'unknown_label'".
+
+        That's correct.
+
+        Now, what about the other instructions like ADD needing enough elements?
+
+        Program:
+
+        1 ADD
+
+        The lines[0] is "ADD" → instruction ADD. But the stack is empty. So during processing, the code checks len(stack) <2 → yes. So raises error "Error on line 1: not enough elements for ADD".
+
+        Correct.
+
+        So the code should handle all the requirements.
+
+        Now, the code's structure in Python must be written as per the problem's instructions: only the run function's code, no explanations. 
+
+        Also, the return type is a list of strings from the PRINT instructions.
+
+        Let me write the code now, following the structure.
+
+        First, the labels are built as I outlined.
+
+        Then, the execution loop.
+
+        Let me also note that in the code for DIV: a // b, but in Python, integer division of negative numbers may behave differently, but according to the problem statement, it's a//b, so that's correct.
+
+        Now, putting all together.
+
+        Also, in the case of the JZ or JNZ, after popping the value, if the condition is met, we set current_line to target_line-1. Else, we don't do anything, and the current_line will be incremented unless it's a jump instruction.
+
+        So the code for JZ:
+
+        After popping the value:
+
+        if value ==0:
+
+            target_line = labels[label_name]
+
+            current_line = target_line -1
+
+        else:
+
+            pass
+
+        Then, since instruction is JZ (in the jump types), we don't increment current_line. 
+
+        So the code should work.
+
+        Now, coding all this into the run function.
+
+        Also, note that in the case of the instruction being 'JMP' or 'JZ' or 'JNZ', after setting current_line to the target, the loop continues with that new current_line. 
+
+        Now, here's the code:
+
+        def run(program: str) -> list[str]:
+            lines = program.splitlines()
+            labels = {}
+            for line_num, line in enumerate(lines, 1):
+                stripped_line = line.strip()
+                if not stripped_line or stripped_line.startswith('#'):
+                    continue
+                if stripped_line.startswith('LABEL '):
+                    parts = stripped_line.split()
+                    if len(parts) < 2:
+                        raise Exception(f"Error on line {line_num}: Invalid LABEL instruction")
+                    label_name = parts[1]
+                    labels[label_name] = line_num
+            stack = []
+            output = []
+            current_line = 0
+            while current_line < len(lines):
+                line = lines[current_line].strip()
+                if not line or line.startswith('#'):
+                    current_line += 1
+                    continue
+                parts = line.split()
+                instruction = parts[0]
+                if instruction == 'PUSH':
+                    if len(parts) < 2:
+                        raise Exception(f"Error on line {current_line +1}: PUSH requires an argument")
+                    n = int(parts[1])
+                    stack.append(n)
+                elif instruction == 'POP':
+                    if not stack:
+                        raise Exception(f"Error on line {current_line +1}: POP on empty stack")
+                    stack.pop()
+                elif instruction == 'ADD':
+                    if len(stack) < 2:
+                        raise Exception(f"Error on line {current_line +1}: not enough elements for ADD")
+                    a = stack.pop()
+                    b = stack.pop()
+                    stack.append(a + b)
+                elif instruction == 'SUB':
+                    if len(stack) < 2:
+                        raise Exception(f"Error on line {current_line +1}: not enough elements for SUB")
+                    b = stack.pop()
+                    a = stack.pop()
+                    stack.append(a - b)
+                elif instruction == 'MUL':
+                    if len(stack) < 2:
+                        raise Exception(f"Error on line {current_line +1}: not enough elements for MUL")
+                    a = stack.pop()
+                    b = stack.pop()
+                    stack.append(a * b)
+                elif instruction == 'DIV':
+                    if len(stack) < 2:
+                        raise Exception(f"Error on line {current_line +1}: not enough elements for DIV")
+                    b = stack.pop()
+                    a = stack.pop()
+                    if b == 0:
+                        raise Exception(f"Error on line {current_line +1}: division by zero")
+                    stack.append(a // b)
+                elif instruction == 'DUP':
+                    if not stack:
+                        raise Exception(f"Error on line {current_line +1}: DUP on empty stack")
+                    x = stack.pop()
+                    stack.append(x)
+                    stack.append(x)
+                elif instruction == 'SWAP':
+                    if len(stack) < 2:
+                        raise Exception(f"Error on line {current_line +1}: not enough elements for SWAP")
+                    b = stack.pop()
+                    a = stack.pop()
+                    stack.append(b)
+                    stack.append(a)
+                elif instruction == 'PRINT':
+                    if not stack:
+                        raise Exception(f"Error on line {current_line +1}: PRINT on empty stack")
+                    output.append(str(stack[-1]))
+                elif instruction == 'JMP':
+                    if len(parts) < 2:
+                        raise Exception(f"Error on line {current_line +1}: invalid JMP instruction")
+                    label_name = parts[1]
+                    if label_name not in labels:
+                        raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+                    target_line = labels[label_name]
+                    current_line = target_line - 1  # since lines are 0-based
+                elif instruction == 'JZ':
+                    if len(parts) < 2:
+                        raise Exception(f"Error on line {current_line +1}: invalid JZ instruction")
+                    label_name = parts[1]
+                    if label_name not in labels:
+                        raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+                    if not stack:
+                        raise Exception(f"Error on line {current_line +1}: JZ on empty stack")
+                    value = stack.pop()
+                    if value == 0:
+                        target_line = labels[label_name]
+                        current_line = target_line - 1
+                    else:
+                        pass  # no jump
+                elif instruction == 'JNZ':
+                    if len(parts) < 2:
+                        raise Exception(f"Error on line {current_line +1}: invalid JNZ instruction")
+                    label_name = parts[1]
+                    if label_name not in labels:
+                        raise Exception(f"Error on line {current_line +1}: undefined label '{label_name}'")
+                    if not stack:
+                        raise Exception(f"Error on line {current_line +1}: JNZ on empty stack")
+                    value = stack.pop()
+                    if value != 0:
+                        target_line = labels[label_name]
+                        current_line = target_line - 1
+                    else:
+                        pass  # no jump
+                else:
+                    # unknown instruction
+                    raise Exception(f"Error on line {current_line +1}: unknown instruction '{instruction}'")
+                # Check if the instruction was a jump command
+                if instruction not in ('JMP', 'JZ', 'JNZ'):
+                    current_line += 1
+            return output
+
+        Wait, but in the case of JZ and JNZ, after setting current_line to target_line -1, the next iteration will process that line. Since the instruction was a jump type, the code does not increment current_line.
+
+        This should work.
+
+        Let me check the part after handling each instruction: the code after the big elif blocks has:
+
+        if instruction not in the jump types → then increment current_line.
+
+        That's correct.
+
+        Now, testing for the case of a label followed by a jump to it.
+
+        Another possible edge case: when a label is on the last line. For example:
+
+        Program:
+
+        1 PRINT
+
+        LABEL end
+
+        JMP end
+
+        The labels dict will have 'end' →2 (since second line is line 2). 
+
+        Execution:
+
+        current_line starts at 0 (line1: PRINT → instruction is PRINT. Process: but stack is empty. So raise error "Error on line 1: PRINT on empty stack".
+
+        Wait, yes, because the first line is "PRINT", which when processed, since stack is empty, raises that error. So that's correct.
+
+        Another example where the program ends properly with a label and jump to it:
+
+        Program:
+
+        PRINT
+
+        LABEL end
+
+        JMP end
+
+        The lines are:
+
+        Line1: PRINT → instruction is PRINT. Stack is empty → error on line1.
+
+        So the code would fail here.
+
+        But if the program is:
+
+        5 PUSH 10
+
+        PRINT
+
+        LABEL end
+
+        JMP end
+
+        Then the labels have 'end' →3 (third line is line3). 
+
+        Execution steps:
+
+        current_line 0: line1 is "5 PUSH 10" → instruction PUSH. push 10 → stack [10]. Then increment to 1.
+
+        current_line 1: line2 is "PRINT" → append "10" to output. increment to 2.
+
+        current_line2: line3 is "LABEL end" → instruction is LABEL. After processing, since it's not a jump command, current_line +=1 →3.
+
+        Now current_line3: line4 is "JMP end". instruction is JMP. label exists. Target_line is 3 (since 'end' is line3's label? Wait no: the third line is "LABEL end" → line_num is 3 (1-based). So labels['end'] =3. 
+
+        So target_line is 3 → current_line =3-1=2. 
+
+        Since instruction was JMP (a jump type), we don't increment current_line. So next iteration starts with current_line=2.
+
+        Now processing line2 again (current_line=2):
+
+        The line is "LABEL end" → instruction is LABEL. Not a jump command → so after processing, current_line +=1 →3 again.
+
+        So the loop continues between current_line 2 and 3, leading to an infinite loop.
+
+        Wait, but the program's last line is "JMP end" (line4). After jumping to line3's label (which is line3 in 1-based?), the code jumps to the line where the label was defined (line3). So the line3 is "LABEL end", which when executed does nothing except add the label. So after the JMP, the code goes to line3 (current_line 2 (0-based)), which is the LABEL instruction. Then, since it's not a jump, current_line becomes 3 again. Then, the next iteration processes line4 again, leading to another JMP to line3's label, etc. So it loops between line2 and 3 (0-based indices 2 and 3?), no. Let me clarify:
+
+        The lines list:
+
+        lines[0] = "5 PUSH 10"
+
+        lines[1] = "PRINT"
+
+        lines[2] = "LABEL end"
+
+        lines[3] = "JMP end"
+
+        So current_line starts at 0:
+
+        After processing line3 (current_line=3): the instruction is JMP end.
+
+        The target_line is labels['end'] → which is 3 (since the label was on line3 (1-based, which is lines[2]?).
+
+        Wait, no: line3 is the fourth line in 1-based? Wait no:
+
+        Wait the first line is line1 (1-based). So:
+
+        Line1: "5 PUSH 10" → line_num 1.
+
+        Line2: "PRINT" → line_num 2.
+
+        Line3: "LABEL end" → line_num3.
+
+        Line4: "JMP end" → line_num4.
+
+        So labels['end'] is line_num3 (the third line's number). So when the code executes the JMP end (line4, current_line=3):
+
+        target_line is 3 (line_num3). So current_line is set to 3-1 = 2 (since lines are 0-based). 
+
+        So next iteration starts with current_line=2 (lines[2] is the "LABEL end" instruction). 
+
+        Since that instruction is not a jump command, after processing (which adds the label, but doesn't change anything), current_line is incremented by 1 → becomes 3 again.
+
+        So the loop continues between 2 and 3, causing an infinite loop.
+
+        So in this program, the code will loop forever unless broken by an error. But since the program's last instruction is a JMP to a label that's on the same line as the label definition, it creates a loop.
+
+        This is a valid program behavior according to the requirements, so the code handles it correctly.
+
+        Now, I think the code is correct. I need to write it in the required format, without any explanations outside the code block.

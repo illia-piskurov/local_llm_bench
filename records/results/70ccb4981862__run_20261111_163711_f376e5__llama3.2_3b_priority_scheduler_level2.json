@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261111_163711_f376e5",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:3b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-11 16:39:30",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "single_task: expected order=['a'], ms=5, cp=5; got order=['a'], ms=5, cp=0",
+    "parallel_tasks_reduce_makespan: expected order=['c', 'b', 'a'], ms=4, cp=3; got order=['a', 'b', 'c'], ms=3, cp=0",
+    "dependencies_and_workers: expected order=['a', 'c', 'b', 'd'], ms=11, cp=11; got order=['a', 'b', 'c', 'd'], ms=9, cp=0",
+    "critical_path_longer_than_worker_parallelism: expected order=['a', 'b', 'c', 'd'], ms=16, cp=4; got order=['a', 'd', 'c', 'b'], ms=4, cp=0",
+    "wide_graph_with_unlocks: expected order=['compile', 'fetch', 'test', 'package'], ms=8, cp=8; got order=['fetch', 'compile', 'test', 'package'], ms=7, cp=0",
+    "cycle_returns_none: expected None, got order=None, ms=2, cp=0"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

@@ -1,0 +1,190 @@
+{
+  "id": "run_20261111_142229_ac78df",
+  "host_id": "70ccb4981862",
+  "model_key": "gemma3:4b",
+  "model_name": "gemma3:4b",
+  "quantization": "Q4_K_M",
+  "backend": "Ollama v0.40.15",
+  "generation_params": {
+    "seed": 42,
+    "timeout_seconds": 600.0,
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_tokens": 10000,
+    "artifact": {
+      "key": "gemma3:4b",
+      "display_name": "gemma3:4b",
+      "architecture": "gemma3",
+      "quantization": "Q4_K_M",
+      "quantization_bits": null,
+      "size_bytes": 3350272403,
+      "params_string": "3.9B",
+      "max_context_length": 131072,
+      "format": "gguf",
+      "publisher": null
+    },
+    "think": "medium",
+    "think_budget": 8192,
+    "suite_hash": "051cb8695784"
+  },
+  "suite_version": "537d00a (051cb8695784)",
+  "started_at": "2026-11-11 14:22:29",
+  "completed_at": "2026-11-11 14:25:57",
+  "status": "completed",
+  "results": [
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:23:06",
+      "passed": 3,
+      "total": 12,
+      "failures": [
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "concurrency_default_one: assertion returned False",
+        "index_passed: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "mapper_rejection: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "retry_transient_failure: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "exponential_backoff: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "task_timeout: assertion returned False",
+        "timeout_triggers_retry: assertion returned False"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:24:04",
+      "passed": 3,
+      "total": 17,
+      "failures": [
+        "order_preservation: assertion returned False",
+        "concurrency_limit: assertion returned False",
+        "concurrency_as_number: assertion returned False",
+        "concurrency_default_one: assertion returned False",
+        "index_passed: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "mapper_rejection: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "retry_transient_failure: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "retry_exhausted: assertion returned False",
+        "exponential_backoff: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "task_timeout: assertion returned False",
+        "timeout_triggers_retry: assertion returned False",
+        "mid_flight_abort: assertion returned False",
+        "settled_all_success: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)",
+        "settled_mixed_failures: exception JavaScript did not settle within 5.0s (runaway promise chain or loop)"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:24:29",
+      "passed": 0,
+      "total": 7,
+      "failures": [
+        "action_and_condition: exception [string \"<python>\"]:3: attempt to call a table value (field 'Action')",
+        "sequence_all_success: exception [string \"<python>\"]:5: attempt to call a table value (field 'Action')",
+        "sequence_short_circuit_failure: exception [string \"<python>\"]:5: attempt to call a table value (field 'Action')",
+        "sequence_resumes_running_child: exception [string \"<python>\"]:6: attempt to call a table value (field 'Action')",
+        "selector_first_success: exception [string \"<python>\"]:5: attempt to call a table value (field 'Action')",
+        "selector_all_failure: exception [string \"<python>\"]:5: attempt to call a table value (field 'Action')",
+        "selector_resumes_running_child: exception [string \"<python>\"]:6: attempt to call a table value (field 'Action')"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:25:06",
+      "passed": 0,
+      "total": 12,
+      "failures": [
+        "Lua syntax error: error loading code: [string \"<python>\"]:116: function arguments expected near ':'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:25:57",
+      "passed": 0,
+      "total": 16,
+      "failures": [
+        "Lua syntax error: error loading code: [string \"<python>\"]:116: function arguments expected near ':'"
+      ],
+      "manual_score": null,
+      "comment": ""
+    }
+  ],
+  "speeds": [
+    {
+      "benchmark": "js_async",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:22:46",
+      "stats": {
+        "input_tokens": 778,
+        "total_output_tokens": 477,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 34.94820412388808,
+        "time_to_first_token_seconds": 1.927103,
+        "model_load_time_seconds": 1.336177625
+      }
+    },
+    {
+      "benchmark": "js_async",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:23:34",
+      "stats": {
+        "input_tokens": 1013,
+        "total_output_tokens": 874,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 34.63270980982997,
+        "time_to_first_token_seconds": 2.657196,
+        "model_load_time_seconds": 0.00100375
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level1",
+      "tested_at": "2026-11-11 14:24:29",
+      "stats": {
+        "input_tokens": 537,
+        "total_output_tokens": 707,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 31.129821880619026,
+        "time_to_first_token_seconds": 1.485928,
+        "model_load_time_seconds": 0.001244292
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level2",
+      "tested_at": "2026-11-11 14:25:06",
+      "stats": {
+        "input_tokens": 1576,
+        "total_output_tokens": 1186,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 32.73175260679017,
+        "time_to_first_token_seconds": 1.190265,
+        "model_load_time_seconds": 0.000848292
+      }
+    },
+    {
+      "benchmark": "lua_game_ai",
+      "level": "level3",
+      "tested_at": "2026-11-11 14:25:57",
+      "stats": {
+        "input_tokens": 1854,
+        "total_output_tokens": 1479,
+        "reasoning_output_tokens": null,
+        "tokens_per_second": 32.295021815188974,
+        "time_to_first_token_seconds": 5.240264,
+        "model_load_time_seconds": 0.000923125
+      }
+    }
+  ]
+}

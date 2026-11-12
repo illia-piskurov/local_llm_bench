@@ -74,12 +74,10 @@ class ModelResponse:
         return self.truncated_reason is not None
 
 
-# Reasoning models spend a large share of the budget on thoughts, so the defaults are generous.
-# They only apply to Ollama, which has no sampling presets: LM Studio gets no sampling or length parameters
-# unless they are set explicitly, so the model's own LM Studio preset (temperature, max tokens, context) governs.
-DEFAULT_MAX_TOKENS = 16384
-DEFAULT_TEMPERATURE = 0.0
-DEFAULT_TOP_P = 1.0
+# Sampling and length parameters are never sent unless set explicitly, so the model's own defaults govern
+# (the LM Studio preset, or the Modelfile in Ollama). The one exception is the Ollama token budget below, which
+# Ollama needs to size its context window.
+DEFAULT_MAX_TOKENS = 10000
 DEFAULT_TIMEOUT_SECONDS = 600.0
 
 
@@ -92,6 +90,10 @@ class GenerationConfig:
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS
     context_length: int | None = None
     repeat_penalty: float | None = None
+    # Ollama only (chosen when a run starts): think is low | medium | high | on | off | auto, think_budget is the
+    # max thinking tokens per answer (0 = unlimited). Unset values fall back to OLLAMA_THINK / OLLAMA_THINK_BUDGET.
+    think: str | None = None
+    think_budget: int | None = None
 
     def to_dict(self) -> dict:
         d: dict = {"seed": self.seed, "timeout_seconds": self.timeout_seconds}
@@ -123,13 +125,11 @@ class GenerationConfig:
 
 
 def resolve_for_backend(cfg: GenerationConfig) -> GenerationConfig:
-    """Fills the defaults a backend cannot do without; LM Studio keeps every unset parameter unset."""
+    """Fills the token budget Ollama cannot do without; sampling stays unset on every backend."""
     if not is_ollama():
         return cfg
     return replace(
         cfg,
-        temperature=DEFAULT_TEMPERATURE if cfg.temperature is None else cfg.temperature,
-        top_p=DEFAULT_TOP_P if cfg.top_p is None else cfg.top_p,
         max_tokens=DEFAULT_MAX_TOKENS if cfg.max_tokens is None else cfg.max_tokens,
     )
 
@@ -322,9 +322,12 @@ def detect_truncation(
     return None
 
 
-def _ollama_think() -> bool | str | None:
-    """Thinking mode from OLLAMA_THINK: low | medium (default) | high | on | off | auto (the model's own default)."""
-    raw = (os.environ.get("OLLAMA_THINK") or OLLAMA_DEFAULT_THINK).strip().lower()
+def _ollama_think(cfg: GenerationConfig | None = None) -> bool | str | None:
+    """Thinking mode: low | medium (default) | high | on | off | auto (the model's own default).
+
+    The run's setting wins, then OLLAMA_THINK, then the default.
+    """
+    raw = ((cfg.think if cfg else None) or os.environ.get("OLLAMA_THINK") or OLLAMA_DEFAULT_THINK).strip().lower()
     if raw in ("off", "false", "0", "no"):
         return False
     if raw in ("on", "true", "1", "yes"):
@@ -334,18 +337,32 @@ def _ollama_think() -> bool | str | None:
     return None
 
 
-def _ollama_think_budget() -> int:
-    """Max thinking tokens per answer from OLLAMA_THINK_BUDGET (0 disables the limit)."""
+def _ollama_think_budget(cfg: GenerationConfig | None = None) -> int:
+    """Max thinking tokens per answer (0 disables the limit): the run's setting, OLLAMA_THINK_BUDGET, the default."""
+    if cfg is not None and cfg.think_budget is not None:
+        return max(0, cfg.think_budget)
     raw = os.environ.get("OLLAMA_THINK_BUDGET")
     return max(0, int(raw)) if raw and raw.strip().isdigit() else OLLAMA_DEFAULT_THINK_BUDGET
 
 
-def backend_generation_params() -> dict:
+def ollama_run_defaults() -> dict:
+    """Defaults offered when a run starts: environment overrides first, then the built-in values."""
+    think = _ollama_think()
+    mode = "auto" if think is None else "on" if think is True else "off" if think is False else think
+    return {
+        "max_tokens": DEFAULT_MAX_TOKENS,
+        "think": mode,
+        "think_budget": _ollama_think_budget(),
+        "num_ctx": int(os.environ.get("OLLAMA_NUM_CTX") or OLLAMA_DEFAULT_NUM_CTX),
+    }
+
+
+def backend_generation_params(cfg: GenerationConfig | None = None) -> dict:
     """Backend settings that change the results, so they are recorded together with the run's parameters."""
     if not is_ollama():
         return {}
-    think = _ollama_think()
-    return {"think": "auto" if think is None else think, "think_budget": _ollama_think_budget()}
+    think = _ollama_think(cfg)
+    return {"think": "auto" if think is None else think, "think_budget": _ollama_think_budget(cfg)}
 
 
 def _ollama_context_plan(messages: list[dict], cfg: GenerationConfig) -> tuple[int, int]:
@@ -353,8 +370,8 @@ def _ollama_context_plan(messages: list[dict], cfg: GenerationConfig) -> tuple[i
 
     Without an explicit num_ctx Ollama uses the model's baked-in default (up to 256k), which allocates a huge
     KV cache, so a bounded default is used. When the output hits the window Ollama shifts the context and drops
-    the start of the prompt, hence num_predict is clamped to the room left. A truncation retry asks for a larger
-    max_tokens, so the window grows with it instead of repeating the same cut-off.
+    the start of the prompt, hence num_predict is clamped to the room left. An explicit max_tokens above the
+    default grows the window with it.
     """
     prompt_tokens = sum(len(m.get("content") or "") for m in messages) // 3 + 1
     ctx = cfg.context_length or int(os.environ.get("OLLAMA_NUM_CTX") or OLLAMA_DEFAULT_NUM_CTX)
@@ -414,21 +431,20 @@ def _ask_ollama(model_key: str, messages: list[dict], cfg: GenerationConfig) -> 
     """Runs a chat completion through Ollama's native /api/chat and maps its stats to the LM Studio shape."""
     cfg = resolve_for_backend(cfg)
     num_ctx, num_predict = _ollama_context_plan(messages, cfg)
-    options: dict = {
-        "temperature": cfg.temperature,
-        "seed": cfg.seed,
-        "top_p": cfg.top_p,
-        "num_predict": num_predict,
-        "num_ctx": num_ctx,
-    }
+    # Unset sampling parameters are not sent: Ollama then uses the model's own defaults from its Modelfile.
+    options: dict = {"seed": cfg.seed, "num_predict": num_predict, "num_ctx": num_ctx}
+    if cfg.temperature is not None:
+        options["temperature"] = cfg.temperature
+    if cfg.top_p is not None:
+        options["top_p"] = cfg.top_p
     if cfg.repeat_penalty is not None:
         options["repeat_penalty"] = cfg.repeat_penalty
 
     body: dict = {"model": model_key, "messages": messages, "stream": True, "options": options}
-    think = _ollama_think()
+    think = _ollama_think(cfg)
     if think is not None:
         body["think"] = think
-    budget = _ollama_think_budget()
+    budget = _ollama_think_budget(cfg)
 
     def stream(limit: int):
         try:

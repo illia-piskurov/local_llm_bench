@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261111_155402_36570b",
+  "host_id": "70ccb4981862",
+  "model": "llama3.2:1b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-11 15:57:07",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception: ValueError: need more than 1 values to unpack",
+    "parallel_tasks_reduce_makespan: unexpected exception: ValueError: need more than 1 values to unpack",
+    "dependencies_and_workers: unexpected exception: ValueError: need more than 1 values to unpack",
+    "critical_path_longer_than_worker_parallelism: unexpected exception: ValueError: need more than 1 values to unpack",
+    "wide_graph_with_unlocks: unexpected exception: ValueError: too many values to unpack (expected 2)",
+    "cycle_returns_none: unexpected exception: ValueError: need more than 1 values to unpack"
+  ],
+  "manual_score": null,
+  "comment": ""
+}

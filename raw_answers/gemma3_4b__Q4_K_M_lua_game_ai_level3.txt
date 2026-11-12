@@ -1,0 +1,229 @@
+```lua
+BT = {}
+
+BT.SUCCESS = "SUCCESS"
+BT.FAILURE = "FAILURE"
+BT.RUNNING = "RUNNING"
+
+---@param fn function
+BT.Action = {}
+function BT.Action.tick(self, ctx)
+  local result = self:fn(ctx)
+  if result == true or result == BT.SUCCESS then
+    return BT.SUCCESS
+  elseif result == false or result == BT.FAILURE then
+    return BT.FAILURE
+  elseif result == BT.RUNNING then
+    return BT.RUNNING
+  else
+    return BT.FAILURE
+  end
+end
+
+function BT.Action.reset(self)
+  -- No reset needed for Action nodes
+end
+
+---@param predicate function
+BT.Condition = {}
+function BT.Condition.tick(self, ctx)
+  local result = self:predicate(ctx)
+  if result then
+    return BT.SUCCESS
+  else
+    return BT.FAILURE
+  end
+end
+
+function BT.Condition.reset(self)
+  -- No reset needed for Condition nodes
+end
+
+---@param children table{BT.Node}
+BT.Sequence = {}
+function BT.Sequence.tick(self, ctx)
+  local child_index = 1
+  local running = BT.RUNNING
+
+  while running == BT.RUNNING do
+    local node = self:getChild(child_index)
+    if node then
+      running = node:tick(ctx)
+      if running == BT.FAILURE then
+        return BT.FAILURE
+      end
+    else
+      return BT.FAILURE -- Should not happen, but handle it
+    end
+    child_index = child_index + 1
+  end
+
+  return running
+end
+
+function BT.Sequence.getChild(self, index)
+  local children = getchildren(self)
+  if children and index > 0 and index <= #children then
+    return children[index]
+  else
+    return nil
+  end
+end
+
+function BT.Sequence.reset(self)
+  -- Reset remembered child index to 1
+  -- No actual reset needed, just a placeholder
+end
+
+---@param children table{BT.Node}
+BT.Selector = {}
+function BT.Selector.tick(self, ctx)
+  local child_index = 1
+  local running = BT.RUNNING
+
+  while running == BT.RUNNING do
+    local node = self:getChild(child_index)
+    if node then
+      running = node:tick(ctx)
+      if running == BT.SUCCESS then
+        return BT.SUCCESS
+      end
+    else
+      return BT.FAILURE -- Should not happen, but handle it
+    end
+    child_index = child_index + 1
+  end
+
+  return running
+end
+
+function BT.Selector.getChild(self, index)
+  local children = getchildren(self)
+  if children and index > 0 and index <= #children then
+    return children[index]
+  else
+    return nil
+  end
+end
+
+function BT.Selector.reset(self)
+  -- Reset remembered child index to 1
+  -- No actual reset needed, just a placeholder
+end
+
+--- @param node BT.Node
+BT.Inverter = {}
+function BT.Inverter.tick(self, ctx)
+  local child_result = self:child:tick(ctx)
+  if child_result == BT.SUCCESS then
+    return BT.FAILURE
+  elseif child_result == BT.FAILURE then
+    return BT.SUCCESS
+  elseif child_result == BT.RUNNING then
+    return BT.RUNNING
+  else
+    return BT.FAILURE
+  end
+end
+
+function BT.Inverter.reset(self)
+  self:child:reset()
+end
+
+--- @param child BT.Node, ticks number
+BT.Cooldown = {}
+function BT.Cooldown.tick(self, ctx)
+  if self.cooldown_timer == 0 then
+    return self:child:tick(ctx)
+  else
+    return BT.FAILURE
+  end
+end
+
+function BT.Cooldown.reset(self)
+  self.cooldown_timer = self.ticks
+end
+
+---@param key string
+BT.Blackboard = {}
+BT.Blackboard.watchers = {}
+
+function BT.Blackboard.new()
+  local bb = {}
+  bb.data = {}
+  bb.watchers = {}
+  return bb
+end
+
+function BT.Blackboard.get(self, key, default)
+  if self.data[key] then
+    return self.data[key]
+  else
+    return default
+  end
+end
+
+function BT.Blackboard.set(self, key, value)
+  if self.data[key] ~= value then
+    self.data[key] = value
+    for k, callback in pairs(self.watchers) do
+      callback(key, value, self.data[key])
+    end
+  end
+end
+
+function BT.Blackboard.watch(self, key, callback)
+  self.watchers[key] = callback
+end
+
+---@param key string
+---@param value any
+---@param old_value any
+BT.Blackboard.on_change = function(key, value, old_value)
+  -- Placeholder for global change notifications
+end
+
+BT.AsyncAction = {}
+BT.AsyncAction.coroutine_fn = nil
+
+function BT.AsyncAction(coroutine_fn)
+  BT.AsyncAction.coroutine_fn = coroutine_fn
+end
+
+function BT.AsyncAction.tick(self, ctx)
+  if not BT.AsyncAction.coroutine_fn then
+    return BT.FAILURE
+  end
+
+  local coroutine = coroutine.create()
+  local wait_ticks = 0
+
+  while true do
+    if coroutine.status == nil or coroutine.status == "STOPPED" then
+      return BT.FAILURE
+    end
+
+    local result = coroutine_fn(ctx)
+    if result == "WAIT_TICKS" then
+      wait_ticks = result[2]
+      return BT.RUNNING
+    else
+      return result
+    end
+  end
+end
+
+function BT.AsyncAction.reset(self)
+  -- Clear coroutine and wait timer
+  BT.AsyncAction.coroutine_fn = nil
+end
+
+function BT.Node.reset(self)
+  -- Cascade reset to child nodes
+  if self:isSequence or self:isSelector then
+    for i = 1, #self:getChildren() do
+      self:getChild(i):reset()
+    end
+  end
+end
+```

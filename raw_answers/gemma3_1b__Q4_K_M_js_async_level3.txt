@@ -1,0 +1,50 @@
+```javascript
+async function pMap(items, mapper, options) {
+  if (!items || items.length === 0) {
+    return [];
+  }
+
+  const concurrency = options === undefined ? 1 : options;
+  const results = [];
+  let retries = 0;
+  let backoffMs = 0;
+  let timeoutMs = 0;
+
+  const promise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(results);
+    }, backoffMs);
+  });
+
+  for (let i = 0; i < items.length; i++) {
+    try {
+      const result = await mapper(items[i], i);
+      results.push(result);
+    } catch (error) {
+      retries++;
+      if (retries >= concurrency) {
+        reject(error);
+        return;
+      }
+      backoffMs = backoffMs + (backoffMs * (2 ** 0));
+      timeoutMs = timeoutMs + (backoffMs * (2 ** 1));
+      Promise.resolve(timeoutMs).then(() => {
+        // Retry
+        if (retries < concurrency) {
+          promise.then(() => {
+            // Continue
+          }).catch(err => {
+            reject(err);
+          });
+        });
+      });
+    }
+  }
+
+  if (retries >= concurrency) {
+    reject(new Error("Timeout"));
+  }
+
+  return results;
+}
+```

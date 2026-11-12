@@ -1,0 +1,26 @@
+{
+  "model": "gemma3:4b",
+  "created_at": "2026-11-11T11:26:43.376359Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nclass InMemoryKeyValueStore:\n    def __init__(self):\n        self.data = {}\n        self.transactions = []\n\n    def set(self, key, value):\n        if self.transactions:\n            self.transactions.append((key, value))\n        else:\n            self.data[key] = value\n\n    def get(self, key):\n        if self.transactions:\n            for k, v in reversed(self.transactions):\n                if k == key:\n                    return v\n            return None\n        elif key in self.data:\n            return self.data[key]\n        else:\n            return \"NULL\"\n\n    def delete(self, key):\n        if self.transactions:\n            self.transactions.pop()\n        if key in self.data:\n            del self.data[key]\n\n    def begin(self):\n        self.transactions.append(None)\n\n    def commit(self):\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n            return\n        \n        committed_transactions = []\n        while self.transactions and isinstance(self.transactions[-1], tuple):\n            key, value = self.transactions.pop()\n            committed_transactions.append((key, value))\n        \n        for k, v in committed_transactions:\n            self.data[k] = v\n        \n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n            return\n\n    def rollback(self):\n        if not self.transactions:\n            print(\"NO TRANSACTION\")\n            return\n        \n        self.transactions.pop()\n\n    def run(self, program):\n        output = []\n        for line in program.strip().split('\\n'):\n            line = line.strip()\n            if not line:\n                continue\n\n            parts = line.split()\n            command = parts[0]\n\n            if command == \"SET\":\n                key = parts[1]\n                value = parts[2]\n                self.set(key, value)\n            elif command == \"GET\":\n                value = self.get(parts[1])\n                output.append(str(value))\n            elif command == \"DELETE\":\n                key = parts[1]\n                self.delete(key)\n            elif command == \"BEGIN\":\n                self.begin()\n            elif command == \"COMMIT\":\n                self.commit()\n            elif command == \"ROLLBACK\":\n                self.rollback()\n            else:\n                pass  # Ignore unknown commands\n\n        return output\n\n\nif __name__ == '__main__':\n    # Example Usage\n    store = InMemoryKeyValueStore()\n    program = \"\"\"\nSET key1 10\nBEGIN\nSET key2 20\nGET key1\nCOMMIT\nROLLBACK\nGET key1\nGET key2\nDELETE key1\nBEGIN\nSET key3 30\nCOMMIT\n\"\"\"\n    output = store.run(program)\n    print('\\n'.join(output))\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 26426584666,
+  "load_duration": 1317708,
+  "prompt_eval_count": 332,
+  "prompt_eval_cached_count": 0,
+  "prompt_eval_duration": 1255890000,
+  "eval_count": 665,
+  "eval_duration": 24980331000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 332,
+    "total_output_tokens": 665,
+    "tokens_per_second": 26.62094429413285,
+    "time_to_first_token_seconds": 1.25589,
+    "model_load_time_seconds": 0.001317708
+  }
+}

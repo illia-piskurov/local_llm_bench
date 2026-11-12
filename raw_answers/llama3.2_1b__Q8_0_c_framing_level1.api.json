@@ -1,0 +1,26 @@
+{
+  "model": "llama3.2:1b",
+  "created_at": "2026-11-11T13:58:13.245014Z",
+  "message": {
+    "role": "assistant",
+    "content": "```c\n#include <stdint.h>\n\nstatic uint8_t buffer[BUFFER_SIZE];\n\nvoid ringbuf_init(void) {\n    buffer[0] = 0;\n}\n\nint ringbuf_push(uint8_t byte) {\n    if (buffer[0] == 0) {\n        buffer[0] = byte;\n        return 0;\n    } else {\n        return -1;\n    }\n}\n\nint ringbuf_pop(void) {\n    if (buffer[0] == 0) {\n        return -1;\n    } else {\n        uint8_t byte = buffer[0];\n        buffer[0] = 0;\n        return byte;\n    }\n}\n\nint ringbuf_available(void) {\n    return buffer[0] != 0;\n}\n\nint ringbuf_free_space(void) {\n    return BUFFER_SIZE - buffer[0];\n}\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 3071833542,
+  "load_duration": 1060833,
+  "prompt_eval_count": 252,
+  "prompt_eval_cached_count": 20,
+  "prompt_eval_duration": 234345000,
+  "eval_count": 173,
+  "eval_duration": 2819264000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 252,
+    "total_output_tokens": 173,
+    "tokens_per_second": 61.363533177453405,
+    "time_to_first_token_seconds": 0.234345,
+    "model_load_time_seconds": 0.001060833
+  }
+}

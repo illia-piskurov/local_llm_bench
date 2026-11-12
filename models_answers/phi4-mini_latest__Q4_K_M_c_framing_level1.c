@@ -1,0 +1,45 @@
+#include <stdint.h>
+#include <string.h>
+
+#define BUFFER_SIZE 512
+
+typedef struct RingBuffer {
+    uint8_t buffer[BUFFER_SIZE];
+    int head;
+    int tail;
+    int count;
+} RingBuffer;
+
+void ringbuf_init(RingBuffer *rb) {
+    rb->head = 0;
+    rb->tail = 0;
+    rb->count = 0;
+}
+
+int ringbuf_push(RingBuffer *rb, uint8_t byte) {
+    if (rb->count == BUFFER_SIZE) {
+        return -1; // Buffer is full
+    }
+    rb->buffer[rb->head] = byte;
+    rb->head = (rb->head + 1) % BUFFER_SIZE;
+    rb->count++;
+    return 0; // Success
+}
+
+int ringbuf_pop(RingBuffer *rb) {
+    if (rb->count == 0) {
+        return -1; // Buffer is empty
+    }
+    int byte = rb->buffer[rb->tail];
+    rb->tail = (rb->tail + 1) % BUFFER_SIZE;
+    rb->count--;
+    return byte; // Return the popped byte
+}
+
+int ringbuf_available(RingBuffer *rb) {
+    return rb->count;
+}
+
+int ringbuf_free_space(RingBuffer *rb) {
+    return BUFFER_SIZE - rb->count;
+}

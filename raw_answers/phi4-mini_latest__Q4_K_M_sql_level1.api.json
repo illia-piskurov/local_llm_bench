@@ -1,0 +1,26 @@
+{
+  "model": "phi4-mini:latest",
+  "created_at": "2026-11-11T12:32:21.281481Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\ndef compile_query(query: dict) -> dict:\n    def compile_condition(condition):\n        if isinstance(condition, dict):\n            op = condition['op']\n            if op in ('=', '!=', '>', '<', '>=', '<='):\n                return f\"{condition['field']} {op} ${len(params)+1}\"\n            elif op == 'AND':\n                return ' AND '.join(compile_condition(c) for c in condition['AND'])\n            elif op == 'OR':\n                return ' OR '.join(compile_condition(c) for c in condition['OR'])\n        return str(condition)\n\n    def compile_order_by(order_by):\n        return ', '.join(f\"{item['field']} {item.get('dir', 'ASC')}\" for item in order_by)\n\n    table = query['table']\n    select = query.get('select', ['*'])\n    where = query.get('where', {})\n    order_by = query.get('orderBy', [])\n    limit = query.get('limit', None)\n    offset = query.get('offset', None)\n\n    sql = f\"SELECT {', '.join(select)} FROM {table}\"\n    if where:\n        sql += f\" WHERE {compile_condition(where)}\"\n    if order_by:\n        sql += f\" ORDER BY {compile_order_by(order_by)}\"\n    if limit is not None:\n        sql += f\" LIMIT {limit}\"\n    if offset is not None:\n        sql += f\" OFFSET {offset}\"\n\n    params = []\n    if where:\n        condition_str = compile_condition(where)\n        for i, condition in enumerate(re.findall(r'\\$\\d+', condition_str), 1):\n            params.append(None)  # Placeholder for actual value\n    return {\"sql\": sql, \"params\": params}\n\n# Example usage:\n# query = {\n#     \"table\": \"users\",\n#     \"select\": [\"name\", \"age\"],\n#     \"where\": {\n#         \"AND\": [\n#             {\"field\": \"age\", \"op\": \">\", \"value\": 18},\n#             {\"field\": \"name\", \"op\": \"=\", \"value\": \"Alice\"}\n#         ]\n#     },\n#     \"orderBy\": [{\"field\": \"name\", \"dir\": \"ASC\"}],\n#     \"limit\": 10\n# }\n# print(compile_query(query))\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 21395071750,
+  "load_duration": 869792,
+  "prompt_eval_count": 341,
+  "prompt_eval_cached_count": 1,
+  "prompt_eval_duration": 1789501000,
+  "eval_count": 482,
+  "eval_duration": 19506510000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 341,
+    "total_output_tokens": 482,
+    "tokens_per_second": 24.709699479814688,
+    "time_to_first_token_seconds": 1.789501,
+    "model_load_time_seconds": 0.000869792
+  }
+}

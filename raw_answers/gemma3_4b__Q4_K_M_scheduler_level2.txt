@@ -1,0 +1,71 @@
+```python
+def topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:
+    """
+    Performs a topological sort on a directed acyclic graph (DAG) represented as a dictionary
+    of tasks and their dependencies.
+
+    Args:
+        tasks: A dictionary where the key is the task name (str), and the value is a list of
+               dependency task names that must complete prior to this task.
+
+    Returns:
+        A list of all task names in an order where every task appears strictly after all of its
+        dependencies (topological sort). If the dependency graph contains a cycle, return None.
+    """
+    in_degree = {}
+    for task in tasks:
+        in_degree[task] = 0
+    for task in tasks:
+        for dependency in tasks[task]:
+            in_degree[task] += 1
+
+    queue = []
+    for task in in_degree:
+        if in_degree[task] == 0:
+            queue.append(task)
+
+    sorted_tasks = []
+    while queue:
+        task = queue.pop(0)
+        sorted_tasks.append(task)
+
+        for dependent_task in tasks:
+            if task in tasks[dependent_task]:
+                in_degree[dependent_task] -= 1
+                if in_degree[dependent_task] == 0:
+                    queue.append(dependent_task)
+
+    if len(sorted_tasks) != len(tasks):
+        return None
+    else:
+        return sorted_tasks
+
+
+def critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:
+    """
+    Calculates the length of the critical path in a task dependency graph.
+
+    Args:
+        tasks: A dictionary where each value is a tuple of (duration, dependencies_list).
+
+    Returns:
+        The length of the critical path — the total duration of the longest dependent
+        sequence of tasks. If the dependency graph contains a cycle, return None.
+    """
+    sorted_tasks = topo_sort(tasks)
+    if sorted_tasks is None:
+        return None
+
+    task_durations = {}
+    for task in tasks:
+        task_durations[task] = tasks[task][0]
+
+    completion_times = {}
+    for task in sorted_tasks:
+        completion_times[task] = task_durations[task]
+        for dependency in tasks[task][1]:
+            if dependency in completion_times:
+                completion_times[task] = max(completion_times[task], completion_times[dependency] + task_durations[task])
+
+    return max(completion_times.values())
+```

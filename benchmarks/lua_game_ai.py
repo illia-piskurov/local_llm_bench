@@ -11,9 +11,10 @@ Code executes inside an isolated Lupa Lua sandbox with revoked OS and file syste
 from collections.abc import Callable
 from pathlib import Path
 
-from lupa import LuaError, LuaRuntime
+from lupa import LuaRuntime
 
 from benchmarks.base import Benchmark, Level, TestResult
+from sandboxes.case_worker import run_cases_isolated
 from sandboxes.lua_runtime import create_lua_sandbox as _create_sandbox
 
 LEVEL1_PROMPT = """\
@@ -505,6 +506,17 @@ LEVEL3_CASES: list[tuple[str, Callable[[LuaRuntime], bool]]] = [
 ]
 
 
+def _check_loaded(rt: LuaRuntime) -> bool:
+    return True
+
+
+def _run_lua_case(case: Callable[[LuaRuntime], bool], solution_lua: str) -> bool:
+    """Runs one case in a fresh sandbox with the solution loaded (executed inside the isolated worker)."""
+    rt = _create_sandbox()
+    _load_solution(rt, solution_lua)
+    return case(rt)
+
+
 def run_lua_suite(cases: list[tuple[str, Callable[[LuaRuntime], bool]]], lua_path: Path) -> tuple[int, int, list[str]]:
     if not lua_path.exists():
         return 0, len(cases), [f"File {lua_path} not found"]
@@ -514,25 +526,23 @@ def run_lua_suite(cases: list[tuple[str, Callable[[LuaRuntime], bool]]], lua_pat
     except Exception as e:
         return 0, len(cases), [f"Error reading file {lua_path}: {e}"]
 
-    rt = _create_sandbox()
-    try:
-        _load_solution(rt, solution_lua)
-    except LuaError as e:
-        return 0, len(cases), [f"Lua syntax error: {e}"]
+    # Every case, the load check included, runs in a killable worker: guest code can hang inside a native call.
+    outcomes = run_cases_isolated([("load", _check_loaded), *cases], solution_lua, runner=_run_lua_case)
+    status, detail = outcomes[0]
+    if status != "pass":
+        return 0, len(cases), [f"Lua syntax error: {detail}"]
 
     passed = 0
     failures: list[str] = []
-    for test_name, test_fn in cases:
-        try:
-            test_rt = _create_sandbox()
-            _load_solution(test_rt, solution_lua)
-            ok = test_fn(test_rt)
-            if ok:
-                passed += 1
-            else:
-                failures.append(f"{test_name}: assertion returned false")
-        except Exception as e:
-            failures.append(f"{test_name}: exception {e}")
+    for (test_name, _), (status, detail) in zip(cases, outcomes[1:], strict=True):
+        if status == "pass":
+            passed += 1
+        elif status == "fail":
+            failures.append(f"{test_name}: assertion returned false")
+        elif status == "error":
+            failures.append(f"{test_name}: exception {detail}")
+        else:
+            failures.append(f"{test_name}: {detail}")
 
     return passed, len(cases), failures
 

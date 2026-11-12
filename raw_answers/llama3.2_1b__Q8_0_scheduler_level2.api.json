@@ -1,0 +1,26 @@
+{
+  "model": "llama3.2:1b",
+  "created_at": "2026-11-11T13:56:49.507851Z",
+  "message": {
+    "role": "assistant",
+    "content": "```python\nfrom collections import defaultdict, deque\n\ndef topo_sort(tasks: dict[str, list[str]]) -> list[str] | None:\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n    \n    for task, dependencies in tasks.items():\n        for dependency in dependencies:\n            graph[dependency].append(task)\n            in_degree[task] += 1\n    \n    queue = deque([task for task in tasks if in_degree[task] == 0])\n    \n    sorted_tasks = []\n    \n    while queue:\n        task = queue.popleft()\n        sorted_tasks.append(task)\n        \n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n    \n    if len(sorted_tasks) != len(tasks):\n        return None\n    \n    return sorted_tasks\n\ndef critical_path(tasks: dict[str, tuple[int, list[str]]]) -> int | None:\n    graph = defaultdict(list)\n    in_degree = {task: 0 for task in tasks}\n    \n    for task, (duration, dependencies) in tasks.items():\n        for dependency in dependencies:\n            graph[dependency].append(task)\n            in_degree[task] += 1\n    \n    queue = deque([task for task in tasks if in_degree[task] == 0])\n    \n    sorted_tasks = []\n    \n    while queue:\n        task = queue.popleft()\n        sorted_tasks.append(task)\n        \n        for neighbor in graph[task]:\n            in_degree[neighbor] -= 1\n            if in_degree[neighbor] == 0:\n                queue.append(neighbor)\n    \n    if len(sorted_tasks) != len(tasks):\n        return None\n    \n    max_duration = 0\n    for task, (duration, _) in tasks.items():\n        max_duration = max(max_duration, duration)\n    \n    return max_duration\n```",
+    "thinking": ""
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 7274643417,
+  "load_duration": 639209,
+  "prompt_eval_count": 499,
+  "prompt_eval_cached_count": 370,
+  "prompt_eval_duration": 138843000,
+  "eval_count": 392,
+  "eval_duration": 7132430000,
+  "finish_reason": "stop",
+  "stats": {
+    "input_tokens": 499,
+    "total_output_tokens": 392,
+    "tokens_per_second": 54.9602309451337,
+    "time_to_first_token_seconds": 0.138843,
+    "model_load_time_seconds": 0.000639209
+  }
+}

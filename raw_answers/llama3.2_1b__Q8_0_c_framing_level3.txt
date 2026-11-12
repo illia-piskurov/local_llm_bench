@@ -1,0 +1,145 @@
+```c
+#include <stdint.h>
+#include <stdbool.h>
+
+static uint8_t buffer[BUFFER_SIZE];
+static uint8_t out_type[BUFFER_SIZE];
+static uint8_t out_payload[BUFFER_SIZE];
+
+int ringbuf_init(void) {
+    buffer[0] = 0;
+    out_type[0] = 0;
+    out_payload[0] = 0;
+    return 0;
+}
+
+int feed_bytes(const uint8_t *data, int len) {
+    if (len > BUFFER_SIZE) {
+        return -1;
+    }
+    for (int i = 0; i < len; i++) {
+        if (buffer[0] == 0) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] == 0x00 && buffer[22] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] == 0x00 && buffer[22] == 0x00 && buffer[23] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] == 0x00 && buffer[22] == 0x00 && buffer[23] == 0x00 && buffer[24] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] == 0x00 && buffer[22] == 0x00 && buffer[23] == 0x00 && buffer[24] == 0x00 && buffer[25] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] == 0x00 && buffer[22] == 0x00 && buffer[23] == 0x00 && buffer[24] == 0x00 && buffer[25] == 0x00 && buffer[26] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] == 0x00 && buffer[22] == 0x00 && buffer[23] == 0x00 && buffer[24] == 0x00 && buffer[25] == 0x00 && buffer[26] == 0x00 && buffer[27] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] == 0x00 && buffer[22] == 0x00 && buffer[23] == 0x00 && buffer[24] == 0x00 && buffer[25] == 0x00 && buffer[26] == 0x00 && buffer[27] == 0x00 && buffer[28] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] == 0x00 && buffer[22] == 0x00 && buffer[23] == 0x00 && buffer[24] == 0x00 && buffer[25] == 0x00 && buffer[26] == 0x00 && buffer[27] == 0x00 && buffer[28] == 0x00 && buffer[29] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] == 0x00 && buffer[22] == 0x00 && buffer[23] == 0x00 && buffer[24] == 0x00 && buffer[25] == 0x00 && buffer[26] == 0x00 && buffer[27] == 0x00 && buffer[28] == 0x00 && buffer[29] == 0x00 && buffer[30] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00 && buffer[8] == 0x00 && buffer[9] == 0x00 && buffer[10] == 0x00 && buffer[11] == 0x00 && buffer[12] == 0x00 && buffer[13] == 0x00 && buffer[14] == 0x00 && buffer[15] == 0x00 && buffer[16] == 0x00 && buffer[17] == 0x00 && buffer[18] == 0x00 && buffer[19] == 0x00 && buffer[20] == 0x00 && buffer[21] == 0x00 && buffer[22] == 0x00 && buffer[23] == 0x00 && buffer[24] == 0x00 && buffer[25] == 0x00 && buffer[26] == 0x00 && buffer[27] == 0x00 && buffer[28] == 0x00 && buffer[29] == 0x00 && buffer[30] == 0x00 && buffer[31] != 0x00) {
+            buffer[0] = data[i];
+            return 0;
+        }
+        if (buffer[0] == 0xAA && buffer[1] == 0x00 && buffer[2] == 0x00 && buffer[3] == 0x00 && buffer[4] == 0x00 && buffer[5] == 0x00 && buffer[6] == 0x00 && buffer[7] == 0x00

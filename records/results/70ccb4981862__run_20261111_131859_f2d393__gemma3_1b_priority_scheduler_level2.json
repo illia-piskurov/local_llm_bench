@@ -1,0 +1,20 @@
+{
+  "run_id": "run_20261111_131859_f2d393",
+  "host_id": "70ccb4981862",
+  "model": "gemma3:1b",
+  "benchmark": "priority_scheduler",
+  "level": "level2",
+  "tested_at": "2026-11-11 13:19:49",
+  "passed": 0,
+  "total": 6,
+  "failures": [
+    "single_task: unexpected exception: NameError: name 'plan_order' isn't defined",
+    "parallel_tasks_reduce_makespan: unexpected exception: NameError: name 'plan_order' isn't defined",
+    "dependencies_and_workers: unexpected exception: NameError: name 'plan_order' isn't defined",
+    "critical_path_longer_than_worker_parallelism: unexpected exception: NameError: name 'plan_order' isn't defined",
+    "wide_graph_with_unlocks: unexpected exception: NameError: name 'plan_order' isn't defined",
+    "cycle_returns_none: unexpected exception: NameError: name 'plan_order' isn't defined"
+  ],
+  "manual_score": null,
+  "comment": ""
+}
